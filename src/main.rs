@@ -215,9 +215,10 @@ fn run(state: &mut State) -> Result<()> {
     ops[0xe8] = Some(inx);
     ops[0xf0] = Some(beq);
 
-    for _ in 0..16 {
+    loop {
         println!("{}", state.dump());
         let opcode = fetch!(state);
+        println!("opcode {:02X}", opcode);
         match ops[opcode as usize] {
             Some(op_fn) => op_fn(state),
             None => todo!("opcode {opcode:02X} not implemented"),
