@@ -7,6 +7,7 @@ const N_MASK: u8 = 0b1000_0000u8;
 const Z_MASK: u8 = 0b0000_0010u8;
 const CARRY_MASK: u8 = 0b0000_0001u8;
 const OSWRCH: u16 = 0xffeeu16;
+const OSHALT: u16 = 0xfffeu16;
 
 type Memory = [u8; 0x10000];
 type OpFn = fn(&mut State) -> ();
@@ -19,6 +20,7 @@ struct State {
     y: u8,
     s: u8,
     memory: Memory,
+    running: bool,
 }
 
 impl State {
@@ -31,6 +33,7 @@ impl State {
             y: 0x00u8,
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
+            running: false,
         }
     }
 
@@ -40,12 +43,20 @@ impl State {
             self.pc, self.p, self.a, self.x, self.y, self.s,
         )
     }
+
+    fn println(&self, _s: &str) {
+        //println!("{s}");
+    }
+
+    fn stdout(&self, c: char) {
+        print!("{c}")
+    }
 }
 
 macro_rules! fetch {
     ($state: expr) => {{
         let value = $state.memory[$state.pc as usize];
-        println!("FETCH {:04X} -> {:02X}", $state.pc, value);
+        $state.println(&format!("FETCH {:04X} -> {:02X}", $state.pc, value));
         $state.pc += 1;
         value
     }};
@@ -95,9 +106,22 @@ macro_rules! push {
     ($state: expr, $value: expr) => {{
         let addr = 0x0100u16 + $state.s as u16;
         $state.memory[addr as usize] = $value;
-        println!("push {:04X} <- {:02X}", addr, $value);
+        $state.println(&format!("push {:04X} <- {:02X}", addr, $value));
         $state.s -= 1;
     }};
+}
+
+macro_rules! push_word {
+    ($state: expr, $value: expr) => {
+        push!($state, ($value >> 8) as u8);
+        push!($state, $value as u8);
+    };
+}
+
+macro_rules! push_ret_addr {
+    ($state: expr, $value: expr) => {
+        push_word!($state, $value - 1)
+    };
 }
 
 macro_rules! pull {
@@ -105,9 +129,23 @@ macro_rules! pull {
         $state.s += 1;
         let addr = 0x0100u16 + $state.s as u16;
         let value = $state.memory[addr as usize];
-        println!("pull {:04X} -> {:02X}", addr, value);
+        $state.println(&format!("pull {:04X} -> {:02X}", addr, value));
         value
     }};
+}
+
+macro_rules! pull_word {
+    ($state: expr) => {{
+        let lo = pull!($state);
+        let hi = pull!($state);
+        ((hi as u16) << 8) + lo as u16
+    }};
+}
+
+macro_rules! pull_ret_addr {
+    ($state: expr) => {
+        pull_word!($state) + 1
+    };
 }
 
 fn load(memory: &mut Memory, path: &Path, start: u16) -> Result<()> {
@@ -126,12 +164,16 @@ fn run(state: &mut State) -> Result<()> {
     /* 0x00 */
     fn brk(state: &mut State) {
         let pc = state.pc - 1;
-        if pc == OSWRCH {
-            let c = state.a as char;
-            println!("{}", c);
-            rts(state);
-        } else {
-            panic!("Break at {:04X}", pc);
+        match pc {
+            OSWRCH => {
+                let c = state.a as char;
+                state.stdout(c);
+                rts(state);
+            }
+            OSHALT => {
+                state.running = false;
+            }
+            _ => panic!("Break at {:04X}", pc),
         }
     }
 
@@ -140,10 +182,7 @@ fn run(state: &mut State) -> Result<()> {
         let lo = fetch!(state);
         let hi = fetch!(state);
         let addr = ((hi as u16) << 8) + lo as u16;
-        let ret_addr = state.pc - 1;
-        println!("push ret_addr {:04X}", ret_addr);
-        push!(state, (ret_addr >> 8) as u8);
-        push!(state, ret_addr as u8);
+        push_ret_addr!(state, state.pc);
         state.pc = addr;
     }
 
@@ -156,11 +195,7 @@ fn run(state: &mut State) -> Result<()> {
 
     /* 0x60 */
     fn rts(state: &mut State) {
-        let lo = pull!(state);
-        let hi = pull!(state);
-        let ret_addr = ((hi as u16) << 8) + lo as u16;
-        println!("pull ret_addr {:04X}", ret_addr);
-        state.pc = ret_addr + 1;
+        state.pc = pull_ret_addr!(state);
     }
 
     /* 0xa2 */
@@ -215,23 +250,30 @@ fn run(state: &mut State) -> Result<()> {
     ops[0xe8] = Some(inx);
     ops[0xf0] = Some(beq);
 
-    loop {
-        println!("{}", state.dump());
+    // Initialize the state
+    push_word!(state, OSHALT - 1);
+
+    state.running = true;
+    while state.running {
+        state.println(&format!("{}", state.dump()));
         let opcode = fetch!(state);
-        println!("opcode {:02X}", opcode);
+        state.println(&format!("opcode {:02X}", opcode));
         match ops[opcode as usize] {
             Some(op_fn) => op_fn(state),
             None => todo!("opcode {opcode:02X} not implemented"),
         }
     }
-
     Ok(())
 }
 
-fn main() -> Result<()> {
+fn demo() -> Result<()> {
     let mut state = State::new();
     load(&mut state.memory, Path::new("examples\\Main.bin"), 0x2000)?;
     state.pc = 0x2000u16;
     run(&mut state)?;
     Ok(())
+}
+
+fn main() -> Result<()> {
+    demo()
 }
