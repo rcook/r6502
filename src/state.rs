@@ -1,5 +1,4 @@
-use crate::{ControllerMessage, Flag, Memory, STACK_BASE};
-use std::sync::mpsc::Sender;
+use crate::{Flag, Memory, Thunk, STACK_BASE};
 
 pub(crate) struct State {
     pub(crate) p: u8,
@@ -9,11 +8,12 @@ pub(crate) struct State {
     pub(crate) y: u8,
     pub(crate) s: u8,
     pub(crate) memory: Memory,
-    controller_tx: Sender<ControllerMessage>,
+    thunk: Thunk,
+    last_step_count: i32,
 }
 
 impl State {
-    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Self {
+    pub(crate) fn new(thunk: Thunk) -> Self {
         Self {
             pc: 0x0000u16,
             p: 0x00u8,
@@ -22,7 +22,8 @@ impl State {
             y: 0x00u8,
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
-            controller_tx,
+            thunk,
+            last_step_count: 0,
         }
     }
 
@@ -108,17 +109,24 @@ impl State {
         }
     }
 
-    #[allow(unused)]
-    pub(crate) fn println(&self, s: &str) {
-        self.controller_tx
-            .send(ControllerMessage::AppendLogLine(String::from(s)))
-            .unwrap();
+    pub(crate) fn write_stdout(&self, c: char) {
+        self.thunk.write_stdout(c);
     }
 
-    pub(crate) fn stdout(&self, c: char) {
-        self.controller_tx
-            .send(ControllerMessage::AppendStdoutChar(c))
-            .unwrap();
+    pub(crate) fn println(&self, s: &str) {
+        self.thunk.println(s);
+    }
+
+    pub(crate) fn poll(&mut self) {
+        // TBD: Use channel instead
+        self.println("Polling");
+        loop {
+            let new_step_count = self.thunk.step_count();
+            if new_step_count > self.last_step_count {
+                self.last_step_count = new_step_count;
+                break;
+            }
+        }
     }
 
     fn make_word(hi: u8, lo: u8) -> u16 {

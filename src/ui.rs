@@ -8,8 +8,6 @@ use cursive_multiplex::Mux;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub(crate) struct UI {
-    #[allow(unused)]
-    controller_tx: Sender<ControllerMessage>,
     cursive: CursiveRunner<CursiveRunnable>,
     tx: Sender<UIMessage>,
     rx: Receiver<UIMessage>,
@@ -54,15 +52,15 @@ impl UI {
 
         cursive.add_fullscreen_layer(linear);
         cursive.add_global_callback('q', Cursive::quit);
+        cursive.add_global_callback(' ', move |_| {
+            controller_tx
+                .send(ControllerMessage::Step)
+                .expect("Must succeed")
+        });
 
         cursive.set_fps(30);
 
-        Ok(Self {
-            controller_tx,
-            cursive,
-            tx,
-            rx,
-        })
+        Ok(Self { cursive, tx, rx })
     }
 
     pub(crate) fn tx(&self) -> &Sender<UIMessage> {
@@ -76,13 +74,13 @@ impl UI {
 
         while let Some(message) = self.rx.try_iter().next() {
             match message {
-                UIMessage::AppendStdoutChar(c) => {
+                UIMessage::WriteStdout(c) => {
                     self.cursive
                         .find_name::<TextView>("stdout")
                         .unwrap()
                         .append(c);
                 }
-                UIMessage::AppendLogLine(mut s) => {
+                UIMessage::Println(mut s) => {
                     s.push('\n');
                     self.cursive
                         .find_name::<TextView>("logger")

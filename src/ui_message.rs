@@ -1,4 +1,4 @@
 pub(crate) enum UIMessage {
-    AppendStdoutChar(char),
-    AppendLogLine(String),
+    WriteStdout(char),
+    Println(String),
 }

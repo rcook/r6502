@@ -1,42 +1,47 @@
-use crate::{ControllerMessage, UIMessage, UI};
+use crate::{ControllerMessage, Thunk, UIMessage, UI};
 use anyhow::Result;
-use std::sync::mpsc::channel;
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{channel, Receiver};
+use std::sync::{Arc, Mutex};
 
 pub(crate) struct Controller {
-    tx: Sender<ControllerMessage>,
     rx: Receiver<ControllerMessage>,
     ui: UI,
+    step_count: Arc<Mutex<i32>>,
+    thunk: Thunk,
 }
 
 impl Controller {
     pub(crate) fn new() -> Result<Self> {
         let (tx, rx) = channel();
+        let step_count = Arc::new(Mutex::new(0));
         Ok(Self {
-            tx: tx.clone(),
             rx: rx,
-            ui: UI::new(tx)?,
+            ui: UI::new(tx.clone())?,
+            step_count: step_count.clone(),
+            thunk: Thunk::new(tx, step_count),
         })
     }
 
-    pub fn run(&mut self) {
+    pub(crate) fn thunk(&self) -> &Thunk {
+        &self.thunk
+    }
+
+    pub(crate) fn run(&mut self) {
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 // Handle messages arriving from the UI.
                 match message {
-                    ControllerMessage::AppendStdoutChar(c) => {
-                        self.ui.tx().send(UIMessage::AppendStdoutChar(c)).unwrap();
+                    ControllerMessage::WriteStdout(c) => {
+                        self.ui.tx().send(UIMessage::WriteStdout(c)).unwrap();
                     }
-                    ControllerMessage::AppendLogLine(s) => {
-                        self.ui.tx().send(UIMessage::AppendLogLine(s)).unwrap();
+                    ControllerMessage::Println(s) => {
+                        self.ui.tx().send(UIMessage::Println(s)).unwrap();
+                    }
+                    ControllerMessage::Step => {
+                        *self.step_count.lock().expect("Must succeed") += 1;
                     }
                 };
             }
         }
-    }
-
-    pub fn tx(&self) -> &Sender<ControllerMessage> {
-        &self.tx
     }
 }

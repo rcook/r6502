@@ -1,4 +1,5 @@
 pub(crate) enum ControllerMessage {
-    AppendStdoutChar(char),
-    AppendLogLine(String),
+    WriteStdout(char),
+    Println(String),
+    Step,
 }
