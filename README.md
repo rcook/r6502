@@ -5,3 +5,5 @@ https://superuser.com/questions/346658/does-the-6502-put-ff-in-the-stack-pointer
 https://stackoverflow.com/questions/49078096/im-failing-to-understand-how-the-stack-works
 https://www.pagetable.com/?p=410
 https://c64os.com/post/6502instructions#RTI
+https://cafbit.com/post/cursive_writing_terminal_applications_in_rust/
+https://stackoverflow.com/questions/78122826/how-to-create-a-new-dialog-after-cursive-run-has-been-called

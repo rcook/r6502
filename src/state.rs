@@ -1,4 +1,5 @@
-use crate::{Flag, Memory, STACK_BASE};
+use crate::{ControllerMessage, Flag, Memory, STACK_BASE};
+use std::sync::mpsc::Sender;
 
 pub(crate) struct State {
     pub(crate) p: u8,
@@ -8,10 +9,11 @@ pub(crate) struct State {
     pub(crate) y: u8,
     pub(crate) s: u8,
     pub(crate) memory: Memory,
+    controller_tx: Sender<ControllerMessage>,
 }
 
 impl State {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Self {
         Self {
             pc: 0x0000u16,
             p: 0x00u8,
@@ -20,6 +22,7 @@ impl State {
             y: 0x00u8,
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
+            controller_tx,
         }
     }
 
@@ -106,10 +109,16 @@ impl State {
     }
 
     #[allow(unused)]
-    pub(crate) fn println(&self, _s: &str) {}
+    pub(crate) fn println(&self, s: &str) {
+        self.controller_tx
+            .send(ControllerMessage::AppendLogLine(String::from(s)))
+            .unwrap();
+    }
 
     pub(crate) fn stdout(&self, c: char) {
-        print!("{c}")
+        self.controller_tx
+            .send(ControllerMessage::AppendStdoutChar(c))
+            .unwrap();
     }
 
     fn make_word(hi: u8, lo: u8) -> u16 {

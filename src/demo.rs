@@ -1,10 +1,11 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
-use crate::{Flag, Memory, Op, State, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
+use crate::{Controller, Flag, Memory, Op, State, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
 use anyhow::{bail, Result};
 use std::fs::File;
 use std::io::{ErrorKind, Read};
 use std::path::Path;
+use std::thread::spawn;
 
 fn load(memory: &mut Memory, path: &Path, addr: u16) -> Result<()> {
     let len = memory.len();
@@ -48,7 +49,13 @@ fn run(state: &mut State) -> Result<()> {
         while !state.get_flag(Flag::B) {
             let opcode = state.next();
             match ops[opcode as usize] {
-                Some(op) => (op.func)(state),
+                Some(op) => {
+                    state.println(&format!(
+                        "{:02X} {} {:?}",
+                        op.opcode, op.mnemonic, op.addressing_mode
+                    ));
+                    (op.func)(state)
+                }
                 None => bail!("Unsupported opcode {opcode:02X}"),
             }
         }
@@ -57,8 +64,6 @@ fn run(state: &mut State) -> Result<()> {
         if state.pc != IRQ_VALUE {
             bail!("Unexpected IRQ value {:04X}", state.pc);
         }
-
-        //let p = state.read(STACK_BASE + (state.s + 1) as u16);
 
         // Address of operating system routine being invoked
         let addr = state.fetch_word(STACK_BASE + (state.s + 2) as u16) - 1;
@@ -69,7 +74,7 @@ fn run(state: &mut State) -> Result<()> {
                 state.stdout(c);
             }
             OSHALT => {
-                println!("Halted.");
+                state.println("Halted");
                 return Ok(());
             }
             _ => panic!("Break at subroutine {:04X}", addr),
@@ -80,9 +85,14 @@ fn run(state: &mut State) -> Result<()> {
 }
 
 pub(crate) fn demo() -> Result<()> {
-    let mut state = State::new();
-    load(&mut state.memory, Path::new("examples\\Main.bin"), 0x2000)?;
-    state.pc = 0x2000u16;
-    run(&mut state)?;
+    let mut controller = Controller::new()?;
+    let controller_tx = controller.tx().clone();
+    spawn(move || {
+        let mut state = State::new(controller_tx);
+        load(&mut state.memory, Path::new("examples\\Main.bin"), 0x2000).unwrap();
+        state.pc = 0x2000u16;
+        run(&mut state).unwrap();
+    });
+    controller.run();
     Ok(())
 }
