@@ -1,6 +1,7 @@
 mod constants;
 mod demo;
 mod flag;
+mod ops;
 mod state;
 mod types;
 
