@@ -4,9 +4,9 @@ use std::fs::File;
 use std::io::{ErrorKind, Read};
 use std::path::Path;
 
-fn load(memory: &mut Memory, path: &Path, start: u16) -> Result<()> {
+fn load(memory: &mut Memory, path: &Path, addr: u16) -> Result<()> {
     let len = memory.len();
-    let buffer = &mut memory[start as usize..len];
+    let buffer = &mut memory[addr as usize..len];
     let mut file = File::open(path)?;
     match file.read_exact(buffer) {
         Ok(()) => {}
