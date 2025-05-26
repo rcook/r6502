@@ -1,8 +1,8 @@
 use crate::{ControllerMessage, UIMessage};
 use anyhow::Result;
 use cursive::direction::Orientation;
-use cursive::view::{Nameable, Scrollable};
-use cursive::views::{LinearLayout, Menubar, NamedView, ScrollView, TextView};
+use cursive::view::{Nameable, ScrollStrategy, Scrollable};
+use cursive::views::{LinearLayout, Menubar, NamedView, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
 use cursive_multiplex::Mux;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -23,8 +23,13 @@ impl UI {
         let mut mux = Mux::new();
 
         let node_id = mux.root().build().expect("Must have ID");
-        let logger =
-            mux.add_right_of(TextView::new("").scrollable().with_name("logger"), node_id)?;
+        let logger = mux.add_right_of(
+            TextView::new("")
+                .with_name("logger")
+                .scrollable()
+                .scroll_strategy(ScrollStrategy::StickToBottom),
+            node_id,
+        )?;
 
         let stdout =
             mux.add_right_of(TextView::new("").with_name("stdout").scrollable(), logger)?;
@@ -70,14 +75,10 @@ impl UI {
                 }
                 UIMessage::AppendLogLine(mut s) => {
                     s.push('\n');
-                    let mut logger = self
-                        .cursive
-                        .find_name::<ScrollView<TextView>>("logger")
-                        .expect("Must exist");
-                    logger.get_inner_mut().append(s);
-
-                    // TBD: Figure out why this doesn't work!
-                    logger.scroll_to_bottom();
+                    self.cursive
+                        .find_name::<TextView>("logger")
+                        .expect("Must exist")
+                        .append(s);
                 }
             }
         }
