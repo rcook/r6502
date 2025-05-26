@@ -3,14 +3,7 @@ use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{Cpu, Flag, Op, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
 use anyhow::{bail, Result};
 
-pub(crate) fn run(state: &mut Cpu) -> Result<()> {
-    // Set up operating system routines
-    fn set_brk(state: &mut Cpu, addr: u16) {
-        state.store(addr, BRK.opcode); // Software interrupt
-        state.store(addr + 1, NOP.opcode); // Padding
-        state.store(addr + 2, RTS.opcode); // Return
-    }
-
+pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
     let ops = {
         let mut ops: [Option<Op>; 256] = [None; 256];
         for op in OPS {
@@ -20,54 +13,61 @@ pub(crate) fn run(state: &mut Cpu) -> Result<()> {
     };
 
     // Set up interrupt vectors
-    state.store_word(IRQ, IRQ_VALUE);
+    cpu.store_word(IRQ, IRQ_VALUE);
 
     // Set up operating system handlers
-    set_brk(state, OSWRCH);
-    set_brk(state, OSHALT);
+    set_brk(cpu, OSWRCH);
+    set_brk(cpu, OSHALT);
 
     // Initialize the state
-    state.push_word(OSHALT - 1);
+    cpu.push_word(OSHALT - 1);
 
     loop {
-        while !state.get_flag(Flag::B) {
-            if !state.poll() {
+        while !cpu.get_flag(Flag::B) {
+            if !cpu.poll() {
                 // Handle disconnection
                 return Ok(());
             }
-            let opcode = state.next();
+            let opcode = cpu.next();
             match ops[opcode as usize] {
                 Some(op) => {
-                    state.println(&format!(
+                    cpu.println(&format!(
                         "{:02X} {} {:?}",
                         op.opcode, op.mnemonic, op.addressing_mode
                     ));
-                    (op.func)(state)
+                    (op.func)(cpu)
                 }
                 None => bail!("Unsupported opcode {opcode:02X}"),
             }
         }
 
         // Check for expected interrupt request value
-        if state.pc != IRQ_VALUE {
-            bail!("Unexpected IRQ value {:04X}", state.pc);
+        if cpu.pc != IRQ_VALUE {
+            bail!("Unexpected IRQ value {:04X}", cpu.pc);
         }
 
         // Address of operating system routine being invoked
-        let addr = state.fetch_word(STACK_BASE + (state.s + 2) as u16) - 1;
+        let addr = cpu.fetch_word(STACK_BASE + (cpu.s + 2) as u16) - 1;
 
         match addr {
             OSWRCH => {
-                let c = state.a as char;
-                state.write_stdout(c);
+                let c = cpu.a as char;
+                cpu.write_stdout(c);
             }
             OSHALT => {
-                state.println("Halted");
+                cpu.println("Halted");
                 return Ok(());
             }
             _ => panic!("Break at subroutine {:04X}", addr),
         }
 
-        (RTI.func)(state);
+        (RTI.func)(cpu);
     }
+}
+
+// Set up operating system routine
+fn set_brk(cpu: &mut Cpu, addr: u16) {
+    cpu.store(addr, BRK.opcode); // Software interrupt
+    cpu.store(addr + 1, NOP.opcode); // Padding
+    cpu.store(addr + 2, RTS.opcode); // Return
 }

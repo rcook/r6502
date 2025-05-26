@@ -1,5 +1,5 @@
 use crate::{ControllerMessage, CpuMessage, Flag, Memory, STACK_BASE};
-use std::sync::mpsc::{Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
 pub(crate) struct Cpu {
     pub(crate) p: u8,
@@ -10,12 +10,14 @@ pub(crate) struct Cpu {
     pub(crate) s: u8,
     pub(crate) memory: Memory,
     controller_tx: Sender<ControllerMessage>,
+    tx: Sender<CpuMessage>,
     rx: Receiver<CpuMessage>,
     free_running: bool,
 }
 
 impl Cpu {
-    pub(crate) fn new(controller_tx: Sender<ControllerMessage>, rx: Receiver<CpuMessage>) -> Self {
+    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Self {
+        let (tx, rx) = channel();
         Self {
             pc: 0x0000u16,
             p: 0x00u8,
@@ -25,9 +27,14 @@ impl Cpu {
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
             controller_tx,
+            tx,
             rx,
             free_running: false,
         }
+    }
+
+    pub(crate) fn tx(&self) -> &Sender<CpuMessage> {
+        &self.tx
     }
 
     pub(crate) fn get_flag(&self, flag: Flag) -> bool {

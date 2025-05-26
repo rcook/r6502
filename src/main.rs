@@ -7,6 +7,7 @@ mod cpu_message;
 mod demo;
 mod flag;
 mod ops;
+mod program_info;
 mod types;
 mod ui;
 mod ui_message;
@@ -20,10 +21,11 @@ pub(crate) use cpu::Cpu;
 pub(crate) use cpu_message::CpuMessage;
 pub(crate) use flag::Flag;
 pub(crate) use ops::{Op, OPS};
+pub(crate) use program_info::ProgramInfo;
 pub(crate) use types::{Memory, OpFn};
 pub(crate) use ui::UI;
 pub(crate) use ui_message::UIMessage;
-pub(crate) use vm::run;
+pub(crate) use vm::run_vm;
 
 fn main() -> anyhow::Result<()> {
     crate::demo::demo()

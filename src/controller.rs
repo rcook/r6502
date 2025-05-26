@@ -1,26 +1,36 @@
-use crate::{ControllerMessage, CpuMessage, UIMessage, UI};
+use crate::{run_vm, ControllerMessage, Cpu, CpuMessage, ProgramInfo, UIMessage, UI};
 use anyhow::Result;
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::{
+    sync::mpsc::{channel, Receiver, Sender},
+    thread::spawn,
+};
 
 pub(crate) struct Controller {
-    vm_tx: Sender<CpuMessage>,
     tx: Sender<ControllerMessage>,
     rx: Receiver<ControllerMessage>,
     ui: UI,
 }
 
 impl Controller {
-    pub(crate) fn new(vm_tx: Sender<CpuMessage>) -> Result<Self> {
+    pub(crate) fn new() -> Result<Self> {
         let (tx, rx) = channel();
         let ui = UI::new(tx.clone())?;
-        Ok(Self { vm_tx, tx, rx, ui })
+        Ok(Self { tx, rx, ui })
     }
 
-    pub(crate) fn tx(&self) -> &Sender<ControllerMessage> {
-        &self.tx
-    }
+    pub(crate) fn run(&mut self, program_info: Option<ProgramInfo>) -> Result<()> {
+        let mut cpu = Cpu::new(self.tx.clone());
+        let cpu_tx = cpu.tx().clone();
 
-    pub(crate) fn run(&mut self) {
+        if let Some(program_info) = program_info {
+            program_info.load(&mut cpu.memory)?;
+            cpu.pc = program_info.start();
+        }
+
+        spawn(move || {
+            run_vm(&mut cpu).unwrap();
+        });
+
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
@@ -37,16 +47,18 @@ impl Controller {
                             .expect("Must succeed");
                     }
                     ControllerMessage::Step => {
-                        self.vm_tx.send(CpuMessage::Step).expect("Must succeed");
+                        cpu_tx.send(CpuMessage::Step).expect("Must succeed");
                     }
                     ControllerMessage::Run => {
-                        self.vm_tx.send(CpuMessage::Run).expect("Must succeed");
+                        cpu_tx.send(CpuMessage::Run).expect("Must succeed");
                     }
                     ControllerMessage::Break => {
-                        self.vm_tx.send(CpuMessage::Break).expect("Must succeed");
+                        cpu_tx.send(CpuMessage::Break).expect("Must succeed");
                     }
                 };
             }
         }
+
+        Ok(())
     }
 }
