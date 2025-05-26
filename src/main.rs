@@ -7,7 +7,7 @@ mod state;
 mod types;
 
 pub(crate) use addressing_mode::AddressingMode;
-pub(crate) use constants::{OSHALT, OSWRCH, STACK_BASE};
+pub(crate) use constants::{IRQ, OSHALT, OSWRCH, STACK_BASE};
 pub(crate) use flag::Flag;
 pub(crate) use ops::{Op, OPS};
 pub(crate) use state::State;

@@ -8,7 +8,6 @@ pub(crate) struct State {
     pub(crate) y: u8,
     pub(crate) s: u8,
     pub(crate) memory: Memory,
-    pub(crate) running: bool,
 }
 
 impl State {
@@ -21,7 +20,6 @@ impl State {
             y: 0x00u8,
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
-            running: false,
         }
     }
 
@@ -37,21 +35,41 @@ impl State {
         }
     }
 
-    pub(crate) fn fetch(&mut self) -> u8 {
-        let value = self.memory[self.pc as usize];
+    pub(crate) fn fetch(&self, addr: u16) -> u8 {
+        self.memory[addr as usize]
+    }
+
+    pub(crate) fn fetch_word(&self, addr: u16) -> u16 {
+        let lo = self.fetch(addr);
+        let hi = self.fetch(addr + 1);
+        Self::make_word(hi, lo)
+    }
+
+    pub(crate) fn store(&mut self, addr: u16, value: u8) {
+        self.memory[addr as usize] = value
+    }
+
+    pub(crate) fn store_word(&mut self, addr: u16, value: u16) {
+        let (hi, lo) = Self::split_word(value);
+        self.store(addr, lo);
+        self.store(addr + 1, hi);
+    }
+
+    pub(crate) fn next(&mut self) -> u8 {
+        let value = self.fetch(self.pc);
         self.pc += 1;
         value
     }
 
-    pub(crate) fn fetch_word(&mut self) -> u16 {
-        let lo = self.fetch();
-        let hi = self.fetch();
+    pub(crate) fn next_word(&mut self) -> u16 {
+        let lo = self.next();
+        let hi = self.next();
         Self::make_word(hi, lo)
     }
 
     pub(crate) fn push(&mut self, value: u8) {
         let addr = STACK_BASE + self.s as u16;
-        self.memory[addr as usize] = value;
+        self.store(addr, value);
         self.s -= 1;
     }
 
@@ -63,9 +81,7 @@ impl State {
 
     pub(crate) fn pull(&mut self) -> u8 {
         self.s += 1;
-        let addr = STACK_BASE + self.s as u16;
-        let value = self.memory[addr as usize];
-        value
+        self.fetch(STACK_BASE + self.s as u16)
     }
 
     pub(crate) fn pull_word(&mut self) -> u16 {
@@ -74,16 +90,23 @@ impl State {
         Self::make_word(hi, lo)
     }
 
-    pub(crate) fn dump(&self) -> String {
-        format!(
+    #[allow(unused)]
+    pub(crate) fn dump_p(&self) {
+        println!(
             "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
             self.pc, self.p, self.a, self.x, self.y, self.s,
         )
     }
 
-    pub(crate) fn println(&self, _s: &str) {
-        //println!("{s}");
+    #[allow(unused)]
+    pub(crate) fn dump_stack(&self) {
+        for i in 0..256 {
+            println!("{:04X}: {:02X}", STACK_BASE + i, self.fetch(STACK_BASE + i));
+        }
     }
+
+    #[allow(unused)]
+    pub(crate) fn println(&self, _s: &str) {}
 
     pub(crate) fn stdout(&self, c: char) {
         print!("{c}")
