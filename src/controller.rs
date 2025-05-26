@@ -1,27 +1,23 @@
-use crate::{ControllerMessage, CpuMessage, Thunk, UIMessage, UI};
+use crate::{ControllerMessage, CpuMessage, UIMessage, UI};
 use anyhow::Result;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub(crate) struct Controller {
     vm_tx: Sender<CpuMessage>,
+    tx: Sender<ControllerMessage>,
     rx: Receiver<ControllerMessage>,
     ui: UI,
-    thunk: Thunk,
 }
 
 impl Controller {
     pub(crate) fn new(vm_tx: Sender<CpuMessage>) -> Result<Self> {
         let (tx, rx) = channel();
-        Ok(Self {
-            vm_tx,
-            rx: rx,
-            ui: UI::new(tx.clone())?,
-            thunk: Thunk::new(tx),
-        })
+        let ui = UI::new(tx.clone())?;
+        Ok(Self { vm_tx, tx, rx, ui })
     }
 
-    pub(crate) fn thunk(&self) -> Thunk {
-        self.thunk.clone()
+    pub(crate) fn tx(&self) -> &Sender<ControllerMessage> {
+        &self.tx
     }
 
     pub(crate) fn run(&mut self) {

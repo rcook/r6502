@@ -19,10 +19,9 @@ fn load(memory: &mut Memory, path: &Path, addr: u16) -> Result<()> {
 }
 
 pub(crate) fn demo() -> Result<()> {
-    let (vm_tx, vm_rx) = channel();
-    let mut controller = Controller::new(vm_tx)?;
-    let thunk = controller.thunk();
-    let mut state = Cpu::new(thunk, vm_rx);
+    let (cpu_tx, cpu_rx) = channel();
+    let mut controller = Controller::new(cpu_tx)?;
+    let mut state = Cpu::new(controller.tx().clone(), cpu_rx);
     spawn(move || {
         load(&mut state.memory, Path::new("examples\\Main.bin"), 0x2000).unwrap();
         state.pc = 0x2000u16;

@@ -1,5 +1,5 @@
-use crate::{CpuMessage, Flag, Memory, Thunk, STACK_BASE};
-use std::sync::mpsc::{Receiver, TryRecvError};
+use crate::{ControllerMessage, CpuMessage, Flag, Memory, STACK_BASE};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) struct Cpu {
     pub(crate) p: u8,
@@ -9,13 +9,13 @@ pub(crate) struct Cpu {
     pub(crate) y: u8,
     pub(crate) s: u8,
     pub(crate) memory: Memory,
+    controller_tx: Sender<ControllerMessage>,
     rx: Receiver<CpuMessage>,
-    thunk: Thunk,
     free_running: bool,
 }
 
 impl Cpu {
-    pub(crate) fn new(thunk: Thunk, vm_rx: Receiver<CpuMessage>) -> Self {
+    pub(crate) fn new(controller_tx: Sender<ControllerMessage>, rx: Receiver<CpuMessage>) -> Self {
         Self {
             pc: 0x0000u16,
             p: 0x00u8,
@@ -24,8 +24,8 @@ impl Cpu {
             y: 0x00u8,
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
-            rx: vm_rx,
-            thunk,
+            controller_tx,
+            rx,
             free_running: false,
         }
     }
@@ -113,11 +113,15 @@ impl Cpu {
     }
 
     pub(crate) fn write_stdout(&self, c: char) {
-        self.thunk.write_stdout(c);
+        self.controller_tx
+            .send(ControllerMessage::WriteStdout(c))
+            .expect("Must succeed")
     }
 
     pub(crate) fn println(&self, s: &str) {
-        self.thunk.println(s);
+        self.controller_tx
+            .send(ControllerMessage::Println(String::from(s)))
+            .expect("Must succeed")
     }
 
     pub(crate) fn poll(&mut self) -> bool {
