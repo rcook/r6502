@@ -21,6 +21,7 @@ impl UI {
         let mut cursive = cursive::default().into_runner();
 
         let mut mux = Mux::new();
+
         let node_id = mux.root().build().expect("Must have ID");
         let logger =
             mux.add_right_of(TextView::new("").scrollable().with_name("logger"), node_id)?;
@@ -30,18 +31,18 @@ impl UI {
 
         mux.set_container_split_ratio(stdout, 0.7).unwrap();
 
-        let idlayer = NamedView::new("Mux", mux);
         let mut linear = LinearLayout::new(Orientation::Vertical);
-
-        linear.add_child(idlayer);
-
+        let mux_later = NamedView::new("Mux", mux);
+        linear.add_child(mux_later);
         let mut menu_bar = Menubar::new();
         menu_bar.add_leaf("Quit", Cursive::quit);
-
         linear.add_child(menu_bar);
+
         cursive.add_fullscreen_layer(linear);
         cursive.add_global_callback('q', Cursive::quit);
+
         cursive.set_fps(30);
+
         Ok(Self {
             controller_tx,
             cursive,
