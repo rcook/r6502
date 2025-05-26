@@ -1,12 +1,10 @@
-use crate::{Controller, ProgramInfo};
+use crate::{Args, Controller, ProgramInfo};
 use anyhow::Result;
-use std::path::Path;
+use clap::Parser;
 
 pub(crate) fn demo() -> Result<()> {
+    let args = Args::parse();
     let mut controller = Controller::new()?;
-    controller.run(Some(ProgramInfo::new(
-        Path::new("examples\\Main.bin"),
-        0x2000,
-    )))?;
+    controller.run(Some(ProgramInfo::new(&args.path, args.start)))?;
     Ok(())
 }

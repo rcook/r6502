@@ -1,4 +1,5 @@
 mod addressing_mode;
+mod args;
 mod constants;
 mod controller;
 mod controller_message;
@@ -14,6 +15,7 @@ mod ui_message;
 mod vm;
 
 pub(crate) use addressing_mode::AddressingMode;
+pub(crate) use args::Args;
 pub(crate) use constants::{IRQ, OSHALT, OSWRCH, STACK_BASE};
 pub(crate) use controller::Controller;
 pub(crate) use controller_message::ControllerMessage;
