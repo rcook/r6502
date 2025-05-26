@@ -24,6 +24,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
 
     loop {
         while !cpu.get_flag(Flag::B) {
+            cpu.show_registers();
             if !cpu.poll() {
                 // Handle disconnection
                 return Ok(());

@@ -105,14 +105,6 @@ impl Cpu {
     }
 
     #[allow(unused)]
-    pub(crate) fn dump_p(&self) {
-        println!(
-            "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
-            self.pc, self.p, self.a, self.x, self.y, self.s,
-        )
-    }
-
-    #[allow(unused)]
     pub(crate) fn dump_stack(&self) {
         for i in 0..256 {
             println!("{:04X}: {:02X}", STACK_BASE + i, self.fetch(STACK_BASE + i));
@@ -128,6 +120,15 @@ impl Cpu {
     pub(crate) fn println(&self, s: &str) {
         self.controller_tx
             .send(ControllerMessage::Println(String::from(s)))
+            .expect("Must succeed")
+    }
+
+    pub(crate) fn show_registers(&self) {
+        self.controller_tx
+            .send(ControllerMessage::ShowRegisters(format!(
+                "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
+                self.pc, self.p, self.a, self.x, self.y, self.s,
+            )))
             .expect("Must succeed")
     }
 

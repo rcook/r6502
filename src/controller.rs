@@ -34,26 +34,25 @@ impl Controller {
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
-                    ControllerMessage::WriteStdout(c) => {
-                        self.ui
-                            .tx()
-                            .send(UIMessage::WriteStdout(c))
-                            .expect("Must succeed");
-                    }
-                    ControllerMessage::Println(s) => {
-                        self.ui
-                            .tx()
-                            .send(UIMessage::Println(s))
-                            .expect("Must succeed");
-                    }
-                    ControllerMessage::Step => {
-                        cpu_tx.send(CpuMessage::Step).expect("Must succeed");
-                    }
-                    ControllerMessage::Run => {
-                        cpu_tx.send(CpuMessage::Run).expect("Must succeed");
-                    }
+                    ControllerMessage::WriteStdout(c) => self
+                        .ui
+                        .tx()
+                        .send(UIMessage::WriteStdout(c))
+                        .expect("Must succeed"),
+                    ControllerMessage::Println(s) => self
+                        .ui
+                        .tx()
+                        .send(UIMessage::Println(s))
+                        .expect("Must succeed"),
+                    ControllerMessage::ShowRegisters(s) => self
+                        .ui
+                        .tx()
+                        .send(UIMessage::ShowRegisters(s))
+                        .expect("Must succeed"),
+                    ControllerMessage::Step => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
+                    ControllerMessage::Run => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
                     ControllerMessage::Break => {
-                        cpu_tx.send(CpuMessage::Break).expect("Must succeed");
+                        cpu_tx.send(CpuMessage::Break).expect("Must succeed")
                     }
                 };
             }

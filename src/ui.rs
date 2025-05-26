@@ -41,10 +41,12 @@ impl UI {
             logger,
         )?;
 
-        _ = mux.add_below(
+        let help = mux.add_below(
             TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break"),
             stdout,
         )?;
+
+        _ = mux.add_below(TextView::new("").with_name("registers"), help);
 
         mux.set_container_split_ratio(stdout, 0.7).unwrap();
 
@@ -98,6 +100,12 @@ impl UI {
                         .find_name::<TextView>("logger")
                         .expect("Must exist")
                         .append(s);
+                }
+                UIMessage::ShowRegisters(s) => {
+                    self.cursive
+                        .find_name::<TextView>("registers")
+                        .expect("Must exist")
+                        .set_content(s);
                 }
             }
         }
