@@ -1,4 +1,4 @@
-use crate::{Flag, Memory, Thunk, VMMessage, STACK_BASE};
+use crate::{CpuMessage, Flag, Memory, Thunk, STACK_BASE};
 use std::sync::mpsc::{Receiver, TryRecvError};
 
 pub(crate) struct Cpu {
@@ -9,13 +9,13 @@ pub(crate) struct Cpu {
     pub(crate) y: u8,
     pub(crate) s: u8,
     pub(crate) memory: Memory,
-    rx: Receiver<VMMessage>,
+    rx: Receiver<CpuMessage>,
     thunk: Thunk,
     free_running: bool,
 }
 
 impl Cpu {
-    pub(crate) fn new(thunk: Thunk, vm_rx: Receiver<VMMessage>) -> Self {
+    pub(crate) fn new(thunk: Thunk, vm_rx: Receiver<CpuMessage>) -> Self {
         Self {
             pc: 0x0000u16,
             p: 0x00u8,
@@ -126,16 +126,16 @@ impl Cpu {
                 match self.rx.try_recv() {
                     Err(TryRecvError::Disconnected) => return false,
                     Err(TryRecvError::Empty) => return true,
-                    Ok(VMMessage::Step) => {}
-                    Ok(VMMessage::Run) => {}
-                    Ok(VMMessage::Break) => self.free_running = false,
+                    Ok(CpuMessage::Step) => {}
+                    Ok(CpuMessage::Run) => {}
+                    Ok(CpuMessage::Break) => self.free_running = false,
                 }
             } else {
                 match self.rx.recv() {
                     Err(_) => return false,
-                    Ok(VMMessage::Step) => return true,
-                    Ok(VMMessage::Run) => self.free_running = true,
-                    Ok(VMMessage::Break) => {}
+                    Ok(CpuMessage::Step) => return true,
+                    Ok(CpuMessage::Run) => self.free_running = true,
+                    Ok(CpuMessage::Break) => {}
                 }
             }
         }

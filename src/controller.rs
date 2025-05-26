@@ -1,16 +1,16 @@
-use crate::{ControllerMessage, Thunk, UIMessage, VMMessage, UI};
+use crate::{ControllerMessage, CpuMessage, Thunk, UIMessage, UI};
 use anyhow::Result;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub(crate) struct Controller {
-    vm_tx: Sender<VMMessage>,
+    vm_tx: Sender<CpuMessage>,
     rx: Receiver<ControllerMessage>,
     ui: UI,
     thunk: Thunk,
 }
 
 impl Controller {
-    pub(crate) fn new(vm_tx: Sender<VMMessage>) -> Result<Self> {
+    pub(crate) fn new(vm_tx: Sender<CpuMessage>) -> Result<Self> {
         let (tx, rx) = channel();
         Ok(Self {
             vm_tx,
@@ -41,13 +41,13 @@ impl Controller {
                             .expect("Must succeed");
                     }
                     ControllerMessage::Step => {
-                        self.vm_tx.send(VMMessage::Step).expect("Must succeed");
+                        self.vm_tx.send(CpuMessage::Step).expect("Must succeed");
                     }
                     ControllerMessage::Run => {
-                        self.vm_tx.send(VMMessage::Run).expect("Must succeed");
+                        self.vm_tx.send(CpuMessage::Run).expect("Must succeed");
                     }
                     ControllerMessage::Break => {
-                        self.vm_tx.send(VMMessage::Break).expect("Must succeed");
+                        self.vm_tx.send(CpuMessage::Break).expect("Must succeed");
                     }
                 };
             }
