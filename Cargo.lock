@@ -528,7 +528,6 @@ dependencies = [
  "anyhow",
  "cursive",
  "cursive-multiplex",
- "cursive_core",
 ]
 
 [[package]]
