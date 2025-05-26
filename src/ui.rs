@@ -1,42 +1,57 @@
 use crate::{ControllerMessage, UIMessage};
-use cursive::event::Key;
-use cursive::view::Nameable;
-use cursive::views::{LinearLayout, Panel, TextView};
+use anyhow::Result;
+use cursive::direction::Orientation;
+use cursive::view::{Nameable, Scrollable};
+use cursive::views::{LinearLayout, Menubar, NamedView, ScrollView, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
+use cursive_multiplex::Mux;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub(crate) struct UI {
     #[allow(unused)]
     controller_tx: Sender<ControllerMessage>,
     cursive: CursiveRunner<CursiveRunnable>,
-    ui_tx: Sender<UIMessage>,
-    ui_rx: Receiver<UIMessage>,
+    tx: Sender<UIMessage>,
+    rx: Receiver<UIMessage>,
 }
 
 impl UI {
-    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Self {
-        let (ui_tx, ui_rx) = channel();
+    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Result<Self> {
+        let (tx, rx) = channel();
         let mut cursive = cursive::default().into_runner();
 
-        cursive.add_layer(
-            LinearLayout::vertical()
-                .child(Panel::new(TextView::new("").with_name("stdout")))
-                .child(TextView::new("").with_name("logger")),
-        );
+        let mut mux = Mux::new();
+        let node_id = mux.root().build().expect("Must have ID");
+        let logger =
+            mux.add_right_of(TextView::new("").scrollable().with_name("logger"), node_id)?;
 
-        cursive.add_global_callback(Key::Esc, Cursive::quit);
-        cursive.set_fps(5);
+        let stdout =
+            mux.add_right_of(TextView::new("").with_name("stdout").scrollable(), logger)?;
 
-        Self {
+        mux.set_container_split_ratio(stdout, 0.7).unwrap();
+
+        let idlayer = NamedView::new("Mux", mux);
+        let mut linear = LinearLayout::new(Orientation::Vertical);
+
+        linear.add_child(idlayer);
+
+        let mut menu_bar = Menubar::new();
+        menu_bar.add_leaf("Quit", Cursive::quit);
+
+        linear.add_child(menu_bar);
+        cursive.add_fullscreen_layer(linear);
+        cursive.add_global_callback('q', Cursive::quit);
+        cursive.set_fps(30);
+        Ok(Self {
             controller_tx,
             cursive,
-            ui_tx: ui_tx,
-            ui_rx: ui_rx,
-        }
+            tx,
+            rx,
+        })
     }
 
     pub(crate) fn tx(&self) -> &Sender<UIMessage> {
-        &self.ui_tx
+        &self.tx
     }
 
     pub fn step(&mut self) -> bool {
@@ -44,7 +59,7 @@ impl UI {
             return false;
         }
 
-        while let Some(message) = self.ui_rx.try_iter().next() {
+        while let Some(message) = self.rx.try_iter().next() {
             match message {
                 UIMessage::AppendStdoutChar(c) => {
                     self.cursive
@@ -54,10 +69,14 @@ impl UI {
                 }
                 UIMessage::AppendLogLine(mut s) => {
                     s.push('\n');
-                    self.cursive
-                        .find_name::<TextView>("logger")
-                        .unwrap()
-                        .append(s);
+                    let mut logger = self
+                        .cursive
+                        .find_name::<ScrollView<TextView>>("logger")
+                        .expect("Must exist");
+                    logger.get_inner_mut().append(s);
+
+                    // TBD: Figure out why this doesn't work!
+                    logger.scroll_to_bottom();
                 }
             }
         }

@@ -16,7 +16,7 @@ impl Controller {
         Ok(Self {
             tx: tx.clone(),
             rx: rx,
-            ui: UI::new(tx),
+            ui: UI::new(tx)?,
         })
     }
 

@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.98"
 cursive = "0.21.1"
+cursive-multiplex = "0.7.0"
+cursive_core = "0.4.6"
