@@ -1,7 +1,7 @@
 use crate::{ControllerMessage, UIMessage};
 use anyhow::Result;
 use cursive::direction::Orientation;
-use cursive::view::{Nameable, ScrollStrategy, Scrollable};
+use cursive::view::{Nameable, Resizable, ScrollStrategy, Scrollable};
 use cursive::views::{LinearLayout, Menubar, NamedView, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
 use cursive_multiplex::Mux;
@@ -26,13 +26,22 @@ impl UI {
         let logger = mux.add_right_of(
             TextView::new("")
                 .with_name("logger")
+                .full_width()
+                .full_height()
                 .scrollable()
                 .scroll_strategy(ScrollStrategy::StickToBottom),
             node_id,
         )?;
 
-        let stdout =
-            mux.add_right_of(TextView::new("").with_name("stdout").scrollable(), logger)?;
+        let stdout = mux.add_right_of(
+            TextView::new("")
+                .with_name("stdout")
+                .full_width()
+                .full_height()
+                .scrollable()
+                .scroll_strategy(ScrollStrategy::StickToBottom),
+            logger,
+        )?;
 
         mux.set_container_split_ratio(stdout, 0.7).unwrap();
 
