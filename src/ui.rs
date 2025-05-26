@@ -1,7 +1,7 @@
 use crate::{ControllerMessage, UIMessage};
 use cursive::event::Key;
 use cursive::view::Nameable;
-use cursive::views::{BoxedView, LinearLayout, Panel, TextView};
+use cursive::views::{LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
@@ -20,9 +20,7 @@ impl UI {
 
         cursive.add_layer(
             LinearLayout::vertical()
-                .child(BoxedView::new(Box::new(Panel::new(
-                    TextView::new("").with_name("stdout"),
-                ))))
+                .child(Panel::new(TextView::new("").with_name("stdout")))
                 .child(TextView::new("").with_name("logger")),
         );
 
