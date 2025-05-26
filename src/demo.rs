@@ -22,8 +22,8 @@ pub(crate) fn demo() -> Result<()> {
     let (vm_tx, vm_rx) = channel();
     let mut controller = Controller::new(vm_tx)?;
     let thunk = controller.thunk();
+    let mut state = State::new(thunk, vm_rx);
     spawn(move || {
-        let mut state = State::new(thunk, vm_rx);
         load(&mut state.memory, Path::new("examples\\Main.bin"), 0x2000).unwrap();
         state.pc = 0x2000u16;
         run(&mut state).unwrap();
