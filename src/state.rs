@@ -1,4 +1,5 @@
-use crate::{Flag, Memory, Thunk, STACK_BASE};
+use crate::{Flag, Memory, Thunk, VMMessage, STACK_BASE};
+use std::sync::mpsc::{Receiver, TryRecvError};
 
 pub(crate) struct State {
     pub(crate) p: u8,
@@ -8,12 +9,13 @@ pub(crate) struct State {
     pub(crate) y: u8,
     pub(crate) s: u8,
     pub(crate) memory: Memory,
+    rx: Receiver<VMMessage>,
     thunk: Thunk,
-    last_step_count: i32,
+    free_running: bool,
 }
 
 impl State {
-    pub(crate) fn new(thunk: Thunk) -> Self {
+    pub(crate) fn new(thunk: Thunk, vm_rx: Receiver<VMMessage>) -> Self {
         Self {
             pc: 0x0000u16,
             p: 0x00u8,
@@ -22,8 +24,9 @@ impl State {
             y: 0x00u8,
             s: 0xffu8,
             memory: [0x00u8; 0x10000],
+            rx: vm_rx,
             thunk,
-            last_step_count: 0,
+            free_running: false,
         }
     }
 
@@ -117,14 +120,23 @@ impl State {
         self.thunk.println(s);
     }
 
-    pub(crate) fn poll(&mut self) {
-        // TBD: Use channel instead
-        self.println("Polling");
+    pub(crate) fn poll(&mut self) -> bool {
         loop {
-            let new_step_count = self.thunk.step_count();
-            if new_step_count > self.last_step_count {
-                self.last_step_count = new_step_count;
-                break;
+            if self.free_running {
+                match self.rx.try_recv() {
+                    Err(TryRecvError::Disconnected) => return false,
+                    Err(TryRecvError::Empty) => return true,
+                    Ok(VMMessage::Step) => {}
+                    Ok(VMMessage::Run) => {}
+                    Ok(VMMessage::Break) => self.free_running = false,
+                }
+            } else {
+                match self.rx.recv() {
+                    Err(_) => return false,
+                    Ok(VMMessage::Step) => return true,
+                    Ok(VMMessage::Run) => self.free_running = true,
+                    Ok(VMMessage::Break) => {}
+                }
             }
         }
     }

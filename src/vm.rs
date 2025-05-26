@@ -31,7 +31,10 @@ pub(crate) fn run(state: &mut State) -> Result<()> {
 
     loop {
         while !state.get_flag(Flag::B) {
-            state.poll();
+            if !state.poll() {
+                // Handle disconnection
+                return Ok(());
+            }
             let opcode = state.next();
             match ops[opcode as usize] {
                 Some(op) => {

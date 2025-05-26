@@ -11,6 +11,7 @@ mod types;
 mod ui;
 mod ui_message;
 mod vm;
+mod vm_message;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use constants::{IRQ, OSHALT, OSWRCH, STACK_BASE};
@@ -24,6 +25,7 @@ pub(crate) use types::{Memory, OpFn};
 pub(crate) use ui::UI;
 pub(crate) use ui_message::UIMessage;
 pub(crate) use vm::run;
+pub(crate) use vm_message::VMMessage;
 
 fn main() -> anyhow::Result<()> {
     crate::demo::demo()

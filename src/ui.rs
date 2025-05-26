@@ -41,6 +41,11 @@ impl UI {
             logger,
         )?;
 
+        _ = mux.add_below(
+            TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break"),
+            stdout,
+        )?;
+
         mux.set_container_split_ratio(stdout, 0.7).unwrap();
 
         let mut linear = LinearLayout::new(Orientation::Vertical);
@@ -52,10 +57,17 @@ impl UI {
 
         cursive.add_fullscreen_layer(linear);
         cursive.add_global_callback('q', Cursive::quit);
+        let temp = controller_tx.clone();
         cursive.add_global_callback(' ', move |_| {
-            controller_tx
-                .send(ControllerMessage::Step)
-                .expect("Must succeed")
+            temp.send(ControllerMessage::Step).expect("Must succeed")
+        });
+        let temp = controller_tx.clone();
+        cursive.add_global_callback('r', move |_| {
+            temp.send(ControllerMessage::Run).expect("Must succeed")
+        });
+        let temp = controller_tx.clone();
+        cursive.add_global_callback('b', move |_| {
+            temp.send(ControllerMessage::Break).expect("Must succeed")
         });
 
         cursive.set_fps(30);
