@@ -1,4 +1,4 @@
-use crate::{Memory, OpFn, State, OSHALT};
+use crate::{Memory, Op, State, OPS, OSHALT};
 use anyhow::{bail, Result};
 use std::fs::File;
 use std::io::{ErrorKind, Read};
@@ -17,18 +17,13 @@ fn load(memory: &mut Memory, path: &Path, start: u16) -> Result<()> {
 }
 
 fn run(state: &mut State) -> Result<()> {
-    use crate::ops::*;
-
-    let mut ops: [Option<OpFn>; 256] = [None; 256];
-    ops[0x00] = Some(brk);
-    ops[0x20] = Some(jsr);
-    ops[0x4c] = Some(jmp_abs);
-    ops[0x60] = Some(rts);
-    ops[0xa2] = Some(ldx_imm);
-    ops[0xbd] = Some(lda_abs_x);
-    ops[0xc9] = Some(cmp_imm);
-    ops[0xe8] = Some(inx);
-    ops[0xf0] = Some(beq);
+    let ops = {
+        let mut ops: [Option<Op>; 256] = [None; 256];
+        for op in OPS {
+            ops[op.opcode as usize] = Some(op)
+        }
+        ops
+    };
 
     // Initialize the state
     state.push_word(OSHALT - 1);
@@ -39,7 +34,7 @@ fn run(state: &mut State) -> Result<()> {
         let opcode = state.fetch();
         state.println(&format!("opcode {:02X}", opcode));
         match ops[opcode as usize] {
-            Some(op_fn) => op_fn(state),
+            Some(op) => (op.func)(state),
             None => todo!("opcode {opcode:02X} not implemented"),
         }
     }
