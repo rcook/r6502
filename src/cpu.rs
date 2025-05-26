@@ -1,7 +1,7 @@
 use crate::{Flag, Memory, Thunk, VMMessage, STACK_BASE};
 use std::sync::mpsc::{Receiver, TryRecvError};
 
-pub(crate) struct State {
+pub(crate) struct Cpu {
     pub(crate) p: u8,
     pub(crate) pc: u16,
     pub(crate) a: u8,
@@ -14,7 +14,7 @@ pub(crate) struct State {
     free_running: bool,
 }
 
-impl State {
+impl Cpu {
     pub(crate) fn new(thunk: Thunk, vm_rx: Receiver<VMMessage>) -> Self {
         Self {
             pc: 0x0000u16,

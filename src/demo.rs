@@ -1,4 +1,4 @@
-use crate::{run, Controller, Memory, State};
+use crate::{run, Controller, Cpu, Memory};
 use anyhow::{bail, Result};
 use std::fs::File;
 use std::io::{ErrorKind, Read};
@@ -22,7 +22,7 @@ pub(crate) fn demo() -> Result<()> {
     let (vm_tx, vm_rx) = channel();
     let mut controller = Controller::new(vm_tx)?;
     let thunk = controller.thunk();
-    let mut state = State::new(thunk, vm_rx);
+    let mut state = Cpu::new(thunk, vm_rx);
     spawn(move || {
         load(&mut state.memory, Path::new("examples\\Main.bin"), 0x2000).unwrap();
         state.pc = 0x2000u16;

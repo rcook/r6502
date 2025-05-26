@@ -1,11 +1,11 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
-use crate::{Flag, Op, State, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
+use crate::{Cpu, Flag, Op, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
 use anyhow::{bail, Result};
 
-pub(crate) fn run(state: &mut State) -> Result<()> {
+pub(crate) fn run(state: &mut Cpu) -> Result<()> {
     // Set up operating system routines
-    fn set_brk(state: &mut State, addr: u16) {
+    fn set_brk(state: &mut Cpu, addr: u16) {
         state.store(addr, BRK.opcode); // Software interrupt
         state.store(addr + 1, NOP.opcode); // Padding
         state.store(addr + 2, RTS.opcode); // Return
