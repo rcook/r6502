@@ -1,10 +1,10 @@
-use crate::Instruction;
+use crate::{Instruction, RegisterFile};
 
 pub(crate) enum UIMessage {
     Status(String),
     WriteStdout(char),
     Current(Instruction),
     Disassembly(Instruction),
-    Registers(String),
+    Registers(RegisterFile),
     Cycles(String),
 }

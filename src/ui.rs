@@ -68,11 +68,11 @@ impl UI {
                         .expect("Must exist")
                         .append(s);
                 }
-                Registers(s) => {
+                Registers(reg) => {
                     self.cursive
                         .find_name::<TextView>(REGISTERS_NAME)
                         .expect("Must exist")
-                        .set_content(s);
+                        .set_content(reg.pretty());
                 }
                 Cycles(s) => {
                     self.cursive

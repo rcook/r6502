@@ -15,9 +15,9 @@ pub(crate) const BRK: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0x00u8,
     func: OpFunc::NoOperand(|cpu| {
-        cpu.push_word(cpu.pc);
-        cpu.push(cpu.p);
-        cpu.pc = cpu.fetch_word(IRQ);
+        cpu.push_word(cpu.reg.pc);
+        cpu.push(cpu.reg.p);
+        cpu.reg.pc = cpu.fetch_word(IRQ);
         cpu.set_flag(Flag::B, true);
         7
     }),
@@ -28,8 +28,8 @@ pub(crate) const JSR: Op = Op {
     addressing_mode: AddressingMode::Absolute,
     opcode: 0x20u8,
     func: OpFunc::Word(|cpu, operand| {
-        cpu.push_word(cpu.pc - 1);
-        cpu.pc = operand;
+        cpu.push_word(cpu.reg.pc - 1);
+        cpu.reg.pc = operand;
         6
     }),
 };
@@ -39,8 +39,8 @@ pub(crate) const RTI: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0x40u8,
     func: OpFunc::NoOperand(|cpu| {
-        cpu.p = cpu.pull();
-        cpu.pc = cpu.pull_word();
+        cpu.reg.p = cpu.pull();
+        cpu.reg.pc = cpu.pull_word();
         6
     }),
 };
@@ -50,7 +50,7 @@ pub(crate) const PHA: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0x48u8,
     func: OpFunc::NoOperand(|cpu| {
-        cpu.push(cpu.a);
+        cpu.push(cpu.reg.a);
         3
     }),
 };
@@ -60,7 +60,7 @@ pub(crate) const JMP_ABS: Op = Op {
     addressing_mode: AddressingMode::Absolute,
     opcode: 0x4cu8,
     func: OpFunc::Word(|cpu, operand| {
-        cpu.pc = operand;
+        cpu.reg.pc = operand;
         3
     }),
 };
@@ -70,8 +70,8 @@ pub(crate) const RTS: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0x60u8,
     func: OpFunc::NoOperand(|cpu| {
-        cpu.pc = cpu.pull_word();
-        cpu.pc += 1;
+        cpu.reg.pc = cpu.pull_word();
+        cpu.reg.pc += 1;
         6
     }),
 };
@@ -81,7 +81,7 @@ pub(crate) const PLA: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0x68u8,
     func: OpFunc::NoOperand(|cpu| {
-        cpu.a = cpu.pull();
+        cpu.reg.a = cpu.pull();
         4
     }),
 };
@@ -91,7 +91,7 @@ pub(crate) const STA_ZP: Op = Op {
     addressing_mode: AddressingMode::ZeroPage,
     opcode: 0x85u8,
     func: OpFunc::Byte(|cpu, operand| {
-        cpu.store(operand as u16, cpu.a);
+        cpu.store(operand as u16, cpu.reg.a);
         3
     }),
 };
@@ -101,7 +101,7 @@ pub(crate) const STA_ABS: Op = Op {
     addressing_mode: AddressingMode::Absolute,
     opcode: 0x8du8,
     func: OpFunc::Word(|cpu, operand| {
-        cpu.store(operand, cpu.a);
+        cpu.store(operand, cpu.reg.a);
         4
     }),
 };
@@ -111,8 +111,8 @@ pub(crate) const TYA: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0x98u8,
     func: OpFunc::NoOperand(|cpu| {
-        let operand = cpu.y;
-        cpu.a = operand;
+        let operand = cpu.reg.y;
+        cpu.reg.a = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -123,7 +123,7 @@ pub(crate) const LDY_IMM: Op = Op {
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xa0u8,
     func: OpFunc::Byte(|cpu, operand| {
-        cpu.y = operand;
+        cpu.reg.y = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -134,7 +134,7 @@ pub(crate) const LDX_IMM: Op = Op {
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xa2u8,
     func: OpFunc::Byte(|cpu, operand| {
-        cpu.x = operand;
+        cpu.reg.x = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -145,8 +145,8 @@ pub(crate) const TAY: Op = Op {
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xa8u8,
     func: OpFunc::NoOperand(|cpu| {
-        let operand = cpu.a;
-        cpu.y = operand;
+        let operand = cpu.reg.a;
+        cpu.reg.y = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -157,7 +157,7 @@ pub(crate) const LDA_IMM: Op = Op {
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xa9u8,
     func: OpFunc::Byte(|cpu, operand| {
-        cpu.a = operand;
+        cpu.reg.a = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -168,8 +168,8 @@ pub(crate) const TAX: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0xaau8,
     func: OpFunc::NoOperand(|cpu| {
-        let operand = cpu.a;
-        cpu.x = operand;
+        let operand = cpu.reg.a;
+        cpu.reg.x = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -181,9 +181,9 @@ pub(crate) const LDA_IND_IDX_Y: Op = Op {
     opcode: 0xb1u8,
     func: OpFunc::Byte(|cpu, operand| {
         let base_addr = cpu.fetch_word(operand as u16);
-        let addr = base_addr + cpu.y as u16;
+        let addr = base_addr + cpu.reg.y as u16;
         let value = cpu.fetch(addr);
-        cpu.a = value;
+        cpu.reg.a = value;
         cpu.set_flags_for(value);
         5 // TBD: Add 1 cycle if page boundary crossed
     }),
@@ -194,9 +194,9 @@ pub(crate) const LDA_ABS_X: Op = Op {
     addressing_mode: AddressingMode::AbsoluteX,
     opcode: 0xbdu8,
     func: OpFunc::Word(|cpu, operand| {
-        let addr = operand + cpu.x as u16;
+        let addr = operand + cpu.reg.x as u16;
         let value = cpu.memory[addr as usize];
-        cpu.a = value;
+        cpu.reg.a = value;
         cpu.set_flags_for(value);
         4 // TBD: Add 1 cycle if page boundary crossed
     }),
@@ -207,8 +207,8 @@ pub(crate) const INY: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0xc8u8,
     func: OpFunc::NoOperand(|cpu| {
-        let operand = cpu.y + 1;
-        cpu.y = operand;
+        let operand = cpu.reg.y + 1;
+        cpu.reg.y = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -219,8 +219,8 @@ pub(crate) const CMP_IMM: Op = Op {
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xc9u8,
     func: OpFunc::Byte(|cpu, operand| {
-        let result = cpu.a as i32 - operand as i32;
-        cpu.set_flag(Flag::N, cpu.a >= 0x80u8);
+        let result = cpu.reg.a as i32 - operand as i32;
+        cpu.set_flag(Flag::N, cpu.reg.a >= 0x80u8);
         cpu.set_flag(Flag::Z, result == 0);
         cpu.set_flag(Flag::Carry, result >= 0);
         2
@@ -232,8 +232,8 @@ pub(crate) const DEX: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0xcau8,
     func: OpFunc::NoOperand(|cpu| {
-        let operand = cpu.x - 1;
-        cpu.x = operand;
+        let operand = cpu.reg.x - 1;
+        cpu.reg.x = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -244,8 +244,8 @@ pub(crate) const CPX_IMM: Op = Op {
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xe0u8,
     func: OpFunc::Byte(|cpu, operand| {
-        let result = cpu.x as i32 - operand as i32;
-        cpu.set_flag(Flag::N, cpu.x >= 0x80u8);
+        let result = cpu.reg.x as i32 - operand as i32;
+        cpu.set_flag(Flag::N, cpu.reg.x >= 0x80u8);
         cpu.set_flag(Flag::Z, result == 0);
         cpu.set_flag(Flag::Carry, result >= 0);
         2
@@ -257,8 +257,8 @@ pub(crate) const INX: Op = Op {
     addressing_mode: AddressingMode::Implied,
     opcode: 0xe8u8,
     func: OpFunc::NoOperand(|cpu| {
-        let operand = cpu.x + 1;
-        cpu.x = operand;
+        let operand = cpu.reg.x + 1;
+        cpu.reg.x = operand;
         cpu.set_flags_for(operand);
         2
     }),
@@ -277,9 +277,9 @@ pub(crate) const BEQ: Op = Op {
     opcode: 0xf0u8,
     func: OpFunc::Byte(|cpu, operand| {
         if cpu.get_flag(Flag::Z) {
-            match cpu.pc.checked_add(operand as u16) {
+            match cpu.reg.pc.checked_add(operand as u16) {
                 Some(result) => {
-                    cpu.pc = result;
+                    cpu.reg.pc = result;
                     3 // TBD: Add 1 cycle if page boundary crossed
                 }
                 None => todo!(),

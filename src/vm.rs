@@ -16,7 +16,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
 
     if let Some(ref program_info) = program_info {
         program_info.load(&mut cpu.memory)?;
-        cpu.pc = program_info.start();
+        cpu.reg.pc = program_info.start();
     }
 
     // Set up interrupt vectors
@@ -70,16 +70,16 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
         }
 
         // Check for expected interrupt request value
-        if cpu.pc != IRQ_VALUE {
-            bail!("Unexpected IRQ value {:04X}", cpu.pc);
+        if cpu.reg.pc != IRQ_VALUE {
+            bail!("Unexpected IRQ value {:04X}", cpu.reg.pc);
         }
 
         // Address of operating system routine being invoked
-        let addr = cpu.fetch_word(STACK_BASE + (cpu.s + 2) as u16) - 1;
+        let addr = cpu.fetch_word(STACK_BASE + (cpu.reg.s + 2) as u16) - 1;
 
         match addr {
             OSWRCH => {
-                let c = cpu.a as char;
+                let c = cpu.reg.a as char;
                 cpu.write_stdout(c);
             }
             OSHALT => {

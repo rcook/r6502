@@ -1,15 +1,11 @@
 use crate::{
-    make_word, split_word, ControllerMessage, CpuMessage, Flag, Instruction, Memory, STACK_BASE,
+    make_word, split_word, ControllerMessage, CpuMessage, Flag, Instruction, Memory, RegisterFile,
+    STACK_BASE,
 };
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
 pub(crate) struct Cpu {
-    pub(crate) p: u8,
-    pub(crate) pc: u16,
-    pub(crate) a: u8,
-    pub(crate) x: u8,
-    pub(crate) y: u8,
-    pub(crate) s: u8,
+    pub(crate) reg: RegisterFile,
     pub(crate) memory: Memory,
     controller_tx: Sender<ControllerMessage>,
     tx: Sender<CpuMessage>,
@@ -21,12 +17,7 @@ impl Cpu {
     pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Self {
         let (tx, rx) = channel();
         Self {
-            pc: 0x0000u16,
-            p: 0x00u8,
-            a: 0x00u8,
-            x: 0x00u8,
-            y: 0x00u8,
-            s: 0xffu8,
+            reg: RegisterFile::new(),
             memory: [0x00u8; 0x10000],
             controller_tx,
             tx,
@@ -40,14 +31,14 @@ impl Cpu {
     }
 
     pub(crate) fn get_flag(&self, flag: Flag) -> bool {
-        (self.p & flag as u8) != 0x00u8
+        (self.reg.p & flag as u8) != 0x00u8
     }
 
     pub(crate) fn set_flag(&mut self, flag: Flag, value: bool) {
         if value {
-            self.p |= flag as u8
+            self.reg.p |= flag as u8
         } else {
-            self.p &= !(flag as u8)
+            self.reg.p &= !(flag as u8)
         }
     }
 
@@ -77,8 +68,8 @@ impl Cpu {
     }
 
     pub(crate) fn next(&mut self) -> u8 {
-        let value = self.fetch(self.pc);
-        self.pc += 1;
+        let value = self.fetch(self.reg.pc);
+        self.reg.pc += 1;
         value
     }
 
@@ -89,9 +80,9 @@ impl Cpu {
     }
 
     pub(crate) fn push(&mut self, value: u8) {
-        let addr = STACK_BASE + self.s as u16;
+        let addr = STACK_BASE + self.reg.s as u16;
         self.store(addr, value);
-        self.s -= 1;
+        self.reg.s -= 1;
     }
 
     pub(crate) fn push_word(&mut self, value: u16) {
@@ -101,8 +92,8 @@ impl Cpu {
     }
 
     pub(crate) fn pull(&mut self) -> u8 {
-        self.s += 1;
-        self.fetch(STACK_BASE + self.s as u16)
+        self.reg.s += 1;
+        self.fetch(STACK_BASE + self.reg.s as u16)
     }
 
     pub(crate) fn pull_word(&mut self) -> u16 {
@@ -144,10 +135,7 @@ impl Cpu {
 
     pub(crate) fn registers(&self) {
         self.controller_tx
-            .send(ControllerMessage::Registers(format!(
-                "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
-                self.pc, self.p, self.a, self.x, self.y, self.s,
-            )))
+            .send(ControllerMessage::Registers(self.reg.clone()))
             .expect("Must succeed")
     }
 
