@@ -1,8 +1,16 @@
-use crate::{Instruction, RegisterFile, Status};
+use crate::{Cycles, Instruction, RegisterFile, Status};
 
 pub(crate) enum StatusMessage {
-    BeforeExecute(RegisterFile, u32, Instruction, u16),
-    AfterExecute(RegisterFile, u32, Instruction),
+    BeforeExecute {
+        reg: RegisterFile,
+        cycles: Cycles,
+        instruction: Instruction,
+    },
+    AfterExecute {
+        reg: RegisterFile,
+        cycles: Cycles,
+        instruction: Instruction,
+    },
     Status(Status),
     WriteStdout(char),
 }

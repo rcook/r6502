@@ -40,8 +40,8 @@ pub(crate) fn run_vm<H: VMHost>(
     loop {
         while !m.get_flag(Flag::B) {
             // Fetch next instruction without incrementing PC
-            let (instruction, pc) = peek(&mut m, &ops)?;
-            host.report_before_execute(&m.reg, cycles, &instruction, pc);
+            let instruction = peek(&mut m, &ops)?;
+            host.report_before_execute(&m.reg, cycles, &instruction);
 
             let result = host.poll(free_running);
             free_running = result.free_running;
@@ -52,15 +52,25 @@ pub(crate) fn run_vm<H: VMHost>(
 
             // Increment PC and execute the instruction
             cycles += match instruction {
-                Instruction::NoOperand(_, f) => {
+                Instruction::NoOperand { pc: _, op: _, f } => {
                     m.reg.pc += 1;
                     f(&mut m)
                 }
-                Instruction::Byte(_, f, operand) => {
+                Instruction::Byte {
+                    pc: _,
+                    op: _,
+                    f,
+                    operand,
+                } => {
                     m.reg.pc += 2;
                     f(&mut m, operand)
                 }
-                Instruction::Word(_, f, operand) => {
+                Instruction::Word {
+                    pc: _,
+                    op: _,
+                    f,
+                    operand,
+                } => {
                     m.reg.pc += 3;
                     f(&mut m, operand)
                 }
@@ -95,19 +105,24 @@ pub(crate) fn run_vm<H: VMHost>(
         };
     }
 
-    fn peek(m: &mut MachineState, ops: &[Option<Op>]) -> Result<(Instruction, u16)> {
+    fn peek(m: &mut MachineState, ops: &[Option<Op>]) -> Result<Instruction> {
+        let pc = m.reg.pc;
         let opcode = m.fetch(m.reg.pc);
         match ops[opcode as usize] {
             Some(op) => match op.func {
-                OpFunc::NoOperand(f) => Ok((Instruction::NoOperand(op, f), m.reg.pc + 1)),
-                OpFunc::Byte(f) => Ok((
-                    Instruction::Byte(op, f, m.fetch(m.reg.pc + 1)),
-                    m.reg.pc + 2,
-                )),
-                OpFunc::Word(f) => Ok((
-                    Instruction::Word(op, f, m.fetch_word(m.reg.pc + 1)),
-                    m.reg.pc + 3,
-                )),
+                OpFunc::NoOperand(f) => Ok(Instruction::NoOperand { pc, op, f }),
+                OpFunc::Byte(f) => Ok(Instruction::Byte {
+                    pc,
+                    op,
+                    f,
+                    operand: m.fetch(m.reg.pc + 1),
+                }),
+                OpFunc::Word(f) => Ok(Instruction::Word {
+                    pc,
+                    op,
+                    f,
+                    operand: m.fetch_word(m.reg.pc + 1),
+                }),
             },
             None => bail!("Unsupported opcode {opcode:02X}"),
         }

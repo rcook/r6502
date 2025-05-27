@@ -11,7 +11,6 @@ pub(crate) trait VMHost {
         _reg: &RegisterFile,
         _cycles: Cycles,
         _instruction: &Instruction,
-        _pc: u16,
     ) {
     }
 

@@ -18,20 +18,13 @@ impl UIHost {
 }
 
 impl VMHost for UIHost {
-    fn report_before_execute(
-        &self,
-        reg: &RegisterFile,
-        cycles: Cycles,
-        instruction: &Instruction,
-        pc: u16,
-    ) {
+    fn report_before_execute(&self, reg: &RegisterFile, cycles: Cycles, instruction: &Instruction) {
         self.status_tx
-            .send(StatusMessage::BeforeExecute(
-                reg.clone(),
+            .send(StatusMessage::BeforeExecute {
+                reg: reg.clone(),
                 cycles,
-                instruction.clone(),
-                pc,
-            ))
+                instruction: instruction.clone(),
+            })
             .expect("Must succeed")
     }
 
@@ -78,11 +71,11 @@ impl VMHost for UIHost {
 
     fn report_after_execute(&self, reg: &RegisterFile, cycles: Cycles, instruction: &Instruction) {
         self.status_tx
-            .send(StatusMessage::AfterExecute(
-                reg.clone(),
+            .send(StatusMessage::AfterExecute {
+                reg: reg.clone(),
                 cycles,
-                instruction.clone(),
-            ))
+                instruction: instruction.clone(),
+            })
             .expect("Must succeed")
     }
 
