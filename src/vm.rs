@@ -2,14 +2,14 @@ use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
     DebugMessage, Flag, Instruction, MachineState, Op, OpFunc, ProgramInfo, RegisterFile, Status,
-    UIMessage, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
+    StatusMessage, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) fn run_vm(
     debug_rx: Receiver<DebugMessage>,
-    ui_tx: Sender<UIMessage>,
+    status_tx: Sender<StatusMessage>,
     program_info: Option<ProgramInfo>,
 ) -> Result<()> {
     let mut free_running = false;
@@ -53,7 +53,7 @@ pub(crate) fn run_vm(
                 None => bail!("Unsupported opcode {opcode:02X}"),
             };
 
-            report_before_execute(&ui_tx, m.reg.clone(), cycles, &instruction);
+            report_before_execute(&status_tx, m.reg.clone(), cycles, &instruction);
 
             if !poll(&debug_rx, &mut free_running) {
                 // Handle disconnection
@@ -66,7 +66,7 @@ pub(crate) fn run_vm(
                 Instruction::Word(_, f, operand) => f(&mut m, operand),
             };
 
-            report_after_execute(&ui_tx, m.reg.clone(), cycles, &instruction);
+            report_after_execute(&status_tx, m.reg.clone(), cycles, &instruction);
         }
 
         // Check for expected interrupt request value
@@ -80,10 +80,10 @@ pub(crate) fn run_vm(
         match addr {
             OSWRCH => {
                 let c = m.reg.a as char;
-                write_stdout(&ui_tx, c);
+                write_stdout(&status_tx, c);
             }
             OSHALT => {
-                report_status(&ui_tx, Status::Halted);
+                report_status(&status_tx, Status::Halted);
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&m.memory)?;
                 }
@@ -107,33 +107,45 @@ fn set_brk(m: &mut MachineState, addr: u16) {
 }
 
 fn report_before_execute(
-    ui_tx: &Sender<UIMessage>,
+    status_tx: &Sender<StatusMessage>,
     reg: RegisterFile,
     cycles: u32,
     instruction: &Instruction,
 ) {
-    ui_tx
-        .send(UIMessage::BeforeExecute(reg, cycles, instruction.clone()))
+    status_tx
+        .send(StatusMessage::BeforeExecute(
+            reg,
+            cycles,
+            instruction.clone(),
+        ))
         .expect("Must succeed")
 }
 
 fn report_after_execute(
-    ui_tx: &Sender<UIMessage>,
+    status_tx: &Sender<StatusMessage>,
     reg: RegisterFile,
     cycles: u32,
     instruction: &Instruction,
 ) {
-    ui_tx
-        .send(UIMessage::AfterExecute(reg, cycles, instruction.clone()))
+    status_tx
+        .send(StatusMessage::AfterExecute(
+            reg,
+            cycles,
+            instruction.clone(),
+        ))
         .expect("Must succeed")
 }
 
-fn report_status(ui_tx: &Sender<UIMessage>, status: Status) {
-    ui_tx.send(UIMessage::Status(status)).expect("Must succeed")
+fn report_status(status_tx: &Sender<StatusMessage>, status: Status) {
+    status_tx
+        .send(StatusMessage::Status(status))
+        .expect("Must succeed")
 }
 
-fn write_stdout(ui_tx: &Sender<UIMessage>, c: char) {
-    ui_tx.send(UIMessage::WriteStdout(c)).expect("Must succeed")
+fn write_stdout(status_tx: &Sender<StatusMessage>, c: char) {
+    status_tx
+        .send(StatusMessage::WriteStdout(c))
+        .expect("Must succeed")
 }
 
 fn poll(debug_rx: &Receiver<DebugMessage>, free_running: &mut bool) -> bool {

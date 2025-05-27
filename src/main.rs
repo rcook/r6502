@@ -11,9 +11,9 @@ mod ops;
 mod program_info;
 mod register_file;
 mod status;
+mod status_message;
 mod types;
 mod ui;
-mod ui_message;
 mod util;
 mod vm;
 
@@ -29,9 +29,9 @@ pub(crate) use ops::{Op, OPS};
 pub(crate) use program_info::ProgramInfo;
 pub(crate) use register_file::RegisterFile;
 pub(crate) use status::Status;
+pub(crate) use status_message::StatusMessage;
 pub(crate) use types::Memory;
 pub(crate) use ui::UI;
-pub(crate) use ui_message::UIMessage;
 pub(crate) use util::{make_word, split_word};
 pub(crate) use vm::run_vm;
 

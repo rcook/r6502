@@ -1,4 +1,4 @@
-use crate::{DebugMessage, Status as _Status, UIMessage};
+use crate::{DebugMessage, Status as _Status, StatusMessage};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -16,14 +16,17 @@ const CYCLES_NAME: &str = "cycles";
 
 pub(crate) struct UI {
     cursive: CursiveRunner<CursiveRunnable>,
-    ui_rx: Receiver<UIMessage>,
+    status_rx: Receiver<StatusMessage>,
 }
 
 impl UI {
-    pub(crate) fn new(ui_rx: Receiver<UIMessage>, debug_tx: Sender<DebugMessage>) -> Result<Self> {
+    pub(crate) fn new(
+        status_rx: Receiver<StatusMessage>,
+        debug_tx: Sender<DebugMessage>,
+    ) -> Result<Self> {
         let mut cursive = Self::make_ui();
         Self::add_callbacks(&mut cursive, debug_tx);
-        Ok(Self { cursive, ui_rx })
+        Ok(Self { cursive, status_rx })
     }
 
     pub(crate) fn run(&mut self) {
@@ -93,13 +96,13 @@ impl UI {
     }
 
     fn step(&mut self) -> bool {
-        use crate::UIMessage::*;
+        use crate::StatusMessage::*;
 
         if !self.cursive.is_running() {
             return false;
         }
 
-        while let Some(message) = self.ui_rx.try_iter().next() {
+        while let Some(message) = self.status_rx.try_iter().next() {
             match message {
                 BeforeExecute(reg, cycles, instruction) => {
                     self.cursive
