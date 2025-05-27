@@ -322,9 +322,19 @@ mod inner {
         addressing_mode: AddressingMode::Implied,
         opcode: 0xcau8,
         func: OpFunc::NoOperand(|m| {
-            let operand = m.reg.x - 1;
-            m.reg.x = operand;
-            m.set_flags_for(operand);
+            m.reg.x = m.reg.x.wrapping_sub(1);
+            m.set_flags_for(m.reg.x);
+            2
+        }),
+    };
+
+    pub(crate) const DEY: Op = Op {
+        mnemonic: "DEY",
+        addressing_mode: AddressingMode::Implied,
+        opcode: 0x88u8,
+        func: OpFunc::NoOperand(|m| {
+            m.reg.y = m.reg.y.wrapping_sub(1);
+            m.set_flags_for(m.reg.y);
             2
         }),
     };
@@ -345,9 +355,8 @@ mod inner {
         addressing_mode: AddressingMode::Implied,
         opcode: 0xe8u8,
         func: OpFunc::NoOperand(|m| {
-            let operand = m.reg.x + 1;
-            m.reg.x = operand;
-            m.set_flags_for(operand);
+            m.reg.x = m.reg.x.wrapping_add(1);
+            m.set_flags_for(m.reg.x);
             2
         }),
     };
@@ -357,9 +366,8 @@ mod inner {
         addressing_mode: AddressingMode::Implied,
         opcode: 0xc8u8,
         func: OpFunc::NoOperand(|m| {
-            let operand = m.reg.y + 1;
-            m.reg.y = operand;
-            m.set_flags_for(operand);
+            m.reg.y = m.reg.y.wrapping_add(1);
+            m.set_flags_for(m.reg.y);
             2
         }),
     };
