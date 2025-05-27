@@ -63,6 +63,16 @@ mod tests {
         Ok(())
     }
 
+    //#[test]
+    fn basics3() -> Result<()> {
+        let bytes = include_bytes!("../examples/randfill.r6502");
+        let (stdout, result) = run(bytes)?;
+        assert_eq!("Hello, world\r\n", stdout);
+        assert_eq!(RunVMStatus::Halted, result.status);
+        assert_eq!(584, result.cycles);
+        Ok(())
+    }
+
     fn run(bytes: &[u8]) -> Result<(String, RunVMResult)> {
         let test_host = TestHost::new();
         let result = run_vm(
