@@ -75,13 +75,25 @@ mod tests {
     }
 
     #[test]
-    fn add0() -> Result<()> {
-        let bytes = include_bytes!("../examples/add0.r6502");
+    fn add8() -> Result<()> {
+        let bytes = include_bytes!("../examples/add8.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
         assert_eq!(27, result.cycles);
         assert_eq!(0x46, result.machine_state.memory[0x0e00]);
+        Ok(())
+    }
+
+    #[test]
+    fn add16() -> Result<()> {
+        let bytes = include_bytes!("../examples/add16.r6502");
+        let (stdout, result) = run(bytes)?;
+        assert_eq!("", stdout);
+        assert_eq!(RunVMStatus::Halted, result.status);
+        assert_eq!(39, result.cycles);
+        assert_eq!(0x68, result.machine_state.memory[0x0e00]);
+        assert_eq!(0xac, result.machine_state.memory[0x0e01]);
         Ok(())
     }
 
