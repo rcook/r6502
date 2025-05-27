@@ -24,7 +24,10 @@ mod inner {
             m.set_flag(Flag::Carry, sum > 0xFF);
             m.set_flag(Flag::Z, result == 0);
             m.set_flag(Flag::N, result >= 0x80);
-            m.set_flag(Flag::V, ((m.reg.a ^ result) & (operand ^ result) & 0x80) != 0);
+            m.set_flag(
+                Flag::V,
+                ((m.reg.a ^ result) & (operand ^ result) & 0x80) != 0,
+            );
             2
         }),
     };
@@ -420,7 +423,11 @@ mod inner {
             let value = m.memory[addr as usize];
             m.reg.a = value;
             m.set_flags_for(value);
-            4 // TBD: Add 1 cycle if page boundary crossed
+            4 + if crosses_page_boundary(operand, m.reg.x) {
+                1
+            } else {
+                0
+            }
         }),
     };
 
@@ -457,7 +464,11 @@ mod inner {
             let value = m.fetch(addr);
             m.reg.a = value;
             m.set_flags_for(value);
-            5 // TBD: Add 1 cycle if page boundary crossed
+            5 + if crosses_page_boundary(base_addr, m.reg.y) {
+                1
+            } else {
+                0
+            }
         }),
     };
 
@@ -716,7 +727,10 @@ mod inner {
             m.set_flag(Flag::Carry, diff >= 0);
             m.set_flag(Flag::Z, result == 0);
             m.set_flag(Flag::N, result >= 0x80);
-            m.set_flag(Flag::V, ((m.reg.a ^ result) & (operand ^ result) & 0x80) != 0);
+            m.set_flag(
+                Flag::V,
+                ((m.reg.a ^ result) & (operand ^ result) & 0x80) != 0,
+            );
             2
         }),
     };
@@ -768,7 +782,11 @@ mod inner {
         func: OpFunc::Word(|m, operand| {
             let addr = operand + m.reg.x as u16;
             m.store(addr, m.reg.a);
-            5 // TBD: Add 1 cycle if page boundary crossed
+            5 + if crosses_page_boundary(operand, m.reg.x) {
+                1
+            } else {
+                0
+            }
         }),
     };
 
@@ -866,5 +884,9 @@ mod inner {
         } else {
             2
         }
+    }
+
+    fn crosses_page_boundary(base: u16, offset: u8) -> bool {
+        (base & 0xFF) + offset as u16 > 0xFF
     }
 }
