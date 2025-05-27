@@ -17,4 +17,4 @@ ORG &2000         ; code origin (like P%=&2000)
     EQUS "Hello, world", 13, 10, 0
 .end
 
-SAVE "Main.bin", start, end
+SAVE "test.bin", start, end

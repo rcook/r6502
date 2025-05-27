@@ -4,5 +4,7 @@ pub(crate) enum AddressingMode {
     AbsoluteX,
     Immediate,
     Implied,
+    IndirectIndexedY,
     Relative,
+    ZeroPage,
 }
