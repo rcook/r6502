@@ -158,4 +158,10 @@ impl Cpu {
             }
         }
     }
+
+    pub(crate) fn on_halted(&self) {
+        self.controller_tx
+            .send(ControllerMessage::OnHalted)
+            .expect("Must succeed")
+    }
 }

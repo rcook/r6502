@@ -117,6 +117,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&cpu.memory)?;
                 }
+                cpu.on_halted();
                 return Ok(());
             }
             _ => panic!("Break at unimplemented subroutine {:04X}", addr),

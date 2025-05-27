@@ -28,7 +28,7 @@ impl Controller {
             run_vm(&mut cpu, program_info).unwrap();
         });
 
-        while self.ui.step() {
+        'outer: while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
                     WriteStdout(c) => self
@@ -51,6 +51,7 @@ impl Controller {
                         .tx()
                         .send(UIMessage::Registers(s))
                         .expect("Must succeed"),
+                    OnHalted => break 'outer,
                     Step => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
                     Run => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
                     Break => cpu_tx.send(CpuMessage::Break).expect("Must succeed"),
