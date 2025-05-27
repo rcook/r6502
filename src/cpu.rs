@@ -1,33 +1,26 @@
 use crate::{
-    make_word, split_word, ControllerMessage, CpuMessage, Flag, Instruction, Memory, RegisterFile,
-    Status, STACK_BASE,
+    make_word, split_word, CpuMessage, Flag, Instruction, Memory, RegisterFile, Status, UIMessage,
+    STACK_BASE,
 };
-use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) struct Cpu {
     pub(crate) reg: RegisterFile,
     pub(crate) memory: Memory,
-    controller_tx: Sender<ControllerMessage>,
-    tx: Sender<CpuMessage>,
-    rx: Receiver<CpuMessage>,
+    cpu_rx: Receiver<CpuMessage>,
+    ui_tx: Sender<UIMessage>,
     free_running: bool,
 }
 
 impl Cpu {
-    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Self {
-        let (tx, rx) = channel();
+    pub(crate) fn new(cpu_rx: Receiver<CpuMessage>, ui_tx: Sender<UIMessage>) -> Self {
         Self {
             reg: RegisterFile::new(),
             memory: [0x00u8; 0x10000],
-            controller_tx,
-            tx,
-            rx,
+            cpu_rx,
+            ui_tx,
             free_running: false,
         }
-    }
-
-    pub(crate) fn tx(&self) -> &Sender<CpuMessage> {
-        &self.tx
     }
 
     pub(crate) fn get_flag(&self, flag: Flag) -> bool {
@@ -110,45 +103,45 @@ impl Cpu {
     }
 
     pub(crate) fn status(&self, status: Status) {
-        self.controller_tx
-            .send(ControllerMessage::Status(status))
+        self.ui_tx
+            .send(UIMessage::Status(status))
             .expect("Must succeed")
     }
 
     pub(crate) fn write_stdout(&self, c: char) {
-        self.controller_tx
-            .send(ControllerMessage::WriteStdout(c))
+        self.ui_tx
+            .send(UIMessage::WriteStdout(c))
             .expect("Must succeed")
     }
 
     pub(crate) fn current(&self, instruction: &Instruction) {
-        self.controller_tx
-            .send(ControllerMessage::Current(instruction.clone()))
+        self.ui_tx
+            .send(UIMessage::Current(instruction.clone()))
             .expect("Must succeed")
     }
 
     pub(crate) fn disassembly(&self, instruction: &Instruction) {
-        self.controller_tx
-            .send(ControllerMessage::Disassembly(instruction.clone()))
+        self.ui_tx
+            .send(UIMessage::Disassembly(instruction.clone()))
             .expect("Must succeed")
     }
 
     pub(crate) fn registers(&self) {
-        self.controller_tx
-            .send(ControllerMessage::Registers(self.reg.clone()))
+        self.ui_tx
+            .send(UIMessage::Registers(self.reg.clone()))
             .expect("Must succeed")
     }
 
     pub(crate) fn cycles(&self, cycles: u32) {
-        self.controller_tx
-            .send(ControllerMessage::Cycles(format!("cycles={cycles}")))
+        self.ui_tx
+            .send(UIMessage::Cycles(format!("cycles={cycles}")))
             .expect("Must succeed")
     }
 
     pub(crate) fn poll(&mut self) -> bool {
         loop {
             if self.free_running {
-                match self.rx.try_recv() {
+                match self.cpu_rx.try_recv() {
                     Err(TryRecvError::Disconnected) => return false,
                     Err(TryRecvError::Empty) => return true,
                     Ok(CpuMessage::Step) => {}
@@ -156,7 +149,7 @@ impl Cpu {
                     Ok(CpuMessage::Break) => self.free_running = false,
                 }
             } else {
-                match self.rx.recv() {
+                match self.cpu_rx.recv() {
                     Err(_) => return false,
                     Ok(CpuMessage::Step) => return true,
                     Ok(CpuMessage::Run) => self.free_running = true,

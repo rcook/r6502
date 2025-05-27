@@ -1,11 +1,11 @@
-use crate::{ControllerMessage, Status as _Status, UIMessage};
+use crate::{CpuMessage, Status as _Status, UIMessage};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
 use cursive::view::{Nameable, Resizable, ScrollStrategy, Scrollable};
 use cursive::views::{LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender};
 
 const CURRENT_NAME: &str = "current";
 const DISASSEMBLY_NAME: &str = "disassembly";
@@ -16,20 +16,14 @@ const CYCLES_NAME: &str = "cycles";
 
 pub(crate) struct UI {
     cursive: CursiveRunner<CursiveRunnable>,
-    tx: Sender<UIMessage>,
-    rx: Receiver<UIMessage>,
+    ui_rx: Receiver<UIMessage>,
 }
 
 impl UI {
-    pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Result<Self> {
+    pub(crate) fn new(ui_rx: Receiver<UIMessage>, cpu_tx: Sender<CpuMessage>) -> Result<Self> {
         let mut cursive = Self::make_ui();
-        Self::add_callbacks(&mut cursive, controller_tx);
-        let (tx, rx) = channel();
-        Ok(Self { cursive, tx, rx })
-    }
-
-    pub(crate) fn tx(&self) -> &Sender<UIMessage> {
-        &self.tx
+        Self::add_callbacks(&mut cursive, cpu_tx);
+        Ok(Self { cursive, ui_rx })
     }
 
     pub fn step(&mut self) -> bool {
@@ -39,7 +33,7 @@ impl UI {
             return false;
         }
 
-        while let Some(message) = self.rx.try_iter().next() {
+        while let Some(message) = self.ui_rx.try_iter().next() {
             match message {
                 Status(status) => {
                     let mut s = match status {
@@ -140,22 +134,15 @@ impl UI {
         cursive
     }
 
-    fn add_callbacks(
-        cursive: &mut CursiveRunner<CursiveRunnable>,
-        controller_tx: Sender<ControllerMessage>,
-    ) {
+    fn add_callbacks(cursive: &mut CursiveRunner<CursiveRunnable>, cpu_tx: Sender<CpuMessage>) {
+        use crate::CpuMessage::*;
+
         cursive.add_global_callback('q', Cursive::quit);
-        let temp = controller_tx.clone();
-        cursive.add_global_callback(' ', move |_| {
-            temp.send(ControllerMessage::Step).expect("Must succeed")
-        });
-        let temp = controller_tx.clone();
-        cursive.add_global_callback('r', move |_| {
-            temp.send(ControllerMessage::Run).expect("Must succeed")
-        });
-        let temp = controller_tx.clone();
-        cursive.add_global_callback('b', move |_| {
-            temp.send(ControllerMessage::Break).expect("Must succeed")
-        });
+        let tx = cpu_tx.clone();
+        cursive.add_global_callback(' ', move |_| _ = tx.send(Step));
+        let tx = cpu_tx.clone();
+        cursive.add_global_callback('r', move |_| _ = tx.send(Run));
+        let tx = cpu_tx.clone();
+        cursive.add_global_callback('b', move |_| _ = tx.send(Break));
     }
 }

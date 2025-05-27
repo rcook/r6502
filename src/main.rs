@@ -1,8 +1,6 @@
 mod addressing_mode;
 mod args;
 mod constants;
-mod controller;
-mod controller_message;
 mod cpu;
 mod cpu_message;
 mod demo;
@@ -22,8 +20,6 @@ mod vm;
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use args::Args;
 pub(crate) use constants::{IRQ, OSHALT, OSWRCH, STACK_BASE};
-pub(crate) use controller::Controller;
-pub(crate) use controller_message::ControllerMessage;
 pub(crate) use cpu::Cpu;
 pub(crate) use cpu_message::CpuMessage;
 pub(crate) use flag::Flag;
