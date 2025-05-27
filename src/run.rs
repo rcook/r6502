@@ -4,7 +4,7 @@ use clap::Parser;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
-pub(crate) fn demo() -> Result<()> {
+pub(crate) fn run() -> Result<()> {
     let args = Args::parse();
     let program_info = Some(ProgramInfo::new(&args.path, args.start));
     let debug_channel = channel();

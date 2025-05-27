@@ -2,7 +2,6 @@ mod addressing_mode;
 mod args;
 mod constants;
 mod debug_message;
-mod demo;
 mod flag;
 mod instruction;
 mod machine_state;
@@ -11,6 +10,7 @@ mod op_func;
 mod ops;
 mod program_info;
 mod register_file;
+mod run;
 mod status;
 mod status_message;
 mod types;
@@ -38,5 +38,5 @@ pub(crate) use util::{make_word, split_word};
 pub(crate) use vm::run_vm;
 
 fn main() -> anyhow::Result<()> {
-    crate::demo::demo()
+    crate::run::run()
 }
