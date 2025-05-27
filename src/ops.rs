@@ -47,6 +47,24 @@ mod inner {
         }),
     };
 
+    pub(crate) const ADC_ABS: Op = Op {
+        mnemonic: "ADC",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x6Du8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let sum = m.reg.a as u16 + value as u16 + carry;
+            let result = sum as u8;
+            m.reg.a = result;
+            m.set_flag(Flag::Carry, sum > 0xFF);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::N, result >= 0x80);
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (value ^ result) & 0x80) != 0);
+            4
+        }),
+    };
+
     pub(crate) const AND_IMM: Op = Op {
         mnemonic: "AND",
         addressing_mode: AddressingMode::Immediate,
@@ -403,6 +421,18 @@ mod inner {
             m.reg.a = value;
             m.set_flags_for(value);
             4 // TBD: Add 1 cycle if page boundary crossed
+        }),
+    };
+
+    pub(crate) const LDA_ABS: Op = Op {
+        mnemonic: "LDA",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0xadu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            m.reg.a = value;
+            m.set_flags_for(value);
+            4
         }),
     };
 

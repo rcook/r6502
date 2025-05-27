@@ -1,0 +1,26 @@
+[
+  {
+    "name": "left_operand",
+    "value": "$0E0C",
+    "sourceLocation": "add0.asm:13"
+  },
+  {
+    "name": "origin",
+    "value": "$0E00"
+  },
+  {
+    "name": "result",
+    "value": "$0E00",
+    "sourceLocation": "add0.asm:3"
+  },
+  {
+    "name": "right_operand",
+    "value": "$0E0D",
+    "sourceLocation": "add0.asm:16"
+  },
+  {
+    "name": "start",
+    "value": "$0E01",
+    "sourceLocation": "add0.asm:6"
+  }
+]
