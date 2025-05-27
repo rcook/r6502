@@ -133,7 +133,7 @@ impl UI {
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
-                        .set_content(format!("cycles={cycles}"));
+                        .set_content(format!("{cycles}"));
                     self.cursive
                         .find_name::<TextView>(CURRENT_NAME)
                         .expect("Must exist")
@@ -151,7 +151,7 @@ impl UI {
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
-                        .set_content(format!("cycles={cycles}"));
+                        .set_content(format!("{cycles}"));
 
                     let mut s = instruction.pretty_disassembly(&self.symbols);
                     s.push('\n');
