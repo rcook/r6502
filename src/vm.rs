@@ -1,7 +1,7 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    iter_ops, DebugMessage, Flag, Instruction, MachineState, Op, OpFunc, ProgramInfo, RegisterFile,
+    iter_ops, DebugMessage, Flag, ImageInfo, Instruction, MachineState, Op, OpFunc, RegisterFile,
     Status, StatusMessage, IRQ, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
@@ -10,7 +10,7 @@ use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 pub(crate) fn run_vm(
     debug_rx: Option<Receiver<DebugMessage>>,
     status_tx: Option<Sender<StatusMessage>>,
-    program_info: Option<ProgramInfo>,
+    image_info: Option<ImageInfo>,
     mut free_running: bool,
 ) -> Result<()> {
     let mut m = MachineState::new();
@@ -23,9 +23,9 @@ pub(crate) fn run_vm(
         ops
     };
 
-    if let Some(ref program_info) = program_info {
-        program_info.load(&mut m.memory)?;
-        m.reg.pc = program_info.start();
+    if let Some(ref image_info) = image_info {
+        let start_info = image_info.load(&mut m.memory)?;
+        m.reg.pc = start_info.start;
     }
 
     // Set up interrupt vectors
@@ -95,7 +95,7 @@ pub(crate) fn run_vm(
                 if let Some(status_tx) = status_tx.as_ref() {
                     report_status(status_tx, Status::Halted);
                 }
-                if let Some(ref program_info) = program_info {
+                if let Some(ref program_info) = image_info {
                     program_info.save_dump(&m.memory)?;
                 }
                 return Ok(());

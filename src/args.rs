@@ -6,8 +6,11 @@ use std::path::PathBuf;
 pub(crate) struct Args {
     pub(crate) path: PathBuf,
 
-    #[clap(value_parser=maybe_hex::<u16>)]
-    pub(crate) start: u16,
+    #[clap(long="origin", value_parser=maybe_hex::<u16>)]
+    pub(crate) origin: Option<u16>,
+
+    #[clap(long="start", value_parser=maybe_hex::<u16>)]
+    pub(crate) start: Option<u16>,
 
     #[arg(
         help = "Launch in debugger [default]",

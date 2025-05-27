@@ -1,0 +1,11 @@
+{
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.vscode/": true,
+    "**/target/": true,
+    "**/__pycache__/": true,
+    "**/*.egg-info/": true,
+    "py/": true,
+  },
+  "rust-analyzer.showUnlinkedFileNotification": false,
+}

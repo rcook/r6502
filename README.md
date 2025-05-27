@@ -1,3 +1,10 @@
+# r6502asm
+
+```bash
+pip install --upgrade pip
+pip install -e r6502asm
+```
+
 https://logicalmoon.com/2017/11/using-vs-code-to-create-a-6502-hello-world/
 https://github.com/stardot/beebasm
 http://www.6502.org/tutorials/6502opcodes.html
@@ -8,3 +15,4 @@ https://c64os.com/post/6502instructions#RTI
 https://cafbit.com/post/cursive_writing_terminal_applications_in_rust/
 https://stackoverflow.com/questions/78122826/how-to-create-a-new-dialog-after-cursive-run-has-been-called
 https://web.archive.org/web/20211204234443if_/http://archive.6502.org/datasheets/mos_6501-6505_mpu_preliminary_aug_1975.pdf
+https://www.masswerk.at/6502/6502_instruction_set.html
