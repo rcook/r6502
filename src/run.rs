@@ -11,7 +11,11 @@ pub(crate) fn run() -> Result<()> {
     if args.debug {
         let debug_channel = channel();
         let status_channel = channel();
-        let mut ui = UI::new(status_channel.1, debug_channel.0)?;
+        let symbols = match image_source.as_ref() {
+            Some(image_source) => image_source.load_symbols()?,
+            None => Vec::new(),
+        };
+        let mut ui = UI::new(status_channel.1, debug_channel.0, symbols)?;
         let ui_host = UIHost::new(debug_channel.1, status_channel.0);
         spawn(move || {
             run_vm(&ui_host, image_source, !args.debug).expect("Must succeed");

@@ -1,4 +1,4 @@
-use crate::{DebugMessage, Status as _Status, StatusMessage};
+use crate::{DebugMessage, Status as _Status, StatusMessage, SymbolInfo};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -17,16 +17,23 @@ const CYCLES_NAME: &str = "cycles";
 pub(crate) struct UI {
     cursive: CursiveRunner<CursiveRunnable>,
     status_rx: Receiver<StatusMessage>,
+    #[allow(unused)]
+    symbols: Vec<SymbolInfo>,
 }
 
 impl UI {
     pub(crate) fn new(
         status_rx: Receiver<StatusMessage>,
         debug_tx: Sender<DebugMessage>,
+        symbols: Vec<SymbolInfo>,
     ) -> Result<Self> {
         let mut cursive = Self::make_ui();
         Self::add_callbacks(&mut cursive, debug_tx);
-        Ok(Self { cursive, status_rx })
+        Ok(Self {
+            cursive,
+            status_rx,
+            symbols,
+        })
     }
 
     pub(crate) fn run(&mut self) {

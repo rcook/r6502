@@ -29,6 +29,25 @@ impl<'a> ImageSource<'a> {
         Self::Bytes(bytes, default_origin, default_start)
     }
 
+    pub(crate) fn load_symbols(&self) -> Result<Vec<SymbolInfo>> {
+        match self {
+            Self::File(path, _, _) => {
+                let mut file_name = path.file_name().expect("Must succeed").to_os_string();
+                file_name.push(".json");
+                let symbol_path = path.parent().expect("Must succeed").join(file_name);
+
+                Ok(if symbol_path.is_file() {
+                    let symbol_file = File::open(symbol_path)?;
+                    let symbols = serde_json::from_reader::<_, Vec<SymbolInfo>>(symbol_file)?;
+                    symbols
+                } else {
+                    Vec::new()
+                })
+            }
+            Self::Bytes(_, _, _) => Ok(Vec::new()),
+        }
+    }
+
     pub(crate) fn load_into_memory(&self, memory: &mut Memory) -> Result<ImageInfo> {
         match self {
             Self::File(path, default_origin, default_start) => {
@@ -41,21 +60,7 @@ impl<'a> ImageSource<'a> {
                     Err(e) if e.kind() == ErrorKind::UnexpectedEof => {}
                     Err(e) => bail!(e),
                 }
-
-                let mut file_name = path.file_name().expect("Must succeed").to_os_string();
-                file_name.push(".json");
-                let symbol_path = path.parent().expect("Must succeed").join(file_name);
-
-                Ok(if symbol_path.is_file() {
-                    let symbol_file = File::open(symbol_path)?;
-                    let symbols = serde_json::from_reader::<_, Vec<SymbolInfo>>(symbol_file)?;
-                    ImageInfo { start, symbols }
-                } else {
-                    ImageInfo {
-                        start,
-                        symbols: Vec::new(),
-                    }
-                })
+                Ok(ImageInfo { start })
             }
             Self::Bytes(bytes, default_origin, default_start) => {
                 let mut cursor = Cursor::new(bytes);
@@ -70,10 +75,7 @@ impl<'a> ImageSource<'a> {
                     Err(e) if e.kind() == ErrorKind::UnexpectedEof => {}
                     Err(e) => bail!(e),
                 }
-                Ok(ImageInfo {
-                    start,
-                    symbols: Vec::new(),
-                })
+                Ok(ImageInfo { start })
             }
         }
     }
