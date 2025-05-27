@@ -26,7 +26,7 @@ pub(crate) use flag::Flag;
 pub(crate) use instruction::Instruction;
 pub(crate) use machine_state::MachineState;
 pub(crate) use op::Op;
-pub(crate) use op_func::{ByteFn, NoOperandFn, OpFunc, WordFn};
+pub(crate) use op_func::{ByteFn, Cycles, NoOperandFn, OpFunc, WordFn};
 pub(crate) use ops::iter_ops;
 pub(crate) use program_info::ProgramInfo;
 pub(crate) use register_file::RegisterFile;

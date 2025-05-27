@@ -10,7 +10,7 @@ pub(crate) fn iter_ops() -> impl Iterator<Item = &'static Op> {
 
 #[iter_mod::make_items]
 mod inner {
-    use crate::{AddressingMode, Flag, Op, OpFunc, IRQ};
+    use crate::{AddressingMode, Cycles, Flag, MachineState, Op, OpFunc, IRQ};
 
     pub(crate) const BRK: Op = Op {
         mnemonic: "BRK",
@@ -241,6 +241,13 @@ mod inner {
         }),
     };
 
+    pub(crate) const BNE: Op = Op {
+        mnemonic: "BNE",
+        addressing_mode: AddressingMode::Relative,
+        opcode: 0xd0u8,
+        func: OpFunc::Byte(|m, operand| branch(m, Flag::Z, false, operand)),
+    };
+
     pub(crate) const CPX_IMM: Op = Op {
         mnemonic: "CPX",
         addressing_mode: AddressingMode::Immediate,
@@ -277,18 +284,28 @@ mod inner {
         mnemonic: "BEQ",
         addressing_mode: AddressingMode::Relative,
         opcode: 0xf0u8,
-        func: OpFunc::Byte(|m, operand| {
-            if m.get_flag(Flag::Z) {
-                match m.reg.pc.checked_add(operand as u16) {
-                    Some(result) => {
-                        m.reg.pc = result;
-                        3 // TBD: Add 1 cycle if page boundary crossed
-                    }
-                    None => todo!(),
-                }
-            } else {
-                2
-            }
-        }),
+        func: OpFunc::Byte(|m, operand| branch(m, Flag::Z, true, operand)),
     };
+
+    fn branch(m: &mut MachineState, flag: Flag, branch_on: bool, operand: u8) -> Cycles {
+        if m.get_flag(flag) == branch_on {
+            let result = compute_branch(m.reg.pc, operand);
+            m.reg.pc = result.0;
+            result.1
+        } else {
+            2
+        }
+    }
+
+    fn compute_branch(pc: u16, operand: u8) -> (u16, Cycles) {
+        let lhs = pc as i32;
+
+        // Treat operand as signed
+        let rhs = (operand as i8) as i32;
+
+        let result = (lhs + rhs) as u16;
+
+        let cycles = 3; // TBD: Add 1 cycle if page boundary crossed
+        (result, cycles)
+    }
 }
