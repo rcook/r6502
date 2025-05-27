@@ -2,6 +2,7 @@
 pub(crate) enum AddressingMode {
     Absolute,
     AbsoluteX,
+    Accumulator,
     Immediate,
     Implied,
     IndirectIndexedY,
@@ -12,6 +13,7 @@ pub(crate) enum AddressingMode {
 impl AddressingMode {
     pub(crate) fn pretty_byte(&self, operand: u8) -> String {
         match self {
+            Self::Accumulator => "A".to_string(),
             Self::Immediate => format!("#${operand:02X}"),
             Self::IndirectIndexedY => format!("(${operand:02X}),Y"),
             Self::Relative => format!("${operand:02X}"),
