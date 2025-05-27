@@ -1,10 +1,10 @@
 use crate::{Cycles, Instruction, PollResult, RegisterFile, Status, VMHost};
 
-pub(crate) struct CliHost {}
+pub(crate) struct CliHost;
 
 impl CliHost {
     pub(crate) fn new() -> Self {
-        Self {}
+        Self
     }
 }
 
