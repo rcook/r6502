@@ -2,9 +2,8 @@ use crate::{ControllerMessage, UIMessage};
 use anyhow::Result;
 use cursive::direction::Orientation;
 use cursive::view::{Nameable, Resizable, ScrollStrategy, Scrollable};
-use cursive::views::{LinearLayout, Menubar, NamedView, TextView};
+use cursive::views::{LinearLayout, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
-use cursive_multiplex::Mux;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 const CURRENT_NAME: &str = "current";
@@ -22,9 +21,6 @@ impl UI {
     pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Result<Self> {
         let (tx, rx) = channel();
         let mut cursive = cursive::default().into_runner();
-
-        let mut mux = Mux::new();
-        let root_id = mux.root().build().expect("Must have ID");
 
         let current = TextView::new("")
             .with_name(CURRENT_NAME)
@@ -47,18 +43,12 @@ impl UI {
         let help = TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break");
         let registers = TextView::new("").with_name(REGISTERS_NAME);
 
-        let current_id = mux.add_right_of(current, root_id)?;
-        let history_id = mux.add_below(history, current_id)?;
-        let stdout_id = mux.add_right_of(stdout, history_id)?;
-        let help_id = mux.add_below(help, stdout_id)?;
-        _ = mux.add_below(registers, help_id);
-
-        let mut linear = LinearLayout::new(Orientation::Vertical);
-        let mux_layer = NamedView::new("Mux", mux);
-        linear.add_child(mux_layer);
-        let mut menu_bar = Menubar::new();
-        menu_bar.add_leaf("Quit", Cursive::quit);
-        linear.add_child(menu_bar);
+        let linear = LinearLayout::new(Orientation::Vertical)
+            .child(current)
+            .child(history)
+            .child(stdout)
+            .child(help)
+            .child(registers);
 
         cursive.add_fullscreen_layer(linear);
         cursive.add_global_callback('q', Cursive::quit);
