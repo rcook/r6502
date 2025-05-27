@@ -47,7 +47,7 @@ pub(crate) use test_host::TestHost;
 pub(crate) use types::Memory;
 pub(crate) use ui::UI;
 pub(crate) use ui_host::UIHost;
-pub(crate) use util::{make_word, split_word};
+pub(crate) use util::{compute_branch, make_word, split_word};
 pub(crate) use vm::run_vm;
 pub(crate) use vm_host::{PollResult, VMHost};
 

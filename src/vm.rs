@@ -39,17 +39,9 @@ pub(crate) fn run_vm<H: VMHost>(
 
     loop {
         while !m.get_flag(Flag::B) {
-            let opcode = m.next();
-            let instruction = match ops[opcode as usize] {
-                Some(op) => match op.func {
-                    OpFunc::NoOperand(f) => Instruction::NoOperand(op, f),
-                    OpFunc::Byte(f) => Instruction::Byte(op, f, m.next()),
-                    OpFunc::Word(f) => Instruction::Word(op, f, m.next_word()),
-                },
-                None => bail!("Unsupported opcode {opcode:02X}"),
-            };
-
-            host.report_before_execute(&m.reg, cycles, &instruction);
+            // Fetch next instruction without incrementing PC
+            let (instruction, pc) = peek(&mut m, &ops)?;
+            host.report_before_execute(&m.reg, cycles, &instruction, pc);
 
             let result = host.poll(free_running);
             free_running = result.free_running;
@@ -58,10 +50,20 @@ pub(crate) fn run_vm<H: VMHost>(
                 return Ok(RunVMResult::new(RunVMStatus::Disconnected, m, cycles));
             }
 
+            // Increment PC and execute the instruction
             cycles += match instruction {
-                Instruction::NoOperand(_, f) => f(&mut m),
-                Instruction::Byte(_, f, operand) => f(&mut m, operand),
-                Instruction::Word(_, f, operand) => f(&mut m, operand),
+                Instruction::NoOperand(_, f) => {
+                    m.reg.pc += 1;
+                    f(&mut m)
+                }
+                Instruction::Byte(_, f, operand) => {
+                    m.reg.pc += 2;
+                    f(&mut m, operand)
+                }
+                Instruction::Word(_, f, operand) => {
+                    m.reg.pc += 3;
+                    f(&mut m, operand)
+                }
             };
 
             host.report_after_execute(&m.reg, cycles, &instruction);
@@ -91,6 +93,24 @@ pub(crate) fn run_vm<H: VMHost>(
             OpFunc::NoOperand(f) => f(&mut m),
             _ => unreachable!(),
         };
+    }
+
+    fn peek(m: &mut MachineState, ops: &[Option<Op>]) -> Result<(Instruction, u16)> {
+        let opcode = m.fetch(m.reg.pc);
+        match ops[opcode as usize] {
+            Some(op) => match op.func {
+                OpFunc::NoOperand(f) => Ok((Instruction::NoOperand(op, f), m.reg.pc + 1)),
+                OpFunc::Byte(f) => Ok((
+                    Instruction::Byte(op, f, m.fetch(m.reg.pc + 1)),
+                    m.reg.pc + 2,
+                )),
+                OpFunc::Word(f) => Ok((
+                    Instruction::Word(op, f, m.fetch_word(m.reg.pc + 1)),
+                    m.reg.pc + 3,
+                )),
+            },
+            None => bail!("Unsupported opcode {opcode:02X}"),
+        }
     }
 }
 

@@ -121,7 +121,7 @@ impl UI {
 
         while let Some(message) = self.status_rx.try_iter().next() {
             match message {
-                BeforeExecute(reg, cycles, instruction) => {
+                BeforeExecute(reg, cycles, instruction, pc) => {
                     self.cursive
                         .find_name::<TextView>(REGISTERS_NAME)
                         .expect("Must exist")
@@ -133,7 +133,7 @@ impl UI {
                     self.cursive
                         .find_name::<TextView>(CURRENT_NAME)
                         .expect("Must exist")
-                        .set_content(instruction.pretty_current(&self.symbols));
+                        .set_content(instruction.pretty_current(&self.symbols, pc));
                 }
                 AfterExecute(reg, cycles, instruction) => {
                     self.cursive

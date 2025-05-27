@@ -10,7 +10,7 @@ pub(crate) fn iter_ops() -> impl Iterator<Item = &'static Op> {
 
 #[iter_mod::make_items]
 mod inner {
-    use crate::{AddressingMode, Cycles, Flag, MachineState, Op, OpFunc, IRQ};
+    use crate::{compute_branch, AddressingMode, Cycles, Flag, MachineState, Op, OpFunc, IRQ};
 
     pub(crate) const BRK: Op = Op {
         mnemonic: "BRK",
@@ -295,17 +295,5 @@ mod inner {
         } else {
             2
         }
-    }
-
-    fn compute_branch(pc: u16, operand: u8) -> (u16, Cycles) {
-        let lhs = pc as i32;
-
-        // Treat operand as signed
-        let rhs = (operand as i8) as i32;
-
-        let result = (lhs + rhs) as u16;
-
-        let cycles = 3; // TBD: Add 1 cycle if page boundary crossed
-        (result, cycles)
     }
 }

@@ -1,4 +1,6 @@
-use crate::{split_word, AddressingMode, ByteFn, NoOperandFn, Op, SymbolInfo, WordFn};
+use crate::{
+    compute_branch, split_word, AddressingMode, ByteFn, NoOperandFn, Op, SymbolInfo, WordFn,
+};
 
 #[derive(Clone)]
 pub(crate) enum Instruction {
@@ -8,7 +10,7 @@ pub(crate) enum Instruction {
 }
 
 impl Instruction {
-    pub(crate) fn pretty_current(&self, symbols: &Vec<SymbolInfo>) -> String {
+    pub(crate) fn pretty_current(&self, symbols: &Vec<SymbolInfo>, pc: u16) -> String {
         match self {
             Self::NoOperand(op, _) => format!(
                 "{:02X}       {} ({:?})",
@@ -17,16 +19,23 @@ impl Instruction {
             Self::Byte(op, _, operand) => {
                 fn look_up_name(
                     symbols: &Vec<SymbolInfo>,
-                    value: u8,
+                    operand: u8,
                     addressing_mode: AddressingMode,
+                    pc: u16,
                 ) -> String {
-                    let temp = value as u16;
+                    let effective_value = if addressing_mode == AddressingMode::Relative {
+                        compute_branch(pc, operand).0
+                    } else {
+                        operand as u16
+                    };
+
                     for symbol in symbols {
-                        if symbol.value == temp {
+                        if symbol.value == effective_value {
                             return symbol.name.clone();
                         }
                     }
-                    addressing_mode.pretty_byte(value)
+
+                    addressing_mode.pretty_byte(operand)
                 }
 
                 format!(
@@ -34,22 +43,22 @@ impl Instruction {
                     op.opcode,
                     operand,
                     op.mnemonic,
-                    look_up_name(symbols, *operand, op.addressing_mode),
+                    look_up_name(symbols, *operand, op.addressing_mode, pc),
                     op.addressing_mode
                 )
             }
             Self::Word(op, _, operand) => {
                 fn look_up_name(
                     symbols: &Vec<SymbolInfo>,
-                    value: u16,
+                    operand: u16,
                     addressing_mode: AddressingMode,
                 ) -> String {
                     for symbol in symbols {
-                        if symbol.value == value {
+                        if symbol.value == operand {
                             return symbol.name.clone();
                         }
                     }
-                    addressing_mode.pretty_word(value)
+                    addressing_mode.pretty_word(operand)
                 }
 
                 let (hi, lo) = split_word(*operand);

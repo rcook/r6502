@@ -50,12 +50,14 @@ impl MachineState {
         self.store(addr + 1, hi);
     }
 
+    #[allow(unused)]
     pub(crate) fn next(&mut self) -> u8 {
         let value = self.fetch(self.reg.pc);
         self.reg.pc += 1;
         value
     }
 
+    #[allow(unused)]
     pub(crate) fn next_word(&mut self) -> u16 {
         let lo = self.next();
         let hi = self.next();
