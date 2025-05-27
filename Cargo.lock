@@ -606,6 +606,8 @@ dependencies = [
  "clap-num",
  "cursive",
  "iter_mod",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

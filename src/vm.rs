@@ -1,13 +1,13 @@
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    iter_ops, Flag, ImageInfo, Instruction, MachineState, Op, OpFunc, RunVMResult, RunVMStatus,
+    iter_ops, Flag, ImageSource, Instruction, MachineState, Op, OpFunc, RunVMResult, RunVMStatus,
     Status, VMHost, IRQ, IRQ_VALUE, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
 
 pub(crate) fn run_vm<H: VMHost>(
     host: &H,
-    image_info: Option<ImageInfo>,
+    image_source: Option<ImageSource>,
     mut free_running: bool,
 ) -> Result<RunVMResult> {
     let mut m = MachineState::new();
@@ -20,7 +20,7 @@ pub(crate) fn run_vm<H: VMHost>(
         ops
     };
 
-    if let Some(ref image_info) = image_info {
+    if let Some(ref image_info) = image_source {
         let start_info = image_info.load_into_memory(&mut m.memory)?;
         m.reg.pc = start_info.start;
     }

@@ -1,5 +1,5 @@
 #![allow(unused)]
-use crate::{run_vm, Args, CliHost, ImageInfo, TestHost, UIHost, UI};
+use crate::{run_vm, Args, CliHost, ImageSource, TestHost, UIHost, UI};
 use anyhow::Result;
 use clap::Parser;
 use std::sync::mpsc::channel;
@@ -7,26 +7,26 @@ use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
     let args = Args::parse();
-    let image_info = Some(ImageInfo::from_file(&args.path, args.origin, args.start));
+    let image_source = Some(ImageSource::from_file(&args.path, args.origin, args.start));
     if args.debug {
         let debug_channel = channel();
         let status_channel = channel();
         let mut ui = UI::new(status_channel.1, debug_channel.0)?;
         let ui_host = UIHost::new(debug_channel.1, status_channel.0);
         spawn(move || {
-            run_vm(&ui_host, image_info, !args.debug).expect("Must succeed");
+            run_vm(&ui_host, image_source, !args.debug).expect("Must succeed");
         });
         ui.run();
     } else {
         let cli_host = CliHost::new();
-        run_vm(&cli_host, image_info, !args.debug)?;
+        run_vm(&cli_host, image_source, !args.debug)?;
     }
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{run_vm, ImageInfo, RunVMResult, RunVMStatus, Status, TestHost};
+    use crate::{run_vm, ImageSource, RunVMResult, RunVMStatus, Status, TestHost};
     use anyhow::Result;
 
     #[test]
@@ -63,7 +63,7 @@ mod tests {
         let test_host = TestHost::new();
         let result = run_vm(
             &test_host,
-            Some(ImageInfo::from_bytes(bytes, None, None)),
+            Some(ImageSource::from_bytes(bytes, None, None)),
             false,
         )?;
         Ok((test_host.stdout(), result))
