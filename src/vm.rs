@@ -1,9 +1,12 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
-use crate::{split_word, Cpu, Flag, Op, OpFunc, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
+use crate::{
+    split_word, ByteFn, Cpu, Flag, NoOperandFn, Op, OpFunc, ProgramInfo, WordFn, IRQ, OPS, OSHALT,
+    OSWRCH, STACK_BASE,
+};
 use anyhow::{bail, Result};
 
-pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
+pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result<()> {
     let ops = {
         let mut ops: [Option<Op>; 256] = [None; 256];
         for op in OPS {
@@ -11,6 +14,11 @@ pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
         }
         ops
     };
+
+    if let Some(ref program_info) = program_info {
+        program_info.load(&mut cpu.memory)?;
+        cpu.pc = program_info.start();
+    }
 
     // Set up interrupt vectors
     cpu.store_word(IRQ, IRQ_VALUE);
@@ -22,42 +30,72 @@ pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
     // Initialize the state
     cpu.push_word(OSHALT - 1);
 
+    enum Instruction {
+        NoOperand(Op, NoOperandFn),
+        Byte(Op, ByteFn, u8),
+        Word(Op, WordFn, u16),
+    }
+
     loop {
         while !cpu.get_flag(Flag::B) {
-            cpu.show_registers();
+            cpu.registers();
+            let opcode = cpu.next();
+
+            let instruction = match ops[opcode as usize] {
+                Some(op) => match op.func {
+                    OpFunc::NoOperand(f) => Instruction::NoOperand(op, f),
+                    OpFunc::Byte(f) => Instruction::Byte(op, f, cpu.next()),
+                    OpFunc::Word(f) => Instruction::Word(op, f, cpu.next_word()),
+                },
+                None => bail!("Unsupported opcode {opcode:02X}"),
+            };
+
+            match instruction {
+                Instruction::NoOperand(op, _) => cpu.current(&format!(
+                    "{:02X}       {} {:?}",
+                    op.opcode, op.mnemonic, op.addressing_mode
+                )),
+                Instruction::Byte(op, _, operand) => cpu.current(&format!(
+                    "{:02X} {:02X}    {} {:?}",
+                    op.opcode, operand, op.mnemonic, op.addressing_mode
+                )),
+                Instruction::Word(op, _, operand) => {
+                    let (hi, lo) = split_word(operand);
+                    cpu.current(&format!(
+                        "{:02X} {:02X} {:02X} {} {:?}",
+                        op.opcode, lo, hi, op.mnemonic, op.addressing_mode
+                    ))
+                }
+            }
+
             if !cpu.poll() {
                 // Handle disconnection
                 return Ok(());
             }
-            let opcode = cpu.next();
-            match ops[opcode as usize] {
-                Some(op) => match op.func {
-                    OpFunc::NoArgs(f) => {
-                        cpu.println(&format!(
-                            "{:02X}       {} {:?}",
-                            op.opcode, op.mnemonic, op.addressing_mode
-                        ));
-                        f(cpu)
-                    }
-                    OpFunc::Byte(f) => {
-                        let operand = cpu.next();
-                        cpu.println(&format!(
-                            "{:02X} {:02X}    {} {:?}",
-                            op.opcode, operand, op.mnemonic, op.addressing_mode
-                        ));
-                        f(cpu, operand)
-                    }
-                    OpFunc::Word(f) => {
-                        let operand = cpu.next_word();
-                        let (hi, lo) = split_word(operand);
-                        cpu.println(&format!(
-                            "{:02X} {:02X} {:02X} {} {:?}",
-                            op.opcode, lo, hi, op.mnemonic, op.addressing_mode
-                        ));
-                        f(cpu, operand)
-                    }
-                },
-                None => bail!("Unsupported opcode {opcode:02X}"),
+
+            match instruction {
+                Instruction::NoOperand(op, f) => {
+                    cpu.history(&format!(
+                        "{:02X}       {} {:?}",
+                        op.opcode, op.mnemonic, op.addressing_mode
+                    ));
+                    f(cpu)
+                }
+                Instruction::Byte(op, f, operand) => {
+                    cpu.history(&format!(
+                        "{:02X} {:02X}    {} {:?}",
+                        op.opcode, operand, op.mnemonic, op.addressing_mode
+                    ));
+                    f(cpu, operand)
+                }
+                Instruction::Word(op, f, operand) => {
+                    let (hi, lo) = split_word(operand);
+                    cpu.history(&format!(
+                        "{:02X} {:02X} {:02X} {} {:?}",
+                        op.opcode, lo, hi, op.mnemonic, op.addressing_mode
+                    ));
+                    f(cpu, operand)
+                }
             }
         }
 
@@ -75,14 +113,17 @@ pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
                 cpu.write_stdout(c);
             }
             OSHALT => {
-                cpu.println("Halted");
+                cpu.history("Halted");
+                if let Some(ref program_info) = program_info {
+                    program_info.save_dump(&mut cpu.memory)?;
+                }
                 return Ok(());
             }
-            _ => panic!("Break at subroutine {:04X}", addr),
+            _ => panic!("Break at unimplemented subroutine {:04X}", addr),
         }
 
         match RTI.func {
-            OpFunc::NoArgs(f) => f(cpu),
+            OpFunc::NoOperand(f) => f(cpu),
             _ => unreachable!(),
         }
     }

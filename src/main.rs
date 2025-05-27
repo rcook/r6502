@@ -24,7 +24,7 @@ pub(crate) use controller_message::ControllerMessage;
 pub(crate) use cpu::Cpu;
 pub(crate) use cpu_message::CpuMessage;
 pub(crate) use flag::Flag;
-pub(crate) use op_func::OpFunc;
+pub(crate) use op_func::{ByteFn, NoOperandFn, OpFunc, WordFn};
 pub(crate) use ops::{Op, OPS};
 pub(crate) use program_info::ProgramInfo;
 pub(crate) use types::Memory;

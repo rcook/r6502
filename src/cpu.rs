@@ -117,15 +117,21 @@ impl Cpu {
             .expect("Must succeed")
     }
 
-    pub(crate) fn println(&self, s: &str) {
+    pub(crate) fn current(&self, s: &str) {
         self.controller_tx
-            .send(ControllerMessage::Println(String::from(s)))
+            .send(ControllerMessage::Current(String::from(s)))
             .expect("Must succeed")
     }
 
-    pub(crate) fn show_registers(&self) {
+    pub(crate) fn history(&self, s: &str) {
         self.controller_tx
-            .send(ControllerMessage::ShowRegisters(format!(
+            .send(ControllerMessage::History(String::from(s)))
+            .expect("Must succeed")
+    }
+
+    pub(crate) fn registers(&self) {
+        self.controller_tx
+            .send(ControllerMessage::Registers(format!(
                 "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
                 self.pc, self.p, self.a, self.x, self.y, self.s,
             )))

@@ -1,7 +1,8 @@
 pub(crate) enum ControllerMessage {
     WriteStdout(char),
-    Println(String),
-    ShowRegisters(String),
+    Current(String),
+    History(String),
+    Registers(String),
     Step,
     Run,
     Break,

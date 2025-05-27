@@ -19,41 +19,41 @@ impl Controller {
     }
 
     pub(crate) fn run(&mut self, program_info: Option<ProgramInfo>) -> Result<()> {
+        use crate::ControllerMessage::*;
+
         let mut cpu = Cpu::new(self.tx.clone());
         let cpu_tx = cpu.tx().clone();
 
-        if let Some(program_info) = program_info {
-            program_info.load(&mut cpu.memory)?;
-            cpu.pc = program_info.start();
-        }
-
         spawn(move || {
-            run_vm(&mut cpu).unwrap();
+            run_vm(&mut cpu, program_info).unwrap();
         });
 
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
-                    ControllerMessage::WriteStdout(c) => self
+                    WriteStdout(c) => self
                         .ui
                         .tx()
                         .send(UIMessage::WriteStdout(c))
                         .expect("Must succeed"),
-                    ControllerMessage::Println(s) => self
+                    Current(s) => self
                         .ui
                         .tx()
-                        .send(UIMessage::Println(s))
+                        .send(UIMessage::Current(s))
                         .expect("Must succeed"),
-                    ControllerMessage::ShowRegisters(s) => self
+                    History(s) => self
                         .ui
                         .tx()
-                        .send(UIMessage::ShowRegisters(s))
+                        .send(UIMessage::History(s))
                         .expect("Must succeed"),
-                    ControllerMessage::Step => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
-                    ControllerMessage::Run => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
-                    ControllerMessage::Break => {
-                        cpu_tx.send(CpuMessage::Break).expect("Must succeed")
-                    }
+                    Registers(s) => self
+                        .ui
+                        .tx()
+                        .send(UIMessage::Registers(s))
+                        .expect("Must succeed"),
+                    Step => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
+                    Run => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
+                    Break => cpu_tx.send(CpuMessage::Break).expect("Must succeed"),
                 };
             }
         }

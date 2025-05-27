@@ -14,7 +14,7 @@ pub(crate) const BRK: Op = Op {
     mnemonic: "BRK",
     addressing_mode: AddressingMode::Implied,
     opcode: 0x00u8,
-    func: OpFunc::NoArgs(|cpu| {
+    func: OpFunc::NoOperand(|cpu| {
         cpu.push_word(cpu.pc);
         cpu.push(cpu.p);
         cpu.pc = cpu.fetch_word(IRQ);
@@ -36,10 +36,17 @@ pub(crate) const RTI: Op = Op {
     mnemonic: "RTI",
     addressing_mode: AddressingMode::Implied,
     opcode: 0x40u8,
-    func: OpFunc::NoArgs(|cpu| {
+    func: OpFunc::NoOperand(|cpu| {
         cpu.p = cpu.pull();
         cpu.pc = cpu.pull_word();
     }),
+};
+
+pub(crate) const PHA: Op = Op {
+    mnemonic: "PHA",
+    addressing_mode: AddressingMode::Implied,
+    opcode: 0x48u8,
+    func: OpFunc::NoOperand(|cpu| cpu.push(cpu.a)),
 };
 
 pub(crate) const JMP_ABS: Op = Op {
@@ -53,10 +60,17 @@ pub(crate) const RTS: Op = Op {
     mnemonic: "RTS",
     addressing_mode: AddressingMode::Implied,
     opcode: 0x60u8,
-    func: OpFunc::NoArgs(|cpu| {
+    func: OpFunc::NoOperand(|cpu| {
         cpu.pc = cpu.pull_word();
         cpu.pc += 1;
     }),
+};
+
+pub(crate) const PLA: Op = Op {
+    mnemonic: "PLA",
+    addressing_mode: AddressingMode::Implied,
+    opcode: 0x68u8,
+    func: OpFunc::NoOperand(|cpu| cpu.a = cpu.pull()),
 };
 
 pub(crate) const STA_ZP: Op = Op {
@@ -73,6 +87,13 @@ pub(crate) const STA_ABS: Op = Op {
     func: OpFunc::Word(|cpu, operand| cpu.store(operand, cpu.a)),
 };
 
+pub(crate) const TYA: Op = Op {
+    mnemonic: "TYA",
+    addressing_mode: AddressingMode::Implied,
+    opcode: 0x98u8,
+    func: OpFunc::NoOperand(|cpu| cpu.a = cpu.y),
+};
+
 pub(crate) const LDY_IMM: Op = Op {
     mnemonic: "LDY",
     addressing_mode: AddressingMode::Immediate,
@@ -87,11 +108,25 @@ pub(crate) const LDX_IMM: Op = Op {
     func: OpFunc::Byte(|cpu, operand| cpu.x = operand),
 };
 
+pub(crate) const TAY: Op = Op {
+    mnemonic: "TAY",
+    addressing_mode: AddressingMode::Immediate,
+    opcode: 0xa8u8,
+    func: OpFunc::NoOperand(|cpu| cpu.y = cpu.a),
+};
+
 pub(crate) const LDA_IMM: Op = Op {
     mnemonic: "LDA",
     addressing_mode: AddressingMode::Immediate,
     opcode: 0xa9u8,
     func: OpFunc::Byte(|cpu, operand| cpu.a = operand),
+};
+
+pub(crate) const TAX: Op = Op {
+    mnemonic: "TAX",
+    addressing_mode: AddressingMode::Implied,
+    opcode: 0xaau8,
+    func: OpFunc::NoOperand(|cpu| cpu.x = cpu.a),
 };
 
 pub(crate) const LDA_IND_IDX_Y: Op = Op {
@@ -116,6 +151,13 @@ pub(crate) const LDA_ABS_X: Op = Op {
     }),
 };
 
+pub(crate) const INY: Op = Op {
+    mnemonic: "INY",
+    addressing_mode: AddressingMode::Implied,
+    opcode: 0xc8u8,
+    func: OpFunc::NoOperand(|cpu| cpu.y += 1),
+};
+
 pub(crate) const CMP_IMM: Op = Op {
     mnemonic: "CMP",
     addressing_mode: AddressingMode::Immediate,
@@ -128,18 +170,37 @@ pub(crate) const CMP_IMM: Op = Op {
     }),
 };
 
+pub(crate) const DEX: Op = Op {
+    mnemonic: "DEX",
+    addressing_mode: AddressingMode::Implied,
+    opcode: 0xcau8,
+    func: OpFunc::NoOperand(|cpu| cpu.x -= 1),
+};
+
+pub(crate) const CPX_IMM: Op = Op {
+    mnemonic: "CPX",
+    addressing_mode: AddressingMode::Immediate,
+    opcode: 0xe0u8,
+    func: OpFunc::Byte(|cpu, operand| {
+        let result = cpu.x as i32 - operand as i32;
+        cpu.set_flag(Flag::N, cpu.x >= 0x80u8);
+        cpu.set_flag(Flag::Z, result == 0);
+        cpu.set_flag(Flag::CARRY, result >= 0);
+    }),
+};
+
 pub(crate) const INX: Op = Op {
     mnemonic: "INX",
     addressing_mode: AddressingMode::Implied,
     opcode: 0xe8u8,
-    func: OpFunc::NoArgs(|cpu| cpu.x += 1),
+    func: OpFunc::NoOperand(|cpu| cpu.x += 1),
 };
 
 pub(crate) const NOP: Op = Op {
     mnemonic: "NOP",
     addressing_mode: AddressingMode::Implied,
     opcode: 0xeau8,
-    func: OpFunc::NoArgs(|_cpu| {}),
+    func: OpFunc::NoOperand(|_cpu| {}),
 };
 
 pub(crate) const BEQ: Op = Op {
@@ -156,11 +217,14 @@ pub(crate) const BEQ: Op = Op {
     }),
 };
 
-pub(crate) const OPS: [Op; 16] = [
+pub(crate) const OPS: [Op; 24] = [
     BEQ,
     BRK,
     CMP_IMM,
+    CPX_IMM,
+    DEX,
     INX,
+    INY,
     JMP_ABS,
     JSR,
     LDA_ABS_X,
@@ -169,8 +233,13 @@ pub(crate) const OPS: [Op; 16] = [
     LDX_IMM,
     LDY_IMM,
     NOP,
+    PHA,
+    PLA,
     RTI,
     RTS,
     STA_ABS,
     STA_ZP,
+    TAX,
+    TAY,
+    TYA,
 ];
