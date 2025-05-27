@@ -95,13 +95,6 @@ impl Cpu {
         make_word(hi, lo)
     }
 
-    #[allow(unused)]
-    pub(crate) fn dump_stack(&self) {
-        for i in 0..256 {
-            println!("{:04X}: {:02X}", STACK_BASE + i, self.fetch(STACK_BASE + i));
-        }
-    }
-
     pub(crate) fn report_before_execute(&self, cycles: u32, instruction: &Instruction) {
         self.ui_tx
             .send(UIMessage::BeforeExecute(
