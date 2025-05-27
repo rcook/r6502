@@ -8,3 +8,4 @@ anyhow = "1.0.98"
 clap = { version = "4.5.38", features = ["derive"] }
 clap-num = "1.2.0"
 cursive = "0.21.1"
+iter_mod = "0.1.0"

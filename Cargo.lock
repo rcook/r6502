@@ -389,6 +389,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
+name = "iter_mod"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "491b665026a9a2071cb8834add22b9ff365803675d2f025427842cc9df8deb0f"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -595,6 +605,7 @@ dependencies = [
  "clap",
  "clap-num",
  "cursive",
+ "iter_mod",
 ]
 
 [[package]]

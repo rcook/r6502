@@ -1,8 +1,8 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    DebugMessage, Flag, Instruction, MachineState, Op, OpFunc, ProgramInfo, RegisterFile, Status,
-    StatusMessage, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
+    iter_ops, DebugMessage, Flag, Instruction, MachineState, Op, OpFunc, ProgramInfo, RegisterFile,
+    Status, StatusMessage, IRQ, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
@@ -18,8 +18,8 @@ pub(crate) fn run_vm(
 
     let ops = {
         let mut ops: [Option<Op>; 256] = [None; 256];
-        for op in OPS {
-            ops[op.opcode as usize] = Some(op)
+        for op in iter_ops() {
+            ops[op.opcode as usize] = Some(*op)
         }
         ops
     };
