@@ -78,7 +78,7 @@ impl UI {
             .scroll_strategy(ScrollStrategy::KeepRow);
 
         let execution = LinearLayout::new(Orientation::Vertical)
-            .child(panel(current, "PC"))
+            .child(panel(current, "Current Instruction"))
             .child(panel(registers, "Registers"))
             .child(panel(cycles, "Cycles"))
             .child(panel(disassembly, "Disassembly"))

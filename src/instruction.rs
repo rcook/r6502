@@ -28,22 +28,20 @@ pub(crate) enum Instruction {
 impl Instruction {
     pub(crate) fn pretty_current(&self, symbols: &Vec<SymbolInfo>) -> String {
         match self {
-            Self::NoOperand { pc: _, op, f: _ } => format!(
-                "{:02X}       {} ({:?})",
-                op.opcode, op.mnemonic, op.addressing_mode
-            ),
+            Self::NoOperand { pc: _, op, f: _ } => {
+                format!("{} ({})", op.mnemonic, op.opcode)
+            }
             Self::Byte {
                 pc,
                 op,
                 f: _,
                 operand,
             } => format!(
-                "{:02X} {:02X}    {} {} ({:?})",
-                op.opcode,
-                operand,
+                "{} {} ({:02X} {:02X})",
                 op.mnemonic,
                 Self::look_up_name(symbols, *pc, op, *operand),
-                op.addressing_mode
+                op.opcode,
+                operand,
             ),
             Self::Word {
                 pc: _,
@@ -53,13 +51,12 @@ impl Instruction {
             } => {
                 let (hi, lo) = split_word(*operand);
                 format!(
-                    "{:02X} {:02X} {:02X} {} {} ({:?})",
+                    "{} {} ({:02X} {:02X} {:02X})",
+                    op.mnemonic,
+                    Self::look_up_name_for_word(symbols, op, *operand),
                     op.opcode,
                     lo,
                     hi,
-                    op.mnemonic,
-                    Self::look_up_name_for_word(symbols, op, *operand),
-                    op.addressing_mode
                 )
             }
         }
