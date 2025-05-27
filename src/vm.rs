@@ -8,12 +8,11 @@ use anyhow::{bail, Result};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) fn run_vm(
-    debug_rx: Receiver<DebugMessage>,
-    status_tx: Sender<StatusMessage>,
+    debug_rx: Option<Receiver<DebugMessage>>,
+    status_tx: Option<Sender<StatusMessage>>,
     program_info: Option<ProgramInfo>,
+    mut free_running: bool,
 ) -> Result<()> {
-    let mut free_running = false;
-
     let mut m = MachineState::new();
 
     let ops = {
@@ -53,11 +52,15 @@ pub(crate) fn run_vm(
                 None => bail!("Unsupported opcode {opcode:02X}"),
             };
 
-            report_before_execute(&status_tx, m.reg.clone(), cycles, &instruction);
+            if let Some(status_tx) = status_tx.as_ref() {
+                report_before_execute(status_tx, m.reg.clone(), cycles, &instruction);
+            }
 
-            if !poll(&debug_rx, &mut free_running) {
-                // Handle disconnection
-                return Ok(());
+            if let Some(debug_rx) = debug_rx.as_ref() {
+                if !poll(debug_rx, &mut free_running) {
+                    // Handle disconnection
+                    return Ok(());
+                }
             }
 
             cycles += match instruction {
@@ -66,7 +69,9 @@ pub(crate) fn run_vm(
                 Instruction::Word(_, f, operand) => f(&mut m, operand),
             };
 
-            report_after_execute(&status_tx, m.reg.clone(), cycles, &instruction);
+            if let Some(status_tx) = status_tx.as_ref() {
+                report_after_execute(status_tx, m.reg.clone(), cycles, &instruction);
+            }
         }
 
         // Check for expected interrupt request value
@@ -80,10 +85,16 @@ pub(crate) fn run_vm(
         match addr {
             OSWRCH => {
                 let c = m.reg.a as char;
-                write_stdout(&status_tx, c);
+                if let Some(status_tx) = status_tx.as_ref() {
+                    write_stdout(status_tx, c);
+                } else {
+                    print!("{c}");
+                }
             }
             OSHALT => {
-                report_status(&status_tx, Status::Halted);
+                if let Some(status_tx) = status_tx.as_ref() {
+                    report_status(status_tx, Status::Halted);
+                }
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&m.memory)?;
                 }

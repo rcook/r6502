@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use clap_num::maybe_hex;
 use std::path::PathBuf;
 
@@ -8,4 +8,19 @@ pub(crate) struct Args {
 
     #[clap(value_parser=maybe_hex::<u16>)]
     pub(crate) start: u16,
+
+    #[arg(
+        help = "Launch in debugger [default]",
+        long = "no-debug",
+        default_value_t = true,
+        action = ArgAction::SetFalse
+    )]
+    pub(crate) debug: bool,
+
+    #[arg(
+        help = "Do not launch in debugger",
+        long = "debug",
+        overrides_with = "debug"
+    )]
+    _no_debug: bool,
 }
