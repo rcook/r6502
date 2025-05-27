@@ -28,7 +28,6 @@ impl Controller {
             run_vm(&mut cpu, program_info).unwrap();
         });
 
-        let mut cpu_running = true;
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
@@ -57,13 +56,10 @@ impl Controller {
                         .tx()
                         .send(UIMessage::Cycles(s))
                         .expect("Must succeed"),
-                    OnHalted => cpu_running = false,
-                    Step if cpu_running => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
-                    Step => {}
-                    Run if cpu_running => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
-                    Run => {}
-                    Break if cpu_running => cpu_tx.send(CpuMessage::Break).expect("Must succeed"),
-                    Break => {}
+                    OnHalted => {}
+                    Step => _ = cpu_tx.send(CpuMessage::Step),
+                    Run => _ = cpu_tx.send(CpuMessage::Run),
+                    Break => _ = cpu_tx.send(CpuMessage::Break),
                 };
             }
         }
