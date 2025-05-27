@@ -1,7 +1,7 @@
-use crate::{Instruction, RegisterFile};
+use crate::{Instruction, RegisterFile, Status};
 
 pub(crate) enum UIMessage {
-    Status(String),
+    Status(Status),
     WriteStdout(char),
     Current(Instruction),
     Disassembly(Instruction),

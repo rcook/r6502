@@ -1,13 +1,12 @@
-use crate::{Instruction, RegisterFile};
+use crate::{Instruction, RegisterFile, Status};
 
 pub(crate) enum ControllerMessage {
-    Status(String),
+    Status(Status),
     WriteStdout(char),
     Current(Instruction),
     Disassembly(Instruction),
     Registers(RegisterFile),
     Cycles(String),
-    OnHalted,
     Step,
     Run,
     Break,

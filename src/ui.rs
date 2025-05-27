@@ -1,4 +1,4 @@
-use crate::{ControllerMessage, UIMessage};
+use crate::{ControllerMessage, Status as _Status, UIMessage};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -41,7 +41,10 @@ impl UI {
 
         while let Some(message) = self.rx.try_iter().next() {
             match message {
-                Status(mut s) => {
+                Status(status) => {
+                    let mut s = match status {
+                        _Status::Halted => String::from("Halted"),
+                    };
                     s.push('\n');
                     self.cursive
                         .find_name::<TextView>(STATUS_NAME)

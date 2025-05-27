@@ -31,10 +31,10 @@ impl Controller {
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
-                    Status(s) => self
+                    Status(status) => self
                         .ui
                         .tx()
-                        .send(UIMessage::Status(s))
+                        .send(UIMessage::Status(status))
                         .expect("Must succeed"),
                     WriteStdout(c) => self
                         .ui
@@ -61,7 +61,6 @@ impl Controller {
                         .tx()
                         .send(UIMessage::Cycles(s))
                         .expect("Must succeed"),
-                    OnHalted => {}
                     Step => _ = cpu_tx.send(CpuMessage::Step),
                     Run => _ = cpu_tx.send(CpuMessage::Run),
                     Break => _ = cpu_tx.send(CpuMessage::Break),

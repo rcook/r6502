@@ -1,7 +1,7 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    Cpu, Flag, Instruction, Op, OpFunc, ProgramInfo, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
+    Cpu, Flag, Instruction, Op, OpFunc, ProgramInfo, Status, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
 
@@ -83,11 +83,10 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 cpu.write_stdout(c);
             }
             OSHALT => {
-                cpu.status("Halted");
+                cpu.status(Status::Halted);
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&cpu.memory)?;
                 }
-                cpu.on_halted();
                 return Ok(());
             }
             _ => panic!("Break at unimplemented subroutine {:04X}", addr),

@@ -1,6 +1,6 @@
 use crate::{
     make_word, split_word, ControllerMessage, CpuMessage, Flag, Instruction, Memory, RegisterFile,
-    STACK_BASE,
+    Status, STACK_BASE,
 };
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
@@ -109,9 +109,9 @@ impl Cpu {
         }
     }
 
-    pub(crate) fn status(&self, s: &str) {
+    pub(crate) fn status(&self, status: Status) {
         self.controller_tx
-            .send(ControllerMessage::Status(String::from(s)))
+            .send(ControllerMessage::Status(status))
             .expect("Must succeed")
     }
 
@@ -164,11 +164,5 @@ impl Cpu {
                 }
             }
         }
-    }
-
-    pub(crate) fn on_halted(&self) {
-        self.controller_tx
-            .send(ControllerMessage::OnHalted)
-            .expect("Must succeed")
     }
 }
