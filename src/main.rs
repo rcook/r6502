@@ -1,5 +1,6 @@
 mod addressing_mode;
 mod args;
+mod cli_host;
 mod constants;
 mod debug_message;
 mod flag;
@@ -16,11 +17,14 @@ mod status;
 mod status_message;
 mod types;
 mod ui;
+mod ui_host;
 mod util;
 mod vm;
+mod vm_host;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use args::Args;
+pub(crate) use cli_host::CliHost;
 pub(crate) use constants::{IRQ, OSHALT, OSWRCH, STACK_BASE};
 pub(crate) use debug_message::DebugMessage;
 pub(crate) use flag::Flag;
@@ -36,8 +40,10 @@ pub(crate) use status::Status;
 pub(crate) use status_message::StatusMessage;
 pub(crate) use types::Memory;
 pub(crate) use ui::UI;
+pub(crate) use ui_host::UIHost;
 pub(crate) use util::{make_word, split_word};
 pub(crate) use vm::run_vm;
+pub(crate) use vm_host::{PollResult, VMHost};
 
 fn main() -> anyhow::Result<()> {
     crate::run::run()

@@ -1,15 +1,13 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    iter_ops, DebugMessage, Flag, ImageInfo, Instruction, MachineState, Op, OpFunc, RegisterFile,
-    Status, StatusMessage, IRQ, OSHALT, OSWRCH, STACK_BASE,
+    iter_ops, Flag, ImageInfo, Instruction, MachineState, Op, OpFunc, Status, VMHost, IRQ, OSHALT,
+    OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
-use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
-pub(crate) fn run_vm(
-    debug_rx: Option<Receiver<DebugMessage>>,
-    status_tx: Option<Sender<StatusMessage>>,
+pub(crate) fn run_vm<H: VMHost>(
+    host: H,
     image_info: Option<ImageInfo>,
     mut free_running: bool,
 ) -> Result<()> {
@@ -52,15 +50,13 @@ pub(crate) fn run_vm(
                 None => bail!("Unsupported opcode {opcode:02X}"),
             };
 
-            if let Some(status_tx) = status_tx.as_ref() {
-                report_before_execute(status_tx, m.reg.clone(), cycles, &instruction);
-            }
+            host.report_before_execute(&m.reg, cycles, &instruction);
 
-            if let Some(debug_rx) = debug_rx.as_ref() {
-                if !poll(debug_rx, &mut free_running) {
-                    // Handle disconnection
-                    return Ok(());
-                }
+            let result = host.poll(free_running);
+            free_running = result.free_running;
+            if !result.is_active {
+                // Handle disconnection
+                return Ok(());
             }
 
             cycles += match instruction {
@@ -69,9 +65,7 @@ pub(crate) fn run_vm(
                 Instruction::Word(_, f, operand) => f(&mut m, operand),
             };
 
-            if let Some(status_tx) = status_tx.as_ref() {
-                report_after_execute(status_tx, m.reg.clone(), cycles, &instruction);
-            }
+            host.report_after_execute(&m.reg, cycles, &instruction);
         }
 
         // Check for expected interrupt request value
@@ -85,16 +79,10 @@ pub(crate) fn run_vm(
         match addr {
             OSWRCH => {
                 let c = m.reg.a as char;
-                if let Some(status_tx) = status_tx.as_ref() {
-                    write_stdout(status_tx, c);
-                } else {
-                    print!("{c}");
-                }
+                host.write_stdout(c);
             }
             OSHALT => {
-                if let Some(status_tx) = status_tx.as_ref() {
-                    report_status(status_tx, Status::Halted);
-                }
+                host.report_status(Status::Halted);
                 if let Some(ref program_info) = image_info {
                     program_info.save_dump(&m.memory)?;
                 }
@@ -115,67 +103,4 @@ fn set_brk(m: &mut MachineState, addr: u16) {
     m.store(addr, BRK.opcode); // Software interrupt
     m.store(addr + 1, NOP.opcode); // Padding
     m.store(addr + 2, RTS.opcode); // Return
-}
-
-fn report_before_execute(
-    status_tx: &Sender<StatusMessage>,
-    reg: RegisterFile,
-    cycles: u32,
-    instruction: &Instruction,
-) {
-    status_tx
-        .send(StatusMessage::BeforeExecute(
-            reg,
-            cycles,
-            instruction.clone(),
-        ))
-        .expect("Must succeed")
-}
-
-fn report_after_execute(
-    status_tx: &Sender<StatusMessage>,
-    reg: RegisterFile,
-    cycles: u32,
-    instruction: &Instruction,
-) {
-    status_tx
-        .send(StatusMessage::AfterExecute(
-            reg,
-            cycles,
-            instruction.clone(),
-        ))
-        .expect("Must succeed")
-}
-
-fn report_status(status_tx: &Sender<StatusMessage>, status: Status) {
-    status_tx
-        .send(StatusMessage::Status(status))
-        .expect("Must succeed")
-}
-
-fn write_stdout(status_tx: &Sender<StatusMessage>, c: char) {
-    status_tx
-        .send(StatusMessage::WriteStdout(c))
-        .expect("Must succeed")
-}
-
-fn poll(debug_rx: &Receiver<DebugMessage>, free_running: &mut bool) -> bool {
-    loop {
-        if *free_running {
-            match debug_rx.try_recv() {
-                Err(TryRecvError::Disconnected) => return false,
-                Err(TryRecvError::Empty) => return true,
-                Ok(DebugMessage::Step) => {}
-                Ok(DebugMessage::Run) => {}
-                Ok(DebugMessage::Break) => *free_running = false,
-            }
-        } else {
-            match debug_rx.recv() {
-                Err(_) => return false,
-                Ok(DebugMessage::Step) => return true,
-                Ok(DebugMessage::Run) => *free_running = true,
-                Ok(DebugMessage::Break) => {}
-            }
-        }
-    }
 }
