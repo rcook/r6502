@@ -1,4 +1,4 @@
-use crate::{ControllerMessage, CpuMessage, Flag, Memory, STACK_BASE};
+use crate::{make_word, split_word, ControllerMessage, CpuMessage, Flag, Memory, STACK_BASE};
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
 pub(crate) struct Cpu {
@@ -56,7 +56,7 @@ impl Cpu {
     pub(crate) fn fetch_word(&self, addr: u16) -> u16 {
         let lo = self.fetch(addr);
         let hi = self.fetch(addr + 1);
-        Self::make_word(hi, lo)
+        make_word(hi, lo)
     }
 
     pub(crate) fn store(&mut self, addr: u16, value: u8) {
@@ -64,7 +64,7 @@ impl Cpu {
     }
 
     pub(crate) fn store_word(&mut self, addr: u16, value: u16) {
-        let (hi, lo) = Self::split_word(value);
+        let (hi, lo) = split_word(value);
         self.store(addr, lo);
         self.store(addr + 1, hi);
     }
@@ -78,7 +78,7 @@ impl Cpu {
     pub(crate) fn next_word(&mut self) -> u16 {
         let lo = self.next();
         let hi = self.next();
-        Self::make_word(hi, lo)
+        make_word(hi, lo)
     }
 
     pub(crate) fn push(&mut self, value: u8) {
@@ -88,7 +88,7 @@ impl Cpu {
     }
 
     pub(crate) fn push_word(&mut self, value: u16) {
-        let (hi, lo) = Self::split_word(value);
+        let (hi, lo) = split_word(value);
         self.push(hi);
         self.push(lo);
     }
@@ -101,7 +101,7 @@ impl Cpu {
     pub(crate) fn pull_word(&mut self) -> u16 {
         let lo = self.pull();
         let hi = self.pull();
-        Self::make_word(hi, lo)
+        make_word(hi, lo)
     }
 
     #[allow(unused)]
@@ -151,15 +151,5 @@ impl Cpu {
                 }
             }
         }
-    }
-
-    fn make_word(hi: u8, lo: u8) -> u16 {
-        ((hi as u16) << 8) + lo as u16
-    }
-
-    fn split_word(value: u16) -> (u8, u8) {
-        let hi = (value >> 8) as u8;
-        let lo = value as u8;
-        (hi, lo)
     }
 }

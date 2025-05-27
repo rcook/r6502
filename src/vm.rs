@@ -1,6 +1,6 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
-use crate::{Cpu, Flag, Op, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
+use crate::{split_word, Cpu, Flag, Op, OpFunc, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE};
 use anyhow::{bail, Result};
 
 pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
@@ -31,13 +31,32 @@ pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
             }
             let opcode = cpu.next();
             match ops[opcode as usize] {
-                Some(op) => {
-                    cpu.println(&format!(
-                        "{:02X} {} {:?}",
-                        op.opcode, op.mnemonic, op.addressing_mode
-                    ));
-                    (op.func)(cpu)
-                }
+                Some(op) => match op.func {
+                    OpFunc::NoArgs(f) => {
+                        cpu.println(&format!(
+                            "{:02X}       {} {:?}",
+                            op.opcode, op.mnemonic, op.addressing_mode
+                        ));
+                        f(cpu)
+                    }
+                    OpFunc::Byte(f) => {
+                        let operand = cpu.next();
+                        cpu.println(&format!(
+                            "{:02X} {:02X}    {} {:?}",
+                            op.opcode, operand, op.mnemonic, op.addressing_mode
+                        ));
+                        f(cpu, operand)
+                    }
+                    OpFunc::Word(f) => {
+                        let operand = cpu.next_word();
+                        let (hi, lo) = split_word(operand);
+                        cpu.println(&format!(
+                            "{:02X} {:02X} {:02X} {} {:?}",
+                            op.opcode, lo, hi, op.mnemonic, op.addressing_mode
+                        ));
+                        f(cpu, operand)
+                    }
+                },
                 None => bail!("Unsupported opcode {opcode:02X}"),
             }
         }
@@ -62,7 +81,10 @@ pub(crate) fn run_vm(cpu: &mut Cpu) -> Result<()> {
             _ => panic!("Break at subroutine {:04X}", addr),
         }
 
-        (RTI.func)(cpu);
+        match RTI.func {
+            OpFunc::NoArgs(f) => f(cpu),
+            _ => unreachable!(),
+        }
     }
 }
 
