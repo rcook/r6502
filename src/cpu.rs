@@ -134,7 +134,7 @@ impl Cpu {
 
     pub(crate) fn cycles(&self, cycles: u32) {
         self.ui_tx
-            .send(UIMessage::Cycles(format!("cycles={cycles}")))
+            .send(UIMessage::Cycles(cycles))
             .expect("Must succeed")
     }
 

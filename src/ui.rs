@@ -71,11 +71,11 @@ impl UI {
                         .expect("Must exist")
                         .set_content(reg.pretty());
                 }
-                Cycles(s) => {
+                Cycles(cycles) => {
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
-                        .set_content(s);
+                        .set_content(format!("cycles={cycles}"));
                 }
             }
         }

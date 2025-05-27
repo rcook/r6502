@@ -6,5 +6,5 @@ pub(crate) enum UIMessage {
     Current(Instruction),
     Disassembly(Instruction),
     Registers(RegisterFile),
-    Cycles(String),
+    Cycles(u32),
 }
