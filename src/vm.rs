@@ -1,11 +1,19 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    Cpu, Flag, Instruction, Op, OpFunc, ProgramInfo, Status, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
+    Cpu, CpuMessage, Flag, Instruction, Op, OpFunc, ProgramInfo, RegisterFile, Status, UIMessage,
+    IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
+use std::sync::mpsc::{Receiver, Sender};
 
-pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result<()> {
+pub(crate) fn run_vm(
+    cpu_rx: Receiver<CpuMessage>,
+    ui_tx: Sender<UIMessage>,
+    program_info: Option<ProgramInfo>,
+) -> Result<()> {
+    let mut cpu = Cpu::new(cpu_rx);
+
     let ops = {
         let mut ops: [Option<Op>; 256] = [None; 256];
         for op in OPS {
@@ -23,8 +31,8 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
     cpu.store_word(IRQ, IRQ_VALUE);
 
     // Set up operating system handlers
-    set_brk(cpu, OSWRCH);
-    set_brk(cpu, OSHALT);
+    set_brk(&mut cpu, OSWRCH);
+    set_brk(&mut cpu, OSHALT);
 
     // Initialize the state
     cpu.push_word(OSHALT - 1);
@@ -43,7 +51,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 None => bail!("Unsupported opcode {opcode:02X}"),
             };
 
-            cpu.report_before_execute(cycles, &instruction);
+            report_before_execute(&ui_tx, cpu.reg.clone(), cycles, &instruction);
 
             if !cpu.poll() {
                 // Handle disconnection
@@ -51,12 +59,12 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
             }
 
             cycles += match instruction {
-                Instruction::NoOperand(_, f) => f(cpu),
-                Instruction::Byte(_, f, operand) => f(cpu, operand),
-                Instruction::Word(_, f, operand) => f(cpu, operand),
+                Instruction::NoOperand(_, f) => f(&mut cpu),
+                Instruction::Byte(_, f, operand) => f(&mut cpu, operand),
+                Instruction::Word(_, f, operand) => f(&mut cpu, operand),
             };
 
-            cpu.report_after_execute(cycles, &instruction);
+            report_after_execute(&ui_tx, cpu.reg.clone(), cycles, &instruction);
         }
 
         // Check for expected interrupt request value
@@ -70,10 +78,10 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
         match addr {
             OSWRCH => {
                 let c = cpu.reg.a as char;
-                cpu.write_stdout(c);
+                write_stdout(&ui_tx, c);
             }
             OSHALT => {
-                cpu.report_status(Status::Halted);
+                report_status(&ui_tx, Status::Halted);
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&cpu.memory)?;
                 }
@@ -83,7 +91,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
         }
 
         cycles += match RTI.func {
-            OpFunc::NoOperand(f) => f(cpu),
+            OpFunc::NoOperand(f) => f(&mut cpu),
             _ => unreachable!(),
         };
     }
@@ -94,4 +102,34 @@ fn set_brk(cpu: &mut Cpu, addr: u16) {
     cpu.store(addr, BRK.opcode); // Software interrupt
     cpu.store(addr + 1, NOP.opcode); // Padding
     cpu.store(addr + 2, RTS.opcode); // Return
+}
+
+pub(crate) fn report_before_execute(
+    ui_tx: &Sender<UIMessage>,
+    reg: RegisterFile,
+    cycles: u32,
+    instruction: &Instruction,
+) {
+    ui_tx
+        .send(UIMessage::BeforeExecute(reg, cycles, instruction.clone()))
+        .expect("Must succeed")
+}
+
+pub(crate) fn report_after_execute(
+    ui_tx: &Sender<UIMessage>,
+    reg: RegisterFile,
+    cycles: u32,
+    instruction: &Instruction,
+) {
+    ui_tx
+        .send(UIMessage::AfterExecute(reg, cycles, instruction.clone()))
+        .expect("Must succeed")
+}
+
+pub(crate) fn report_status(ui_tx: &Sender<UIMessage>, status: Status) {
+    ui_tx.send(UIMessage::Status(status)).expect("Must succeed")
+}
+
+pub(crate) fn write_stdout(ui_tx: &Sender<UIMessage>, c: char) {
+    ui_tx.send(UIMessage::WriteStdout(c)).expect("Must succeed")
 }

@@ -1,24 +1,19 @@
-use crate::{
-    make_word, split_word, CpuMessage, Flag, Instruction, Memory, RegisterFile, Status, UIMessage,
-    STACK_BASE,
-};
-use std::sync::mpsc::{Receiver, Sender, TryRecvError};
+use crate::{make_word, split_word, CpuMessage, Flag, Memory, RegisterFile, STACK_BASE};
+use std::sync::mpsc::{Receiver, TryRecvError};
 
 pub(crate) struct Cpu {
     pub(crate) reg: RegisterFile,
     pub(crate) memory: Memory,
     cpu_rx: Receiver<CpuMessage>,
-    ui_tx: Sender<UIMessage>,
     free_running: bool,
 }
 
 impl Cpu {
-    pub(crate) fn new(cpu_rx: Receiver<CpuMessage>, ui_tx: Sender<UIMessage>) -> Self {
+    pub(crate) fn new(cpu_rx: Receiver<CpuMessage>) -> Self {
         Self {
             reg: RegisterFile::new(),
             memory: [0x00u8; 0x10000],
             cpu_rx,
-            ui_tx,
             free_running: false,
         }
     }
@@ -93,38 +88,6 @@ impl Cpu {
         let lo = self.pull();
         let hi = self.pull();
         make_word(hi, lo)
-    }
-
-    pub(crate) fn report_before_execute(&self, cycles: u32, instruction: &Instruction) {
-        self.ui_tx
-            .send(UIMessage::BeforeExecute(
-                self.reg.clone(),
-                cycles,
-                instruction.clone(),
-            ))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn report_after_execute(&self, cycles: u32, instruction: &Instruction) {
-        self.ui_tx
-            .send(UIMessage::AfterExecute(
-                self.reg.clone(),
-                cycles,
-                instruction.clone(),
-            ))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn report_status(&self, status: Status) {
-        self.ui_tx
-            .send(UIMessage::Status(status))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn write_stdout(&self, c: char) {
-        self.ui_tx
-            .send(UIMessage::WriteStdout(c))
-            .expect("Must succeed")
     }
 
     pub(crate) fn poll(&mut self) -> bool {
