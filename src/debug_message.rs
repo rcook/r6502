@@ -1,4 +1,4 @@
-pub(crate) enum CpuMessage {
+pub(crate) enum DebugMessage {
     Step,
     Run,
     Break,

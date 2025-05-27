@@ -1,4 +1,4 @@
-use crate::{CpuMessage, Status as _Status, UIMessage};
+use crate::{DebugMessage, Status as _Status, UIMessage};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -20,9 +20,9 @@ pub(crate) struct UI {
 }
 
 impl UI {
-    pub(crate) fn new(ui_rx: Receiver<UIMessage>, cpu_tx: Sender<CpuMessage>) -> Result<Self> {
+    pub(crate) fn new(ui_rx: Receiver<UIMessage>, debug_tx: Sender<DebugMessage>) -> Result<Self> {
         let mut cursive = Self::make_ui();
-        Self::add_callbacks(&mut cursive, cpu_tx);
+        Self::add_callbacks(&mut cursive, debug_tx);
         Ok(Self { cursive, ui_rx })
     }
 
@@ -80,16 +80,16 @@ impl UI {
         cursive
     }
 
-    fn add_callbacks(cursive: &mut CursiveRunner<CursiveRunnable>, cpu_tx: Sender<CpuMessage>) {
-        use crate::CpuMessage::*;
+    fn add_callbacks(cursive: &mut CursiveRunner<CursiveRunnable>, debug_tx: Sender<DebugMessage>) {
+        use crate::DebugMessage::*;
 
         cursive.add_global_callback('q', Cursive::quit);
-        let tx = cpu_tx.clone();
-        cursive.add_global_callback(' ', move |_| _ = tx.send(Step));
-        let tx = cpu_tx.clone();
-        cursive.add_global_callback('r', move |_| _ = tx.send(Run));
-        let tx = cpu_tx.clone();
-        cursive.add_global_callback('b', move |_| _ = tx.send(Break));
+        let d = debug_tx.clone();
+        cursive.add_global_callback(' ', move |_| _ = d.send(Step));
+        let d = debug_tx.clone();
+        cursive.add_global_callback('r', move |_| _ = d.send(Run));
+        let d = debug_tx.clone();
+        cursive.add_global_callback('b', move |_| _ = d.send(Break));
     }
 
     fn step(&mut self) -> bool {

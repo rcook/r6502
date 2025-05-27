@@ -1,11 +1,11 @@
 use crate::{make_word, split_word, Flag, Memory, RegisterFile, STACK_BASE};
 
-pub(crate) struct Cpu {
+pub(crate) struct MachineState {
     pub(crate) reg: RegisterFile,
     pub(crate) memory: Memory,
 }
 
-impl Cpu {
+impl MachineState {
     pub(crate) fn new() -> Self {
         Self {
             reg: RegisterFile::new(),
