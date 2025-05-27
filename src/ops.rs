@@ -1,14 +1,4 @@
-use crate::{AddressingMode, Flag, OpFunc, IRQ};
-
-#[derive(Clone, Copy)]
-pub(crate) struct Op {
-    #[allow(unused)]
-    pub(crate) mnemonic: &'static str,
-    #[allow(unused)]
-    pub(crate) addressing_mode: AddressingMode,
-    pub(crate) opcode: u8,
-    pub(crate) func: OpFunc,
-}
+use crate::{AddressingMode, Flag, Op, OpFunc, IRQ};
 
 pub(crate) const BRK: Op = Op {
     mnemonic: "BRK",
