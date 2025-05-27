@@ -35,6 +35,37 @@ impl UI {
 
         while let Some(message) = self.ui_rx.try_iter().next() {
             match message {
+                BeforeExecute(reg, cycles, instruction) => {
+                    self.cursive
+                        .find_name::<TextView>(REGISTERS_NAME)
+                        .expect("Must exist")
+                        .set_content(reg.pretty());
+                    self.cursive
+                        .find_name::<TextView>(CYCLES_NAME)
+                        .expect("Must exist")
+                        .set_content(format!("cycles={cycles}"));
+                    self.cursive
+                        .find_name::<TextView>(CURRENT_NAME)
+                        .expect("Must exist")
+                        .set_content(instruction.pretty_current());
+                }
+                AfterExecute(reg, cycles, instruction) => {
+                    self.cursive
+                        .find_name::<TextView>(REGISTERS_NAME)
+                        .expect("Must exist")
+                        .set_content(reg.pretty());
+                    self.cursive
+                        .find_name::<TextView>(CYCLES_NAME)
+                        .expect("Must exist")
+                        .set_content(format!("cycles={cycles}"));
+
+                    let mut s = instruction.pretty_disassembly();
+                    s.push('\n');
+                    self.cursive
+                        .find_name::<TextView>(DISASSEMBLY_NAME)
+                        .expect("Must exist")
+                        .append(s);
+                }
                 Status(status) => {
                     let mut s = match status {
                         _Status::Halted => String::from("Halted"),
@@ -50,32 +81,6 @@ impl UI {
                         .find_name::<TextView>(STDOUT_NAME)
                         .expect("Must exist")
                         .append(c);
-                }
-                Current(instruction) => {
-                    self.cursive
-                        .find_name::<TextView>(CURRENT_NAME)
-                        .expect("Must exist")
-                        .set_content(instruction.pretty_current());
-                }
-                Disassembly(instruction) => {
-                    let mut s = instruction.pretty_disassembly();
-                    s.push('\n');
-                    self.cursive
-                        .find_name::<TextView>(DISASSEMBLY_NAME)
-                        .expect("Must exist")
-                        .append(s);
-                }
-                Registers(reg) => {
-                    self.cursive
-                        .find_name::<TextView>(REGISTERS_NAME)
-                        .expect("Must exist")
-                        .set_content(reg.pretty());
-                }
-                Cycles(cycles) => {
-                    self.cursive
-                        .find_name::<TextView>(CYCLES_NAME)
-                        .expect("Must exist")
-                        .set_content(format!("cycles={cycles}"));
                 }
             }
         }

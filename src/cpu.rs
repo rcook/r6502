@@ -102,7 +102,27 @@ impl Cpu {
         }
     }
 
-    pub(crate) fn status(&self, status: Status) {
+    pub(crate) fn report_before_execute(&self, cycles: u32, instruction: &Instruction) {
+        self.ui_tx
+            .send(UIMessage::BeforeExecute(
+                self.reg.clone(),
+                cycles,
+                instruction.clone(),
+            ))
+            .expect("Must succeed")
+    }
+
+    pub(crate) fn report_after_execute(&self, cycles: u32, instruction: &Instruction) {
+        self.ui_tx
+            .send(UIMessage::AfterExecute(
+                self.reg.clone(),
+                cycles,
+                instruction.clone(),
+            ))
+            .expect("Must succeed")
+    }
+
+    pub(crate) fn report_status(&self, status: Status) {
         self.ui_tx
             .send(UIMessage::Status(status))
             .expect("Must succeed")
@@ -111,30 +131,6 @@ impl Cpu {
     pub(crate) fn write_stdout(&self, c: char) {
         self.ui_tx
             .send(UIMessage::WriteStdout(c))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn current(&self, instruction: &Instruction) {
-        self.ui_tx
-            .send(UIMessage::Current(instruction.clone()))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn disassembly(&self, instruction: &Instruction) {
-        self.ui_tx
-            .send(UIMessage::Disassembly(instruction.clone()))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn registers(&self) {
-        self.ui_tx
-            .send(UIMessage::Registers(self.reg.clone()))
-            .expect("Must succeed")
-    }
-
-    pub(crate) fn cycles(&self, cycles: u32) {
-        self.ui_tx
-            .send(UIMessage::Cycles(cycles))
             .expect("Must succeed")
     }
 

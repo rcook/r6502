@@ -33,10 +33,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
 
     loop {
         while !cpu.get_flag(Flag::B) {
-            cpu.registers();
-            cpu.cycles(cycles);
             let opcode = cpu.next();
-
             let instruction = match ops[opcode as usize] {
                 Some(op) => match op.func {
                     OpFunc::NoOperand(f) => Instruction::NoOperand(op, f),
@@ -46,7 +43,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 None => bail!("Unsupported opcode {opcode:02X}"),
             };
 
-            cpu.current(&instruction);
+            cpu.report_before_execute(cycles, &instruction);
 
             if !cpu.poll() {
                 // Handle disconnection
@@ -54,19 +51,12 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
             }
 
             cycles += match instruction {
-                Instruction::NoOperand(_, f) => {
-                    cpu.disassembly(&instruction);
-                    f(cpu)
-                }
-                Instruction::Byte(_, f, operand) => {
-                    cpu.disassembly(&instruction);
-                    f(cpu, operand)
-                }
-                Instruction::Word(_, f, operand) => {
-                    cpu.disassembly(&instruction);
-                    f(cpu, operand)
-                }
+                Instruction::NoOperand(_, f) => f(cpu),
+                Instruction::Byte(_, f, operand) => f(cpu, operand),
+                Instruction::Word(_, f, operand) => f(cpu, operand),
             };
+
+            cpu.report_after_execute(cycles, &instruction);
         }
 
         // Check for expected interrupt request value
@@ -83,7 +73,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 cpu.write_stdout(c);
             }
             OSHALT => {
-                cpu.status(Status::Halted);
+                cpu.report_status(Status::Halted);
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&cpu.memory)?;
                 }
