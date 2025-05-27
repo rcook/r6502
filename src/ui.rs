@@ -9,6 +9,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 
 const CURRENT_NAME: &str = "current";
 const DISASSEMBLY_NAME: &str = "disassembly";
+const STATUS_NAME: &str = "status";
 const STDOUT_NAME: &str = "stdout";
 const REGISTERS_NAME: &str = "registers";
 const CYCLES_NAME: &str = "cycles";
@@ -40,19 +41,27 @@ impl UI {
 
         while let Some(message) = self.rx.try_iter().next() {
             match message {
+                Status(mut s) => {
+                    s.push('\n');
+                    self.cursive
+                        .find_name::<TextView>(STATUS_NAME)
+                        .expect("Must exist")
+                        .append(s);
+                }
                 WriteStdout(c) => {
                     self.cursive
                         .find_name::<TextView>(STDOUT_NAME)
-                        .unwrap()
+                        .expect("Must exist")
                         .append(c);
                 }
-                Current(s) => {
+                Current(instruction) => {
                     self.cursive
                         .find_name::<TextView>(CURRENT_NAME)
                         .expect("Must exist")
-                        .set_content(s);
+                        .set_content(instruction.pretty_current());
                 }
-                Disassembly(mut s) => {
+                Disassembly(instruction) => {
+                    let mut s = instruction.pretty_disassembly();
                     s.push('\n');
                     self.cursive
                         .find_name::<TextView>(DISASSEMBLY_NAME)
@@ -83,6 +92,11 @@ impl UI {
             Panel::new(view).title(label).title_position(HAlign::Left)
         }
 
+        let status = TextView::new("")
+            .with_name(STATUS_NAME)
+            .fixed_height(3)
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::StickToBottom);
         let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
         let registers = TextView::new("").with_name(REGISTERS_NAME);
         let cycles = TextView::new("").with_name(CYCLES_NAME);
@@ -105,7 +119,8 @@ impl UI {
             .child(panel(current, "PC"))
             .child(panel(registers, "Registers"))
             .child(panel(cycles, "Cycles"))
-            .child(panel(disassembly, "Disassembly"));
+            .child(panel(disassembly, "Disassembly"))
+            .child(panel(status, "Status"));
 
         let info = LinearLayout::new(Orientation::Vertical)
             .child(panel(stdout, "Output"))

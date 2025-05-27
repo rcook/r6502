@@ -1,4 +1,6 @@
-use crate::{make_word, split_word, ControllerMessage, CpuMessage, Flag, Memory, STACK_BASE};
+use crate::{
+    make_word, split_word, ControllerMessage, CpuMessage, Flag, Instruction, Memory, STACK_BASE,
+};
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 
 pub(crate) struct Cpu {
@@ -116,21 +118,27 @@ impl Cpu {
         }
     }
 
+    pub(crate) fn status(&self, s: &str) {
+        self.controller_tx
+            .send(ControllerMessage::Status(String::from(s)))
+            .expect("Must succeed")
+    }
+
     pub(crate) fn write_stdout(&self, c: char) {
         self.controller_tx
             .send(ControllerMessage::WriteStdout(c))
             .expect("Must succeed")
     }
 
-    pub(crate) fn current(&self, s: &str) {
+    pub(crate) fn current(&self, instruction: &Instruction) {
         self.controller_tx
-            .send(ControllerMessage::Current(String::from(s)))
+            .send(ControllerMessage::Current(instruction.clone()))
             .expect("Must succeed")
     }
 
-    pub(crate) fn disassembly(&self, s: &str) {
+    pub(crate) fn disassembly(&self, instruction: &Instruction) {
         self.controller_tx
-            .send(ControllerMessage::Disassembly(String::from(s)))
+            .send(ControllerMessage::Disassembly(instruction.clone()))
             .expect("Must succeed")
     }
 

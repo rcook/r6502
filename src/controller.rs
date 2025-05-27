@@ -31,15 +31,20 @@ impl Controller {
         while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
+                    Status(s) => self
+                        .ui
+                        .tx()
+                        .send(UIMessage::Status(s))
+                        .expect("Must succeed"),
                     WriteStdout(c) => self
                         .ui
                         .tx()
                         .send(UIMessage::WriteStdout(c))
                         .expect("Must succeed"),
-                    Current(s) => self
+                    Current(instruction) => self
                         .ui
                         .tx()
-                        .send(UIMessage::Current(s))
+                        .send(UIMessage::Current(instruction))
                         .expect("Must succeed"),
                     Disassembly(s) => self
                         .ui

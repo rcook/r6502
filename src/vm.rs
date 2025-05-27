@@ -1,8 +1,7 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    split_word, Cpu, Flag, Instruction, Op, OpFunc, ProgramInfo, IRQ, OPS, OSHALT, OSWRCH,
-    STACK_BASE,
+    Cpu, Flag, Instruction, Op, OpFunc, ProgramInfo, IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
 
@@ -47,32 +46,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 None => bail!("Unsupported opcode {opcode:02X}"),
             };
 
-            match instruction {
-                Instruction::NoOperand(op, _) => cpu.current(&format!(
-                    "{:02X}       {} ({:?})",
-                    op.opcode, op.mnemonic, op.addressing_mode
-                )),
-                Instruction::Byte(op, _, operand) => cpu.current(&format!(
-                    "{:02X} {:02X}    {} {} ({:?})",
-                    op.opcode,
-                    operand,
-                    op.mnemonic,
-                    op.addressing_mode.pretty_byte(operand),
-                    op.addressing_mode
-                )),
-                Instruction::Word(op, _, operand) => {
-                    let (hi, lo) = split_word(operand);
-                    cpu.current(&format!(
-                        "{:02X} {:02X} {:02X} {} {} ({:?})",
-                        op.opcode,
-                        lo,
-                        hi,
-                        op.mnemonic,
-                        op.addressing_mode.pretty_word(operand),
-                        op.addressing_mode
-                    ))
-                }
-            }
+            cpu.current(&instruction);
 
             if !cpu.poll() {
                 // Handle disconnection
@@ -80,30 +54,16 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
             }
 
             cycles += match instruction {
-                Instruction::NoOperand(op, f) => {
-                    cpu.disassembly(&format!("{:02X}       {}", op.opcode, op.mnemonic));
+                Instruction::NoOperand(_, f) => {
+                    cpu.disassembly(&instruction);
                     f(cpu)
                 }
-                Instruction::Byte(op, f, operand) => {
-                    cpu.disassembly(&format!(
-                        "{:02X} {:02X}    {} {}",
-                        op.opcode,
-                        operand,
-                        op.mnemonic,
-                        op.addressing_mode.pretty_byte(operand)
-                    ));
+                Instruction::Byte(_, f, operand) => {
+                    cpu.disassembly(&instruction);
                     f(cpu, operand)
                 }
-                Instruction::Word(op, f, operand) => {
-                    let (hi, lo) = split_word(operand);
-                    cpu.disassembly(&format!(
-                        "{:02X} {:02X} {:02X} {} {}",
-                        op.opcode,
-                        lo,
-                        hi,
-                        op.mnemonic,
-                        op.addressing_mode.pretty_word(operand)
-                    ));
+                Instruction::Word(_, f, operand) => {
+                    cpu.disassembly(&instruction);
                     f(cpu, operand)
                 }
             };
@@ -123,7 +83,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 cpu.write_stdout(c);
             }
             OSHALT => {
-                cpu.disassembly("Halted");
+                cpu.status("Halted");
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&cpu.memory)?;
                 }
