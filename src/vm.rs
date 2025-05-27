@@ -5,14 +5,16 @@ use crate::{
     IRQ, OPS, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) fn run_vm(
     cpu_rx: Receiver<CpuMessage>,
     ui_tx: Sender<UIMessage>,
     program_info: Option<ProgramInfo>,
 ) -> Result<()> {
-    let mut cpu = Cpu::new(cpu_rx);
+    let mut free_running = false;
+
+    let mut cpu = Cpu::new();
 
     let ops = {
         let mut ops: [Option<Op>; 256] = [None; 256];
@@ -53,7 +55,7 @@ pub(crate) fn run_vm(
 
             report_before_execute(&ui_tx, cpu.reg.clone(), cycles, &instruction);
 
-            if !cpu.poll() {
+            if !poll(&cpu_rx, &mut free_running) {
                 // Handle disconnection
                 return Ok(());
             }
@@ -104,7 +106,7 @@ fn set_brk(cpu: &mut Cpu, addr: u16) {
     cpu.store(addr + 2, RTS.opcode); // Return
 }
 
-pub(crate) fn report_before_execute(
+fn report_before_execute(
     ui_tx: &Sender<UIMessage>,
     reg: RegisterFile,
     cycles: u32,
@@ -115,7 +117,7 @@ pub(crate) fn report_before_execute(
         .expect("Must succeed")
 }
 
-pub(crate) fn report_after_execute(
+fn report_after_execute(
     ui_tx: &Sender<UIMessage>,
     reg: RegisterFile,
     cycles: u32,
@@ -126,10 +128,31 @@ pub(crate) fn report_after_execute(
         .expect("Must succeed")
 }
 
-pub(crate) fn report_status(ui_tx: &Sender<UIMessage>, status: Status) {
+fn report_status(ui_tx: &Sender<UIMessage>, status: Status) {
     ui_tx.send(UIMessage::Status(status)).expect("Must succeed")
 }
 
-pub(crate) fn write_stdout(ui_tx: &Sender<UIMessage>, c: char) {
+fn write_stdout(ui_tx: &Sender<UIMessage>, c: char) {
     ui_tx.send(UIMessage::WriteStdout(c)).expect("Must succeed")
+}
+
+fn poll(cpu_rx: &Receiver<CpuMessage>, free_running: &mut bool) -> bool {
+    loop {
+        if *free_running {
+            match cpu_rx.try_recv() {
+                Err(TryRecvError::Disconnected) => return false,
+                Err(TryRecvError::Empty) => return true,
+                Ok(CpuMessage::Step) => {}
+                Ok(CpuMessage::Run) => {}
+                Ok(CpuMessage::Break) => *free_running = false,
+            }
+        } else {
+            match cpu_rx.recv() {
+                Err(_) => return false,
+                Ok(CpuMessage::Step) => return true,
+                Ok(CpuMessage::Run) => *free_running = true,
+                Ok(CpuMessage::Break) => {}
+            }
+        }
+    }
 }

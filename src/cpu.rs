@@ -1,20 +1,15 @@
-use crate::{make_word, split_word, CpuMessage, Flag, Memory, RegisterFile, STACK_BASE};
-use std::sync::mpsc::{Receiver, TryRecvError};
+use crate::{make_word, split_word, Flag, Memory, RegisterFile, STACK_BASE};
 
 pub(crate) struct Cpu {
     pub(crate) reg: RegisterFile,
     pub(crate) memory: Memory,
-    cpu_rx: Receiver<CpuMessage>,
-    free_running: bool,
 }
 
 impl Cpu {
-    pub(crate) fn new(cpu_rx: Receiver<CpuMessage>) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             reg: RegisterFile::new(),
             memory: [0x00u8; 0x10000],
-            cpu_rx,
-            free_running: false,
         }
     }
 
@@ -88,26 +83,5 @@ impl Cpu {
         let lo = self.pull();
         let hi = self.pull();
         make_word(hi, lo)
-    }
-
-    pub(crate) fn poll(&mut self) -> bool {
-        loop {
-            if self.free_running {
-                match self.cpu_rx.try_recv() {
-                    Err(TryRecvError::Disconnected) => return false,
-                    Err(TryRecvError::Empty) => return true,
-                    Ok(CpuMessage::Step) => {}
-                    Ok(CpuMessage::Run) => {}
-                    Ok(CpuMessage::Break) => self.free_running = false,
-                }
-            } else {
-                match self.cpu_rx.recv() {
-                    Err(_) => return false,
-                    Ok(CpuMessage::Step) => return true,
-                    Ok(CpuMessage::Run) => self.free_running = true,
-                    Ok(CpuMessage::Break) => {}
-                }
-            }
-        }
     }
 }
