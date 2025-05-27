@@ -63,7 +63,7 @@ mod tests {
         Ok(())
     }
 
-    //#[test]
+    #[test]
     fn basics3() -> Result<()> {
         let bytes = include_bytes!("../examples/randfill.r6502");
         let (stdout, result) = run(bytes)?;

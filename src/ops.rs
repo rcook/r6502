@@ -423,6 +423,18 @@ mod inner {
         }),
     };
 
+    pub(crate) const LDA_ZP: Op = Op {
+        mnemonic: "LDA",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0xa5u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            m.reg.a = value;
+            m.set_flags_for(value);
+            3
+        }),
+    };
+
     pub(crate) const LDX_ABS: Op = Op {
         mnemonic: "LDX",
         addressing_mode: AddressingMode::Absolute,
@@ -708,6 +720,17 @@ mod inner {
         func: OpFunc::Word(|m, operand| {
             m.store(operand, m.reg.a);
             4
+        }),
+    };
+
+    pub(crate) const STA_ABS_X: Op = Op {
+        mnemonic: "STA",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x9du8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            m.store(addr, m.reg.a);
+            5 // TBD: Add 1 cycle if page boundary crossed
         }),
     };
 
