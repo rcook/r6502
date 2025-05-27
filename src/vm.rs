@@ -1,16 +1,15 @@
-use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    iter_ops, Flag, ImageInfo, Instruction, MachineState, Op, OpFunc, Status, VMHost, IRQ, OSHALT,
-    OSWRCH, STACK_BASE,
+    iter_ops, Flag, ImageInfo, Instruction, MachineState, Op, OpFunc, RunVMResult, RunVMStatus,
+    Status, VMHost, IRQ, IRQ_VALUE, OSHALT, OSWRCH, STACK_BASE,
 };
 use anyhow::{bail, Result};
 
 pub(crate) fn run_vm<H: VMHost>(
-    host: H,
+    host: &H,
     image_info: Option<ImageInfo>,
     mut free_running: bool,
-) -> Result<()> {
+) -> Result<RunVMResult> {
     let mut m = MachineState::new();
 
     let ops = {
@@ -22,7 +21,7 @@ pub(crate) fn run_vm<H: VMHost>(
     };
 
     if let Some(ref image_info) = image_info {
-        let start_info = image_info.load(&mut m.memory)?;
+        let start_info = image_info.load_into_memory(&mut m.memory)?;
         m.reg.pc = start_info.start;
     }
 
@@ -56,7 +55,7 @@ pub(crate) fn run_vm<H: VMHost>(
             free_running = result.free_running;
             if !result.is_active {
                 // Handle disconnection
-                return Ok(());
+                return Ok(RunVMResult::new(RunVMStatus::Disconnected, m, cycles));
             }
 
             cycles += match instruction {
@@ -83,10 +82,7 @@ pub(crate) fn run_vm<H: VMHost>(
             }
             OSHALT => {
                 host.report_status(Status::Halted);
-                if let Some(ref program_info) = image_info {
-                    program_info.save_dump(&m.memory)?;
-                }
-                return Ok(());
+                return Ok(RunVMResult::new(RunVMStatus::Halted, m, cycles));
             }
             _ => panic!("Break at unimplemented subroutine {:04X}", addr),
         }

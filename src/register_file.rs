@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct RegisterFile {
     pub(crate) p: u8,
     pub(crate) pc: u16,
