@@ -38,8 +38,8 @@ impl<'a> ImageSource<'a> {
 
                 Ok(if symbol_path.is_file() {
                     let symbol_file = File::open(symbol_path)?;
-                    let symbols = serde_json::from_reader::<_, Vec<SymbolInfo>>(symbol_file)?;
-                    symbols
+
+                    serde_json::from_reader::<_, Vec<SymbolInfo>>(symbol_file)?
                 } else {
                     Vec::new()
                 })

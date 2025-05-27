@@ -17,7 +17,6 @@ const CYCLES_NAME: &str = "cycles";
 pub(crate) struct UI {
     cursive: CursiveRunner<CursiveRunnable>,
     status_rx: Receiver<StatusMessage>,
-    #[allow(unused)]
     symbols: Vec<SymbolInfo>,
 }
 
@@ -27,7 +26,7 @@ impl UI {
         debug_tx: Sender<DebugMessage>,
         symbols: Vec<SymbolInfo>,
     ) -> Result<Self> {
-        let mut cursive = Self::make_ui();
+        let mut cursive = Self::make_ui(&symbols);
         Self::add_callbacks(&mut cursive, debug_tx);
         Ok(Self {
             cursive,
@@ -40,10 +39,16 @@ impl UI {
         while self.step() {}
     }
 
-    fn make_ui() -> CursiveRunner<CursiveRunnable> {
+    fn make_ui(symbols: &[SymbolInfo]) -> CursiveRunner<CursiveRunnable> {
         fn panel<V>(view: V, label: &str) -> Panel<V> {
             Panel::new(view).title(label).title_position(HAlign::Left)
         }
+
+        let s = symbols
+            .iter()
+            .map(|s| format!("{} = ${:04X}", s.name, s.value))
+            .collect::<Vec<_>>()
+            .join("\n");
 
         let status = TextView::new("")
             .with_name(STATUS_NAME)
@@ -64,6 +69,10 @@ impl UI {
             .full_height()
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
+        let symbols = TextView::new(s)
+            .min_height(10)
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::KeepRow);
         let help = TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break")
             .scrollable()
             .scroll_strategy(ScrollStrategy::KeepRow);
@@ -77,6 +86,7 @@ impl UI {
 
         let info = LinearLayout::new(Orientation::Vertical)
             .child(panel(stdout, "Output"))
+            .child(panel(symbols, "Symbols"))
             .child(panel(help, "Help"));
 
         let dashboard = LinearLayout::new(Orientation::Horizontal)
@@ -123,7 +133,7 @@ impl UI {
                     self.cursive
                         .find_name::<TextView>(CURRENT_NAME)
                         .expect("Must exist")
-                        .set_content(instruction.pretty_current());
+                        .set_content(instruction.pretty_current(&self.symbols));
                 }
                 AfterExecute(reg, cycles, instruction) => {
                     self.cursive
