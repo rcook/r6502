@@ -92,6 +92,20 @@ mod inner {
         }),
     };
 
+    pub(crate) const ASL_ABS: Op = Op {
+        mnemonic: "ASL",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x0Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            m.set_flag(Flag::Carry, (value & 0x80) != 0);
+            let result = value << 1;
+            m.store(operand, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
     pub(crate) const ASL_ZP: Op = Op {
         mnemonic: "ASL",
         addressing_mode: AddressingMode::ZeroPage,
@@ -649,6 +663,21 @@ mod inner {
         }),
     };
 
+    pub(crate) const ROL_ABS: Op = Op {
+        mnemonic: "ROL",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x2Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            m.set_flag(Flag::Carry, (value & 0x80) != 0);
+            let result = (value << 1) | carry;
+            m.store(operand, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
     pub(crate) const ROL_ZP: Op = Op {
         mnemonic: "ROL",
         addressing_mode: AddressingMode::ZeroPage,
@@ -727,11 +756,26 @@ mod inner {
             m.set_flag(Flag::Carry, diff >= 0);
             m.set_flag(Flag::Z, result == 0);
             m.set_flag(Flag::N, result >= 0x80);
-            m.set_flag(
-                Flag::V,
-                ((m.reg.a ^ result) & (operand ^ result) & 0x80) != 0,
-            );
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (operand ^ result) & 0x80) != 0);
             2
+        }),
+    };
+
+    pub(crate) const SBC_ABS: Op = Op {
+        mnemonic: "SBC",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0xEDu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let diff = m.reg.a as i16 - value as i16 - (1 - carry);
+            let result = diff as u8;
+            m.reg.a = result;
+            m.set_flag(Flag::Carry, diff >= 0);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::N, result >= 0x80);
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (value ^ result) & 0x80) != 0);
+            4
         }),
     };
 

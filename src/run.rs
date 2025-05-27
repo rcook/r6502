@@ -97,6 +97,18 @@ mod tests {
         Ok(())
     }
 
+    //#[test]
+    fn div16() -> Result<()> {
+        let bytes = include_bytes!("../examples/div16.r6502");
+        let (stdout, result) = run(bytes)?;
+        assert_eq!("", stdout);
+        assert_eq!(RunVMStatus::Halted, result.status);
+        assert_eq!(1141, result.cycles);
+        assert_eq!(0xd2, result.machine_state.memory[0x0e00]);
+        assert_eq!(0x01, result.machine_state.memory[0x0e01]);
+        Ok(())
+    }
+
     fn run(bytes: &[u8]) -> Result<(String, RunVMResult)> {
         let test_host = TestHost::new();
         let result = run_vm(
