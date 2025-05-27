@@ -1,5 +1,6 @@
 use crate::{ControllerMessage, UIMessage};
 use anyhow::Result;
+use cursive::align::HAlign;
 use cursive::direction::Orientation;
 use cursive::view::{Nameable, Resizable, ScrollStrategy, Scrollable};
 use cursive::views::{LinearLayout, Panel, TextView};
@@ -19,60 +20,9 @@ pub(crate) struct UI {
 
 impl UI {
     pub(crate) fn new(controller_tx: Sender<ControllerMessage>) -> Result<Self> {
+        let mut cursive = Self::make_ui();
+        Self::add_callbacks(&mut cursive, controller_tx);
         let (tx, rx) = channel();
-        let mut cursive = cursive::default().into_runner();
-
-        let current = TextView::new("")
-            .with_name(CURRENT_NAME)
-            .full_width()
-            .full_height()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::StickToBottom);
-        let registers = TextView::new("").with_name(REGISTERS_NAME);
-        let history = TextView::new("")
-            .with_name(HISTORY_NAME)
-            .full_width()
-            .full_height()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::StickToBottom);
-        let stdout = TextView::new("")
-            .with_name(STDOUT_NAME)
-            .full_width()
-            .full_height()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::StickToBottom);
-        let help = TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break");
-
-        let execution = LinearLayout::new(Orientation::Vertical)
-            .child(Panel::new(current).title("PC"))
-            .child(Panel::new(registers).title("Registers"))
-            .child(Panel::new(history).title("History"));
-
-        let info = LinearLayout::new(Orientation::Vertical)
-            .child(Panel::new(stdout).title("stdout"))
-            .child(Panel::new(help).title("Help"));
-
-        let dashboard = LinearLayout::new(Orientation::Horizontal)
-            .child(execution)
-            .child(info);
-
-        cursive.add_fullscreen_layer(dashboard);
-        cursive.add_global_callback('q', Cursive::quit);
-        let temp = controller_tx.clone();
-        cursive.add_global_callback(' ', move |_| {
-            temp.send(ControllerMessage::Step).expect("Must succeed")
-        });
-        let temp = controller_tx.clone();
-        cursive.add_global_callback('r', move |_| {
-            temp.send(ControllerMessage::Run).expect("Must succeed")
-        });
-        let temp = controller_tx.clone();
-        cursive.add_global_callback('b', move |_| {
-            temp.send(ControllerMessage::Break).expect("Must succeed")
-        });
-
-        cursive.set_fps(30);
-
         Ok(Self { cursive, tx, rx })
     }
 
@@ -119,5 +69,66 @@ impl UI {
 
         self.cursive.step();
         true
+    }
+
+    fn make_ui() -> CursiveRunner<CursiveRunnable> {
+        fn panel<V>(view: V, label: &str) -> Panel<V> {
+            Panel::new(view).title(label).title_position(HAlign::Left)
+        }
+
+        let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
+        let registers = TextView::new("").with_name(REGISTERS_NAME);
+        let history = TextView::new("")
+            .with_name(HISTORY_NAME)
+            .full_height()
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::StickToBottom);
+        let stdout = TextView::new("")
+            .with_name(STDOUT_NAME)
+            .full_width()
+            .full_height()
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::StickToBottom);
+        let help = TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break")
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::KeepRow);
+
+        let execution = LinearLayout::new(Orientation::Vertical)
+            .child(panel(current, "PC"))
+            .child(panel(registers, "Registers"))
+            .child(panel(history, "History"));
+
+        let info = LinearLayout::new(Orientation::Vertical)
+            .child(panel(stdout, "Output"))
+            .child(panel(help, "Help"));
+
+        let dashboard = LinearLayout::new(Orientation::Horizontal)
+            .child(execution)
+            .child(info);
+
+        let mut cursive = cursive::default().into_runner();
+        cursive.add_fullscreen_layer(dashboard);
+
+        cursive.set_fps(30);
+        cursive
+    }
+
+    fn add_callbacks(
+        cursive: &mut CursiveRunner<CursiveRunnable>,
+        controller_tx: Sender<ControllerMessage>,
+    ) {
+        cursive.add_global_callback('q', Cursive::quit);
+        let temp = controller_tx.clone();
+        cursive.add_global_callback(' ', move |_| {
+            temp.send(ControllerMessage::Step).expect("Must succeed")
+        });
+        let temp = controller_tx.clone();
+        cursive.add_global_callback('r', move |_| {
+            temp.send(ControllerMessage::Run).expect("Must succeed")
+        });
+        let temp = controller_tx.clone();
+        cursive.add_global_callback('b', move |_| {
+            temp.send(ControllerMessage::Break).expect("Must succeed")
+        });
     }
 }
