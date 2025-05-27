@@ -17,7 +17,7 @@ pub(crate) fn demo() -> Result<()> {
         run_vm(cpu_channel.1, ui_channel.0, program_info).unwrap();
     });
 
-    while ui.step() {}
+    ui.run();
 
     Ok(())
 }

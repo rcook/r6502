@@ -26,67 +26,8 @@ impl UI {
         Ok(Self { cursive, ui_rx })
     }
 
-    pub fn step(&mut self) -> bool {
-        use crate::UIMessage::*;
-
-        if !self.cursive.is_running() {
-            return false;
-        }
-
-        while let Some(message) = self.ui_rx.try_iter().next() {
-            match message {
-                BeforeExecute(reg, cycles, instruction) => {
-                    self.cursive
-                        .find_name::<TextView>(REGISTERS_NAME)
-                        .expect("Must exist")
-                        .set_content(reg.pretty());
-                    self.cursive
-                        .find_name::<TextView>(CYCLES_NAME)
-                        .expect("Must exist")
-                        .set_content(format!("cycles={cycles}"));
-                    self.cursive
-                        .find_name::<TextView>(CURRENT_NAME)
-                        .expect("Must exist")
-                        .set_content(instruction.pretty_current());
-                }
-                AfterExecute(reg, cycles, instruction) => {
-                    self.cursive
-                        .find_name::<TextView>(REGISTERS_NAME)
-                        .expect("Must exist")
-                        .set_content(reg.pretty());
-                    self.cursive
-                        .find_name::<TextView>(CYCLES_NAME)
-                        .expect("Must exist")
-                        .set_content(format!("cycles={cycles}"));
-
-                    let mut s = instruction.pretty_disassembly();
-                    s.push('\n');
-                    self.cursive
-                        .find_name::<TextView>(DISASSEMBLY_NAME)
-                        .expect("Must exist")
-                        .append(s);
-                }
-                Status(status) => {
-                    let mut s = match status {
-                        _Status::Halted => String::from("Halted"),
-                    };
-                    s.push('\n');
-                    self.cursive
-                        .find_name::<TextView>(STATUS_NAME)
-                        .expect("Must exist")
-                        .append(s);
-                }
-                WriteStdout(c) => {
-                    self.cursive
-                        .find_name::<TextView>(STDOUT_NAME)
-                        .expect("Must exist")
-                        .append(c);
-                }
-            }
-        }
-
-        self.cursive.step();
-        true
+    pub(crate) fn run(&mut self) {
+        while self.step() {}
     }
 
     fn make_ui() -> CursiveRunner<CursiveRunnable> {
@@ -149,5 +90,68 @@ impl UI {
         cursive.add_global_callback('r', move |_| _ = tx.send(Run));
         let tx = cpu_tx.clone();
         cursive.add_global_callback('b', move |_| _ = tx.send(Break));
+    }
+
+    fn step(&mut self) -> bool {
+        use crate::UIMessage::*;
+
+        if !self.cursive.is_running() {
+            return false;
+        }
+
+        while let Some(message) = self.ui_rx.try_iter().next() {
+            match message {
+                BeforeExecute(reg, cycles, instruction) => {
+                    self.cursive
+                        .find_name::<TextView>(REGISTERS_NAME)
+                        .expect("Must exist")
+                        .set_content(reg.pretty());
+                    self.cursive
+                        .find_name::<TextView>(CYCLES_NAME)
+                        .expect("Must exist")
+                        .set_content(format!("cycles={cycles}"));
+                    self.cursive
+                        .find_name::<TextView>(CURRENT_NAME)
+                        .expect("Must exist")
+                        .set_content(instruction.pretty_current());
+                }
+                AfterExecute(reg, cycles, instruction) => {
+                    self.cursive
+                        .find_name::<TextView>(REGISTERS_NAME)
+                        .expect("Must exist")
+                        .set_content(reg.pretty());
+                    self.cursive
+                        .find_name::<TextView>(CYCLES_NAME)
+                        .expect("Must exist")
+                        .set_content(format!("cycles={cycles}"));
+
+                    let mut s = instruction.pretty_disassembly();
+                    s.push('\n');
+                    self.cursive
+                        .find_name::<TextView>(DISASSEMBLY_NAME)
+                        .expect("Must exist")
+                        .append(s);
+                }
+                Status(status) => {
+                    let mut s = match status {
+                        _Status::Halted => String::from("Halted"),
+                    };
+                    s.push('\n');
+                    self.cursive
+                        .find_name::<TextView>(STATUS_NAME)
+                        .expect("Must exist")
+                        .append(s);
+                }
+                WriteStdout(c) => {
+                    self.cursive
+                        .find_name::<TextView>(STDOUT_NAME)
+                        .expect("Must exist")
+                        .append(c);
+                }
+            }
+        }
+
+        self.cursive.step();
+        true
     }
 }
