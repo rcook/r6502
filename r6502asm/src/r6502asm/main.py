@@ -1,16 +1,50 @@
 # pyright: reportMissingTypeStubs=false
 
 from argparse import ArgumentParser
+from dataclasses import dataclass
 from pathlib import Path
-import shutil
 from tempfile import NamedTemporaryFile
 import Ophis
+import json
 import re
+import shutil
 
 
 ORG_REGEX = re.compile("^\\s*\\.org\\s+(?P<addr>\\$?.+)\\s*$")
 MAGIC_NUMBER = 0x6502
+DEFAULT_ASM_EXT: str = ".asm"
 DEFAULT_EXT: str = ".r6502"
+DEFAULT_SYMBOL_EXT: str = ".r6502.json"
+ORIGIN_SYMBOL: str = "origin"
+START_SYMBOL: str = "start"
+
+
+@dataclass(frozen=True)
+class SymbolInfo:
+    name: str
+    value: int
+    source_location: str | None
+
+    @staticmethod
+    def read(map_path: Path) -> list["SymbolInfo"]:
+        results: list[SymbolInfo] = []
+        with map_path.open("rt") as map_f:
+            for line in map_f.readlines():
+                parts = [
+                    p.strip()
+                    for p in line.strip().split("|", maxsplit=2)
+                ]
+                if len(parts) != 3:
+                    raise RuntimeError(f"Syntax error in {map_path}")
+                value_str, n, source_location = parts
+                value = parse_int(value_str)
+                if value is not None:
+                    results.append(
+                        SymbolInfo(
+                            name=n,
+                            value=value,
+                            source_location=source_location))
+        return results
 
 
 def parse_int(s: str) -> int | None:
@@ -63,9 +97,18 @@ def make_image_path(asm_path: Path, image_path: Path | None) -> Path:
     d = asm_path.parent
     stem = asm_path.stem
     ext = asm_path.suffix
-    if ext.lower() == ".asm":
+    if ext.lower() == DEFAULT_ASM_EXT:
         return d / f"{stem}{DEFAULT_EXT}"
     return d / f"{stem}{ext}{DEFAULT_EXT}"
+
+
+def make_symbol_path(image_path: Path) -> Path:
+    d = image_path.parent
+    stem = image_path.stem
+    ext = image_path.suffix
+    if ext.lower() == DEFAULT_EXT:
+        return d / f"{stem}{DEFAULT_SYMBOL_EXT}"
+    return d / f"{stem}{ext}{DEFAULT_SYMBOL_EXT}"
 
 
 def assemble(asm_path: Path, image_path: Path | None) -> None:
@@ -82,7 +125,26 @@ def assemble(asm_path: Path, image_path: Path | None) -> None:
             raise RuntimeError("Ophis failed")
         bin_temp.close()
 
-        start = get_start(map_path, origin)
+        symbols = SymbolInfo.read(map_path)
+        symbol_map = {
+            s.name: s
+            for s in symbols
+        }
+
+        start_symbol = symbol_map.get(START_SYMBOL)
+        start = origin if start_symbol is None else start_symbol.value
+
+        if ORIGIN_SYMBOL not in symbol_map:
+            symbol_map[ORIGIN_SYMBOL] = SymbolInfo(
+                name=ORIGIN_SYMBOL,
+                value=origin,
+                source_location=None)
+
+        if START_SYMBOL not in symbol_map:
+            symbol_map[START_SYMBOL] = SymbolInfo(
+                name=START_SYMBOL,
+                value=start,
+                source_location=None)
 
         with image_path.open("wb") as image_f:
             _ = image_f.write(MAGIC_NUMBER.to_bytes(2, byteorder="little"))
@@ -90,6 +152,20 @@ def assemble(asm_path: Path, image_path: Path | None) -> None:
             _ = image_f.write(start.to_bytes(2, byteorder="little"))
             with bin_path.open("rb") as other_f:
                 shutil.copyfileobj(other_f, image_f)
+
+        with make_symbol_path(image_path).open("wt") as symbol_f:
+            def transform(symbol: SymbolInfo) -> dict[str, str]:
+                d = {
+                    "name": symbol.name,
+                    "value": f"${symbol.value:04X}"
+                }
+                if symbol.source_location is not None:
+                    d["sourceLocation"] = symbol.source_location
+                return d
+            json.dump([
+                transform(s)
+                for s in sorted(symbol_map.values(), key=lambda s: s.name)
+            ], symbol_f, indent=2)
 
 
 def main(cwd: Path, argv: list[str]) -> None:

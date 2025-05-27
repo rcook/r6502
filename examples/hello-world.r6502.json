@@ -1,0 +1,30 @@
+[
+  {
+    "name": "done",
+    "value": "$0E0D",
+    "sourceLocation": "hello-world.asm:10"
+  },
+  {
+    "name": "hello",
+    "value": "$0E0E",
+    "sourceLocation": "hello-world.asm:12"
+  },
+  {
+    "name": "loop",
+    "value": "$0E02",
+    "sourceLocation": "hello-world.asm:5"
+  },
+  {
+    "name": "origin",
+    "value": "$0E00"
+  },
+  {
+    "name": "oswrch",
+    "value": "$FFEE",
+    "sourceLocation": "hello-world.asm:1"
+  },
+  {
+    "name": "start",
+    "value": "$0E00"
+  }
+]

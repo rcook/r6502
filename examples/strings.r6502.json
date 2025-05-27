@@ -1,0 +1,71 @@
+[
+  {
+    "name": "array",
+    "value": "$0E4D",
+    "sourceLocation": "strings.asm:51"
+  },
+  {
+    "name": "origin",
+    "value": "$0E00"
+  },
+  {
+    "name": "oswrch",
+    "value": "$FFEE",
+    "sourceLocation": "strings.asm:1"
+  },
+  {
+    "name": "print_str",
+    "value": "$0E2B",
+    "sourceLocation": "strings.asm:36"
+  },
+  {
+    "name": "print_str_arg",
+    "value": "$0082",
+    "sourceLocation": "strings.asm:3"
+  },
+  {
+    "name": "print_str_end",
+    "value": "$0E3A",
+    "sourceLocation": "strings.asm:45"
+  },
+  {
+    "name": "print_str_loop",
+    "value": "$0E2D",
+    "sourceLocation": "strings.asm:38"
+  },
+  {
+    "name": "print_strs",
+    "value": "$0E0C",
+    "sourceLocation": "strings.asm:14"
+  },
+  {
+    "name": "print_strs_arg",
+    "value": "$0080",
+    "sourceLocation": "strings.asm:2"
+  },
+  {
+    "name": "print_strs_end",
+    "value": "$0E2A",
+    "sourceLocation": "strings.asm:34"
+  },
+  {
+    "name": "print_strs_loop",
+    "value": "$0E11",
+    "sourceLocation": "strings.asm:18"
+  },
+  {
+    "name": "start",
+    "value": "$0E00",
+    "sourceLocation": "strings.asm:7"
+  },
+  {
+    "name": "str0",
+    "value": "$0E3B",
+    "sourceLocation": "strings.asm:47"
+  },
+  {
+    "name": "str1",
+    "value": "$0E44",
+    "sourceLocation": "strings.asm:49"
+  }
+]

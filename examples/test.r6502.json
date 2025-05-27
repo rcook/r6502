@@ -1,0 +1,31 @@
+[
+  {
+    "name": "finished",
+    "value": "$2010",
+    "sourceLocation": "test.asm:14"
+  },
+  {
+    "name": "letter",
+    "value": "$2002",
+    "sourceLocation": "test.asm:7"
+  },
+  {
+    "name": "message",
+    "value": "$2011",
+    "sourceLocation": "test.asm:16"
+  },
+  {
+    "name": "origin",
+    "value": "$2000"
+  },
+  {
+    "name": "oswrch",
+    "value": "$FFEE",
+    "sourceLocation": "test.asm:1"
+  },
+  {
+    "name": "start",
+    "value": "$2000",
+    "sourceLocation": "test.asm:5"
+  }
+]
