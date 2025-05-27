@@ -28,7 +28,8 @@ impl Controller {
             run_vm(&mut cpu, program_info).unwrap();
         });
 
-        'outer: while self.ui.step() {
+        let mut cpu_running = true;
+        while self.ui.step() {
             while let Some(message) = self.rx.try_iter().next() {
                 match message {
                     WriteStdout(c) => self
@@ -51,10 +52,13 @@ impl Controller {
                         .tx()
                         .send(UIMessage::Registers(s))
                         .expect("Must succeed"),
-                    OnHalted => break 'outer,
-                    Step => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
-                    Run => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
-                    Break => cpu_tx.send(CpuMessage::Break).expect("Must succeed"),
+                    OnHalted => cpu_running = false,
+                    Step if cpu_running => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
+                    Step => {}
+                    Run if cpu_running => cpu_tx.send(CpuMessage::Run).expect("Must succeed"),
+                    Run => {}
+                    Break if cpu_running => cpu_tx.send(CpuMessage::Break).expect("Must succeed"),
+                    Break => {}
                 };
             }
         }
