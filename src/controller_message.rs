@@ -3,6 +3,7 @@ pub(crate) enum ControllerMessage {
     Current(String),
     History(String),
     Registers(String),
+    Cycles(String),
     OnHalted,
     Step,
     Run,

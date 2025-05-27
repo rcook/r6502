@@ -49,6 +49,11 @@ impl Cpu {
         }
     }
 
+    pub(crate) fn set_flags_for(&mut self, value: u8) {
+        self.set_flag(Flag::N, value >= 0x80u8);
+        self.set_flag(Flag::Z, value == 0);
+    }
+
     pub(crate) fn fetch(&self, addr: u16) -> u8 {
         self.memory[addr as usize]
     }
@@ -135,6 +140,12 @@ impl Cpu {
                 "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
                 self.pc, self.p, self.a, self.x, self.y, self.s,
             )))
+            .expect("Must succeed")
+    }
+
+    pub(crate) fn cycles(&self, cycles: u32) {
+        self.controller_tx
+            .send(ControllerMessage::Cycles(format!("cycles={cycles}")))
             .expect("Must succeed")
     }
 

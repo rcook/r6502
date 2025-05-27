@@ -11,6 +11,7 @@ const CURRENT_NAME: &str = "current";
 const HISTORY_NAME: &str = "history";
 const STDOUT_NAME: &str = "stdout";
 const REGISTERS_NAME: &str = "registers";
+const CYCLES_NAME: &str = "cycles";
 
 pub(crate) struct UI {
     cursive: CursiveRunner<CursiveRunnable>,
@@ -64,6 +65,12 @@ impl UI {
                         .expect("Must exist")
                         .set_content(s);
                 }
+                Cycles(s) => {
+                    self.cursive
+                        .find_name::<TextView>(CYCLES_NAME)
+                        .expect("Must exist")
+                        .set_content(s);
+                }
             }
         }
 
@@ -78,6 +85,7 @@ impl UI {
 
         let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
         let registers = TextView::new("").with_name(REGISTERS_NAME);
+        let cycles = TextView::new("").with_name(CYCLES_NAME);
         let history = TextView::new("")
             .with_name(HISTORY_NAME)
             .full_height()
@@ -96,6 +104,7 @@ impl UI {
         let execution = LinearLayout::new(Orientation::Vertical)
             .child(panel(current, "PC"))
             .child(panel(registers, "Registers"))
+            .child(panel(cycles, "Cycles"))
             .child(panel(history, "History"));
 
         let info = LinearLayout::new(Orientation::Vertical)

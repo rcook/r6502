@@ -52,6 +52,11 @@ impl Controller {
                         .tx()
                         .send(UIMessage::Registers(s))
                         .expect("Must succeed"),
+                    Cycles(s) => self
+                        .ui
+                        .tx()
+                        .send(UIMessage::Cycles(s))
+                        .expect("Must succeed"),
                     OnHalted => cpu_running = false,
                     Step if cpu_running => cpu_tx.send(CpuMessage::Step).expect("Must succeed"),
                     Step => {}

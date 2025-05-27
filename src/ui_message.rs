@@ -3,4 +3,5 @@ pub(crate) enum UIMessage {
     Current(String),
     History(String),
     Registers(String),
+    Cycles(String),
 }

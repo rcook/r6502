@@ -36,9 +36,12 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
         Word(Op, WordFn, u16),
     }
 
+    let mut cycles = 0;
+
     loop {
         while !cpu.get_flag(Flag::B) {
             cpu.registers();
+            cpu.cycles(cycles);
             let opcode = cpu.next();
 
             let instruction = match ops[opcode as usize] {
@@ -73,7 +76,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 return Ok(());
             }
 
-            match instruction {
+            cycles += match instruction {
                 Instruction::NoOperand(op, f) => {
                     cpu.history(&format!(
                         "{:02X}       {} {:?}",
@@ -96,7 +99,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                     ));
                     f(cpu, operand)
                 }
-            }
+            };
         }
 
         // Check for expected interrupt request value
@@ -123,10 +126,10 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
             _ => panic!("Break at unimplemented subroutine {:04X}", addr),
         }
 
-        match RTI.func {
+        cycles += match RTI.func {
             OpFunc::NoOperand(f) => f(cpu),
             _ => unreachable!(),
-        }
+        };
     }
 }
 
