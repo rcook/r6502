@@ -2,7 +2,7 @@ use crate::{ControllerMessage, UIMessage};
 use anyhow::Result;
 use cursive::direction::Orientation;
 use cursive::view::{Nameable, Resizable, ScrollStrategy, Scrollable};
-use cursive::views::{LinearLayout, TextView};
+use cursive::views::{LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
@@ -28,6 +28,7 @@ impl UI {
             .full_height()
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
+        let registers = TextView::new("").with_name(REGISTERS_NAME);
         let history = TextView::new("")
             .with_name(HISTORY_NAME)
             .full_width()
@@ -41,16 +42,21 @@ impl UI {
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let help = TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break");
-        let registers = TextView::new("").with_name(REGISTERS_NAME);
 
-        let linear = LinearLayout::new(Orientation::Vertical)
-            .child(current)
-            .child(history)
-            .child(stdout)
-            .child(help)
-            .child(registers);
+        let execution = LinearLayout::new(Orientation::Vertical)
+            .child(Panel::new(current).title("PC"))
+            .child(Panel::new(registers).title("Registers"))
+            .child(Panel::new(history).title("History"));
 
-        cursive.add_fullscreen_layer(linear);
+        let info = LinearLayout::new(Orientation::Vertical)
+            .child(Panel::new(stdout).title("stdout"))
+            .child(Panel::new(help).title("Help"));
+
+        let dashboard = LinearLayout::new(Orientation::Horizontal)
+            .child(execution)
+            .child(info);
+
+        cursive.add_fullscreen_layer(dashboard);
         cursive.add_global_callback('q', Cursive::quit);
         let temp = controller_tx.clone();
         cursive.add_global_callback(' ', move |_| {
