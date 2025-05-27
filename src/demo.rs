@@ -14,7 +14,7 @@ pub(crate) fn demo() -> Result<()> {
     let mut ui = UI::new(status_channel.1, debug_channel.0)?;
 
     spawn(move || {
-        run_vm(debug_channel.1, status_channel.0, program_info).unwrap();
+        run_vm(debug_channel.1, status_channel.0, program_info).expect("Must succeed");
     });
 
     ui.run();
