@@ -166,7 +166,7 @@ pub(crate) const CMP_IMM: Op = Op {
         let result = cpu.a as i32 - operand as i32;
         cpu.set_flag(Flag::N, cpu.a >= 0x80u8);
         cpu.set_flag(Flag::Z, result == 0);
-        cpu.set_flag(Flag::CARRY, result >= 0);
+        cpu.set_flag(Flag::Carry, result >= 0);
     }),
 };
 
@@ -185,7 +185,7 @@ pub(crate) const CPX_IMM: Op = Op {
         let result = cpu.x as i32 - operand as i32;
         cpu.set_flag(Flag::N, cpu.x >= 0x80u8);
         cpu.set_flag(Flag::Z, result == 0);
-        cpu.set_flag(Flag::CARRY, result >= 0);
+        cpu.set_flag(Flag::Carry, result >= 0);
     }),
 };
 

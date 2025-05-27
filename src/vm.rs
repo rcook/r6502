@@ -115,7 +115,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
             OSHALT => {
                 cpu.history("Halted");
                 if let Some(ref program_info) = program_info {
-                    program_info.save_dump(&mut cpu.memory)?;
+                    program_info.save_dump(&cpu.memory)?;
                 }
                 return Ok(());
             }
