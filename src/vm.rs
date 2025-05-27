@@ -1,8 +1,8 @@
 use crate::constants::IRQ_VALUE;
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
-    split_word, ByteFn, Cpu, Flag, NoOperandFn, Op, OpFunc, ProgramInfo, WordFn, IRQ, OPS, OSHALT,
-    OSWRCH, STACK_BASE,
+    split_word, Cpu, Flag, Instruction, Op, OpFunc, ProgramInfo, IRQ, OPS, OSHALT, OSWRCH,
+    STACK_BASE,
 };
 use anyhow::{bail, Result};
 
@@ -29,12 +29,6 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
 
     // Initialize the state
     cpu.push_word(OSHALT - 1);
-
-    enum Instruction {
-        NoOperand(Op, NoOperandFn),
-        Byte(Op, ByteFn, u8),
-        Word(Op, WordFn, u16),
-    }
 
     let mut cycles = 0;
 
