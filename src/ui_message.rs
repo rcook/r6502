@@ -1,7 +1,7 @@
 pub(crate) enum UIMessage {
     WriteStdout(char),
     Current(String),
-    History(String),
+    Disassembly(String),
     Registers(String),
     Cycles(String),
 }

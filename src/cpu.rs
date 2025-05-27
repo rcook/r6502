@@ -128,9 +128,9 @@ impl Cpu {
             .expect("Must succeed")
     }
 
-    pub(crate) fn history(&self, s: &str) {
+    pub(crate) fn disassembly(&self, s: &str) {
         self.controller_tx
-            .send(ControllerMessage::History(String::from(s)))
+            .send(ControllerMessage::Disassembly(String::from(s)))
             .expect("Must succeed")
     }
 

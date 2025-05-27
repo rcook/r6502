@@ -8,7 +8,7 @@ use cursive::{Cursive, CursiveRunnable, CursiveRunner};
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 const CURRENT_NAME: &str = "current";
-const HISTORY_NAME: &str = "history";
+const DISASSEMBLY_NAME: &str = "disassembly";
 const STDOUT_NAME: &str = "stdout";
 const REGISTERS_NAME: &str = "registers";
 const CYCLES_NAME: &str = "cycles";
@@ -52,10 +52,10 @@ impl UI {
                         .expect("Must exist")
                         .set_content(s);
                 }
-                History(mut s) => {
+                Disassembly(mut s) => {
                     s.push('\n');
                     self.cursive
-                        .find_name::<TextView>(HISTORY_NAME)
+                        .find_name::<TextView>(DISASSEMBLY_NAME)
                         .expect("Must exist")
                         .append(s);
                 }
@@ -86,8 +86,8 @@ impl UI {
         let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
         let registers = TextView::new("").with_name(REGISTERS_NAME);
         let cycles = TextView::new("").with_name(CYCLES_NAME);
-        let history = TextView::new("")
-            .with_name(HISTORY_NAME)
+        let disassembly = TextView::new("")
+            .with_name(DISASSEMBLY_NAME)
             .full_height()
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
@@ -105,7 +105,7 @@ impl UI {
             .child(panel(current, "PC"))
             .child(panel(registers, "Registers"))
             .child(panel(cycles, "Cycles"))
-            .child(panel(history, "History"));
+            .child(panel(disassembly, "Disassembly"));
 
         let info = LinearLayout::new(Orientation::Vertical)
             .child(panel(stdout, "Output"))

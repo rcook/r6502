@@ -41,10 +41,10 @@ impl Controller {
                         .tx()
                         .send(UIMessage::Current(s))
                         .expect("Must succeed"),
-                    History(s) => self
+                    Disassembly(s) => self
                         .ui
                         .tx()
-                        .send(UIMessage::History(s))
+                        .send(UIMessage::Disassembly(s))
                         .expect("Must succeed"),
                     Registers(s) => self
                         .ui

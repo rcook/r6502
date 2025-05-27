@@ -55,18 +55,27 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
 
             match instruction {
                 Instruction::NoOperand(op, _) => cpu.current(&format!(
-                    "{:02X}       {} {:?}",
+                    "{:02X}       {} ({:?})",
                     op.opcode, op.mnemonic, op.addressing_mode
                 )),
                 Instruction::Byte(op, _, operand) => cpu.current(&format!(
-                    "{:02X} {:02X}    {} {:?}",
-                    op.opcode, operand, op.mnemonic, op.addressing_mode
+                    "{:02X} {:02X}    {} {} ({:?})",
+                    op.opcode,
+                    operand,
+                    op.mnemonic,
+                    op.addressing_mode.pretty_byte(operand),
+                    op.addressing_mode
                 )),
                 Instruction::Word(op, _, operand) => {
                     let (hi, lo) = split_word(operand);
                     cpu.current(&format!(
-                        "{:02X} {:02X} {:02X} {} {:?}",
-                        op.opcode, lo, hi, op.mnemonic, op.addressing_mode
+                        "{:02X} {:02X} {:02X} {} {} ({:?})",
+                        op.opcode,
+                        lo,
+                        hi,
+                        op.mnemonic,
+                        op.addressing_mode.pretty_word(operand),
+                        op.addressing_mode
                     ))
                 }
             }
@@ -78,24 +87,28 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
 
             cycles += match instruction {
                 Instruction::NoOperand(op, f) => {
-                    cpu.history(&format!(
-                        "{:02X}       {} {:?}",
-                        op.opcode, op.mnemonic, op.addressing_mode
-                    ));
+                    cpu.disassembly(&format!("{:02X}       {}", op.opcode, op.mnemonic));
                     f(cpu)
                 }
                 Instruction::Byte(op, f, operand) => {
-                    cpu.history(&format!(
-                        "{:02X} {:02X}    {} {:?}",
-                        op.opcode, operand, op.mnemonic, op.addressing_mode
+                    cpu.disassembly(&format!(
+                        "{:02X} {:02X}    {} {}",
+                        op.opcode,
+                        operand,
+                        op.mnemonic,
+                        op.addressing_mode.pretty_byte(operand)
                     ));
                     f(cpu, operand)
                 }
                 Instruction::Word(op, f, operand) => {
                     let (hi, lo) = split_word(operand);
-                    cpu.history(&format!(
-                        "{:02X} {:02X} {:02X} {} {:?}",
-                        op.opcode, lo, hi, op.mnemonic, op.addressing_mode
+                    cpu.disassembly(&format!(
+                        "{:02X} {:02X} {:02X} {} {}",
+                        op.opcode,
+                        lo,
+                        hi,
+                        op.mnemonic,
+                        op.addressing_mode.pretty_word(operand)
                     ));
                     f(cpu, operand)
                 }
@@ -116,7 +129,7 @@ pub(crate) fn run_vm(cpu: &mut Cpu, program_info: Option<ProgramInfo>) -> Result
                 cpu.write_stdout(c);
             }
             OSHALT => {
-                cpu.history("Halted");
+                cpu.disassembly("Halted");
                 if let Some(ref program_info) = program_info {
                     program_info.save_dump(&cpu.memory)?;
                 }
