@@ -68,6 +68,82 @@ mod inner {
         }),
     };
 
+    pub(crate) const ADC_ABS_X: Op = Op {
+        mnemonic: "ADC",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x7Du8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let sum = m.reg.a as u16 + value as u16 + carry;
+            let result = sum as u8;
+            m.reg.a = result;
+            m.set_flag(Flag::Carry, sum > 0xFF);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::N, result >= 0x80);
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (value ^ result) & 0x80) != 0);
+            4 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const ADC_ABS_Y: Op = Op {
+        mnemonic: "ADC",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0x79u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let sum = m.reg.a as u16 + value as u16 + carry;
+            let result = sum as u8;
+            m.reg.a = result;
+            m.set_flag(Flag::Carry, sum > 0xFF);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::N, result >= 0x80);
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (value ^ result) & 0x80) != 0);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const ADC_IND_X: Op = Op {
+        mnemonic: "ADC",
+        addressing_mode: AddressingMode::IndexedIndirectX,
+        opcode: 0x61u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = m.fetch_word((operand + m.reg.x) as u16);
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let sum = m.reg.a as u16 + value as u16 + carry;
+            let result = sum as u8;
+            m.reg.a = result;
+            m.set_flag(Flag::Carry, sum > 0xFF);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::N, result >= 0x80);
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (value ^ result) & 0x80) != 0);
+            6
+        }),
+    };
+
+    pub(crate) const ADC_ZP_X: Op = Op {
+        mnemonic: "ADC",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x75u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let sum = m.reg.a as u16 + value as u16 + carry;
+            let result = sum as u8;
+            m.reg.a = result;
+            m.set_flag(Flag::Carry, sum > 0xFF);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::N, result >= 0x80);
+            m.set_flag(Flag::V, ((m.reg.a ^ result) & (value ^ result) & 0x80) != 0);
+            4
+        }),
+    };
+
     pub(crate) const AND_IMM: Op = Op {
         mnemonic: "AND",
         addressing_mode: AddressingMode::Immediate,
@@ -76,6 +152,69 @@ mod inner {
             m.reg.a &= operand;
             m.set_flags_for(m.reg.a);
             2
+        }),
+    };
+
+    pub(crate) const AND_ABS: Op = Op {
+        mnemonic: "AND",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x2Du8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            m.reg.a &= value;
+            m.set_flags_for(m.reg.a);
+            4
+        }),
+    };
+
+    pub(crate) const AND_ABS_X: Op = Op {
+        mnemonic: "AND",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x3Du8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            m.reg.a &= value;
+            m.set_flags_for(m.reg.a);
+            4 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const AND_ABS_Y: Op = Op {
+        mnemonic: "AND",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0x39u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            let value = m.fetch(addr);
+            m.reg.a &= value;
+            m.set_flags_for(m.reg.a);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const AND_ZP: Op = Op {
+        mnemonic: "AND",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0x25u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            m.reg.a &= value;
+            m.set_flags_for(m.reg.a);
+            3
+        }),
+    };
+
+    pub(crate) const AND_ZP_X: Op = Op {
+        mnemonic: "AND",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x35u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            m.reg.a &= value;
+            m.set_flags_for(m.reg.a);
+            4
         }),
     };
 
@@ -106,6 +245,21 @@ mod inner {
         }),
     };
 
+    pub(crate) const ASL_ABS_X: Op = Op {
+        mnemonic: "ASL",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x1Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            m.set_flag(Flag::Carry, (value & 0x80) != 0);
+            let result = value << 1;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            7
+        }),
+    };
+
     pub(crate) const ASL_ZP: Op = Op {
         mnemonic: "ASL",
         addressing_mode: AddressingMode::ZeroPage,
@@ -117,6 +271,21 @@ mod inner {
             m.store(operand as u16, result);
             m.set_flags_for(result);
             5
+        }),
+    };
+
+    pub(crate) const ASL_ZP_X: Op = Op {
+        mnemonic: "ASL",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x16u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            m.set_flag(Flag::Carry, (value & 0x80) != 0);
+            let result = value << 1;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            6
         }),
     };
 
@@ -270,6 +439,79 @@ mod inner {
         }),
     };
 
+    pub(crate) const CMP_ABS: Op = Op {
+        mnemonic: "CMP",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0xCDu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let result = m.reg.a as i32 - value as i32;
+            m.set_flag(Flag::N, result < 0);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::Carry, result >= 0);
+            4
+        }),
+    };
+
+    pub(crate) const CMP_ABS_X: Op = Op {
+        mnemonic: "CMP",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0xDDu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            let result = m.reg.a as i32 - value as i32;
+            m.set_flag(Flag::N, result < 0);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::Carry, result >= 0);
+            4 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const CMP_ABS_Y: Op = Op {
+        mnemonic: "CMP",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0xD9u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            let value = m.fetch(addr);
+            let result = m.reg.a as i32 - value as i32;
+            m.set_flag(Flag::N, result < 0);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::Carry, result >= 0);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const CMP_ZP: Op = Op {
+        mnemonic: "CMP",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0xC5u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            let result = m.reg.a as i32 - value as i32;
+            m.set_flag(Flag::N, result < 0);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::Carry, result >= 0);
+            3
+        }),
+    };
+
+    pub(crate) const CMP_ZP_X: Op = Op {
+        mnemonic: "CMP",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0xD5u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            let result = m.reg.a as i32 - value as i32;
+            m.set_flag(Flag::N, result < 0);
+            m.set_flag(Flag::Z, result == 0);
+            m.set_flag(Flag::Carry, result >= 0);
+            4
+        }),
+    };
+
     pub(crate) const CPX_ABS: Op = Op {
         mnemonic: "CPX",
         addressing_mode: AddressingMode::Absolute,
@@ -352,17 +594,6 @@ mod inner {
         }),
     };
 
-    pub(crate) const DEX: Op = Op {
-        mnemonic: "DEX",
-        addressing_mode: AddressingMode::Implied,
-        opcode: 0xcau8,
-        func: OpFunc::NoOperand(|m| {
-            m.reg.x = m.reg.x.wrapping_sub(1);
-            m.set_flags_for(m.reg.x);
-            2
-        }),
-    };
-
     pub(crate) const DEY: Op = Op {
         mnemonic: "DEY",
         addressing_mode: AddressingMode::Implied,
@@ -370,6 +601,71 @@ mod inner {
         func: OpFunc::NoOperand(|m| {
             m.reg.y = m.reg.y.wrapping_sub(1);
             m.set_flags_for(m.reg.y);
+            2
+        }),
+    };
+
+    pub(crate) const DEC_ABS: Op = Op {
+        mnemonic: "DEC",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0xCEu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let result = value.wrapping_sub(1);
+            m.store(operand, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
+    pub(crate) const DEC_ABS_X: Op = Op {
+        mnemonic: "DEC",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0xDEu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            let result = value.wrapping_sub(1);
+            m.store(addr, result);
+            m.set_flags_for(result);
+            7
+        }),
+    };
+
+    pub(crate) const DEC_ZP: Op = Op {
+        mnemonic: "DEC",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0xC6u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            let result = value.wrapping_sub(1);
+            m.store(operand as u16, result);
+            m.set_flags_for(result);
+            5
+        }),
+    };
+
+    pub(crate) const DEC_ZP_X: Op = Op {
+        mnemonic: "DEC",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0xD6u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            let result = value.wrapping_sub(1);
+            m.store(addr, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
+    pub(crate) const DEX: Op = Op {
+        mnemonic: "DEX",
+        addressing_mode: AddressingMode::Implied,
+        opcode: 0xcau8,
+        func: OpFunc::NoOperand(|m| {
+            m.reg.x = m.reg.x.wrapping_sub(1);
+            m.set_flags_for(m.reg.x);
             2
         }),
     };
@@ -382,6 +678,69 @@ mod inner {
             m.reg.a ^= operand;
             m.set_flags_for(m.reg.a);
             2
+        }),
+    };
+
+    pub(crate) const EOR_ABS: Op = Op {
+        mnemonic: "EOR",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x4Du8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            m.reg.a ^= value;
+            m.set_flags_for(m.reg.a);
+            4
+        }),
+    };
+
+    pub(crate) const EOR_ABS_X: Op = Op {
+        mnemonic: "EOR",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x5Du8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            m.reg.a ^= value;
+            m.set_flags_for(m.reg.a);
+            4 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const EOR_ABS_Y: Op = Op {
+        mnemonic: "EOR",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0x59u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            let value = m.fetch(addr);
+            m.reg.a ^= value;
+            m.set_flags_for(m.reg.a);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const EOR_ZP: Op = Op {
+        mnemonic: "EOR",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0x45u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            m.reg.a ^= value;
+            m.set_flags_for(m.reg.a);
+            3
+        }),
+    };
+
+    pub(crate) const EOR_ZP_X: Op = Op {
+        mnemonic: "EOR",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x55u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            m.reg.a ^= value;
+            m.set_flags_for(m.reg.a);
+            4
         }),
     };
 
@@ -404,6 +763,60 @@ mod inner {
             m.reg.y = m.reg.y.wrapping_add(1);
             m.set_flags_for(m.reg.y);
             2
+        }),
+    };
+
+    pub(crate) const INC_ABS: Op = Op {
+        mnemonic: "INC",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0xEEu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let result = value.wrapping_add(1);
+            m.store(operand, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
+    pub(crate) const INC_ABS_X: Op = Op {
+        mnemonic: "INC",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0xFEu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            let result = value.wrapping_add(1);
+            m.store(addr, result);
+            m.set_flags_for(result);
+            7
+        }),
+    };
+
+    pub(crate) const INC_ZP: Op = Op {
+        mnemonic: "INC",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0xE6u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            let result = value.wrapping_add(1);
+            m.store(operand as u16, result);
+            m.set_flags_for(result);
+            5
+        }),
+    };
+
+    pub(crate) const INC_ZP_X: Op = Op {
+        mnemonic: "INC",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0xF6u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            let result = value.wrapping_add(1);
+            m.store(addr, result);
+            m.set_flags_for(result);
+            6
         }),
     };
 
@@ -457,6 +870,19 @@ mod inner {
         }),
     };
 
+    pub(crate) const LDA_ABS_Y: Op = Op {
+        mnemonic: "LDA",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0xB9u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            let value = m.fetch(addr);
+            m.reg.a = value;
+            m.set_flags_for(value);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
     pub(crate) const LDA_IMM: Op = Op {
         mnemonic: "LDA",
         addressing_mode: AddressingMode::Immediate,
@@ -498,6 +924,19 @@ mod inner {
         }),
     };
 
+    pub(crate) const LDA_ZP_X: Op = Op {
+        mnemonic: "LDA",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0xB5u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            m.reg.a = value;
+            m.set_flags_for(value);
+            4
+        }),
+    };
+
     pub(crate) const LDX_ABS: Op = Op {
         mnemonic: "LDX",
         addressing_mode: AddressingMode::Absolute,
@@ -506,6 +945,18 @@ mod inner {
             m.reg.x = m.fetch(operand);
             m.set_flags_for(m.reg.x);
             4
+        }),
+    };
+
+    pub(crate) const LDX_ABS_Y: Op = Op {
+        mnemonic: "LDX",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0xBEu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            m.reg.x = m.fetch(addr);
+            m.set_flags_for(m.reg.x);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
         }),
     };
 
@@ -531,6 +982,18 @@ mod inner {
         }),
     };
 
+    pub(crate) const LDX_ZP_Y: Op = Op {
+        mnemonic: "LDX",
+        addressing_mode: AddressingMode::ZeroPageY,
+        opcode: 0xB6u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.y) as u16;
+            m.reg.x = m.fetch(addr);
+            m.set_flags_for(m.reg.x);
+            4
+        }),
+    };
+
     pub(crate) const LDY_ABS: Op = Op {
         mnemonic: "LDY",
         addressing_mode: AddressingMode::Absolute,
@@ -539,6 +1002,18 @@ mod inner {
             m.reg.y = m.fetch(operand);
             m.set_flags_for(m.reg.y);
             4
+        }),
+    };
+
+    pub(crate) const LDY_ABS_X: Op = Op {
+        mnemonic: "LDY",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0xBCu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            m.reg.y = m.fetch(addr);
+            m.set_flags_for(m.reg.y);
+            4 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
         }),
     };
 
@@ -564,6 +1039,18 @@ mod inner {
         }),
     };
 
+    pub(crate) const LDY_ZP_X: Op = Op {
+        mnemonic: "LDY",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0xB4u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            m.reg.y = m.fetch(addr);
+            m.set_flags_for(m.reg.y);
+            4
+        }),
+    };
+
     pub(crate) const LSR_A: Op = Op {
         mnemonic: "LSR",
         addressing_mode: AddressingMode::Accumulator,
@@ -574,6 +1061,35 @@ mod inner {
             m.reg.a = value >> 1;
             m.set_flags_for(m.reg.a);
             2
+        }),
+    };
+
+    pub(crate) const LSR_ABS: Op = Op {
+        mnemonic: "LSR",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x4Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            m.set_flag(Flag::Carry, (value & 0x01) != 0);
+            let result = value >> 1;
+            m.store(operand, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
+    pub(crate) const LSR_ABS_X: Op = Op {
+        mnemonic: "LSR",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x5Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            m.set_flag(Flag::Carry, (value & 0x01) != 0);
+            let result = value >> 1;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            7
         }),
     };
 
@@ -606,6 +1122,69 @@ mod inner {
             m.reg.a |= operand;
             m.set_flags_for(m.reg.a);
             2
+        }),
+    };
+
+    pub(crate) const ORA_ABS: Op = Op {
+        mnemonic: "ORA",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x0Du8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            m.reg.a |= value;
+            m.set_flags_for(m.reg.a);
+            4
+        }),
+    };
+
+    pub(crate) const ORA_ABS_X: Op = Op {
+        mnemonic: "ORA",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x1Du8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            m.reg.a |= value;
+            m.set_flags_for(m.reg.a);
+            4 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const ORA_ABS_Y: Op = Op {
+        mnemonic: "ORA",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0x19u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            let value = m.fetch(addr);
+            m.reg.a |= value;
+            m.set_flags_for(m.reg.a);
+            4 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const ORA_ZP: Op = Op {
+        mnemonic: "ORA",
+        addressing_mode: AddressingMode::ZeroPage,
+        opcode: 0x05u8,
+        func: OpFunc::Byte(|m, operand| {
+            let value = m.fetch(operand as u16);
+            m.reg.a |= value;
+            m.set_flags_for(m.reg.a);
+            3
+        }),
+    };
+
+    pub(crate) const ORA_ZP_X: Op = Op {
+        mnemonic: "ORA",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x15u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            m.reg.a |= value;
+            m.set_flags_for(m.reg.a);
+            4
         }),
     };
 
@@ -678,6 +1257,22 @@ mod inner {
         }),
     };
 
+    pub(crate) const ROL_ABS_X: Op = Op {
+        mnemonic: "ROL",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x3Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            m.set_flag(Flag::Carry, (value & 0x80) != 0);
+            let result = (value << 1) | carry;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            7
+        }),
+    };
+
     pub(crate) const ROL_ZP: Op = Op {
         mnemonic: "ROL",
         addressing_mode: AddressingMode::ZeroPage,
@@ -690,6 +1285,22 @@ mod inner {
             m.store(operand as u16, result);
             m.set_flags_for(result);
             5
+        }),
+    };
+
+    pub(crate) const ROL_ZP_X: Op = Op {
+        mnemonic: "ROL",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x36u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            m.set_flag(Flag::Carry, (value & 0x80) != 0);
+            let result = (value << 1) | carry;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            6
         }),
     };
 
@@ -707,6 +1318,37 @@ mod inner {
         }),
     };
 
+    pub(crate) const ROR_ABS: Op = Op {
+        mnemonic: "ROR",
+        addressing_mode: AddressingMode::Absolute,
+        opcode: 0x6Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let value = m.fetch(operand);
+            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            m.set_flag(Flag::Carry, (value & 0x01) != 0);
+            let result = (value >> 1) | carry;
+            m.store(operand, result);
+            m.set_flags_for(result);
+            6
+        }),
+    };
+
+    pub(crate) const ROR_ABS_X: Op = Op {
+        mnemonic: "ROR",
+        addressing_mode: AddressingMode::AbsoluteX,
+        opcode: 0x7Eu8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.x as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            m.set_flag(Flag::Carry, (value & 0x01) != 0);
+            let result = (value >> 1) | carry;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            7
+        }),
+    };
+
     pub(crate) const ROR_ZP: Op = Op {
         mnemonic: "ROR",
         addressing_mode: AddressingMode::ZeroPage,
@@ -719,6 +1361,22 @@ mod inner {
             m.store(operand as u16, result);
             m.set_flags_for(result);
             5
+        }),
+    };
+
+    pub(crate) const ROR_ZP_X: Op = Op {
+        mnemonic: "ROR",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x76u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            let value = m.fetch(addr);
+            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            m.set_flag(Flag::Carry, (value & 0x01) != 0);
+            let result = (value >> 1) | carry;
+            m.store(addr, result);
+            m.set_flags_for(result);
+            6
         }),
     };
 
@@ -826,11 +1484,41 @@ mod inner {
         func: OpFunc::Word(|m, operand| {
             let addr = operand + m.reg.x as u16;
             m.store(addr, m.reg.a);
-            5 + if crosses_page_boundary(operand, m.reg.x) {
-                1
-            } else {
-                0
-            }
+            5 + if crosses_page_boundary(operand, m.reg.x) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const STA_ABS_Y: Op = Op {
+        mnemonic: "STA",
+        addressing_mode: AddressingMode::AbsoluteY,
+        opcode: 0x99u8,
+        func: OpFunc::Word(|m, operand| {
+            let addr = operand + m.reg.y as u16;
+            m.store(addr, m.reg.a);
+            5 + if crosses_page_boundary(operand, m.reg.y) { 1 } else { 0 }
+        }),
+    };
+
+    pub(crate) const STA_IND_X: Op = Op {
+        mnemonic: "STA",
+        addressing_mode: AddressingMode::IndexedIndirectX,
+        opcode: 0x81u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = m.fetch_word((operand + m.reg.x) as u16);
+            m.store(addr, m.reg.a);
+            6
+        }),
+    };
+
+    pub(crate) const STA_IND_Y: Op = Op {
+        mnemonic: "STA",
+        addressing_mode: AddressingMode::IndirectIndexedY,
+        opcode: 0x91u8,
+        func: OpFunc::Byte(|m, operand| {
+            let base_addr = m.fetch_word(operand as u16);
+            let addr = base_addr + m.reg.y as u16;
+            m.store(addr, m.reg.a);
+            6 + if crosses_page_boundary(base_addr, m.reg.y) { 1 } else { 0 }
         }),
     };
 
@@ -841,6 +1529,17 @@ mod inner {
         func: OpFunc::Byte(|m, operand| {
             m.store(operand as u16, m.reg.a);
             3
+        }),
+    };
+
+    pub(crate) const STA_ZP_X: Op = Op {
+        mnemonic: "STA",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x95u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            m.store(addr, m.reg.a);
+            4
         }),
     };
 
@@ -864,6 +1563,17 @@ mod inner {
         }),
     };
 
+    pub(crate) const STX_ZP_Y: Op = Op {
+        mnemonic: "STX",
+        addressing_mode: AddressingMode::ZeroPageY,
+        opcode: 0x96u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.y) as u16;
+            m.store(addr, m.reg.x);
+            4
+        }),
+    };
+
     pub(crate) const STY_ABS: Op = Op {
         mnemonic: "STY",
         addressing_mode: AddressingMode::Absolute,
@@ -884,6 +1594,17 @@ mod inner {
         }),
     };
 
+    pub(crate) const STY_ZP_X: Op = Op {
+        mnemonic: "STY",
+        addressing_mode: AddressingMode::ZeroPageX,
+        opcode: 0x94u8,
+        func: OpFunc::Byte(|m, operand| {
+            let addr = (operand + m.reg.x) as u16;
+            m.store(addr, m.reg.y);
+            4
+        }),
+    };
+
     pub(crate) const TAX: Op = Op {
         mnemonic: "TAX",
         addressing_mode: AddressingMode::Implied,
@@ -898,7 +1619,7 @@ mod inner {
 
     pub(crate) const TAY: Op = Op {
         mnemonic: "TAY",
-        addressing_mode: AddressingMode::Immediate,
+        addressing_mode: AddressingMode::Implied,
         opcode: 0xa8u8,
         func: OpFunc::NoOperand(|m| {
             let operand = m.reg.a;
