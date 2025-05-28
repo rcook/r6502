@@ -1,61 +1,36 @@
 [
   {
-    "name": "div_loop",
-    "value": "$0E14",
-    "sourceLocation": "div16.asm:27"
+    "name": "l1",
+    "value": "$0008",
+    "sourceLocation": "div16.asm:9"
   },
   {
-    "name": "dividend_hi",
-    "value": "$0E49",
-    "sourceLocation": "div16.asm:68"
+    "name": "l2",
+    "value": "$0022",
+    "sourceLocation": "div16.asm:24"
   },
   {
-    "name": "dividend_lo",
-    "value": "$0E48",
-    "sourceLocation": "div16.asm:66"
+    "name": "num1",
+    "value": "$0026",
+    "sourceLocation": "div16.asm:29"
   },
   {
-    "name": "divisor_hi",
-    "value": "$0E4B",
-    "sourceLocation": "div16.asm:72"
-  },
-  {
-    "name": "divisor_lo",
-    "value": "$0E4A",
-    "sourceLocation": "div16.asm:70"
+    "name": "num2",
+    "value": "$0028",
+    "sourceLocation": "div16.asm:31"
   },
   {
     "name": "origin",
-    "value": "$0E00"
+    "value": "$0000"
   },
   {
-    "name": "quotient_hi",
-    "value": "$0E01",
-    "sourceLocation": "div16.asm:10"
-  },
-  {
-    "name": "quotient_lo",
-    "value": "$0E00",
-    "sourceLocation": "div16.asm:8"
-  },
-  {
-    "name": "remainder_hi",
-    "value": "$0E03",
-    "sourceLocation": "div16.asm:14"
-  },
-  {
-    "name": "remainder_lo",
-    "value": "$0E02",
-    "sourceLocation": "div16.asm:12"
-  },
-  {
-    "name": "skip_subtract",
-    "value": "$0E3E",
-    "sourceLocation": "div16.asm:55"
+    "name": "rem",
+    "value": "$002A",
+    "sourceLocation": "div16.asm:33"
   },
   {
     "name": "start",
-    "value": "$0E04",
-    "sourceLocation": "div16.asm:17"
+    "value": "$0000",
+    "sourceLocation": "div16.asm:4"
   }
 ]
