@@ -29,7 +29,7 @@ impl Instruction {
     pub(crate) fn pretty_current(&self, symbols: &Vec<SymbolInfo>) -> String {
         match self {
             Self::NoOperand { pc: _, op, f: _ } => {
-                format!("{} ({})", op.mnemonic, op.opcode)
+                format!("{} ({:02X})", op.mnemonic, op.opcode)
             }
             Self::Byte {
                 pc,
