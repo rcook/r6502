@@ -1234,9 +1234,10 @@ mod inner {
         opcode: 0x2Au8,
         func: OpFunc::NoOperand(|m| {
             let value = m.reg.a;
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            m.set_flag(Flag::Carry, (value & 0x80) != 0);
-            m.reg.a = (value << 1) | carry;
+            let old_carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let new_carry = (value & 0x80) != 0;
+            m.set_flag(Flag::Carry, new_carry);
+            m.reg.a = (value << 1) | old_carry;
             m.set_flags_for(m.reg.a);
             2
         }),
@@ -1248,9 +1249,10 @@ mod inner {
         opcode: 0x2Eu8,
         func: OpFunc::Word(|m, operand| {
             let value = m.fetch(operand);
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            m.set_flag(Flag::Carry, (value & 0x80) != 0);
-            let result = (value << 1) | carry;
+            let old_carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let new_carry = (value & 0x80) != 0;
+            m.set_flag(Flag::Carry, new_carry);
+            let result = (value << 1) | old_carry;
             m.store(operand, result);
             m.set_flags_for(result);
             6
@@ -1264,9 +1266,10 @@ mod inner {
         func: OpFunc::Word(|m, operand| {
             let addr = operand + m.reg.x as u16;
             let value = m.fetch(addr);
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            m.set_flag(Flag::Carry, (value & 0x80) != 0);
-            let result = (value << 1) | carry;
+            let old_carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let new_carry = (value & 0x80) != 0;
+            m.set_flag(Flag::Carry, new_carry);
+            let result = (value << 1) | old_carry;
             m.store(addr, result);
             m.set_flags_for(result);
             7
@@ -1279,9 +1282,10 @@ mod inner {
         opcode: 0x26u8,
         func: OpFunc::Byte(|m, operand| {
             let value = m.fetch(operand as u16);
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            m.set_flag(Flag::Carry, (value & 0x80) != 0);
-            let result = (value << 1) | carry;
+            let old_carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let new_carry = (value & 0x80) != 0;
+            m.set_flag(Flag::Carry, new_carry);
+            let result = (value << 1) | old_carry;
             m.store(operand as u16, result);
             m.set_flags_for(result);
             5
@@ -1295,9 +1299,10 @@ mod inner {
         func: OpFunc::Byte(|m, operand| {
             let addr = (operand + m.reg.x) as u16;
             let value = m.fetch(addr);
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            m.set_flag(Flag::Carry, (value & 0x80) != 0);
-            let result = (value << 1) | carry;
+            let old_carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
+            let new_carry = (value & 0x80) != 0;
+            m.set_flag(Flag::Carry, new_carry);
+            let result = (value << 1) | old_carry;
             m.store(addr, result);
             m.set_flags_for(result);
             6
@@ -1310,9 +1315,9 @@ mod inner {
         opcode: 0x6Au8,
         func: OpFunc::NoOperand(|m| {
             let value = m.reg.a;
-            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            let old_carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
             m.set_flag(Flag::Carry, (value & 0x01) != 0);
-            m.reg.a = (value >> 1) | carry;
+            m.reg.a = (value >> 1) | old_carry;
             m.set_flags_for(m.reg.a);
             2
         }),
@@ -1324,9 +1329,9 @@ mod inner {
         opcode: 0x6Eu8,
         func: OpFunc::Word(|m, operand| {
             let value = m.fetch(operand);
-            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            let old_carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
             m.set_flag(Flag::Carry, (value & 0x01) != 0);
-            let result = (value >> 1) | carry;
+            let result = (value >> 1) | old_carry;
             m.store(operand, result);
             m.set_flags_for(result);
             6
@@ -1340,9 +1345,9 @@ mod inner {
         func: OpFunc::Word(|m, operand| {
             let addr = operand + m.reg.x as u16;
             let value = m.fetch(addr);
-            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            let old_carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
             m.set_flag(Flag::Carry, (value & 0x01) != 0);
-            let result = (value >> 1) | carry;
+            let result = (value >> 1) | old_carry;
             m.store(addr, result);
             m.set_flags_for(result);
             7
@@ -1355,9 +1360,9 @@ mod inner {
         opcode: 0x66u8,
         func: OpFunc::Byte(|m, operand| {
             let value = m.fetch(operand as u16);
-            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            let old_carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
             m.set_flag(Flag::Carry, (value & 0x01) != 0);
-            let result = (value >> 1) | carry;
+            let result = (value >> 1) | old_carry;
             m.store(operand as u16, result);
             m.set_flags_for(result);
             5
@@ -1371,9 +1376,9 @@ mod inner {
         func: OpFunc::Byte(|m, operand| {
             let addr = (operand + m.reg.x) as u16;
             let value = m.fetch(addr);
-            let carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
+            let old_carry = if m.get_flag(Flag::Carry) { 0x80 } else { 0 };
             m.set_flag(Flag::Carry, (value & 0x01) != 0);
-            let result = (value >> 1) | carry;
+            let result = (value >> 1) | old_carry;
             m.store(addr, result);
             m.set_flags_for(result);
             6
@@ -1407,8 +1412,8 @@ mod inner {
         addressing_mode: AddressingMode::Immediate,
         opcode: 0xE9u8,
         func: OpFunc::Byte(|m, operand| {
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            let diff = m.reg.a as i16 - operand as i16 - (1 - carry);
+            let borrow = if m.get_flag(Flag::Carry) { 0 } else { 1 };
+            let diff = m.reg.a as i16 - operand as i16 - borrow;
             let result = diff as u8;
             m.reg.a = result;
             m.set_flag(Flag::Carry, diff >= 0);
@@ -1425,8 +1430,8 @@ mod inner {
         opcode: 0xEDu8,
         func: OpFunc::Word(|m, operand| {
             let value = m.fetch(operand);
-            let carry = if m.get_flag(Flag::Carry) { 1 } else { 0 };
-            let diff = m.reg.a as i16 - value as i16 - (1 - carry);
+            let borrow = if m.get_flag(Flag::Carry) { 0 } else { 1 };
+            let diff = m.reg.a as i16 - value as i16 - borrow;
             let result = diff as u8;
             m.reg.a = result;
             m.set_flag(Flag::Carry, diff >= 0);
