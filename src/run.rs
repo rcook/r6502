@@ -104,8 +104,14 @@ mod tests {
         assert_eq!("", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
         assert_eq!(1141, result.cycles);
-        assert_eq!(0xd2, result.machine_state.memory[0x0e00]);
-        assert_eq!(0x01, result.machine_state.memory[0x0e01]);
+        let quotient_lo = result.machine_state.memory[0x0e00];
+        let quotient_hi = result.machine_state.memory[0x0e01];
+        let remainder_lo = result.machine_state.memory[0x0e02];
+        let remainder_hi = result.machine_state.memory[0x0e03];
+        assert_eq!(0xd2, quotient_lo);
+        assert_eq!(0x01, quotient_hi);
+        assert_eq!(0x00, remainder_lo);
+        assert_eq!(0x00, remainder_hi);
         Ok(())
     }
 
