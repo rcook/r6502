@@ -14,8 +14,9 @@ const STATUS_NAME: &str = "status";
 const STDOUT_NAME: &str = "stdout";
 const REGISTERS_NAME: &str = "registers";
 const CYCLES_NAME: &str = "cycles";
-const COMMAND_NAME: &str = "command";
 const COMMAND_RESPONSE_NAME: &str = "command-response";
+const COMMAND_NAME: &str = "command";
+const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
 
 pub(crate) struct UI {
     cursive: CursiveRunner<CursiveRunnable>,
@@ -97,18 +98,34 @@ impl UI {
             .on_submit(move |s, text| {
                 fn nasty_hack(s: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
                     // TBD: For now we'll implement a single command "m BEGIN END"
-                    // Let's fetch the stack for the time being
                     let parts = text.split_whitespace().collect::<Vec<_>>();
                     if parts.len() != 3 {
+                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                            view.set_content(format!("Syntax error in \"{text}\""));
+                        });
                         return;
                     }
 
                     if parts[0] != "m" {
+                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                            view.set_content(format!("Unknown command \"{}\"", parts[0]));
+                        });
                         return;
                     }
 
-                    let begin = u16::from_str_radix(parts[1], 16).expect("Must succeed");
-                    let end = u16::from_str_radix(parts[2], 16).expect("Must succeed");
+                    let Ok(begin) = u16::from_str_radix(parts[1], 16) else {
+                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                            view.set_content(format!("Invalid begin address \"{}\"", parts[1]));
+                        });
+                        return;
+                    };
+
+                    let Ok(end) = u16::from_str_radix(parts[2], 16) else {
+                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                            view.set_content(format!("Invalid end address \"{}\"", parts[2]));
+                        });
+                        return;
+                    };
 
                     _ = d.send(FetchMemory { begin, end });
                     s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
@@ -118,6 +135,9 @@ impl UI {
                 nasty_hack(s, text, &d)
             })
             .with_name(COMMAND_NAME)
+            .fixed_height(1);
+        let command_feedback = TextView::new("")
+            .with_name(COMMAND_FEEDBACK_NAME)
             .fixed_height(1);
 
         let left = LinearLayout::new(Orientation::Vertical)
@@ -132,7 +152,8 @@ impl UI {
             .child(panel(symbols, "Symbols"))
             .child(panel(help, "Help"))
             .child(panel(command_response, "Command Response"))
-            .child(panel(command, "Command"));
+            .child(panel(command, "Command"))
+            .child(Panel::new(command_feedback));
 
         let dashboard = LinearLayout::new(Orientation::Horizontal)
             .child(left)
