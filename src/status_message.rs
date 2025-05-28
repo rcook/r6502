@@ -13,4 +13,9 @@ pub(crate) enum StatusMessage {
     },
     Status(Status),
     WriteStdout(char),
+    FetchMemoryResponse {
+        begin: u16,
+        end: u16,
+        snapshot: Vec<u8>,
+    },
 }

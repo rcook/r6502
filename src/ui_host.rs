@@ -1,5 +1,6 @@
 use crate::{
-    Cycles, DebugMessage, Instruction, PollResult, RegisterFile, Status, StatusMessage, VMHost,
+    Cycles, DebugMessage, Instruction, MachineState, PollResult, RegisterFile, Status,
+    StatusMessage, VMHost,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -15,6 +16,19 @@ impl UIHost {
             status_tx,
         }
     }
+
+    fn fetch_memory(&self, memory: &[u8], begin: u16, end: u16) {
+        let begin_temp = begin as usize;
+        let end_temp = end as usize;
+        assert!(end_temp >= begin_temp && end_temp <= 0x10000);
+        let count = end_temp - begin_temp + 1;
+        let snapshot = memory[begin_temp..begin_temp + count].to_vec();
+        _ = self.status_tx.send(StatusMessage::FetchMemoryResponse {
+            begin,
+            end,
+            snapshot,
+        });
+    }
 }
 
 impl VMHost for UIHost {
@@ -28,7 +42,7 @@ impl VMHost for UIHost {
             .expect("Must succeed")
     }
 
-    fn poll(&self, mut free_running: bool) -> PollResult {
+    fn poll(&self, machine_state: &MachineState, mut free_running: bool) -> PollResult {
         loop {
             if free_running {
                 match self.debug_rx.try_recv() {
@@ -44,9 +58,14 @@ impl VMHost for UIHost {
                             free_running,
                         }
                     }
-                    Ok(DebugMessage::Step) => {}
-                    Ok(DebugMessage::Run) => {}
-                    Ok(DebugMessage::Break) => free_running = false,
+                    Ok(m) => match m {
+                        DebugMessage::Step => {}
+                        DebugMessage::Run => {}
+                        DebugMessage::Break => free_running = false,
+                        DebugMessage::FetchMemory { begin, end } => {
+                            self.fetch_memory(&machine_state.memory, begin, end)
+                        }
+                    },
                 }
             } else {
                 match self.debug_rx.recv() {
@@ -56,14 +75,19 @@ impl VMHost for UIHost {
                             free_running,
                         }
                     }
-                    Ok(DebugMessage::Step) => {
-                        return PollResult {
-                            is_active: true,
-                            free_running,
+                    Ok(m) => match m {
+                        DebugMessage::Step => {
+                            return PollResult {
+                                is_active: true,
+                                free_running,
+                            }
                         }
-                    }
-                    Ok(DebugMessage::Run) => free_running = true,
-                    Ok(DebugMessage::Break) => {}
+                        DebugMessage::Run => free_running = true,
+                        DebugMessage::Break => {}
+                        DebugMessage::FetchMemory { begin, end } => {
+                            self.fetch_memory(&machine_state.memory, begin, end)
+                        }
+                    },
                 }
             }
         }

@@ -1,4 +1,4 @@
-use crate::{Cycles, Instruction, RegisterFile, Status};
+use crate::{Cycles, Instruction, MachineState, RegisterFile, Status};
 
 pub(crate) struct PollResult {
     pub(crate) is_active: bool,
@@ -14,7 +14,7 @@ pub(crate) trait VMHost {
     ) {
     }
 
-    fn poll(&self, free_running: bool) -> PollResult {
+    fn poll(&self, _machine_state: &MachineState, free_running: bool) -> PollResult {
         PollResult {
             is_active: true,
             free_running,

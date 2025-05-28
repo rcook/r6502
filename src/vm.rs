@@ -43,7 +43,7 @@ pub(crate) fn run_vm<H: VMHost>(
             let instruction = peek(&mut m, &ops)?;
             host.report_before_execute(&m.reg, cycles, &instruction);
 
-            let result = host.poll(free_running);
+            let result = host.poll(&m, free_running);
             free_running = result.free_running;
             if !result.is_active {
                 // Handle disconnection
