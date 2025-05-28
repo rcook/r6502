@@ -103,11 +103,13 @@ mod tests {
         let (stdout, result) = run(bytes)?;
         assert_eq!("", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
-        assert_eq!(1141, result.cycles);
-        let quotient_lo = result.machine_state.memory[0x0e00];
-        let quotient_hi = result.machine_state.memory[0x0e01];
-        let remainder_lo = result.machine_state.memory[0x0e02];
-        let remainder_hi = result.machine_state.memory[0x0e03];
+        assert_eq!(758, result.cycles);
+        const NUM1: usize = 0x0026;
+        const REM: usize = 0x002a;
+        let quotient_lo = result.machine_state.memory[NUM1];
+        let quotient_hi = result.machine_state.memory[NUM1 + 1];
+        let remainder_lo = result.machine_state.memory[REM];
+        let remainder_hi = result.machine_state.memory[REM + 1];
         assert_eq!(0xd2, quotient_lo);
         assert_eq!(0x01, quotient_hi);
         assert_eq!(0x00, remainder_lo);

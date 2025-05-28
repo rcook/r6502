@@ -39,7 +39,7 @@ impl Instruction {
             } => format!(
                 "{} {} ({:02X} {:02X})",
                 op.mnemonic,
-                Self::look_up_name(symbols, *pc, op, *operand),
+                Self::pretty_byte(symbols, *pc, op, *operand),
                 op.opcode,
                 operand,
             ),
@@ -53,7 +53,7 @@ impl Instruction {
                 format!(
                     "{} {} ({:02X} {:02X} {:02X})",
                     op.mnemonic,
-                    Self::look_up_name_for_word(symbols, op, *operand),
+                    Self::pretty_word(symbols, op, *operand),
                     op.opcode,
                     lo,
                     hi,
@@ -78,7 +78,7 @@ impl Instruction {
                 op.opcode,
                 operand,
                 op.mnemonic,
-                Self::look_up_name(symbols, *pc, op, *operand)
+                Self::pretty_byte(symbols, *pc, op, *operand)
             ),
             Self::Word {
                 pc,
@@ -94,34 +94,34 @@ impl Instruction {
                     lo,
                     hi,
                     op.mnemonic,
-                    Self::look_up_name_for_word(symbols, op, *operand)
+                    Self::pretty_word(symbols, op, *operand)
                 )
             }
         }
     }
 
-    fn look_up_name(symbols: &Vec<SymbolInfo>, pc: u16, op: &Op, operand: u8) -> String {
+    fn find_name(symbols: &Vec<SymbolInfo>, effective_value: u16) -> Option<String> {
+        for symbol in symbols {
+            if symbol.value == effective_value {
+                return Some(symbol.name.clone());
+            }
+        }
+        None
+    }
+
+    fn pretty_byte(symbols: &Vec<SymbolInfo>, pc: u16, op: &Op, operand: u8) -> String {
         let effective_value = if op.addressing_mode == AddressingMode::Relative {
             compute_branch(pc + 2, operand).0
         } else {
             operand as u16
         };
 
-        for symbol in symbols {
-            if symbol.value == effective_value {
-                return symbol.name.clone();
-            }
-        }
-
-        op.addressing_mode.pretty_byte(operand)
+        let name = Self::find_name(symbols, effective_value);
+        op.addressing_mode.pretty_byte(operand, &name)
     }
 
-    fn look_up_name_for_word(symbols: &Vec<SymbolInfo>, op: &Op, operand: u16) -> String {
-        for symbol in symbols {
-            if symbol.value == operand {
-                return symbol.name.clone();
-            }
-        }
-        op.addressing_mode.pretty_word(operand)
+    fn pretty_word(symbols: &Vec<SymbolInfo>, op: &Op, operand: u16) -> String {
+        let name = Self::find_name(symbols, operand);
+        op.addressing_mode.pretty_word(operand, &name)
     }
 }

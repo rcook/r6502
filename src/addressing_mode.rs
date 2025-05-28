@@ -15,25 +15,27 @@ pub(crate) enum AddressingMode {
 }
 
 impl AddressingMode {
-    pub(crate) fn pretty_byte(&self, operand: u8) -> String {
+    pub(crate) fn pretty_byte(&self, operand: u8, name: &Option<String>) -> String {
+        let s = name.clone().unwrap_or_else(|| format!("${operand:02X}"));
         match self {
-            Self::Accumulator => "A".to_string(),
-            Self::Immediate => format!("#${operand:02X}"),
-            Self::IndexedIndirectX => format!("(${operand:02X},X)"),
-            Self::IndirectIndexedY => format!("(${operand:02X}),Y"),
-            Self::Relative => format!("${operand:02X}"),
-            Self::ZeroPage => format!("${operand:02X}"),
-            Self::ZeroPageX => format!("${operand:02X},X"),
-            Self::ZeroPageY => format!("${operand:02X},Y"),
+            Self::Accumulator => String::from("A"),
+            Self::Immediate => format!("#{s}"),
+            Self::IndexedIndirectX => format!("({s},X)"),
+            Self::IndirectIndexedY => format!("({s}),Y"),
+            Self::Relative => s,
+            Self::ZeroPage => s,
+            Self::ZeroPageX => format!("{s},X"),
+            Self::ZeroPageY => format!("{s},Y"),
             _ => unimplemented!(),
         }
     }
 
-    pub(crate) fn pretty_word(&self, operand: u16) -> String {
+    pub(crate) fn pretty_word(&self, operand: u16, name: &Option<String>) -> String {
+        let s = name.clone().unwrap_or_else(|| format!("${operand:04X}"));
         match self {
-            Self::Absolute => format!("${operand:04X}"),
-            Self::AbsoluteX => format!("${operand:04X},X"),
-            Self::AbsoluteY => format!("${operand:04X},Y"),
+            Self::Absolute => s,
+            Self::AbsoluteX => format!("{s},X"),
+            Self::AbsoluteY => format!("{s},Y"),
             _ => unimplemented!(),
         }
     }
