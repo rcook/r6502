@@ -1,5 +1,4 @@
 /target
 *.egg-info/
 __pycache__/
-*.dump
 error.log
