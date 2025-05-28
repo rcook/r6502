@@ -1,7 +1,7 @@
 # r6502asm
 
 ```bash
-pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install -e r6502asm
 ```
 
