@@ -1,126 +1,159 @@
-use crate::{Cpu, Cycles, Instruction, InstructionInfo, Monitor, VmState};
+use crate::{get, Cpu, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
 
-#[allow(unused)]
-pub(crate) fn step(monitor: &impl Monitor, cpu: &Cpu, s: &mut VmState) -> Cycles {
-    monitor.on_before_fetch(&s.reg);
-    let instruction = Instruction::fetch(cpu, s);
-    let instruction_info = InstructionInfo::from_instruction(&instruction);
-    monitor.on_before_execute(&s.reg, &instruction_info);
-    let cycles = instruction.execute(s);
-    monitor.on_after_execute(&s.reg, &instruction_info, cycles);
-    cycles
+pub(crate) struct Vm {
+    pub(crate) monitor: Box<dyn Monitor>,
+    pub(crate) cpu: Cpu,
+    pub(crate) s: VmState,
+    pub(crate) cycles: u32,
+}
+
+impl Default for Vm {
+    fn default() -> Self {
+        Self::new(Box::new(DummyMonitor), Cpu::make_6502(), VmState::default())
+    }
+}
+
+impl Vm {
+    #[allow(unused)]
+    pub(crate) fn new(monitor: Box<dyn Monitor>, cpu: Cpu, s: VmState) -> Self {
+        Self {
+            monitor,
+            cpu,
+            s,
+            cycles: 0,
+        }
+    }
+
+    #[allow(unused)]
+    pub(crate) fn with_vm_state(s: VmState) -> Self {
+        Self::new(Box::new(DummyMonitor), Cpu::make_6502(), s)
+    }
+
+    #[allow(unused)]
+    #[must_use]
+    pub(crate) fn step(&mut self) -> bool {
+        self.monitor.on_before_fetch(&self.s.reg);
+        let instruction = Instruction::fetch(&self.cpu, &mut self.s);
+        let instruction_info = InstructionInfo::from_instruction(&instruction);
+        self.monitor
+            .on_before_execute(&self.s.reg, &instruction_info);
+        let cycles = instruction.execute(&mut self.s);
+        self.monitor
+            .on_after_execute(&self.s.reg, &instruction_info, cycles);
+        self.cycles += cycles as u32;
+        !get!(self.s.reg, B)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        get, p, set, step, Cpu, DummyMonitor, Memory, Opcode, Reg, VmState, IRQ, OSWRCH, P,
-    };
+    use crate::{get, p, set, set_up_os, Image, Memory, Opcode, Reg, Vm, VmState, IRQ, OSWRCH, P};
+    use anyhow::Result;
 
     #[test]
     fn no_operand() {
-        let mut s = VmState {
+        let mut vm = Vm::with_vm_state(VmState {
             reg: Reg {
                 a: 0x12,
                 ..Default::default()
             },
             memory: Memory::new(),
-        };
-        s.memory[0x0000] = Opcode::Nop as u8;
-        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
-        assert_eq!(2, cycles);
-        assert_eq!(0x12, s.reg.a);
-        assert_eq!(p!(), s.reg.p);
-        assert_eq!(0x0001, s.reg.pc)
+        });
+        vm.s.memory[0x0000] = Opcode::Nop as u8;
+        assert!(vm.step());
+        assert_eq!(2, vm.cycles);
+        assert_eq!(0x12, vm.s.reg.a);
+        assert_eq!(p!(), vm.s.reg.p);
+        assert_eq!(0x0001, vm.s.reg.pc)
     }
 
     #[test]
     fn byte0() {
-        let mut s = VmState {
+        let mut vm = Vm::with_vm_state(VmState {
             reg: Reg {
                 a: 0x12,
                 ..Default::default()
             },
             memory: Memory::new(),
-        };
-        s.memory[0x0000] = Opcode::AdcImm as u8;
-        s.memory[0x0001] = 0x34;
-        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
-        assert_eq!(2, cycles);
-        assert_eq!(0x46, s.reg.a);
-        assert_eq!(p!(), s.reg.p);
-        assert_eq!(0x0002, s.reg.pc)
+        });
+        vm.s.memory[0x0000] = Opcode::AdcImm as u8;
+        vm.s.memory[0x0001] = 0x34;
+        assert!(vm.step());
+        assert_eq!(2, vm.cycles);
+        assert_eq!(0x46, vm.s.reg.a);
+        assert_eq!(p!(), vm.s.reg.p);
+        assert_eq!(0x0002, vm.s.reg.pc)
     }
 
     #[test]
     fn byte1() {
-        let mut s = VmState {
+        let mut vm = Vm::with_vm_state(VmState {
             reg: Reg {
                 a: 0x12,
                 ..Default::default()
             },
             memory: Memory::new(),
-        };
-        s.memory[0x0000] = Opcode::AdcZp as u8;
-        s.memory[0x0001] = 0x34;
-        s.memory[0x0034] = 0x56;
-        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
-        assert_eq!(3, cycles);
-        assert_eq!(0x68, s.reg.a);
-        assert_eq!(p!(), s.reg.p);
-        assert_eq!(0x0002, s.reg.pc)
+        });
+        vm.s.memory[0x0000] = Opcode::AdcZp as u8;
+        vm.s.memory[0x0001] = 0x34;
+        vm.s.memory[0x0034] = 0x56;
+        assert!(vm.step());
+        assert_eq!(3, vm.cycles);
+        assert_eq!(0x68, vm.s.reg.a);
+        assert_eq!(p!(), vm.s.reg.p);
+        assert_eq!(0x0002, vm.s.reg.pc)
     }
 
     #[test]
     fn word0() {
-        let mut s = VmState {
+        let mut vm = Vm::with_vm_state(VmState {
             reg: Reg {
                 a: 0x12,
                 ..Default::default()
             },
             memory: Memory::new(),
-        };
-        s.memory[0x0000] = Opcode::JmpAbs as u8;
-        s.memory[0x0001] = 0x00;
-        s.memory[0x0002] = 0x10;
-        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
-        assert_eq!(3, cycles);
-        assert_eq!(0x12, s.reg.a);
-        assert_eq!(p!(), s.reg.p);
-        assert_eq!(0x1000, s.reg.pc)
+        });
+        vm.s.memory[0x0000] = Opcode::JmpAbs as u8;
+        vm.s.memory[0x0001] = 0x00;
+        vm.s.memory[0x0002] = 0x10;
+        assert!(vm.step());
+        assert_eq!(3, vm.cycles);
+        assert_eq!(0x12, vm.s.reg.a);
+        assert_eq!(p!(), vm.s.reg.p);
+        assert_eq!(0x1000, vm.s.reg.pc)
     }
 
     #[test]
     fn word1() {
-        let mut s = VmState {
+        let mut vm = Vm::with_vm_state(VmState {
             reg: Reg {
                 a: 0x25,
                 ..Default::default()
             },
             memory: Memory::new(),
-        };
-        s.memory[0x0000] = Opcode::AdcAbs as u8;
-        s.memory[0x0001] = 0x12;
-        s.memory[0x0002] = 0x34;
-        s.memory[0x3412] = 0x13;
-        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
-        assert_eq!(4, cycles);
-        assert_eq!(0x38, s.reg.a);
-        assert_eq!(p!(), s.reg.p);
-        assert_eq!(0x0003, s.reg.pc)
+        });
+        vm.s.memory[0x0000] = Opcode::AdcAbs as u8;
+        vm.s.memory[0x0001] = 0x12;
+        vm.s.memory[0x0002] = 0x34;
+        vm.s.memory[0x3412] = 0x13;
+        assert!(vm.step());
+        assert_eq!(4, vm.cycles);
+        assert_eq!(0x38, vm.s.reg.a);
+        assert_eq!(p!(), vm.s.reg.p);
+        assert_eq!(0x0003, vm.s.reg.pc)
     }
 
     #[test]
     fn brk() {
-        let mut s = VmState::default();
-        s.reg.pc = 0x1000;
-        s.memory[0x1000] = Opcode::Brk as u8;
-        s.memory.store_word(IRQ, 0x9876);
-        set!(s.reg, B, false);
-        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
-        assert_eq!(7, cycles);
-        assert!(get!(s.reg, B));
-        assert_eq!(0x9876, s.reg.pc);
+        let mut vm = Vm::default();
+        vm.s.reg.pc = 0x1000;
+        vm.s.memory[0x1000] = Opcode::Brk as u8;
+        vm.s.memory.store_word(IRQ, 0x9876);
+        set!(vm.s.reg, B, false);
+        assert!(!vm.step());
+        assert_eq!(7, vm.cycles);
+        assert!(get!(vm.s.reg, B));
+        assert_eq!(0x9876, vm.s.reg.pc);
     }
 
     #[test]
@@ -129,35 +162,59 @@ mod tests {
         const OS: u16 = 0x2000;
         let p_test = P::D | P::ONE;
 
-        let monitor = DummyMonitor;
-        let cpu = Cpu::make_6502();
-        let mut s = VmState::default();
+        let mut vm = Vm::default();
+        set_up_os(&mut vm, OS);
 
-        s.memory.store_word(IRQ, OS);
+        vm.s.memory[START] = Opcode::Jsr as u8;
+        vm.s.memory.store_word(START + 1, OSWRCH);
 
-        // Set up OSWRCH as a software interrupt
-        s.memory[OSWRCH] = Opcode::Brk as u8;
-        s.memory[OSWRCH + 1] = Opcode::Nop as u8;
-        s.memory[OSWRCH + 2] = Opcode::Rts as u8;
+        vm.s.reg.pc = START;
+        vm.s.reg.p = p_test;
+        set!(vm.s.reg, B, false);
 
-        s.memory[START] = Opcode::Jsr as u8;
-        s.memory.store_word(START + 1, OSWRCH);
+        assert!(vm.step());
+        assert_eq!(6, vm.cycles);
+        assert!(!get!(vm.s.reg, B));
+        assert_eq!(OSWRCH, vm.s.reg.pc);
 
-        s.reg.pc = START;
-        s.reg.p = p_test;
-        set!(s.reg, B, false);
+        assert!(!vm.step());
+        assert_eq!(13, vm.cycles);
+        assert!(get!(vm.s.reg, B));
+        assert_eq!(OS, vm.s.reg.pc);
 
-        let cycles = step(&monitor, &cpu, &mut s);
-        assert_eq!(6, cycles);
-        assert!(!get!(s.reg, B));
-        assert_eq!(OSWRCH, s.reg.pc);
+        assert_eq!(p_test.bits(), vm.s.peek());
+        assert_eq!(OSWRCH + 1, vm.s.peek_back_word(1));
+    }
 
-        let cycles = step(&monitor, &cpu, &mut s);
-        assert_eq!(7, cycles);
-        assert!(get!(s.reg, B));
-        assert_eq!(OS, s.reg.pc);
+    // TBD: LDX ($a2) not implemented yet
+    #[allow(unused)]
+    //#[test]
+    fn print() -> Result<()> {
+        const OS: u16 = 0x2000;
+        let input = r#" 0E00  A2 00     LDX  #$00
+ 0E02  BD 0E 0E  LDA  $0E0E, X
+ 0E05  F0 06     BEQ  $0E0D
+ 0E07  20 EE FF  JSR  $FFEE
+ 0E0A  E8        INX
+ 0E0B  D0 F5     BNE  $0E02
+ 0E0D  60        RTS
+ 0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
+"#;
+        let image = input.parse::<Image>()?;
 
-        assert_eq!(p_test.bits(), s.peek());
-        assert_eq!(OSWRCH + 1, s.peek_back_word(1));
+        let mut vm = Vm::default();
+        set_up_os(&mut vm, OS);
+        vm.s.memory.load(&image);
+
+        vm.s.reg.pc = image.origin;
+
+        assert!(!get!(vm.s.reg, B));
+        loop {
+            if !vm.step() {
+                break;
+            }
+        }
+
+        Ok(())
     }
 }

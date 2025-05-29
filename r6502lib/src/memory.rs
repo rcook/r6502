@@ -1,4 +1,7 @@
-use crate::util::{make_word, split_word};
+use crate::{
+    util::{make_word, split_word},
+    Image,
+};
 use std::ops::{Index, IndexMut};
 
 pub(crate) struct Memory([u8; 0x10000]);
@@ -13,6 +16,13 @@ impl Memory {
     #[allow(unused)]
     pub(crate) fn new() -> Self {
         Self::default()
+    }
+
+    #[allow(unused)]
+    pub(crate) fn load(&mut self, image: &Image) {
+        let origin = image.origin as usize;
+        let limit = origin + image.values.len();
+        self.0[origin..limit].copy_from_slice(&image.values);
     }
 
     pub(crate) fn fetch_word(&self, addr: u16) -> u16 {

@@ -1,7 +1,7 @@
 use anyhow::{bail, Error, Result};
 use std::str::FromStr;
 
-pub(crate) struct AssemblyListing {
+pub(crate) struct Image {
     #[allow(unused)]
     pub(crate) origin: u16,
 
@@ -9,7 +9,7 @@ pub(crate) struct AssemblyListing {
     pub(crate) values: Vec<u8>,
 }
 
-impl FromStr for AssemblyListing {
+impl FromStr for Image {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -65,7 +65,6 @@ impl FromStr for AssemblyListing {
 
         pc = temp_pc;
 
-        println!("{pc:04X} {count}");
         for line in i {
             let (addr, count) = read_line(&mut values, line)?;
             if addr != pc {
@@ -86,7 +85,7 @@ impl FromStr for AssemblyListing {
 
 #[cfg(test)]
 mod tests {
-    use crate::AssemblyListing;
+    use crate::Image;
     use anyhow::Result;
 
     #[test]
@@ -100,9 +99,9 @@ mod tests {
  0E0D  60        RTS
  0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
 "#;
-        let listing = input.parse::<AssemblyListing>()?;
-        assert_eq!(0x0e00, listing.origin);
-        assert_eq!(28, listing.values.len());
+        let image = input.parse::<Image>()?;
+        assert_eq!(0x0e00, image.origin);
+        assert_eq!(28, image.values.len());
         Ok(())
     }
 }
