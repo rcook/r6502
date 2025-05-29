@@ -9,6 +9,7 @@ mod monitor;
 mod nop;
 mod op;
 mod op_byte;
+mod op_info;
 mod op_word;
 mod opcode;
 mod p;
@@ -31,9 +32,11 @@ use nop::nop;
 #[allow(unused)]
 use op::{Op, OpNoOperandFn};
 #[allow(unused)]
-use op_byte::{zero_page, OpByte, OpByteClosure, OpByteFn};
+use op_byte::{zero_page, OpByte, OpByteFn};
 #[allow(unused)]
-use op_word::{OpWord, OpWordFn};
+use op_info::OpInfo;
+#[allow(unused)]
+use op_word::{absolute, OpWord, OpWordFn};
 use opcode::Opcode;
 #[allow(unused)]
 use p::{get, p, set, value, P};

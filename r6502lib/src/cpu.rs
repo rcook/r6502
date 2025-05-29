@@ -1,4 +1,4 @@
-use crate::{adc, jmp, nop, op_word::absolute, zero_page, Op, OpByte, OpWord, Opcode};
+use crate::{absolute, adc, jmp, nop, zero_page, Op, OpByte, OpWord, Opcode};
 use std::collections::HashMap;
 
 pub(crate) struct Cpu(HashMap<Opcode, Op>);
@@ -10,9 +10,21 @@ impl Cpu {
         use crate::Opcode::*;
 
         Self(HashMap::from([
-            (AdcAbs, Op::Word(OpWord::Wrapped { f: absolute(adc) })),
+            (
+                AdcAbs,
+                Op::Word(OpWord::Wrapped {
+                    wrapper: absolute,
+                    f: adc,
+                }),
+            ),
             (AdcImm, Op::Byte(OpByte::Simple { f: adc })),
-            (AdcZp, Op::Byte(OpByte::Wrapped { f: zero_page(adc) })),
+            (
+                AdcZp,
+                Op::Byte(OpByte::Wrapped {
+                    wrapper: zero_page,
+                    f: adc,
+                }),
+            ),
             (JmpAbs, Op::Word(OpWord::Simple { f: jmp })),
             (Nop, Op::NoOperand { f: nop }),
         ]))

@@ -1,28 +1,28 @@
 use crate::{Cycles, OpByteFn, VmState};
-use std::rc::Rc;
 
 pub(crate) type OpWordFn = fn(s: &mut VmState, operand: u16) -> Cycles;
 
-pub(crate) type OpWordClosure = Rc<Box<dyn Fn(&mut VmState, u16) -> Cycles>>;
+pub(crate) type Wrapper = fn(s: &mut VmState, operand: u16) -> (u8, Cycles);
 
 #[derive(Clone)]
 pub(crate) enum OpWord {
     Simple { f: OpWordFn },
-    Wrapped { f: OpWordClosure },
+    Wrapped { wrapper: Wrapper, f: OpByteFn },
 }
 
 impl OpWord {
     pub(crate) fn execute(&self, s: &mut VmState, operand: &u16) -> Cycles {
         match self {
             Self::Simple { f } => f(s, *operand),
-            Self::Wrapped { f } => f(s, *operand),
+            Self::Wrapped { wrapper, f } => {
+                let (value, extra_cycles) = wrapper(s, *operand);
+                let cycles = f(s, value);
+                cycles + extra_cycles
+            }
         }
     }
 }
 
-pub(crate) fn absolute(f: OpByteFn) -> OpWordClosure {
-    Rc::new(Box::new(move |s, operand| {
-        let value = s.memory[operand];
-        f(s, value) + 2
-    }))
+pub(crate) fn absolute(s: &mut VmState, operand: u16) -> (u8, Cycles) {
+    (s.memory[operand], 2)
 }
