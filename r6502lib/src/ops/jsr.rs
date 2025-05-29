@@ -11,7 +11,7 @@ pub(crate) fn jsr(s: &mut VmState, operand: u16) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::jsr::jsr;
+    use crate::ops::jsr::jsr;
     use crate::{constants::OSWRCH, VmState};
 
     #[test]

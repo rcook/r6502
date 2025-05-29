@@ -1,0 +1,13 @@
+pub(crate) mod adc;
+pub(crate) mod brk;
+pub(crate) mod jmp;
+pub(crate) mod jsr;
+pub(crate) mod lda;
+pub(crate) mod ldx;
+pub(crate) mod ldy;
+pub(crate) mod nop;
+pub(crate) mod pha;
+pub(crate) mod php;
+pub(crate) mod pla;
+pub(crate) mod plp;
+pub(crate) mod rts;

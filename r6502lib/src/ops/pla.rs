@@ -13,8 +13,8 @@ pub(crate) fn pla(s: &mut VmState) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::pha::pha;
-    use crate::pla::pla;
+    use crate::ops::pha::pha;
+    use crate::ops::pla::pla;
     use crate::{reg, Memory, VmState, P};
 
     #[test]

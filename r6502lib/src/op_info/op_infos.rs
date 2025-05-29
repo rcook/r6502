@@ -4,7 +4,7 @@ mod absolute {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, value: u16) -> $crate::Cycles {
-                _ = $crate::$f::$f(s, s.memory[value]);
+                _ = $crate::ops::$f::$f(s, s.memory[value]);
                 $cycles
             }
         };
@@ -20,7 +20,7 @@ mod zero_page {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, value: u8) -> $crate::Cycles {
-                _ = $crate::$f::$f(s, s.memory[value as u16]);
+                _ = $crate::ops::$f::$f(s, s.memory[value as u16]);
                 $cycles
             }
         };
@@ -41,7 +41,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Absolute,
-                op: $crate::Op::Word($crate::WordOp::new($crate::$f::$f)),
+                op: $crate::Op::Word($crate::WordOp::new($crate::ops::$f::$f)),
             }
         };
     }
@@ -51,7 +51,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Immediate,
-                op: $crate::Op::Byte($crate::ByteOp::new($crate::$f::$f)),
+                op: $crate::Op::Byte($crate::ByteOp::new($crate::ops::$f::$f)),
             }
         };
     }
@@ -61,7 +61,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Implied,
-                op: $crate::Op::NoOperand($crate::NoOperandOp::new($crate::$f::$f)),
+                op: $crate::Op::NoOperand($crate::NoOperandOp::new($crate::ops::$f::$f)),
             }
         };
     }

@@ -12,7 +12,7 @@ pub(crate) fn brk(s: &mut VmState) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::brk::brk;
+    use crate::ops::brk::brk;
     use crate::{get, reg, Memory, VmState, IRQ};
 
     #[test]
