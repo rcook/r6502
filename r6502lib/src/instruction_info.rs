@@ -45,15 +45,15 @@ impl InstructionInfo {
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
         let s = op_info.addressing_mode.format_instruction_info(self)?;
         Ok(match &self.operand {
-            Operand::None => format!("{:04X}  {:2X}        {s}", self.pc, self.opcode as u8),
+            Operand::None => format!("{:04X}  {:02X}        {s}", self.pc, self.opcode as u8),
             Operand::Byte(value) => format!(
-                "{:04X}  {:2X} {value:2X}     {s}",
+                "{:04X}  {:02X} {value:02X}     {s}",
                 self.pc, self.opcode as u8,
             ),
             Operand::Word(value) => {
                 let (hi, lo) = split_word(*value);
                 format!(
-                    "{:04X}  {:2X} {lo:2X} {hi:2X}  {s}",
+                    "{:04X}  {:02X} {lo:02X} {hi:02X}  {s}",
                     self.pc, self.opcode as u8
                 )
             }

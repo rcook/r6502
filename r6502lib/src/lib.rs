@@ -37,7 +37,7 @@ pub(crate) use instruction::Instruction;
 pub(crate) use instruction_info::InstructionInfo;
 pub(crate) use memory::Memory;
 #[allow(unused)]
-pub(crate) use monitor::{DummyMonitor, Monitor};
+pub(crate) use monitor::{DummyMonitor, Monitor, TracingMonitor};
 #[allow(unused)]
 pub(crate) use no_operand_op::{NoOperandFn, NoOperandOp};
 #[allow(unused)]

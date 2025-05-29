@@ -36,10 +36,10 @@ impl Vm {
         let instruction = Instruction::fetch(&self.cpu, &mut self.s);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
         self.monitor
-            .on_before_execute(&self.s.reg, &instruction_info);
+            .on_before_execute(&self.cpu, &self.s.reg, &instruction_info);
         let cycles = instruction.execute(&mut self.s);
         self.monitor
-            .on_after_execute(&self.s.reg, &instruction_info, cycles);
+            .on_after_execute(&self.cpu, &self.s.reg, &instruction_info, cycles);
         self.cycles += cycles as u32;
         !get!(self.s.reg, B)
     }
@@ -47,7 +47,10 @@ impl Vm {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get, p, set, set_up_os, Image, Memory, Opcode, Reg, Vm, VmState, IRQ, OSWRCH, P};
+    use crate::{
+        get, p, set, set_up_os, Cpu, DummyMonitor, Image, Memory, Opcode, Reg, Vm, VmState, IRQ,
+        OSWRCH, P,
+    };
     use anyhow::Result;
 
     #[test]
@@ -179,17 +182,14 @@ mod tests {
 
         assert!(!vm.step());
         assert_eq!(13, vm.cycles);
-        assert!(get!(vm.s.reg, B));
-        assert_eq!(OS, vm.s.reg.pc);
-
-        assert_eq!(p_test.bits(), vm.s.peek());
-        assert_eq!(OSWRCH + 1, vm.s.peek_back_word(1));
+        assert_eq!(Some(OSWRCH), os_brk_addr(&vm, OS));
     }
 
-    #[allow(unused)]
-    //#[test]
+    #[test]
     fn print() -> Result<()> {
         const OS: u16 = 0x2000;
+        const RETURN_ADDR: u16 = 0x1234;
+
         let input = r#" 0E00  A2 00     LDX  #$00
  0E02  BD 0E 0E  LDA  $0E0E, X
  0E05  F0 06     BEQ  $0E0D
@@ -201,19 +201,57 @@ mod tests {
 "#;
         let image = input.parse::<Image>()?;
 
-        let mut vm = Vm::default();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor), // Box::new(TracingMonitor) for disassembly
+            Cpu::make_6502(),
+            VmState::default(),
+        );
+        let rts = vm
+            .cpu
+            .get_op_info(&Opcode::Rts)
+            .expect("RTS must exist")
+            .clone();
         set_up_os(&mut vm, OS);
         vm.s.memory.load(&image);
-
+        vm.s.push_word(RETURN_ADDR - 1);
         vm.s.reg.pc = image.origin;
+        set!(vm.s.reg, B, false);
 
-        assert!(!get!(vm.s.reg, B));
+        let mut result = String::new();
         loop {
-            if !vm.step() {
-                break;
+            loop {
+                if !vm.step() {
+                    break;
+                }
+            }
+
+            match os_brk_addr(&vm, OS) {
+                Some(RETURN_ADDR) => break,
+                Some(OSWRCH) => {
+                    result.push(vm.s.reg.a as char);
+                    println!("{result}");
+
+                    // Is this equivalent to RTI?
+                    vm.s.pull();
+                    vm.s.pull_word();
+                    set!(vm.s.reg, B, false);
+                    rts.op.execute_no_operand(&mut vm.s);
+                }
+                _ => panic!("expectation failed"),
             }
         }
 
+        assert_eq!("HELLO, WORLD!", result);
+
         Ok(())
+    }
+
+    fn os_brk_addr(vm: &Vm, os: u16) -> Option<u16> {
+        if get!(vm.s.reg, B) && vm.s.reg.pc == os {
+            let addr = vm.s.peek_back_word(1).wrapping_sub(1);
+            Some(addr)
+        } else {
+            None
+        }
     }
 }
