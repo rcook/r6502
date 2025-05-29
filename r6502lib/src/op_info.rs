@@ -86,5 +86,7 @@ mod constants {
     pub(crate) const JMP_ABS: OpInfo = absolute_simple!(JmpAbs, jmp);
     pub(crate) const NOP: OpInfo = implied!(Nop, nop);
     pub(crate) const PHA: OpInfo = implied!(Pha, pha);
+    pub(crate) const PHP: OpInfo = implied!(Php, php);
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
+    pub(crate) const PLP: OpInfo = implied!(Plp, plp);
 }

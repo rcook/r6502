@@ -20,7 +20,9 @@ mod opcode;
 mod operand;
 mod p;
 mod pha;
+mod php;
 mod pla;
+mod plp;
 mod reg;
 mod util;
 mod vm;
@@ -56,7 +58,9 @@ pub(crate) use operand::Operand;
 #[allow(unused)]
 pub(crate) use p::{get, p, set, value, P};
 pub(crate) use pha::pha;
+pub(crate) use php::php;
 pub(crate) use pla::pla;
+pub(crate) use plp::plp;
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
 #[allow(unused)]
