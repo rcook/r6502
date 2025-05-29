@@ -2,16 +2,23 @@ use bitflags::bitflags;
 
 // Reference: https://www.nesdev.org/wiki/Status_flags
 bitflags! {
-    #[derive(Debug, Default, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub(crate) struct P: u8 {
         const N = 0b1000000; // Negative
         const V = 0b0100000; // Overflow
-        const ONE = 0b0010000; // Always 1
+        const ONE = 0b00100000; // Always 1
         const B = 0b00010000; // B
         const D = 0b00001000; // Decimal
         const I = 0b00000100; // Interrupt Disable
         const Z = 0b00000010; // Zero
         const C = 0b00000001; // Carry
+    }
+}
+
+impl Default for P {
+    fn default() -> Self {
+        // TBD: What is the initial state of the P register?
+        Self::empty()
     }
 }
 
@@ -64,6 +71,7 @@ mod tests {
 
     #[test]
     fn basics() {
+        assert_eq!(P::empty(), P::default());
         assert_eq!(P::empty(), p!());
         assert_eq!(P::N, p!(N));
         assert_eq!(P::N | P::V, p!(N, V));
