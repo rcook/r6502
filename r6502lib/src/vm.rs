@@ -188,6 +188,7 @@ mod tests {
 
     #[rstest]
     #[case(
+        false,
         "HELLO, WORLD!",
         r#" 0E00  A2 00     LDX  #$00
  0E02  BD 0E 0E  LDA  $0E0E, X
@@ -200,6 +201,7 @@ mod tests {
 "#
     )]
     #[case(
+        false,
         "Hello, world\r\n",
         r#" 2000  A2 00     LDX  #$00
  2002  BD 11 20  LDA  $2011, X
@@ -215,6 +217,7 @@ mod tests {
     #[cfg_attr(
         feature = "not-implemented",
         case(
+            true,
             "TBD",
             r#" 0E00  A9 4D     LDA  #$4D
  0E02  85 80     STA  $80
@@ -254,8 +257,12 @@ mod tests {
 "#
         )
     )]
-    fn stdout(#[case] expected_stdout: &str, #[case] input: &str) -> Result<()> {
-        assert_eq!(expected_stdout, capture_stdout(input, false)?);
+    fn stdout(
+        #[case] trace: bool,
+        #[case] expected_stdout: &str,
+        #[case] input: &str,
+    ) -> Result<()> {
+        assert_eq!(expected_stdout, capture_stdout(input, trace)?);
         Ok(())
     }
 
