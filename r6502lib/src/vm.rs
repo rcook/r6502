@@ -186,7 +186,6 @@ mod tests {
         assert_eq!(OSWRCH + 1, vm.s.peek_back_word(1));
     }
 
-    // TBD: LDX ($a2) not implemented yet
     #[allow(unused)]
     //#[test]
     fn print() -> Result<()> {
