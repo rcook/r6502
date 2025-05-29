@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.98"
+bitflags = "2.9.1"
+num-derive = "0.4.2"
+num-traits = "0.2.19"
+
+[dev-dependencies]
+rstest = "0.25.0"
