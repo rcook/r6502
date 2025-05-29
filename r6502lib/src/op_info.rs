@@ -82,6 +82,7 @@ mod constants {
     pub(crate) const ADC_ABS: OpInfo = absolute!(AdcAbs, adc);
     pub(crate) const ADC_IMM: OpInfo = immediate!(AdcImm, adc);
     pub(crate) const ADC_ZP: OpInfo = zero_page!(AdcZp, adc);
+    pub(crate) const BRK: OpInfo = implied!(Brk, brk);
     pub(crate) const JMP_ABS: OpInfo = absolute_simple!(JmpAbs, jmp);
     pub(crate) const NOP: OpInfo = implied!(Nop, nop);
 }

@@ -2,6 +2,7 @@ mod adc;
 mod addressing_mode;
 mod assembly_listing;
 mod binding;
+mod brk;
 mod byte_op;
 mod cpu;
 mod cycles;
@@ -28,6 +29,7 @@ pub(crate) use addressing_mode::AddressingMode;
 #[allow(unused)]
 pub(crate) use assembly_listing::AssemblyListing;
 pub(crate) use binding::Binding;
+pub(crate) use brk::brk;
 #[allow(unused)]
 pub(crate) use byte_op::{zero_page, ByteOp, ByteOpFn};
 pub(crate) use cpu::Cpu;
