@@ -1,4 +1,4 @@
-use crate::{make_word, Cpu, Cycles, Op, OpByte, OpNoOperandFn, OpWord, Opcode, VmState};
+use crate::{make_word, Cpu, Cycles, Op, OpByte, OpInfo, OpNoOperandFn, OpWord, Opcode, VmState};
 
 #[allow(unused)]
 pub(crate) enum Instruction {
@@ -22,12 +22,13 @@ impl Instruction {
     pub(crate) fn fetch(cpu: &Cpu, s: &mut VmState) -> Self {
         let value = s.memory[s.reg.pc];
         match Opcode::from_u8(value) {
-            Some(opcode) => match cpu.get_op(&opcode) {
-                Some(op) => match op {
-                    Op::NoOperand { f } => Self::NoOperand {
-                        f: f.clone(),
-                        opcode,
-                    },
+            Some(opcode) => match cpu.get_op_info(&opcode) {
+                Some(OpInfo {
+                    opcode: _,
+                    addressing_mode: _,
+                    op,
+                }) => match op {
+                    Op::NoOperand { f } => Self::NoOperand { f: *f, opcode },
                     Op::Byte(f) => Self::Byte {
                         f: f.clone(),
                         opcode,

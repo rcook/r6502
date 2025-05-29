@@ -1,7 +1,7 @@
-use crate::{Op, OpInfo, Opcode};
+use crate::{OpInfo, Opcode};
 use std::collections::HashMap;
 
-pub(crate) struct Cpu(HashMap<Opcode, Op>);
+pub(crate) struct Cpu(HashMap<Opcode, OpInfo>);
 
 impl Cpu {
     // http://www.6502.org/users/obelisk/6502/instructions.html
@@ -11,12 +11,12 @@ impl Cpu {
 
         Self(
             OpInfo::iter()
-                .map(|o| (o.opcode.clone(), o.op.clone()))
+                .map(|o| (o.opcode.clone(), o.clone()))
                 .collect::<HashMap<_, _>>(),
         )
     }
 
-    pub(crate) fn get_op(&self, opcode: &Opcode) -> Option<&Op> {
+    pub(crate) fn get_op_info(&self, opcode: &Opcode) -> Option<&OpInfo> {
         self.0.get(opcode)
     }
 }

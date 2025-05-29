@@ -20,7 +20,7 @@ impl InstructionInfo {
                 operand,
             } => Self::Byte {
                 opcode: opcode.clone(),
-                operand: operand.clone(),
+                operand: *operand,
             },
             Instruction::Word {
                 f: _,
@@ -28,34 +28,26 @@ impl InstructionInfo {
                 operand,
             } => Self::Word {
                 opcode: opcode.clone(),
-                operand: operand.clone(),
+                operand: *operand,
             },
         }
     }
 
-    // TBD: Format string correctly according to addressing mode
+    pub(crate) fn opcode(&self) -> Opcode {
+        match self {
+            Self::NoOperand { opcode } => opcode.clone(),
+            Self::Byte { opcode, operand: _ } => opcode.clone(),
+            Self::Word { opcode, operand: _ } => opcode.clone(),
+        }
+    }
+
     #[allow(unused)]
     pub(crate) fn display(&self, cpu: &Cpu) -> Result<String> {
-        match self {
-            Self::NoOperand { opcode } => {
-                let op = cpu
-                    .get_op(opcode)
-                    .ok_or_else(|| anyhow!("Unknown opcode {opcode}"))?;
-                Ok(opcode.mnemonic().to_string())
-            }
-            Self::Byte { opcode, operand } => {
-                let op = cpu
-                    .get_op(opcode)
-                    .ok_or_else(|| anyhow!("Unknown opcode {opcode}"))?;
-                Ok(format!("{} BYTE ${operand:02X}", opcode.mnemonic()))
-            }
-            Self::Word { opcode, operand } => {
-                let op = cpu
-                    .get_op(opcode)
-                    .ok_or_else(|| anyhow!("Unknown opcode {opcode}"))?;
-                Ok(format!("{} WORD ${operand:04X}", opcode.mnemonic()))
-            }
-        }
+        let opcode = self.opcode();
+        let op_info = cpu
+            .get_op_info(&opcode)
+            .ok_or_else(|| anyhow!("Unknown opcode {opcode}"))?;
+        op_info.addressing_mode.format_instruction_info(self)
     }
 }
 
@@ -76,13 +68,13 @@ mod tests {
             opcode: AdcImm,
             operand: 0x12,
         };
-        assert_eq!("ADC BYTE $12", instruction_info.display(&cpu)?);
+        assert_eq!("ADC #$12", instruction_info.display(&cpu)?);
 
         let instruction_info = InstructionInfo::Word {
             opcode: AdcAbs,
             operand: 0x1234,
         };
-        assert_eq!("ADC WORD $1234", instruction_info.display(&cpu)?);
+        assert_eq!("ADC $1234", instruction_info.display(&cpu)?);
 
         Ok(())
     }
