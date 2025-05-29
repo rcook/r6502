@@ -12,7 +12,7 @@ pub(crate) fn brk(s: &mut VmState) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::{brk, reg, Memory, VmState, IRQ};
+    use crate::{brk, get, reg, Memory, VmState, IRQ};
 
     #[test]
     fn basics() {
@@ -21,10 +21,12 @@ mod tests {
             memory: Memory::new(),
         };
         s.memory.store_word(IRQ, 0x1234);
+        assert!(!get!(s.reg, B));
         assert_eq!(0x0000, s.reg.pc);
         assert_eq!(0xff, s.reg.s);
         let cycles = brk(&mut s);
         assert_eq!(7, cycles);
+        assert!(get!(s.reg, B));
         assert_eq!(0x1234, s.reg.pc);
         assert_eq!(0xfc, s.reg.s);
     }
