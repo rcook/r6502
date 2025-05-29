@@ -1,12 +1,10 @@
 use crate::util::{is_neg, is_zero};
-use crate::{set, Cycles, VmState, STACK_BASE};
+use crate::{set, Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLA
 // http://www.6502.org/users/obelisk/6502/reference.html#PLA
 pub(crate) fn pla(s: &mut VmState) -> Cycles {
-    s.reg.s = s.reg.s.wrapping_add(1);
-    let addr = STACK_BASE + s.reg.s as u16;
-    let value = s.memory[addr];
+    let value = s.pull();
     s.reg.a = value;
     set!(s.reg, N, is_neg(value));
     set!(s.reg, Z, is_zero(value));

@@ -1,11 +1,9 @@
-use crate::{Cycles, VmState, STACK_BASE};
+use crate::{Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
 pub(crate) fn pha(s: &mut VmState) -> Cycles {
-    let addr = STACK_BASE + s.reg.s as u16;
-    s.memory[addr] = s.reg.a;
-    s.reg.s = s.reg.s.wrapping_sub(1);
+    s.push(s.reg.a);
     3
 }
 
