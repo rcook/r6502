@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 use strum::EnumProperty;
 use strum_macros::EnumProperty;
 
-#[derive(Clone, Debug, EnumProperty, Eq, FromPrimitive, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, EnumProperty, Eq, FromPrimitive, Hash, PartialEq)]
 #[repr(u8)]
 pub(crate) enum Opcode {
     #[strum(props(mnemonic = "ADC"))]
@@ -34,6 +34,6 @@ impl Opcode {
 
 impl Display for Opcode {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "${:02X}", self.clone() as u8)
+        write!(f, "${:02X}", *self as u8)
     }
 }

@@ -1,21 +1,10 @@
-use crate::{make_word, Cpu, Cycles, Op, OpByte, OpInfo, OpNoOperandFn, OpWord, Opcode, VmState};
+use crate::{make_word, Binding, Cpu, Cycles, Op, OpInfo, Opcode, VmState};
 
 #[allow(unused)]
-pub(crate) enum Instruction {
-    NoOperand {
-        f: OpNoOperandFn,
-        opcode: Opcode,
-    },
-    Byte {
-        f: OpByte,
-        opcode: Opcode,
-        operand: u8,
-    },
-    Word {
-        f: OpWord,
-        opcode: Opcode,
-        operand: u16,
-    },
+pub(crate) struct Instruction {
+    pub(crate) pc: u16,
+    pub(crate) opcode: Opcode,
+    pub(crate) binding: Binding,
 }
 
 impl Instruction {
@@ -28,16 +17,23 @@ impl Instruction {
                     addressing_mode: _,
                     op,
                 }) => match op {
-                    Op::NoOperand { f } => Self::NoOperand { f: *f, opcode },
-                    Op::Byte(f) => Self::Byte {
-                        f: f.clone(),
+                    Op::NoOperand { f } => Self {
+                        pc: s.reg.pc,
                         opcode,
-                        operand: s.memory[s.reg.pc + 1],
+                        binding: Binding::NoOperand(*f),
                     },
-                    Op::Word(f) => Self::Word {
-                        f: f.clone(),
+                    Op::Byte(f) => Self {
+                        pc: s.reg.pc,
                         opcode,
-                        operand: make_word(s.memory[s.reg.pc + 2], s.memory[s.reg.pc + 1]),
+                        binding: Binding::Byte(f.clone(), s.memory[s.reg.pc + 1]),
+                    },
+                    Op::Word(f) => Self {
+                        pc: s.reg.pc,
+                        opcode,
+                        binding: Binding::Word(
+                            f.clone(),
+                            make_word(s.memory[s.reg.pc + 2], s.memory[s.reg.pc + 1]),
+                        ),
                     },
                 },
                 None => unimplemented!("Unsupported opcode ${value:02X}"),
@@ -47,26 +43,18 @@ impl Instruction {
     }
 
     pub(crate) fn execute(&self, s: &mut VmState) -> Cycles {
-        match self {
-            Self::NoOperand { f, opcode: _ } => {
+        match &self.binding {
+            Binding::NoOperand(f) => {
                 s.reg.pc += 1;
                 f(s)
             }
-            Self::Byte {
-                f,
-                opcode: _,
-                operand,
-            } => {
+            Binding::Byte(f, value) => {
                 s.reg.pc += 2;
-                f.execute(s, operand)
+                f.execute(s, value)
             }
-            Self::Word {
-                f,
-                opcode: _,
-                operand,
-            } => {
+            Binding::Word(f, value) => {
                 s.reg.pc += 3;
-                f.execute(s, operand)
+                f.execute(s, value)
             }
         }
     }

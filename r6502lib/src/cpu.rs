@@ -11,7 +11,7 @@ impl Cpu {
 
         Self(
             OpInfo::iter()
-                .map(|o| (o.opcode.clone(), o.clone()))
+                .map(|o| (o.opcode, o.clone()))
                 .collect::<HashMap<_, _>>(),
         )
     }

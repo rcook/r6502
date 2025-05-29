@@ -1,4 +1,4 @@
-use crate::InstructionInfo;
+use crate::{InstructionInfo, Operand};
 use anyhow::{bail, Result};
 
 #[derive(Clone)]
@@ -15,27 +15,33 @@ impl AddressingMode {
         instruction_info: &InstructionInfo,
     ) -> Result<String> {
         match self {
-            Self::Absolute => match instruction_info {
-                InstructionInfo::Word { opcode, operand } => {
-                    Ok(format!("{} ${:04X}", opcode.mnemonic(), operand))
-                }
-                _ => bail!("invalid addressing mode for {}", instruction_info.opcode()),
+            Self::Absolute => match instruction_info.operand {
+                Operand::Word(value) => Ok(format!(
+                    "{} ${:04X}",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
-            Self::Immediate => match instruction_info {
-                InstructionInfo::Byte { opcode, operand } => {
-                    Ok(format!("{} #${:02X}", opcode.mnemonic(), operand))
-                }
-                _ => bail!("invalid addressing mode for {}", instruction_info.opcode()),
+            Self::Immediate => match instruction_info.operand {
+                Operand::Byte(value) => Ok(format!(
+                    "{} #${:02X}",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
-            Self::Implied => match instruction_info {
-                InstructionInfo::NoOperand { opcode } => Ok(String::from(opcode.mnemonic())),
-                _ => bail!("invalid addressing mode for {}", instruction_info.opcode()),
+            Self::Implied => match instruction_info.operand {
+                Operand::None => Ok(String::from(instruction_info.opcode.mnemonic())),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
-            Self::ZeroPage => match instruction_info {
-                InstructionInfo::Byte { opcode, operand } => {
-                    Ok(format!("{} ${:02X}", opcode.mnemonic(), operand))
-                }
-                _ => bail!("invalid addressing mode for {}", instruction_info.opcode()),
+            Self::ZeroPage => match instruction_info.operand {
+                Operand::Byte(value) => Ok(format!(
+                    "{} ${:02X}",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
         }
     }

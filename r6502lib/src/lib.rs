@@ -1,6 +1,7 @@
 mod adc;
 mod addressing_mode;
 mod assembly_listing;
+mod binding;
 mod cpu;
 mod cycles;
 mod instruction;
@@ -14,6 +15,7 @@ mod op_byte;
 mod op_info;
 mod op_word;
 mod opcode;
+mod operand;
 mod p;
 mod reg;
 mod util;
@@ -24,6 +26,7 @@ pub(crate) use adc::adc;
 pub(crate) use addressing_mode::AddressingMode;
 #[allow(unused)]
 pub(crate) use assembly_listing::AssemblyListing;
+pub(crate) use binding::Binding;
 pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
@@ -42,11 +45,12 @@ pub(crate) use op_info::OpInfo;
 #[allow(unused)]
 pub(crate) use op_word::{absolute, OpWord, OpWordFn};
 pub(crate) use opcode::Opcode;
+pub(crate) use operand::Operand;
 #[allow(unused)]
 pub(crate) use p::{get, p, set, value, P};
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
-pub(crate) use util::make_word;
+pub(crate) use util::{make_word, split_word};
 #[allow(unused)]
 pub(crate) use vm::step;
 pub(crate) use vm_state::VmState;
