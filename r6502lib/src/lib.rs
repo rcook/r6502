@@ -4,6 +4,7 @@ mod assembly_listing;
 mod binding;
 mod brk;
 mod byte_op;
+mod constants;
 mod cpu;
 mod cycles;
 mod instruction;
@@ -18,6 +19,7 @@ mod op_info;
 mod opcode;
 mod operand;
 mod p;
+mod pha;
 mod reg;
 mod util;
 mod vm;
@@ -32,6 +34,7 @@ pub(crate) use binding::Binding;
 pub(crate) use brk::brk;
 #[allow(unused)]
 pub(crate) use byte_op::{zero_page, ByteOp, ByteOpFn};
+pub(crate) use constants::STACK_BASE;
 pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
@@ -51,6 +54,7 @@ pub(crate) use opcode::Opcode;
 pub(crate) use operand::Operand;
 #[allow(unused)]
 pub(crate) use p::{get, p, set, value, P};
+pub(crate) use pha::pha;
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
 pub(crate) use util::{make_word, split_word};

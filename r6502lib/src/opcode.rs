@@ -19,6 +19,8 @@ pub(crate) enum Opcode {
     JmpAbs = 0x4c,
     #[strum(props(mnemonic = "NOP"))]
     Nop = 0xea,
+    #[strum(props(mnemonic = "PHA"))]
+    Pha = 0x48,
 }
 
 impl Opcode {
