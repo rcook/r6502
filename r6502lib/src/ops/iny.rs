@@ -1,7 +1,7 @@
 use super::helper::set_flags_on_value;
 use crate::{Cycles, VmState};
 
-// http://www.6502.org/tutorials/6502opcodes.html#INXY
+// http://www.6502.org/tutorials/6502opcodes.html#INY
 // http://www.6502.org/users/obelisk/6502/reference.html#INY
 pub(crate) fn iny(s: &mut VmState) -> Cycles {
     let value = s.reg.y.wrapping_add(1);

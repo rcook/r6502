@@ -39,6 +39,10 @@ pub(crate) enum Opcode {
     CmpImm = 0xc9,
     #[strum(props(mnemonic = "CMP"))]
     CmpZp = 0xc5,
+    #[strum(props(mnemonic = "DEX"))]
+    Dex = 0xca,
+    #[strum(props(mnemonic = "DEY"))]
+    Dey = 0x88,
     #[strum(props(mnemonic = "INX"))]
     Inx = 0xe8,
     #[strum(props(mnemonic = "INY"))]
@@ -89,6 +93,14 @@ pub(crate) enum Opcode {
     StaAbsY = 0x99,
     #[strum(props(mnemonic = "STA"))]
     StaZp = 0x85,
+    #[strum(props(mnemonic = "TAX"))]
+    Tax = 0xaa,
+    #[strum(props(mnemonic = "TAY"))]
+    Tay = 0xa8,
+    #[strum(props(mnemonic = "TXA"))]
+    Txa = 0x8a,
+    #[strum(props(mnemonic = "TYA"))]
+    Tya = 0x98,
 }
 
 impl Opcode {

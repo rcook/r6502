@@ -233,6 +233,8 @@ mod items {
     pub(crate) const CMP_ABS_X: OpInfo = absolute_x_wrapped!(CmpAbsX, cmp);
     pub(crate) const CMP_IMM: OpInfo = immediate!(CmpImm, cmp);
     pub(crate) const CMP_ZP: OpInfo = zero_page_wrapped!(CmpZp, cmp);
+    pub(crate) const DEX: OpInfo = implied!(Dex, dex);
+    pub(crate) const DEY: OpInfo = implied!(Dey, dey);
     pub(crate) const INX: OpInfo = implied!(Inx, inx);
     pub(crate) const INY: OpInfo = implied!(Iny, iny);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);
@@ -258,4 +260,8 @@ mod items {
     pub(crate) const STA_ABS_X: OpInfo = absolute_x_wrapped!(StaAbsX, sta);
     pub(crate) const STA_ABS_Y: OpInfo = absolute_y_wrapped!(StaAbsY, sta);
     pub(crate) const STA_ZP: OpInfo = zero_page_wrapped!(StaZp, sta);
+    pub(crate) const TAX: OpInfo = implied!(Tax, tax);
+    pub(crate) const TAY: OpInfo = implied!(Tay, tay);
+    pub(crate) const TXA: OpInfo = implied!(Txa, txa);
+    pub(crate) const TYA: OpInfo = implied!(Tya, tya);
 }

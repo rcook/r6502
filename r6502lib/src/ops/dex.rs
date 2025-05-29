@@ -1,0 +1,11 @@
+use super::helper::set_flags_on_value;
+use crate::{Cycles, VmState};
+
+// http://www.6502.org/tutorials/6502opcodes.html#DEX
+// http://www.6502.org/users/obelisk/6502/reference.html#DEX
+pub(crate) fn dex(s: &mut VmState) -> Cycles {
+    let value = s.reg.x.wrapping_sub(1);
+    s.reg.x = value;
+    set_flags_on_value(s, value);
+    2
+}

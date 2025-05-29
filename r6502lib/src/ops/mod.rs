@@ -9,6 +9,8 @@ pub(crate) mod brk;
 pub(crate) mod bvc;
 pub(crate) mod bvs;
 pub(crate) mod cmp;
+pub(crate) mod dex;
+pub(crate) mod dey;
 pub(crate) mod inx;
 pub(crate) mod iny;
 pub(crate) mod jmp;
@@ -23,5 +25,9 @@ pub(crate) mod pla;
 pub(crate) mod plp;
 pub(crate) mod rts;
 pub(crate) mod sta;
+pub(crate) mod tax;
+pub(crate) mod tay;
+pub(crate) mod txa;
+pub(crate) mod tya;
 
 mod helper;
