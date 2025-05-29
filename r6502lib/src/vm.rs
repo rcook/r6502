@@ -214,12 +214,10 @@ mod tests {
  2011  48 65 6C 6C 6F 2C 20 77 6F 72 6C 64 0D 0A 00     |Hello, world... |
 "#
     )]
-    #[cfg_attr(
-        feature = "not-implemented",
-        case(
-            true,
-            "TBD",
-            r#" 0E00  A9 4D     LDA  #$4D
+    #[case(
+        false,
+        "String0\nString1\n",
+        r#" 0E00  A9 4D     LDA  #$4D
  0E02  85 80     STA  $80
  0E04  A9 0E     LDA  #$0E
  0E06  85 81     STA  $81
@@ -255,7 +253,6 @@ mod tests {
  0E3B  53 74 72 69 6E 67 30 0A 00 53 74 72 69 6E 67 31  |String0..String1|
  0E4B  0A 00 02 3B 0E 44 0E                             |...;.D.         |
 "#
-        )
     )]
     fn stdout(
         #[case] trace: bool,
@@ -307,6 +304,9 @@ mod tests {
                 Some(RETURN_ADDR) => break,
                 Some(OSWRCH) => {
                     result.push(vm.s.reg.a as char);
+                    if trace {
+                        println!("stdout={result}");
+                    }
 
                     // Is this equivalent to RTI?
                     vm.s.pull();

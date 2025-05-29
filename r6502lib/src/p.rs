@@ -1,5 +1,7 @@
 use bitflags::bitflags;
 
+pub(crate) const P_STR: &str = "NV1BDIZC";
+
 // Reference: https://www.nesdev.org/wiki/Status_flags
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq)]

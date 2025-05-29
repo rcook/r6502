@@ -80,8 +80,11 @@ mod indirect_indexed_y {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
-                let addr = (s.memory[addr as u16] as u16).wrapping_add(s.reg.y as u16);
-                _ = $crate::ops::$f::$f(s, s.memory[addr]);
+                let effective_addr = s
+                    .memory
+                    .fetch_word(addr as u16)
+                    .wrapping_add(s.reg.y as u16);
+                _ = $crate::ops::$f::$f(s, s.memory[effective_addr]);
                 $cycles
             }
         };

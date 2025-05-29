@@ -49,7 +49,7 @@ pub(crate) use operand::Operand;
 #[allow(unused)]
 pub(crate) use os::set_up_os;
 #[allow(unused)]
-pub(crate) use p::{get, p, set, value, P};
+pub(crate) use p::{get, p, set, value, P, P_STR};
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
 #[allow(unused)]
