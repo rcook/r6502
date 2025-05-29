@@ -33,12 +33,22 @@ impl VmState {
 
     #[allow(unused)]
     pub(crate) fn peek(&self) -> u8 {
-        let stack_addr = STACK_BASE + self.reg.s as u16;
+        self.peek_back(0x00)
+    }
+
+    #[allow(unused)]
+    pub(crate) fn peek_back(&self, offset: u8) -> u8 {
+        let stack_addr = (STACK_BASE + self.reg.s as u16).wrapping_add(offset as u16);
         self.memory[stack_addr.wrapping_add(1)]
     }
 
+    #[allow(unused)]
     pub(crate) fn peek_word(&self) -> u16 {
-        let stack_addr = STACK_BASE + self.reg.s as u16;
+        self.peek_back_word(0x00)
+    }
+
+    pub(crate) fn peek_back_word(&self, offset: u8) -> u16 {
+        let stack_addr = (STACK_BASE + self.reg.s as u16).wrapping_add(offset as u16);
         let hi = self.memory[stack_addr.wrapping_add(2)];
         let lo = self.memory[stack_addr.wrapping_add(1)];
         make_word(hi, lo)

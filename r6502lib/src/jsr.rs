@@ -5,7 +5,6 @@ use crate::{Cycles, VmState};
 pub(crate) fn jsr(s: &mut VmState, operand: u16) -> Cycles {
     let return_addr = s.reg.pc;
     s.push_word(return_addr - 1);
-    println!("PEEK {:04X}", s.peek_word());
     s.reg.pc = operand;
     6
 }

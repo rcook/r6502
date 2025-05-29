@@ -90,4 +90,5 @@ mod constants {
     pub(crate) const PHP: OpInfo = implied!(Php, php);
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
     pub(crate) const PLP: OpInfo = implied!(Plp, plp);
+    pub(crate) const RTS: OpInfo = implied!(Rts, rts);
 }

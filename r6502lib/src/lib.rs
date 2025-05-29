@@ -25,6 +25,7 @@ mod php;
 mod pla;
 mod plp;
 mod reg;
+mod rts;
 mod util;
 mod vm;
 mod vm_state;
@@ -38,7 +39,8 @@ pub(crate) use binding::Binding;
 pub(crate) use brk::brk;
 #[allow(unused)]
 pub(crate) use byte_op::{zero_page, ByteOp, ByteOpFn};
-pub(crate) use constants::{IRQ, STACK_BASE};
+#[allow(unused)]
+pub(crate) use constants::{IRQ, OSWRCH, STACK_BASE};
 pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
@@ -65,6 +67,7 @@ pub(crate) use pla::pla;
 pub(crate) use plp::plp;
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
+pub(crate) use rts::rts;
 #[allow(unused)]
 pub(crate) use vm::step;
 pub(crate) use vm_state::VmState;

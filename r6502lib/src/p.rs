@@ -2,7 +2,7 @@ use bitflags::bitflags;
 
 // Reference: https://www.nesdev.org/wiki/Status_flags
 bitflags! {
-    #[derive(Debug, PartialEq)]
+    #[derive(Clone, Copy, Debug, PartialEq)]
     pub(crate) struct P: u8 {
         const N = 0b1000000; // Negative
         const V = 0b0100000; // Overflow

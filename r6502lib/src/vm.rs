@@ -13,7 +13,9 @@ pub(crate) fn step(monitor: &impl Monitor, cpu: &Cpu, s: &mut VmState) -> Cycles
 
 #[cfg(test)]
 mod tests {
-    use crate::{get, p, set, step, Cpu, DummyMonitor, Memory, Opcode, Reg, VmState, IRQ};
+    use crate::{
+        get, p, set, step, Cpu, DummyMonitor, Memory, Opcode, Reg, VmState, IRQ, OSWRCH, P,
+    };
 
     #[test]
     fn no_operand() {
@@ -119,5 +121,43 @@ mod tests {
         assert_eq!(7, cycles);
         assert!(get!(s.reg, B));
         assert_eq!(0x9876, s.reg.pc);
+    }
+
+    #[test]
+    fn jsr_software_interrupt() {
+        const START: u16 = 0x1000;
+        const OS: u16 = 0x2000;
+        let p_test = P::D | P::ONE;
+
+        let monitor = DummyMonitor;
+        let cpu = Cpu::make_6502();
+        let mut s = VmState::default();
+
+        s.memory.store_word(IRQ, OS);
+
+        // Set up OSWRCH as a software interrupt
+        s.memory[OSWRCH] = Opcode::Brk as u8;
+        s.memory[OSWRCH + 1] = Opcode::Nop as u8;
+        s.memory[OSWRCH + 2] = Opcode::Rts as u8;
+
+        s.memory[START] = Opcode::Jsr as u8;
+        s.memory.store_word(START + 1, OSWRCH);
+
+        s.reg.pc = START;
+        s.reg.p = p_test;
+        set!(s.reg, B, false);
+
+        let cycles = step(&monitor, &cpu, &mut s);
+        assert_eq!(6, cycles);
+        assert!(!get!(s.reg, B));
+        assert_eq!(OSWRCH, s.reg.pc);
+
+        let cycles = step(&monitor, &cpu, &mut s);
+        assert_eq!(7, cycles);
+        assert!(get!(s.reg, B));
+        assert_eq!(OS, s.reg.pc);
+
+        assert_eq!(p_test.bits(), s.peek());
+        assert_eq!(OSWRCH + 1, s.peek_back_word(1));
     }
 }
