@@ -17,21 +17,21 @@ impl Instruction {
                     addressing_mode: _,
                     op,
                 }) => match op {
-                    Op::NoOperand { f } => Self {
+                    Op::NoOperand(inner) => Self {
                         pc: s.reg.pc,
                         opcode,
-                        binding: Binding::NoOperand(*f),
+                        binding: Binding::NoOperand(inner.clone()),
                     },
-                    Op::Byte(f) => Self {
+                    Op::Byte(inner) => Self {
                         pc: s.reg.pc,
                         opcode,
-                        binding: Binding::Byte(f.clone(), s.memory[s.reg.pc + 1]),
+                        binding: Binding::Byte(inner.clone(), s.memory[s.reg.pc + 1]),
                     },
-                    Op::Word(f) => Self {
+                    Op::Word(inner) => Self {
                         pc: s.reg.pc,
                         opcode,
                         binding: Binding::Word(
-                            f.clone(),
+                            inner.clone(),
                             make_word(s.memory[s.reg.pc + 2], s.memory[s.reg.pc + 1]),
                         ),
                     },
@@ -46,7 +46,7 @@ impl Instruction {
         match &self.binding {
             Binding::NoOperand(f) => {
                 s.reg.pc += 1;
-                f(s)
+                f.execute(s)
             }
             Binding::Byte(f, value) => {
                 s.reg.pc += 2;

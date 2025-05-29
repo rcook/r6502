@@ -2,6 +2,7 @@ mod adc;
 mod addressing_mode;
 mod assembly_listing;
 mod binding;
+mod byte_op;
 mod cpu;
 mod cycles;
 mod instruction;
@@ -9,11 +10,10 @@ mod instruction_info;
 mod jmp;
 mod memory;
 mod monitor;
+mod no_operand_op;
 mod nop;
 mod op;
-mod op_byte;
 mod op_info;
-mod op_word;
 mod opcode;
 mod operand;
 mod p;
@@ -21,12 +21,15 @@ mod reg;
 mod util;
 mod vm;
 mod vm_state;
+mod word_op;
 
 pub(crate) use adc::adc;
 pub(crate) use addressing_mode::AddressingMode;
 #[allow(unused)]
 pub(crate) use assembly_listing::AssemblyListing;
 pub(crate) use binding::Binding;
+#[allow(unused)]
+pub(crate) use byte_op::{zero_page, ByteOp, ByteOpFn};
 pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
@@ -35,15 +38,13 @@ pub(crate) use jmp::jmp;
 pub(crate) use memory::Memory;
 #[allow(unused)]
 pub(crate) use monitor::{DummyMonitor, Monitor};
+#[allow(unused)]
+pub(crate) use no_operand_op::{NoOperandFn, NoOperandOp};
 pub(crate) use nop::nop;
 #[allow(unused)]
-pub(crate) use op::{Op, OpNoOperandFn};
-#[allow(unused)]
-pub(crate) use op_byte::{zero_page, OpByte, OpByteFn};
+pub(crate) use op::Op;
 #[allow(unused)]
 pub(crate) use op_info::OpInfo;
-#[allow(unused)]
-pub(crate) use op_word::{absolute, OpWord, OpWordFn};
 pub(crate) use opcode::Opcode;
 pub(crate) use operand::Operand;
 #[allow(unused)]
@@ -54,3 +55,5 @@ pub(crate) use util::{make_word, split_word};
 #[allow(unused)]
 pub(crate) use vm::step;
 pub(crate) use vm_state::VmState;
+#[allow(unused)]
+pub(crate) use word_op::{absolute, WordOp, WordOpFn};

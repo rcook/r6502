@@ -1,8 +1,8 @@
-use crate::{OpByte, OpNoOperandFn, OpWord};
+use crate::{ByteOp, NoOperandOp, WordOp};
 
 #[allow(unused)]
 pub(crate) enum Binding {
-    NoOperand(OpNoOperandFn),
-    Byte(OpByte, u8),
-    Word(OpWord, u16),
+    NoOperand(NoOperandOp),
+    Byte(ByteOp, u8),
+    Word(WordOp, u16),
 }
