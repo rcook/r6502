@@ -1,3 +1,5 @@
+use crate::{set, VmState};
+
 pub(crate) fn sign(value: u8) -> bool {
     (value & 0b10000000) != 0
 }
@@ -19,4 +21,9 @@ pub(crate) fn is_zero(value: u8) -> bool {
 
 pub(crate) fn is_carry(value: u16) -> bool {
     (value & 0x0100) != 0
+}
+
+pub(crate) fn set_flags_on_load(s: &mut VmState, operand: u8) {
+    set!(s.reg, N, is_neg(operand));
+    set!(s.reg, Z, is_zero(operand));
 }
