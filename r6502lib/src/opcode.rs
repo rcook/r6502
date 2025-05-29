@@ -54,6 +54,8 @@ pub(crate) enum Opcode {
     #[strum(props(mnemonic = "LDA"))]
     LdaImm = 0xa9,
     #[strum(props(mnemonic = "LDA"))]
+    LdaIndY = 0xb1,
+    #[strum(props(mnemonic = "LDA"))]
     LdaZp = 0xa5,
     #[strum(props(mnemonic = "LDX"))]
     LdxAbs = 0xae,

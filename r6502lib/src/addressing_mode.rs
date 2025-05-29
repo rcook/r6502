@@ -8,6 +8,7 @@ pub(crate) enum AddressingMode {
     AbsoluteY,
     Immediate,
     Implied,
+    IndirectIndexedY,
     Relative,
     ZeroPage,
 }
@@ -52,6 +53,14 @@ impl AddressingMode {
             },
             Self::Implied => match instruction_info.operand {
                 Operand::None => Ok(String::from(instruction_info.opcode.mnemonic())),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
+            },
+            Self::IndirectIndexedY => match instruction_info.operand {
+                Operand::Byte(value) => Ok(format!(
+                    "{} (${:02X}),Y",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
             Self::Relative => match instruction_info.operand {

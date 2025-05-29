@@ -74,6 +74,20 @@ mod absolute_y {
     wrap_store!(sta, 5, 5);
 }
 
+mod indirect_indexed_y {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                let addr = (s.memory[addr as u16] as u16).wrapping_add(s.reg.y as u16);
+                _ = $crate::ops::$f::$f(s, s.memory[addr]);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(lda, 5, 6);
+}
+
 mod zero_page {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
@@ -179,6 +193,18 @@ mod items {
         };
     }
 
+    macro_rules! indirect_indexed_y_wrapped {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::IndirectIndexedY,
+                op: $crate::Op::Byte($crate::ByteOp::new(
+                    $crate::op_info::op_infos::indirect_indexed_y::$f,
+                )),
+            }
+        };
+    }
+
     macro_rules! zero_page_wrapped {
         ($opcode: ident, $f: ident) => {
             $crate::OpInfo {
@@ -214,6 +240,7 @@ mod items {
     pub(crate) const LDA_ABS: OpInfo = absolute_wrapped!(LdaAbs, lda);
     pub(crate) const LDA_ABS_X: OpInfo = absolute_x_wrapped!(LdaAbsX, lda);
     pub(crate) const LDA_IMM: OpInfo = immediate!(LdaImm, lda);
+    pub(crate) const LDA_IND_Y: OpInfo = indirect_indexed_y_wrapped!(LdaIndY, lda);
     pub(crate) const LDA_ZP: OpInfo = zero_page_wrapped!(LdaZp, lda);
     pub(crate) const LDX_ABS: OpInfo = absolute_wrapped!(LdxAbs, ldx);
     pub(crate) const LDX_IMM: OpInfo = immediate!(LdxImm, ldx);
