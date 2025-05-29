@@ -1,5 +1,5 @@
 use crate::{AddressingMode, Op, Opcode};
-use inner::{Item, CONSTS};
+use constants::{Item, CONSTS};
 
 #[derive(Clone)]
 pub(crate) struct OpInfo {
@@ -20,7 +20,7 @@ impl OpInfo {
 }
 
 #[iter_mod::make_items]
-mod inner {
+mod constants {
     use crate::OpInfo;
 
     macro_rules! absolute {
