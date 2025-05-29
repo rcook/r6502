@@ -12,6 +12,8 @@ mod instruction_info;
 mod jmp;
 mod jsr;
 mod lda;
+mod ldx;
+mod ldy;
 mod memory;
 mod monitor;
 mod no_operand_op;

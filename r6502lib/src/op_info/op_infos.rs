@@ -2,28 +2,34 @@ pub(crate) use items::*;
 
 mod absolute {
     macro_rules! wrap {
-        ($f: ident, $extra_cycles: expr) => {
+        ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, value: u16) -> $crate::Cycles {
-                $crate::$f::$f(s, s.memory[value]) + $extra_cycles
+                _ = $crate::$f::$f(s, s.memory[value]);
+                $cycles
             }
         };
     }
 
-    wrap!(adc, 2);
-    wrap!(lda, 2);
+    wrap!(adc, 4);
+    wrap!(lda, 4);
+    wrap!(ldx, 4);
+    wrap!(ldy, 4);
 }
 
 mod zero_page {
     macro_rules! wrap {
-        ($f: ident, $extra_cycles: expr) => {
+        ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, value: u8) -> $crate::Cycles {
-                $crate::$f::$f(s, s.memory[value as u16]) + $extra_cycles
+                _ = $crate::$f::$f(s, s.memory[value as u16]);
+                $cycles
             }
         };
     }
 
-    wrap!(adc, 1);
-    wrap!(lda, 1);
+    wrap!(adc, 3);
+    wrap!(lda, 3);
+    wrap!(ldx, 3);
+    wrap!(ldy, 3);
 }
 
 #[iter_mod::make_items]
@@ -91,6 +97,12 @@ mod items {
     pub(crate) const LDA_ABS: OpInfo = absolute_wrapped!(LdaAbs, lda);
     pub(crate) const LDA_IMM: OpInfo = immediate!(LdaImm, lda);
     pub(crate) const LDA_ZP: OpInfo = zero_page_wrapped!(LdaZp, lda);
+    pub(crate) const LDX_ABS: OpInfo = absolute_wrapped!(LdxAbs, ldx);
+    pub(crate) const LDX_IMM: OpInfo = immediate!(LdxImm, ldx);
+    pub(crate) const LDX_ZP: OpInfo = zero_page_wrapped!(LdxZp, ldx);
+    pub(crate) const LDY_ABS: OpInfo = absolute_wrapped!(LdyAbs, ldy);
+    pub(crate) const LDY_IMM: OpInfo = immediate!(LdyImm, ldy);
+    pub(crate) const LDY_ZP: OpInfo = zero_page_wrapped!(LdyZp, ldy);
     pub(crate) const NOP: OpInfo = implied!(Nop, nop);
     pub(crate) const PHA: OpInfo = implied!(Pha, pha);
     pub(crate) const PHP: OpInfo = implied!(Php, php);
