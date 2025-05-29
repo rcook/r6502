@@ -1,4 +1,5 @@
-use crate::{split_word, Binding, Cpu, Instruction, Opcode, Operand};
+use crate::util::split_word;
+use crate::{Binding, Cpu, Instruction, Opcode, Operand};
 use anyhow::{anyhow, Result};
 
 #[allow(unused)]

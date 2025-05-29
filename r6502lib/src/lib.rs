@@ -20,6 +20,7 @@ mod opcode;
 mod operand;
 mod p;
 mod pha;
+mod pla;
 mod reg;
 mod util;
 mod vm;
@@ -55,9 +56,9 @@ pub(crate) use operand::Operand;
 #[allow(unused)]
 pub(crate) use p::{get, p, set, value, P};
 pub(crate) use pha::pha;
+pub(crate) use pla::pla;
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
-pub(crate) use util::{make_word, split_word};
 #[allow(unused)]
 pub(crate) use vm::step;
 pub(crate) use vm_state::VmState;

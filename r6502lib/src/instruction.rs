@@ -1,4 +1,5 @@
-use crate::{make_word, Binding, Cpu, Cycles, Op, OpInfo, Opcode, VmState};
+use crate::util::make_word;
+use crate::{Binding, Cpu, Cycles, Op, OpInfo, Opcode, VmState};
 
 #[allow(unused)]
 pub(crate) struct Instruction {

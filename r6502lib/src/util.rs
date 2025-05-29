@@ -1,3 +1,26 @@
+pub(crate) fn sign(value: u8) -> bool {
+    (value & 0b10000000) != 0
+}
+
+pub(crate) fn is_neg(value: u8) -> bool {
+    sign(value)
+}
+
+pub(crate) fn is_overflow(lhs: u8, rhs: u8, result: u8) -> bool {
+    matches!(
+        (sign(lhs), sign(rhs), sign(result)),
+        (true, true, false) | (false, false, true)
+    )
+}
+
+pub(crate) fn is_zero(value: u8) -> bool {
+    value == 0
+}
+
+pub(crate) fn is_carry(value: u16) -> bool {
+    (value & 0x0100) != 0
+}
+
 pub(crate) fn make_word(hi: u8, lo: u8) -> u16 {
     ((hi as u16) << 8) + lo as u16
 }
@@ -10,7 +33,7 @@ pub(crate) fn split_word(value: u16) -> (u8, u8) {
 
 #[cfg(test)]
 mod tests {
-    use crate::make_word;
+    use crate::util::make_word;
     use rstest::rstest;
 
     #[rstest]

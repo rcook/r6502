@@ -1,32 +1,10 @@
+use crate::util::{is_carry, is_neg, is_overflow, is_zero};
 use crate::{get, set, value, Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
-    fn sign(value: u8) -> bool {
-        (value & 0b10000000) != 0
-    }
-
-    fn is_neg(value: u8) -> bool {
-        sign(value)
-    }
-
-    fn is_overflow(lhs: u8, rhs: u8, result: u8) -> bool {
-        matches!(
-            (sign(lhs), sign(rhs), sign(result)),
-            (true, true, false) | (false, false, true)
-        )
-    }
-
-    fn is_zero(value: u8) -> bool {
-        value == 0
-    }
-
-    fn is_carry(value: u16) -> bool {
-        (value & 0x0100) != 0
-    }
-
     if get!(s.reg, D) {
         todo!("Decimal mode not implemented")
     }
@@ -34,15 +12,15 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
     let lhs = s.reg.a;
     let rhs = operand;
 
-    let result_word = lhs as u16 + rhs as u16 + value!(s.reg, C);
-    let result = result_word as u8;
+    let value_word = lhs as u16 + rhs as u16 + value!(s.reg, C);
+    let value = value_word as u8;
 
-    let neg = is_neg(result);
-    let overflow = is_overflow(lhs, rhs, result);
-    let zero = is_zero(result);
-    let carry = is_carry(result_word);
+    let neg = is_neg(value);
+    let overflow = is_overflow(lhs, rhs, value);
+    let zero = is_zero(value);
+    let carry = is_carry(value_word);
 
-    s.reg.a = result;
+    s.reg.a = value;
     set!(s.reg, N, neg);
     set!(s.reg, V, overflow);
     set!(s.reg, Z, zero);
