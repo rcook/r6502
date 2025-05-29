@@ -4,6 +4,7 @@ use anyhow::{bail, Result};
 #[derive(Clone)]
 pub(crate) enum AddressingMode {
     Absolute,
+    AbsoluteX,
     Immediate,
     Implied,
     Relative,
@@ -19,6 +20,14 @@ impl AddressingMode {
             Self::Absolute => match instruction_info.operand {
                 Operand::Word(value) => Ok(format!(
                     "{} ${:04X}",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
+            },
+            Self::AbsoluteX => match instruction_info.operand {
+                Operand::Word(value) => Ok(format!(
+                    "{} ${:04X},X",
                     instruction_info.opcode.mnemonic(),
                     value
                 )),
