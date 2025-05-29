@@ -10,6 +10,7 @@ mod cycles;
 mod instruction;
 mod instruction_info;
 mod jmp;
+mod jsr;
 mod memory;
 mod monitor;
 mod no_operand_op;
@@ -43,6 +44,7 @@ pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
 pub(crate) use instruction_info::InstructionInfo;
 pub(crate) use jmp::jmp;
+pub(crate) use jsr::jsr;
 pub(crate) use memory::Memory;
 #[allow(unused)]
 pub(crate) use monitor::{DummyMonitor, Monitor};
