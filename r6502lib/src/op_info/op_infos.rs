@@ -11,6 +11,7 @@ mod absolute {
     }
 
     wrap!(adc, 4);
+    wrap!(cmp, 4);
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
@@ -26,6 +27,7 @@ mod absolute_x {
         };
     }
 
+    wrap!(cmp, 4, 5);
     wrap!(lda, 4, 5);
 }
 
@@ -40,6 +42,7 @@ mod zero_page {
     }
 
     wrap!(adc, 3);
+    wrap!(cmp, 3);
     wrap!(lda, 3);
     wrap!(ldx, 3);
     wrap!(ldy, 3);
@@ -135,6 +138,10 @@ mod items {
     pub(crate) const BRK: OpInfo = implied!(Brk, brk);
     pub(crate) const BVC: OpInfo = relative!(Bvc, bvc);
     pub(crate) const BVS: OpInfo = relative!(Bvs, bvs);
+    pub(crate) const CMP_ABS: OpInfo = absolute_wrapped!(CmpAbs, cmp);
+    pub(crate) const CMP_ABS_X: OpInfo = absolute_x_wrapped!(CmpAbsX, cmp);
+    pub(crate) const CMP_IMM: OpInfo = immediate!(CmpImm, cmp);
+    pub(crate) const CMP_ZP: OpInfo = zero_page_wrapped!(CmpZp, cmp);
     pub(crate) const INX: OpInfo = implied!(Inx, inx);
     pub(crate) const INY: OpInfo = implied!(Iny, iny);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);

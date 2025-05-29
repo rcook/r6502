@@ -8,6 +8,7 @@ pub(crate) mod bpl;
 pub(crate) mod brk;
 pub(crate) mod bvc;
 pub(crate) mod bvs;
+pub(crate) mod cmp;
 pub(crate) mod inx;
 pub(crate) mod iny;
 pub(crate) mod jmp;

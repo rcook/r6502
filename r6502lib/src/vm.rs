@@ -48,10 +48,11 @@ impl Vm {
 #[cfg(test)]
 mod tests {
     use crate::{
-        get, p, set, set_up_os, Cpu, DummyMonitor, Image, Memory, Opcode, Reg, Vm, VmState, IRQ,
-        OSWRCH, P,
+        get, p, set, set_up_os, Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, Reg,
+        TracingMonitor, Vm, VmState, IRQ, OSWRCH, P,
     };
     use anyhow::Result;
+    use rstest::rstest;
 
     #[test]
     fn no_operand() {
@@ -185,12 +186,10 @@ mod tests {
         assert_eq!(Some(OSWRCH), os_brk_addr(&vm, OS));
     }
 
-    #[test]
-    fn print() -> Result<()> {
-        const OS: u16 = 0x2000;
-        const RETURN_ADDR: u16 = 0x1234;
-
-        let input = r#" 0E00  A2 00     LDX  #$00
+    #[rstest]
+    #[case(
+        "HELLO, WORLD!",
+        r#" 0E00  A2 00     LDX  #$00
  0E02  BD 0E 0E  LDA  $0E0E, X
  0E05  F0 06     BEQ  $0E0D
  0E07  20 EE FF  JSR  $FFEE
@@ -198,14 +197,48 @@ mod tests {
  0E0B  D0 F5     BNE  $0E02
  0E0D  60        RTS
  0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
-"#;
+"#
+    )]
+    #[case(
+        "Hello, world\r\n",
+        r#" 2000  A2 00     LDX  #$00
+ 2002  BD 11 20  LDA  $2011, X
+ 2005  C9 00     CMP  #$00
+ 2007  F0 07     BEQ  $2010
+ 2009  20 EE FF  JSR  $FFEE
+ 200C  E8        INX
+ 200D  4C 02 20  JMP  $2002
+ 2010  60        RTS
+ 2011  48 65 6C 6C 6F 2C 20 77 6F 72 6C 64 0D 0A 00     |Hello, world... |
+"#
+    )]
+    fn stdout(#[case] expected_stdout: &str, #[case] input: &str) -> Result<()> {
+        assert_eq!(expected_stdout, capture_stdout(input, false)?);
+        Ok(())
+    }
+
+    fn os_brk_addr(vm: &Vm, os: u16) -> Option<u16> {
+        if get!(vm.s.reg, B) && vm.s.reg.pc == os {
+            let addr = vm.s.peek_back_word(1).wrapping_sub(1);
+            Some(addr)
+        } else {
+            None
+        }
+    }
+
+    fn capture_stdout(input: &str, trace: bool) -> Result<String> {
+        const OS: u16 = 0x2000;
+        const RETURN_ADDR: u16 = 0x1234;
+
         let image = input.parse::<Image>()?;
 
-        let mut vm = Vm::new(
-            Box::new(DummyMonitor), // Box::new(TracingMonitor) for disassembly
-            Cpu::make_6502(),
-            VmState::default(),
-        );
+        let monitor: Box<dyn Monitor> = if trace {
+            Box::new(TracingMonitor)
+        } else {
+            Box::new(DummyMonitor)
+        };
+
+        let mut vm = Vm::new(monitor, Cpu::make_6502(), VmState::default());
         let rts = vm
             .cpu
             .get_op_info(&Opcode::Rts)
@@ -225,7 +258,6 @@ mod tests {
                 Some(RETURN_ADDR) => break,
                 Some(OSWRCH) => {
                     result.push(vm.s.reg.a as char);
-                    println!("{result}");
 
                     // Is this equivalent to RTI?
                     vm.s.pull();
@@ -237,17 +269,6 @@ mod tests {
             }
         }
 
-        assert_eq!("HELLO, WORLD!", result);
-
-        Ok(())
-    }
-
-    fn os_brk_addr(vm: &Vm, os: u16) -> Option<u16> {
-        if get!(vm.s.reg, B) && vm.s.reg.pc == os {
-            let addr = vm.s.peek_back_word(1).wrapping_sub(1);
-            Some(addr)
-        } else {
-            None
-        }
+        Ok(result)
     }
 }
