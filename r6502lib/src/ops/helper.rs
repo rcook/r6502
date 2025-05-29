@@ -23,7 +23,7 @@ pub(crate) fn is_carry(value: u16) -> bool {
     (value & 0x0100) != 0
 }
 
-pub(crate) fn set_flags_on_load(s: &mut VmState, operand: u8) {
+pub(crate) fn set_flags_on_value(s: &mut VmState, operand: u8) {
     set!(s.reg, N, is_neg(operand));
     set!(s.reg, Z, is_zero(operand));
 }

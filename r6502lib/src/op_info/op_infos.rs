@@ -135,6 +135,8 @@ mod items {
     pub(crate) const BRK: OpInfo = implied!(Brk, brk);
     pub(crate) const BVC: OpInfo = relative!(Bvc, bvc);
     pub(crate) const BVS: OpInfo = relative!(Bvs, bvs);
+    pub(crate) const INX: OpInfo = implied!(Inx, inx);
+    pub(crate) const INY: OpInfo = implied!(Iny, iny);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);
     pub(crate) const JSR: OpInfo = absolute!(Jsr, jsr);
     pub(crate) const LDA_ABS: OpInfo = absolute_wrapped!(LdaAbs, lda);

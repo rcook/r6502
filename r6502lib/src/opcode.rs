@@ -31,6 +31,10 @@ pub(crate) enum Opcode {
     Bvc = 0x50,
     #[strum(props(mnemonic = "BVS"))]
     Bvs = 0x70,
+    #[strum(props(mnemonic = "INX"))]
+    Inx = 0xe8,
+    #[strum(props(mnemonic = "INY"))]
+    Iny = 0xc8,
     #[strum(props(mnemonic = "JMP"))]
     JmpAbs = 0x4c,
     #[strum(props(mnemonic = "JSR"))]

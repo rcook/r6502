@@ -1,11 +1,11 @@
-use crate::ops::helper::set_flags_on_load;
+use crate::ops::helper::set_flags_on_value;
 use crate::{Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDY
 // http://www.6502.org/users/obelisk/6502/reference.html#LDY
 pub(crate) fn ldy(s: &mut VmState, operand: u8) -> Cycles {
     s.reg.y = operand;
-    set_flags_on_load(s, operand);
+    set_flags_on_value(s, operand);
     2
 }
 
