@@ -3,8 +3,17 @@ pub(crate) use items::*;
 mod absolute {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, value: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f::$f(s, s.memory[value]);
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
+                _ = $crate::ops::$f::$f(s, s.memory[addr]);
+                $cycles
+            }
+        };
+    }
+
+    macro_rules! wrap_store {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
+                $crate::ops::$f::$f(s, addr);
                 $cycles
             }
         };
@@ -15,13 +24,23 @@ mod absolute {
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
+    wrap_store!(sta, 4);
 }
 
 mod absolute_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, value: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f::$f(s, s.memory[value.wrapping_add(s.reg.x as u16)]);
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
+                _ = $crate::ops::$f::$f(s, s.memory[addr.wrapping_add(s.reg.x as u16)]);
+                $cycles
+            }
+        };
+    }
+
+    macro_rules! wrap_store {
+        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
+                $crate::ops::$f::$f(s, addr.wrapping_add(s.reg.x as u16));
                 $cycles
             }
         };
@@ -29,13 +48,46 @@ mod absolute_x {
 
     wrap!(cmp, 4, 5);
     wrap!(lda, 4, 5);
+    wrap_store!(sta, 5, 5);
+}
+
+mod absolute_y {
+    #[allow(unused)]
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
+                _ = $crate::ops::$f::$f(s, s.memory[addr.wrapping_add(s.reg.y as u16)]);
+                $cycles
+            }
+        };
+    }
+
+    macro_rules! wrap_store {
+        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
+                $crate::ops::$f::$f(s, addr.wrapping_add(s.reg.y as u16));
+                $cycles
+            }
+        };
+    }
+
+    wrap_store!(sta, 5, 5);
 }
 
 mod zero_page {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, value: u8) -> $crate::Cycles {
-                _ = $crate::ops::$f::$f(s, s.memory[value as u16]);
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                _ = $crate::ops::$f::$f(s, s.memory[addr as u16]);
+                $cycles
+            }
+        };
+    }
+
+    macro_rules! wrap_store {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                $crate::ops::$f::$f(s, addr as u16);
                 $cycles
             }
         };
@@ -46,6 +98,7 @@ mod zero_page {
     wrap!(lda, 3);
     wrap!(ldx, 3);
     wrap!(ldy, 3);
+    wrap_store!(sta, 3);
 }
 
 #[iter_mod::make_items]
@@ -114,6 +167,18 @@ mod items {
         };
     }
 
+    macro_rules! absolute_y_wrapped {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::AbsoluteY,
+                op: $crate::Op::Word($crate::WordOp::new(
+                    $crate::op_info::op_infos::absolute_y::$f,
+                )),
+            }
+        };
+    }
+
     macro_rules! zero_page_wrapped {
         ($opcode: ident, $f: ident) => {
             $crate::OpInfo {
@@ -162,4 +227,8 @@ mod items {
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
     pub(crate) const PLP: OpInfo = implied!(Plp, plp);
     pub(crate) const RTS: OpInfo = implied!(Rts, rts);
+    pub(crate) const STA_ABS: OpInfo = absolute_wrapped!(StaAbs, sta);
+    pub(crate) const STA_ABS_X: OpInfo = absolute_x_wrapped!(StaAbsX, sta);
+    pub(crate) const STA_ABS_Y: OpInfo = absolute_y_wrapped!(StaAbsY, sta);
+    pub(crate) const STA_ZP: OpInfo = zero_page_wrapped!(StaZp, sta);
 }
