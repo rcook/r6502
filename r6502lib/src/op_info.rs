@@ -21,44 +21,67 @@ impl OpInfo {
 
 #[iter_mod::make_items]
 mod inner {
-    use crate::AddressingMode::*;
-    use crate::Op::*;
-    use crate::Opcode::*;
-    use crate::{absolute, adc, jmp, nop, zero_page, ByteOp, NoOperandOp, OpInfo, WordOp};
+    use crate::OpInfo;
 
-    pub(crate) const ADC_ABS: OpInfo = OpInfo {
-        opcode: AdcAbs,
-        addressing_mode: Absolute,
-        op: Word(WordOp::Wrapped {
-            wrapper: absolute,
-            f: adc,
-        }),
-    };
+    macro_rules! absolute {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::Absolute,
+                op: $crate::Op::Word($crate::WordOp::Wrapped {
+                    wrapper: $crate::absolute,
+                    f: $crate::$f,
+                }),
+            }
+        };
+    }
 
-    pub(crate) const ADC_IMM: OpInfo = OpInfo {
-        opcode: AdcImm,
-        addressing_mode: Immediate,
-        op: Byte(ByteOp::Simple { f: adc }),
-    };
+    macro_rules! absolute_simple {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::Absolute,
+                op: $crate::Op::Word($crate::WordOp::Simple { f: $crate::$f }),
+            }
+        };
+    }
 
-    pub(crate) const ADC_ZP: OpInfo = OpInfo {
-        opcode: AdcZp,
-        addressing_mode: ZeroPage,
-        op: Byte(ByteOp::Wrapped {
-            wrapper: zero_page,
-            f: adc,
-        }),
-    };
+    macro_rules! immediate {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::Immediate,
+                op: $crate::Op::Byte($crate::ByteOp::Simple { f: $crate::$f }),
+            }
+        };
+    }
 
-    pub(crate) const JMP_ABS: OpInfo = OpInfo {
-        opcode: JmpAbs,
-        addressing_mode: Absolute,
-        op: Word(WordOp::Simple { f: jmp }),
-    };
+    macro_rules! implied {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::Implied,
+                op: $crate::Op::NoOperand($crate::NoOperandOp { f: $crate::$f }),
+            }
+        };
+    }
 
-    pub(crate) const NOP: OpInfo = OpInfo {
-        opcode: Nop,
-        addressing_mode: Implied,
-        op: NoOperand(NoOperandOp { f: nop }),
-    };
+    macro_rules! zero_page {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::ZeroPage,
+                op: $crate::Op::Byte($crate::ByteOp::Wrapped {
+                    wrapper: $crate::zero_page,
+                    f: $crate::$f,
+                }),
+            }
+        };
+    }
+
+    pub(crate) const ADC_ABS: OpInfo = absolute!(AdcAbs, adc);
+    pub(crate) const ADC_IMM: OpInfo = immediate!(AdcImm, adc);
+    pub(crate) const ADC_ZP: OpInfo = zero_page!(AdcZp, adc);
+    pub(crate) const JMP_ABS: OpInfo = absolute_simple!(JmpAbs, jmp);
+    pub(crate) const NOP: OpInfo = implied!(Nop, nop);
 }
