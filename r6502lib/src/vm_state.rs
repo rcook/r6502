@@ -1,6 +1,7 @@
 use crate::util::{make_word, split_word};
 use crate::{Memory, Reg, STACK_BASE};
 
+#[derive(Default)]
 pub(crate) struct VmState {
     pub(crate) reg: Reg,
     pub(crate) memory: Memory,

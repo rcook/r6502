@@ -13,7 +13,7 @@ pub(crate) fn step(monitor: &impl Monitor, cpu: &Cpu, s: &mut VmState) -> Cycles
 
 #[cfg(test)]
 mod tests {
-    use crate::{p, step, Cpu, DummyMonitor, Memory, Opcode, Reg, VmState};
+    use crate::{get, p, set, step, Cpu, DummyMonitor, Memory, Opcode, Reg, VmState, IRQ};
 
     #[test]
     fn no_operand() {
@@ -106,5 +106,18 @@ mod tests {
         assert_eq!(0x38, s.reg.a);
         assert_eq!(p!(), s.reg.p);
         assert_eq!(0x0003, s.reg.pc)
+    }
+
+    #[test]
+    fn brk() {
+        let mut s = VmState::default();
+        s.reg.pc = 0x1000;
+        s.memory[0x1000] = Opcode::Brk as u8;
+        s.memory.store_word(IRQ, 0x9876);
+        set!(s.reg, B, false);
+        let cycles = step(&DummyMonitor, &Cpu::make_6502(), &mut s);
+        assert_eq!(7, cycles);
+        assert!(get!(s.reg, B));
+        assert_eq!(0x9876, s.reg.pc);
     }
 }

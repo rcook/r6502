@@ -1,13 +1,18 @@
+use crate::util::{make_word, split_word};
 use std::ops::{Index, IndexMut};
 
-use crate::util::{make_word, split_word};
-
 pub(crate) struct Memory([u8; 0x10000]);
+
+impl Default for Memory {
+    fn default() -> Self {
+        Self([0x00; 0x10000])
+    }
+}
 
 impl Memory {
     #[allow(unused)]
     pub(crate) fn new() -> Self {
-        Self([0x00; 0x10000])
+        Self::default()
     }
 
     pub(crate) fn fetch_word(&self, addr: u16) -> u16 {
