@@ -219,11 +219,7 @@ mod tests {
 
         let mut result = String::new();
         loop {
-            loop {
-                if !vm.step() {
-                    break;
-                }
-            }
+            while vm.step() {}
 
             match os_brk_addr(&vm, OS) {
                 Some(RETURN_ADDR) => break,
