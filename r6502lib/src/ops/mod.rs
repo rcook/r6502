@@ -6,17 +6,15 @@ mod jump;
 mod load;
 mod misc;
 mod register;
-mod ret;
 mod stack;
 mod store;
 
 pub(crate) use arithmetic::adc;
 pub(crate) use branch::{bcc, bcs, beq, bmi, bne, bpl, bvc, bvs};
 pub(crate) use compare::{cmp, cpx, cpy};
-pub(crate) use jump::{jmp, jsr};
+pub(crate) use jump::{jmp, jsr, rts};
 pub(crate) use load::{lda, ldx, ldy};
 pub(crate) use misc::{brk, nop};
 pub(crate) use register::{dex, dey, inx, iny, tax, tay, txa, tya};
-pub(crate) use ret::rts;
 pub(crate) use stack::{pha, php, pla, plp};
 pub(crate) use store::sta;
