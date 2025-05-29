@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn basics0() -> Result<()> {
-        let bytes = include_bytes!("../examples/hello-world.r6502");
+        let bytes = include_bytes!("../../examples/hello-world.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("HELLO, WORLD!", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn basics1() -> Result<()> {
-        let bytes = include_bytes!("../examples/strings.r6502");
+        let bytes = include_bytes!("../../examples/strings.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("String0\nString1\n", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn basics2() -> Result<()> {
-        let bytes = include_bytes!("../examples/test.r6502");
+        let bytes = include_bytes!("../../examples/test.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("Hello, world\r\n", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
@@ -66,7 +66,7 @@ mod tests {
     // TBD: This program does not seem to terminate
     //#[test]
     fn basics3() -> Result<()> {
-        let bytes = include_bytes!("../examples/randfill.r6502");
+        let bytes = include_bytes!("../../examples/randfill.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("Hello, world\r\n", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let bytes = include_bytes!("../examples/add8.r6502");
+        let bytes = include_bytes!("../../examples/add8.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn add16() -> Result<()> {
-        let bytes = include_bytes!("../examples/add16.r6502");
+        let bytes = include_bytes!("../../examples/add16.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
@@ -99,7 +99,7 @@ mod tests {
 
     //#[test]
     fn div16() -> Result<()> {
-        let bytes = include_bytes!("../examples/div16.r6502");
+        let bytes = include_bytes!("../../examples/div16.r6502");
         let (stdout, result) = run(bytes)?;
         assert_eq!("", stdout);
         assert_eq!(RunVMStatus::Halted, result.status);
