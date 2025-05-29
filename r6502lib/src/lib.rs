@@ -38,7 +38,7 @@ pub(crate) use assembly_listing::AssemblyListing;
 pub(crate) use binding::Binding;
 pub(crate) use brk::brk;
 #[allow(unused)]
-pub(crate) use byte_op::{zero_page, ByteOp, ByteOpFn};
+pub(crate) use byte_op::ByteOp;
 #[allow(unused)]
 pub(crate) use constants::{IRQ, OSWRCH, STACK_BASE};
 pub(crate) use cpu::Cpu;
@@ -72,4 +72,4 @@ pub(crate) use rts::rts;
 pub(crate) use vm::step;
 pub(crate) use vm_state::VmState;
 #[allow(unused)]
-pub(crate) use word_op::{absolute, WordOp, WordOpFn};
+pub(crate) use word_op::WordOp;
