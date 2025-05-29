@@ -1,5 +1,3 @@
-#![allow(unexpected_cfgs)]
-
 use crate::{get, Cpu, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
 
 pub(crate) struct Vm {
