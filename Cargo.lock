@@ -728,6 +728,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bitflags",
+ "iter_mod",
  "num-derive",
  "num-traits",
  "rstest",

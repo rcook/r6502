@@ -1,7 +1,7 @@
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 
-#[derive(Debug, Eq, FromPrimitive, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, FromPrimitive, Hash, PartialEq)]
 #[repr(u8)]
 pub(crate) enum Opcode {
     AdcAbs = 0x6d,
