@@ -1,4 +1,4 @@
-use crate::util::{is_neg, is_zero};
+use crate::ops::helper::{is_neg, is_zero};
 use crate::{set, Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDX

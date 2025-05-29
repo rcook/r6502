@@ -1,4 +1,4 @@
-use crate::util::{is_carry, is_neg, is_overflow, is_zero};
+use crate::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
 use crate::{get, set, value, Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
