@@ -3,6 +3,7 @@ mod assembly_listing;
 mod cpu;
 mod cycles;
 mod instruction;
+mod instruction_info;
 mod jmp;
 mod memory;
 mod monitor;
@@ -24,6 +25,7 @@ use assembly_listing::AssemblyListing;
 use cpu::Cpu;
 use cycles::Cycles;
 use instruction::Instruction;
+use instruction_info::InstructionInfo;
 use jmp::jmp;
 use memory::Memory;
 #[allow(unused)]

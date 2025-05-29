@@ -9,6 +9,8 @@ bitflags = "2.9.1"
 iter_mod = "0.1.0"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
+strum = { version = "0.27.1", features = ["strum_macros"] }
+strum_macros = "0.27.1"
 
 [dev-dependencies]
 rstest = "0.25.0"

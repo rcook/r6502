@@ -1,12 +1,13 @@
-use crate::{Cpu, Cycles, Instruction, Monitor, VmState};
+use crate::{Cpu, Cycles, Instruction, InstructionInfo, Monitor, VmState};
 
 #[allow(unused)]
 pub(crate) fn step(monitor: &impl Monitor, cpu: &Cpu, s: &mut VmState) -> Cycles {
     monitor.on_before_fetch(&s.reg);
     let instruction = Instruction::fetch(cpu, s);
-    monitor.on_before_execute(&s.reg, &instruction);
+    let instruction_info = InstructionInfo::from_instruction(&instruction);
+    monitor.on_before_execute(&s.reg, &instruction_info);
     let cycles = instruction.execute(s);
-    monitor.on_after_execute(&s.reg, &instruction, cycles);
+    monitor.on_after_execute(&s.reg, &instruction_info, cycles);
     cycles
 }
 

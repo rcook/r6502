@@ -1,9 +1,9 @@
-use crate::{Cycles, Instruction, Reg};
+use crate::{Cycles, InstructionInfo, Reg};
 
 pub(crate) trait Monitor {
     fn on_before_fetch(&self, _reg: &Reg) {}
-    fn on_before_execute(&self, _reg: &Reg, _instruction: &Instruction) {}
-    fn on_after_execute(&self, _reg: &Reg, _instruction: &Instruction, _cycles: Cycles) {}
+    fn on_before_execute(&self, _reg: &Reg, _instruction: &InstructionInfo) {}
+    fn on_after_execute(&self, _reg: &Reg, _instruction: &InstructionInfo, _cycles: Cycles) {}
 }
 
 #[allow(unused)]
