@@ -37,7 +37,7 @@ pub(crate) use binding::Binding;
 pub(crate) use brk::brk;
 #[allow(unused)]
 pub(crate) use byte_op::{zero_page, ByteOp, ByteOpFn};
-pub(crate) use constants::STACK_BASE;
+pub(crate) use constants::{IRQ, STACK_BASE};
 pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
