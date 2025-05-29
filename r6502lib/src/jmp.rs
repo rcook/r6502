@@ -9,7 +9,8 @@ pub(crate) fn jmp(s: &mut VmState, operand: u16) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::{jmp, reg, Memory, Reg, VmState};
+    use crate::jmp::jmp;
+    use crate::{reg, Memory, Reg, VmState};
     use rstest::rstest;
 
     #[rstest]

@@ -9,7 +9,8 @@ pub(crate) fn pha(s: &mut VmState) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::{pha, reg, Memory, VmState, P, STACK_BASE};
+    use crate::pha::pha;
+    use crate::{reg, Memory, VmState, P, STACK_BASE};
 
     #[test]
     fn basics() {

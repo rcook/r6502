@@ -4,24 +4,26 @@ mod absolute {
     macro_rules! wrap {
         ($f: ident, $extra_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, value: u16) -> $crate::Cycles {
-                $crate::$f(s, s.memory[value]) + $extra_cycles
+                $crate::$f::$f(s, s.memory[value]) + $extra_cycles
             }
         };
     }
 
     wrap!(adc, 2);
+    wrap!(lda, 2);
 }
 
 mod zero_page {
     macro_rules! wrap {
         ($f: ident, $extra_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, value: u8) -> $crate::Cycles {
-                $crate::$f(s, s.memory[value as u16]) + $extra_cycles
+                $crate::$f::$f(s, s.memory[value as u16]) + $extra_cycles
             }
         };
     }
 
     wrap!(adc, 1);
+    wrap!(lda, 1);
 }
 
 #[iter_mod::make_items]
@@ -33,7 +35,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Absolute,
-                op: $crate::Op::Word($crate::WordOp::new($crate::$f)),
+                op: $crate::Op::Word($crate::WordOp::new($crate::$f::$f)),
             }
         };
     }
@@ -43,7 +45,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Immediate,
-                op: $crate::Op::Byte($crate::ByteOp::new($crate::$f)),
+                op: $crate::Op::Byte($crate::ByteOp::new($crate::$f::$f)),
             }
         };
     }
@@ -53,7 +55,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Implied,
-                op: $crate::Op::NoOperand($crate::NoOperandOp::new($crate::$f)),
+                op: $crate::Op::NoOperand($crate::NoOperandOp::new($crate::$f::$f)),
             }
         };
     }
@@ -86,6 +88,9 @@ mod items {
     pub(crate) const BRK: OpInfo = implied!(Brk, brk);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);
     pub(crate) const JSR: OpInfo = absolute!(Jsr, jsr);
+    pub(crate) const LDA_ABS: OpInfo = absolute_wrapped!(LdaAbs, lda);
+    pub(crate) const LDA_IMM: OpInfo = immediate!(LdaImm, lda);
+    pub(crate) const LDA_ZP: OpInfo = zero_page_wrapped!(LdaZp, lda);
     pub(crate) const NOP: OpInfo = implied!(Nop, nop);
     pub(crate) const PHA: OpInfo = implied!(Pha, pha);
     pub(crate) const PHP: OpInfo = implied!(Php, php);

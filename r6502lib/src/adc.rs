@@ -30,7 +30,8 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::{adc, reg, Memory, Reg, VmState};
+    use crate::adc::adc;
+    use crate::{reg, Memory, Reg, VmState};
     use rstest::rstest;
 
     #[rstest]

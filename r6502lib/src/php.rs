@@ -9,7 +9,9 @@ pub(crate) fn php(s: &mut VmState) -> Cycles {
 
 #[cfg(test)]
 mod tests {
-    use crate::{php, plp, reg, Memory, VmState, P};
+    use crate::php::php;
+    use crate::plp::plp;
+    use crate::{reg, Memory, VmState, P};
 
     #[test]
     fn basics() {
