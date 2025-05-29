@@ -13,6 +13,8 @@ pub(crate) enum Opcode {
     AdcImm = 0x69,
     #[strum(props(mnemonic = "ADC"))]
     AdcZp = 0x65,
+    #[strum(props(mnemonic = "BEQ"))]
+    Beq = 0xf0,
     #[strum(props(mnemonic = "BRK"))]
     Brk = 0x00,
     #[strum(props(mnemonic = "JMP"))]

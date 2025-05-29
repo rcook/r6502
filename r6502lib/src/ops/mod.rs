@@ -1,4 +1,5 @@
 pub(crate) mod adc;
+pub(crate) mod beq;
 pub(crate) mod brk;
 pub(crate) mod jmp;
 pub(crate) mod jsr;
