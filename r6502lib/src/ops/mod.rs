@@ -1,6 +1,13 @@
 pub(crate) mod adc;
+pub(crate) mod bcc;
+pub(crate) mod bcs;
 pub(crate) mod beq;
+pub(crate) mod bmi;
+pub(crate) mod bne;
+pub(crate) mod bpl;
 pub(crate) mod brk;
+pub(crate) mod bvc;
+pub(crate) mod bvs;
 pub(crate) mod jmp;
 pub(crate) mod jsr;
 pub(crate) mod lda;

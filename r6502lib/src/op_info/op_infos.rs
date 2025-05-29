@@ -101,8 +101,15 @@ mod items {
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_IMM: OpInfo = immediate!(AdcImm, adc);
     pub(crate) const ADC_ZP: OpInfo = zero_page_wrapped!(AdcZp, adc);
+    pub(crate) const BCC: OpInfo = relative!(Bcc, bcc);
+    pub(crate) const BCS: OpInfo = relative!(Bcs, bcs);
     pub(crate) const BEQ: OpInfo = relative!(Beq, beq);
+    pub(crate) const BMI: OpInfo = relative!(Bmi, bmi);
+    pub(crate) const BNE: OpInfo = relative!(Bne, bne);
+    pub(crate) const BPL: OpInfo = relative!(Bpl, bpl);
     pub(crate) const BRK: OpInfo = implied!(Brk, brk);
+    pub(crate) const BVC: OpInfo = relative!(Bvc, bvc);
+    pub(crate) const BVS: OpInfo = relative!(Bvs, bvs);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);
     pub(crate) const JSR: OpInfo = absolute!(Jsr, jsr);
     pub(crate) const LDA_ABS: OpInfo = absolute_wrapped!(LdaAbs, lda);
