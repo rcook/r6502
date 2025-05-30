@@ -43,6 +43,11 @@ impl Vm {
         self.cycles += cycles as u32;
         !get!(self.s.reg, B)
     }
+
+    #[allow(unused)]
+    pub(crate) fn run_until_brk(&mut self) {
+        while self.step() {}
+    }
 }
 
 #[cfg(test)]
@@ -191,7 +196,6 @@ mod tests {
     #[case("Hello, world\r\n", include_str!("../../examples/test.r6502.txt"), None)]
     #[case("Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"), None)]
     #[case("String0\nString1\n", include_str!("../../examples/strings.r6502.txt"), None)]
-    #[cfg_attr(feature = "not-implemented", case("String0\nString1\n", include_str!("../../examples/add8.r6502.txt"), Some(0x0e01)))]
     fn stdout(
         #[case] expected_stdout: &str,
         #[case] input: &str,
@@ -202,6 +206,19 @@ mod tests {
         #[cfg(not(feature = "not-implemented"))]
         const TRACE: bool = false;
         assert_eq!(expected_stdout, capture_stdout(input, start, TRACE)?);
+        Ok(())
+    }
+
+    #[test]
+    fn add8() -> Result<()> {
+        let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
+        let mut vm = Vm::default();
+        vm.s.memory.load(&image);
+        assert_eq!(0x00, vm.s.memory[0x0e00]);
+        vm.s.reg.pc = 0x0e01;
+        vm.run_until_brk();
+        assert_eq!(27, vm.cycles);
+        assert_eq!(0x46, vm.s.memory[0x0e00]);
         Ok(())
     }
 
