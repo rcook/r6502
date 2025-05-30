@@ -3,11 +3,12 @@ use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
 use cursive::event::Key;
-use cursive::view::{Nameable, Resizable, ScrollStrategy, Scrollable};
+use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
-use cursive::{Cursive, CursiveRunnable, CursiveRunner};
+use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
 use std::sync::mpsc::{Receiver, Sender};
 
+const RIGHT_NAME: &str = "right";
 const CURRENT_NAME: &str = "current";
 const DISASSEMBLY_NAME: &str = "disassembly";
 const STATUS_NAME: &str = "status";
@@ -153,7 +154,8 @@ impl UI {
             .child(panel(help, "Help"))
             .child(panel(command_response, "Command Response"))
             .child(panel(command, "Command"))
-            .child(Panel::new(command_feedback));
+            .child(Panel::new(command_feedback))
+            .with_name(RIGHT_NAME);
 
         let dashboard = LinearLayout::new(Orientation::Horizontal)
             .child(left)
@@ -172,14 +174,19 @@ impl UI {
         cursive.add_global_callback('r', move |_| _ = d.send(Run));
         let d = debug_tx.clone();
         cursive.add_global_callback('b', move |_| _ = d.send(Break));
-        cursive.add_global_callback('c', move |s| {
-            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
-                // TBD: Figure out how to give the edit view focus
-                command.enable();
+        cursive.add_global_callback('c', move |c| {
+            c.call_on_name(RIGHT_NAME, |right: &mut LinearLayout| {
+                // https://github.com/gyscos/cursive/discussions/820#discussioncomment-13299361
+                right
+                    .call_on_name(COMMAND_NAME, EditView::enable)
+                    .expect("Must succeed");
+                right
+                    .focus_view(&Selector::Name(COMMAND_NAME))
+                    .expect("Must succeed");
             });
         });
-        cursive.add_global_callback(Key::Esc, move |s| {
-            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+        cursive.add_global_callback(Key::Esc, move |c| {
+            c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                 command.disable();
             });
         });
