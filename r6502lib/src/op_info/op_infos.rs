@@ -236,6 +236,10 @@ mod items {
     pub(crate) const BRK: OpInfo = implied!(Brk, brk);
     pub(crate) const BVC: OpInfo = relative!(Bvc, bvc);
     pub(crate) const BVS: OpInfo = relative!(Bvs, bvs);
+    pub(crate) const CLC: OpInfo = implied!(Clc, clc);
+    pub(crate) const CLD: OpInfo = implied!(Cld, cld);
+    pub(crate) const CLI: OpInfo = implied!(Cli, cli);
+    pub(crate) const CLV: OpInfo = implied!(Clv, clv);
     pub(crate) const CMP_ABS: OpInfo = absolute_wrapped!(CmpAbs, cmp);
     pub(crate) const CMP_ABS_X: OpInfo = absolute_x_wrapped!(CmpAbsX, cmp);
     pub(crate) const CMP_IMM: OpInfo = immediate!(CmpImm, cmp);
@@ -269,6 +273,9 @@ mod items {
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
     pub(crate) const PLP: OpInfo = implied!(Plp, plp);
     pub(crate) const RTS: OpInfo = implied!(Rts, rts);
+    pub(crate) const SEC: OpInfo = implied!(Sec, sec);
+    pub(crate) const SED: OpInfo = implied!(Sed, sed);
+    pub(crate) const SEI: OpInfo = implied!(Sei, sei);
     pub(crate) const STA_ABS: OpInfo = absolute_wrapped!(StaAbs, sta);
     pub(crate) const STA_ABS_X: OpInfo = absolute_x_wrapped!(StaAbsX, sta);
     pub(crate) const STA_ABS_Y: OpInfo = absolute_y_wrapped!(StaAbsY, sta);

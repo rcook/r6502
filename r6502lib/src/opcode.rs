@@ -31,6 +31,14 @@ pub(crate) enum Opcode {
     Bvc = 0x50,
     #[strum(props(mnemonic = "BVS"))]
     Bvs = 0x70,
+    #[strum(props(mnemonic = "CLC"))]
+    Clc = 0x18,
+    #[strum(props(mnemonic = "Cld"))]
+    Cld = 0xd8,
+    #[strum(props(mnemonic = "CLI"))]
+    Cli = 0x58,
+    #[strum(props(mnemonic = "Clv"))]
+    Clv = 0xb8,
     #[strum(props(mnemonic = "CMP"))]
     CmpAbs = 0xcd,
     #[strum(props(mnemonic = "CMP"))]
@@ -97,6 +105,12 @@ pub(crate) enum Opcode {
     Plp = 0x28,
     #[strum(props(mnemonic = "RTS"))]
     Rts = 0x60,
+    #[strum(props(mnemonic = "SEC"))]
+    Sec = 0x38,
+    #[strum(props(mnemonic = "Sed"))]
+    Sed = 0xf8,
+    #[strum(props(mnemonic = "Sei"))]
+    Sei = 0x78,
     #[strum(props(mnemonic = "STA"))]
     StaAbs = 0x8d,
     #[strum(props(mnemonic = "STA"))]

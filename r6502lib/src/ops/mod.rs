@@ -1,6 +1,7 @@
 mod arithmetic;
 mod branch;
 mod compare;
+mod flag;
 mod helper;
 mod jump;
 mod load;
@@ -12,6 +13,7 @@ mod store;
 pub(crate) use arithmetic::adc;
 pub(crate) use branch::{bcc, bcs, beq, bmi, bne, bpl, bvc, bvs};
 pub(crate) use compare::{cmp, cpx, cpy};
+pub(crate) use flag::{clc, cld, cli, clv, sec, sed, sei};
 pub(crate) use jump::{jmp, jsr, rts};
 pub(crate) use load::{lda, ldx, ldy};
 pub(crate) use misc::{brk, nop};

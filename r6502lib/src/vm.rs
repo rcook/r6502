@@ -187,16 +187,21 @@ mod tests {
     }
 
     #[rstest]
-    #[case(false, "HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"))]
-    #[case(false, "Hello, world\r\n", include_str!("../../examples/test.r6502.txt"))]
-    #[case(false, "Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"))]
-    #[case(false, "String0\nString1\n", include_str!("../../examples/strings.r6502.txt"))]
+    #[case("HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"), None)]
+    #[case("Hello, world\r\n", include_str!("../../examples/test.r6502.txt"), None)]
+    #[case("Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"), None)]
+    #[case("String0\nString1\n", include_str!("../../examples/strings.r6502.txt"), None)]
+    #[cfg_attr(feature = "not-implemented", case("String0\nString1\n", include_str!("../../examples/add8.r6502.txt"), Some(0x0e01)))]
     fn stdout(
-        #[case] trace: bool,
         #[case] expected_stdout: &str,
         #[case] input: &str,
+        #[case] start: Option<u16>,
     ) -> Result<()> {
-        assert_eq!(expected_stdout, capture_stdout(input, trace)?);
+        #[cfg(feature = "not-implemented")]
+        const TRACE: bool = true;
+        #[cfg(not(feature = "not-implemented"))]
+        const TRACE: bool = false;
+        assert_eq!(expected_stdout, capture_stdout(input, start, TRACE)?);
         Ok(())
     }
 
@@ -209,7 +214,7 @@ mod tests {
         }
     }
 
-    fn capture_stdout(input: &str, trace: bool) -> Result<String> {
+    fn capture_stdout(input: &str, start: Option<u16>, trace: bool) -> Result<String> {
         const OS: u16 = 0x2000;
         const RETURN_ADDR: u16 = 0x1234;
 
@@ -230,7 +235,7 @@ mod tests {
         set_up_os(&mut vm, OS);
         vm.s.memory.load(&image);
         vm.s.push_word(RETURN_ADDR - 1);
-        vm.s.reg.pc = image.origin;
+        vm.s.reg.pc = start.unwrap_or(image.origin);
         set!(vm.s.reg, B, false);
 
         let mut result = String::new();
