@@ -187,73 +187,9 @@ mod tests {
     }
 
     #[rstest]
-    #[case(
-        false,
-        "HELLO, WORLD!",
-        r#" 0E00  A2 00     LDX  #$00
- 0E02  BD 0E 0E  LDA  $0E0E, X
- 0E05  F0 06     BEQ  $0E0D
- 0E07  20 EE FF  JSR  $FFEE
- 0E0A  E8        INX
- 0E0B  D0 F5     BNE  $0E02
- 0E0D  60        RTS
- 0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
-"#
-    )]
-    #[case(
-        false,
-        "Hello, world\r\n",
-        r#" 2000  A2 00     LDX  #$00
- 2002  BD 11 20  LDA  $2011, X
- 2005  C9 00     CMP  #$00
- 2007  F0 07     BEQ  $2010
- 2009  20 EE FF  JSR  $FFEE
- 200C  E8        INX
- 200D  4C 02 20  JMP  $2002
- 2010  60        RTS
- 2011  48 65 6C 6C 6F 2C 20 77 6F 72 6C 64 0D 0A 00     |Hello, world... |
-"#
-    )]
-    #[case(
-        false,
-        "String0\nString1\n",
-        r#" 0E00  A9 4D     LDA  #$4D
- 0E02  85 80     STA  $80
- 0E04  A9 0E     LDA  #$0E
- 0E06  85 81     STA  $81
- 0E08  20 0C 0E  JSR  $0E0C
- 0E0B  60        RTS  
- 0E0C  A0 00     LDY  #$00
- 0E0E  B1 80     LDA  ($80), Y
- 0E10  AA        TAX  
- 0E11  E0 00     CPX  #$00
- 0E13  F0 15     BEQ  $0E2A
- 0E15  C8        INY  
- 0E16  B1 80     LDA  ($80), Y
- 0E18  85 82     STA  $82
- 0E1A  C8        INY  
- 0E1B  B1 80     LDA  ($80), Y
- 0E1D  85 83     STA  $83
- 0E1F  98        TYA  
- 0E20  48        PHA  
- 0E21  20 2B 0E  JSR  $0E2B
- 0E24  68        PLA  
- 0E25  A8        TAY  
- 0E26  CA        DEX  
- 0E27  4C 11 0E  JMP  $0E11
- 0E2A  60        RTS  
- 0E2B  A0 00     LDY  #$00
- 0E2D  B1 82     LDA  ($82), Y
- 0E2F  C9 00     CMP  #$00
- 0E31  F0 07     BEQ  $0E3A
- 0E33  20 EE FF  JSR  $FFEE
- 0E36  C8        INY  
- 0E37  4C 2D 0E  JMP  $0E2D
- 0E3A  60        RTS  
- 0E3B  53 74 72 69 6E 67 30 0A 00 53 74 72 69 6E 67 31  |String0..String1|
- 0E4B  0A 00 02 3B 0E 44 0E                             |...;.D.         |
-"#
-    )]
+    #[case(false, "HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"))]
+    #[case(false, "Hello, world\r\n", include_str!("../../examples/test.r6502.txt"))]
+    #[case(false, "String0\nString1\n", include_str!("../../examples/strings.r6502.txt"))]
     fn stdout(
         #[case] trace: bool,
         #[case] expected_stdout: &str,
