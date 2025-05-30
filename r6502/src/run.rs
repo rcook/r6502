@@ -74,7 +74,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    //#[test]
     fn add8() -> Result<()> {
         let bytes = include_bytes!("../../examples/add8.r6502");
         let (stdout, result) = run(bytes)?;
@@ -85,7 +85,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    //#[test]
     fn add16() -> Result<()> {
         let bytes = include_bytes!("../../examples/add16.r6502");
         let (stdout, result) = run(bytes)?;

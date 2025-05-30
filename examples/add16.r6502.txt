@@ -6,5 +6,5 @@
  0E0C  AD 17 0E  LDA  $0E17
  0E0F  6D 19 0E  ADC  $0E19
  0E12  8D 01 0E  STA  $0E01
- 0E15  60        RTS  
+ 0E15  00        BRK  
  0E16  12 34 56 78                                      |.4Vx            |

@@ -11,7 +11,7 @@ start:
     LDA left_operand + 1
     ADC right_operand + 1
     STA result + 1
-    RTS
+    BRK
 
 left_operand:
     .word $3412

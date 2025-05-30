@@ -8,7 +8,7 @@ start:
     LDA left_operand
     ADC right_operand
     STA result
-    RTS
+    BRK
 
 left_operand:
     .byte $12

@@ -197,14 +197,21 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
-        let mut vm = Vm::default();
-        vm.s.memory.load(&image);
-        assert_eq!(0x00, vm.s.memory[0x0e00]);
+        let mut vm = load_into_vm(include_str!("../../examples/add8.r6502.txt"))?;
         vm.s.reg.pc = 0x0e01;
         vm.run_until_brk();
-        assert_eq!(27, vm.cycles);
+        assert_eq!(21, vm.cycles);
         assert_eq!(0x46, vm.s.memory[0x0e00]);
+        Ok(())
+    }
+
+    #[test]
+    fn add16() -> Result<()> {
+        let mut vm = load_into_vm(include_str!("../../examples/add16.r6502.txt"))?;
+        vm.s.reg.pc = 0x0e02;
+        vm.run_until_brk();
+        assert_eq!(33, vm.cycles);
+        assert_eq!(0xac68, vm.s.memory.fetch_word(0x0e00));
         Ok(())
     }
 
@@ -264,5 +271,13 @@ mod tests {
         }
 
         Ok(result)
+    }
+
+    fn load_into_vm(input: &str) -> Result<Vm> {
+        let image = input.parse::<Image>()?;
+        assert_eq!(0x0e00, image.origin);
+        let mut vm = Vm::default();
+        vm.s.memory.load(&image);
+        Ok(vm)
     }
 }
