@@ -16,3 +16,4 @@ https://cafbit.com/post/cursive_writing_terminal_applications_in_rust/
 https://stackoverflow.com/questions/78122826/how-to-create-a-new-dialog-after-cursive-run-has-been-called
 https://web.archive.org/web/20211204234443if_/http://archive.6502.org/datasheets/mos_6501-6505_mpu_preliminary_aug_1975.pdf
 https://www.masswerk.at/6502/6502_instruction_set.html
+https://github.com/Klaus2m5/6502_65C02_functional_tests
