@@ -189,6 +189,7 @@ mod tests {
     #[rstest]
     #[case(false, "HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"))]
     #[case(false, "Hello, world\r\n", include_str!("../../examples/test.r6502.txt"))]
+    #[case(false, "Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"))]
     #[case(false, "String0\nString1\n", include_str!("../../examples/strings.r6502.txt"))]
     fn stdout(
         #[case] trace: bool,

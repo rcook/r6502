@@ -1,0 +1,8 @@
+ 2000  A2 00     LDX  #$00
+ 2002  BD 0F 20  LDA  $200F, X
+ 2005  F0 07     BEQ  $200E
+ 2007  20 EE FF  JSR  $FFEE
+ 200A  E8        INX  
+ 200B  4C 02 20  JMP  $2002
+ 200E  60        RTS  
+ 200F  48 65 6C 6C 6F 2C 20 77 6F 72 6C 64 0D 0A 00     |Hello, world... |
