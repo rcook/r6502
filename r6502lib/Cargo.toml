@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.98"
 bitflags = "2.9.1"
+derive_builder = "0.20.2"
 iter_mod = "0.1.0"
 num-derive = "0.4.2"
 num-traits = "0.2.19"

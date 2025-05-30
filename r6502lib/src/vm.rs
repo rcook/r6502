@@ -1,35 +1,41 @@
 use crate::{get, Cpu, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
+use derive_builder::Builder;
+use std::result::Result as StdResult;
 
+#[allow(unused)]
+#[derive(Builder)]
+#[builder(pattern = "owned")]
 pub(crate) struct Vm {
+    #[builder(default = "self.default_monitor()?")]
     pub(crate) monitor: Box<dyn Monitor>,
+
+    #[builder(default)]
     pub(crate) cpu: Cpu,
+
+    #[builder(default)]
     pub(crate) s: VmState,
+
+    #[builder(default = "0")]
     pub(crate) cycles: u32,
 }
 
 impl Default for Vm {
     fn default() -> Self {
-        Self::new(Box::new(DummyMonitor), Cpu::make_6502(), VmState::default())
+        VmBuilder::default().build().expect("Must succeed")
     }
 }
 
+#[allow(unused)]
 impl Vm {
-    #[allow(unused)]
-    pub(crate) fn new(monitor: Box<dyn Monitor>, cpu: Cpu, s: VmState) -> Self {
+    pub(crate) fn new(monitor: Box<dyn Monitor>, cpu: Cpu, s: VmState, cycles: u32) -> Self {
         Self {
             monitor,
             cpu,
             s,
-            cycles: 0,
+            cycles,
         }
     }
 
-    #[allow(unused)]
-    pub(crate) fn with_vm_state(s: VmState) -> Self {
-        Self::new(Box::new(DummyMonitor), Cpu::make_6502(), s)
-    }
-
-    #[allow(unused)]
     #[must_use]
     pub(crate) fn step(&mut self) -> bool {
         self.monitor.on_before_fetch(&self.s.reg);
@@ -44,30 +50,30 @@ impl Vm {
         !get!(self.s.reg, B)
     }
 
-    #[allow(unused)]
     pub(crate) fn run_until_brk(&mut self) {
         while self.step() {}
+    }
+}
+
+impl VmBuilder {
+    fn default_monitor(&self) -> StdResult<Box<dyn Monitor>, VmBuilderError> {
+        Ok(Box::new(DummyMonitor))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        get, p, set, set_up_os, Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, Reg,
-        TracingMonitor, Vm, VmState, IRQ, OSWRCH, P,
+        get, p, set, set_up_os, DummyMonitor, Image, Monitor, Opcode, TracingMonitor, Vm,
+        VmBuilder, IRQ, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
     fn no_operand() {
-        let mut vm = Vm::with_vm_state(VmState {
-            reg: Reg {
-                a: 0x12,
-                ..Default::default()
-            },
-            memory: Memory::new(),
-        });
+        let mut vm = Vm::default();
+        vm.s.reg.a = 0x12;
         vm.s.memory[0x0000] = Opcode::Nop as u8;
         assert!(vm.step());
         assert_eq!(2, vm.cycles);
@@ -78,13 +84,8 @@ mod tests {
 
     #[test]
     fn byte0() {
-        let mut vm = Vm::with_vm_state(VmState {
-            reg: Reg {
-                a: 0x12,
-                ..Default::default()
-            },
-            memory: Memory::new(),
-        });
+        let mut vm = Vm::default();
+        vm.s.reg.a = 0x12;
         vm.s.memory[0x0000] = Opcode::AdcImm as u8;
         vm.s.memory[0x0001] = 0x34;
         assert!(vm.step());
@@ -96,13 +97,8 @@ mod tests {
 
     #[test]
     fn byte1() {
-        let mut vm = Vm::with_vm_state(VmState {
-            reg: Reg {
-                a: 0x12,
-                ..Default::default()
-            },
-            memory: Memory::new(),
-        });
+        let mut vm = Vm::default();
+        vm.s.reg.a = 0x12;
         vm.s.memory[0x0000] = Opcode::AdcZp as u8;
         vm.s.memory[0x0001] = 0x34;
         vm.s.memory[0x0034] = 0x56;
@@ -115,13 +111,8 @@ mod tests {
 
     #[test]
     fn word0() {
-        let mut vm = Vm::with_vm_state(VmState {
-            reg: Reg {
-                a: 0x12,
-                ..Default::default()
-            },
-            memory: Memory::new(),
-        });
+        let mut vm = Vm::default();
+        vm.s.reg.a = 0x12;
         vm.s.memory[0x0000] = Opcode::JmpAbs as u8;
         vm.s.memory[0x0001] = 0x00;
         vm.s.memory[0x0002] = 0x10;
@@ -134,13 +125,8 @@ mod tests {
 
     #[test]
     fn word1() {
-        let mut vm = Vm::with_vm_state(VmState {
-            reg: Reg {
-                a: 0x25,
-                ..Default::default()
-            },
-            memory: Memory::new(),
-        });
+        let mut vm = Vm::default();
+        vm.s.reg.a = 0x25;
         vm.s.memory[0x0000] = Opcode::AdcAbs as u8;
         vm.s.memory[0x0001] = 0x12;
         vm.s.memory[0x0002] = 0x34;
@@ -243,7 +229,7 @@ mod tests {
             Box::new(DummyMonitor)
         };
 
-        let mut vm = Vm::new(monitor, Cpu::make_6502(), VmState::default());
+        let mut vm = VmBuilder::default().monitor(monitor).build()?;
         let rts = vm
             .cpu
             .get_op_info(&Opcode::Rts)

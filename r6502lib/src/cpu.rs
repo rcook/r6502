@@ -20,3 +20,9 @@ impl Cpu {
         self.0.get(opcode)
     }
 }
+
+impl Default for Cpu {
+    fn default() -> Self {
+        Self::make_6502()
+    }
+}

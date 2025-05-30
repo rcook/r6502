@@ -53,7 +53,7 @@ pub(crate) use p::{get, p, set, value, P, P_STR};
 #[allow(unused)]
 pub(crate) use reg::{reg, Reg};
 #[allow(unused)]
-pub(crate) use vm::Vm;
+pub(crate) use vm::{Vm, VmBuilder, VmBuilderError};
 pub(crate) use vm_state::VmState;
 #[allow(unused)]
 pub(crate) use word_op::WordOp;
