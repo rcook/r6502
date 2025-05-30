@@ -1,5 +1,6 @@
 # pyright: reportMissingTypeStubs=false
 
+
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,11 +13,37 @@ import shutil
 
 ORG_REGEX = re.compile("^\\s*\\.org\\s+(?P<addr>\\$?.+)\\s*$")
 MAGIC_NUMBER = 0x6502
-DEFAULT_ASM_EXT: str = ".asm"
-DEFAULT_EXT: str = ".r6502"
-DEFAULT_SYMBOL_EXT: str = ".r6502.json"
 ORIGIN_SYMBOL: str = "origin"
 START_SYMBOL: str = "start"
+
+
+@dataclass(frozen=True)
+class OutputPaths:
+    image_path: Path
+    symbol_path: Path
+    listing_path: Path
+
+    @staticmethod
+    def make(asm_path: Path, output_path: Path | None) -> "OutputPaths":
+        if output_path is not None:
+            d = output_path.parent
+            name = output_path.name
+            return OutputPaths(
+                image_path=output_path,
+                symbol_path=d / f"{name}.json",
+                listing_path=d / f"{name}.txt")
+
+        d = asm_path.parent
+        stem = asm_path.stem
+        ext = asm_path.suffix
+        base_name = stem if ext.lower() == ".asm" else asm_path.name
+        image_path = d / f"{base_name}.r6502"
+        symbol_path = d / f"{base_name}.r6502.json"
+        listing_path = d / f"{base_name}.r6502.txt"
+        return OutputPaths(
+            image_path=image_path,
+            symbol_path=symbol_path,
+            listing_path=listing_path)
 
 
 @dataclass(frozen=True)
@@ -91,41 +118,32 @@ def get_start(map_path: Path, default: int) -> int:
     return default if start is None else start
 
 
-def make_image_path(asm_path: Path, image_path: Path | None) -> Path:
-    if image_path is not None:
-        return image_path
-    d = asm_path.parent
-    stem = asm_path.stem
-    ext = asm_path.suffix
-    if ext.lower() == DEFAULT_ASM_EXT:
-        return d / f"{stem}{DEFAULT_EXT}"
-    return d / f"{stem}{ext}{DEFAULT_EXT}"
+def assemble(asm_path: Path, output_path: Path | None) -> None:
+    output_paths = OutputPaths.make(asm_path, output_path)
 
-
-def make_symbol_path(image_path: Path) -> Path:
-    d = image_path.parent
-    stem = image_path.stem
-    ext = image_path.suffix
-    if ext.lower() == DEFAULT_EXT:
-        return d / f"{stem}{DEFAULT_SYMBOL_EXT}"
-    return d / f"{stem}{ext}{DEFAULT_SYMBOL_EXT}"
-
-
-def assemble(asm_path: Path, image_path: Path | None) -> None:
-    image_path = make_image_path(asm_path, image_path)
     origin = get_origin(asm_path, 0x0000)
 
-    with NamedTemporaryFile(delete=True, delete_on_close=False) as bin_temp, NamedTemporaryFile(delete=True, delete_on_close=False) as map_temp:
-        bin_path = Path(bin_temp.name)
-        map_path = Path(map_temp.name)
+    with NamedTemporaryFile(delete=True, delete_on_close=False) as temp_bin, NamedTemporaryFile(delete=True, delete_on_close=False) as temp_map:
+        temp_bin_path = Path(temp_bin.name)
+        temp_map_path = Path(temp_map.name)
         # autopep8: off
-        result = Ophis.Ophis.Main.run_ophis([str(asm_path), "--quiet", "-o", str(bin_path), "-m", str(map_path)]) # pyright: ignore[reportUnknownMemberType]
+        result = Ophis.Ophis.Main.run_ophis([
+            str(asm_path),
+            "--quiet",
+            "-o",
+            str(temp_bin_path),
+            "-m",
+            str(temp_map_path),
+            "-l",
+            str(output_paths.listing_path)
+        ]) # pyright: ignore[reportUnknownMemberType]
         # autopep8: on
         if result != 0:
             raise RuntimeError("Ophis failed")
-        bin_temp.close()
+        temp_bin.close()
+        temp_map.close()
 
-        symbols = SymbolInfo.read(map_path)
+        symbols = SymbolInfo.read(temp_map_path)
         symbol_map = {
             s.name: s
             for s in symbols
@@ -146,14 +164,14 @@ def assemble(asm_path: Path, image_path: Path | None) -> None:
                 value=start,
                 source_location=None)
 
-        with image_path.open("wb") as image_f:
+        with output_paths.image_path.open("wb") as image_f:
             _ = image_f.write(MAGIC_NUMBER.to_bytes(2, byteorder="little"))
             _ = image_f.write(origin.to_bytes(2, byteorder="little"))
             _ = image_f.write(start.to_bytes(2, byteorder="little"))
-            with bin_path.open("rb") as other_f:
+            with temp_bin_path.open("rb") as other_f:
                 shutil.copyfileobj(other_f, image_f)
 
-        with make_symbol_path(image_path).open("wt") as symbol_f:
+        with output_paths.symbol_path.open("wt") as symbol_f:
             def transform(symbol: SymbolInfo) -> dict[str, str]:
                 d = {
                     "name": symbol.name,
@@ -181,11 +199,11 @@ def main(cwd: Path, argv: list[str]) -> None:
     _ = parser.add_argument(
         "--output",
         "-o",
-        dest="image_path",
-        metavar="IMAGE_PATH",
+        dest="output_path",
+        metavar="OUTPUT_PATH",
         type=resolved_path,
         default=None,
         help="path to output .r6502 image file")
 
     args = parser.parse_args(argv)
-    assemble(asm_path=args.asm_path, image_path=args.image_path)
+    assemble(asm_path=args.asm_path, output_path=args.output_path)

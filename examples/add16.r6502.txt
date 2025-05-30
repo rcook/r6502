@@ -1,0 +1,10 @@
+ 0E00  00 00                                            |..              |
+ 0E02  18        CLC  
+ 0E03  AD 16 0E  LDA  $0E16
+ 0E06  6D 18 0E  ADC  $0E18
+ 0E09  8D 00 0E  STA  $0E00
+ 0E0C  AD 17 0E  LDA  $0E17
+ 0E0F  6D 19 0E  ADC  $0E19
+ 0E12  8D 01 0E  STA  $0E01
+ 0E15  60        RTS  
+ 0E16  12 34 56 78                                      |.4Vx            |
