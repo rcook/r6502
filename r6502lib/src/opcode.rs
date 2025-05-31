@@ -49,14 +49,23 @@ pub(crate) enum Opcode {
     Cli = 0x58,
     #[strum(props(mnemonic = "Clv"))]
     Clv = 0xb8,
+
     #[strum(props(mnemonic = "CMP"))]
     CmpAbs = 0xcd,
     #[strum(props(mnemonic = "CMP"))]
     CmpAbsX = 0xdd,
     #[strum(props(mnemonic = "CMP"))]
+    CmpAbsY = 0xd9,
+    #[strum(props(mnemonic = "CMP"))]
     CmpImm = 0xc9,
     #[strum(props(mnemonic = "CMP"))]
+    CmpIndX = 0xc1,
+    #[strum(props(mnemonic = "CMP"))]
+    CmpIndY = 0xd1,
+    #[strum(props(mnemonic = "CMP"))]
     CmpZp = 0xc5,
+    #[strum(props(mnemonic = "CMP"))]
+    CmpZpX = 0xd5,
     #[strum(props(mnemonic = "CPX"))]
     CpxAbs = 0xec,
     #[strum(props(mnemonic = "CPX"))]

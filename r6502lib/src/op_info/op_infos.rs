@@ -28,8 +28,12 @@ mod items {
     pub(crate) const CLV: OpInfo = implied!(Clv, clv);
     pub(crate) const CMP_ABS: OpInfo = absolute_wrapped!(CmpAbs, cmp);
     pub(crate) const CMP_ABS_X: OpInfo = absolute_x_wrapped!(CmpAbsX, cmp);
+    pub(crate) const CMP_ABS_Y: OpInfo = absolute_y_wrapped!(CmpAbsY, cmp);
     pub(crate) const CMP_IMM: OpInfo = immediate!(CmpImm, cmp);
+    pub(crate) const CMP_IND_X: OpInfo = indexed_indirect_x_wrapped!(CmpIndX, cmp);
+    pub(crate) const CMP_IND_Y: OpInfo = indirect_indexed_y_wrapped!(CmpIndY, cmp);
     pub(crate) const CMP_ZP: OpInfo = zero_page_wrapped!(CmpZp, cmp);
+    pub(crate) const CMP_ZP_X: OpInfo = zero_page_x_wrapped!(CmpZpX, cmp);
     pub(crate) const CPX_ABS: OpInfo = absolute_wrapped!(CpxAbs, cpx);
     pub(crate) const CPX_IMM: OpInfo = immediate!(CpxImm, cpx);
     pub(crate) const CPX_ZP: OpInfo = zero_page_wrapped!(CpxZp, cpx);

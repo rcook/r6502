@@ -95,6 +95,7 @@ pub(crate) mod absolute_y {
     }
 
     wrap!(adc, 4, 5);
+    wrap!(cmp, 4, 5);
     wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
@@ -111,6 +112,7 @@ pub(crate) mod indexed_indirect_x {
     }
 
     wrap!(adc, 6);
+    wrap!(cmp, 6);
     wrap!(sbc, 6);
 }
 
@@ -133,6 +135,7 @@ pub(crate) mod indirect_indexed_y {
     }
 
     wrap!(adc, 5, 6);
+    wrap!(cmp, 5, 6);
     wrap!(lda, 5, 6);
     wrap!(sbc, 5, 6);
 }
@@ -179,5 +182,6 @@ pub(crate) mod zero_page_x {
     }
 
     wrap!(adc, 4);
+    wrap!(cmp, 4);
     wrap!(sbc, 4);
 }
