@@ -29,7 +29,7 @@ pub(crate) use binding::Binding;
 #[allow(unused)]
 pub(crate) use byte_op::ByteOp;
 #[allow(unused)]
-pub(crate) use constants::{IRQ, OSWRCH, STACK_BASE};
+pub(crate) use constants::{IRQ, MAGIC_NUMBER, OSWRCH, STACK_BASE};
 pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
 #[allow(unused)]
