@@ -24,6 +24,7 @@ pub(crate) mod absolute {
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
+    wrap!(sbc, 4);
     wrap_store!(sta, 4);
 }
 
@@ -59,6 +60,7 @@ pub(crate) mod absolute_x {
     wrap!(adc, 4, 5);
     wrap!(cmp, 4, 5);
     wrap!(lda, 4, 5);
+    wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
 
@@ -93,6 +95,7 @@ pub(crate) mod absolute_y {
     }
 
     wrap!(adc, 4, 5);
+    wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
 
@@ -108,6 +111,7 @@ pub(crate) mod indexed_indirect_x {
     }
 
     wrap!(adc, 6);
+    wrap!(sbc, 6);
 }
 
 pub(crate) mod indirect_indexed_y {
@@ -130,6 +134,7 @@ pub(crate) mod indirect_indexed_y {
 
     wrap!(adc, 5, 6);
     wrap!(lda, 5, 6);
+    wrap!(sbc, 5, 6);
 }
 
 pub(crate) mod zero_page {
@@ -158,6 +163,7 @@ pub(crate) mod zero_page {
     wrap!(lda, 3);
     wrap!(ldx, 3);
     wrap!(ldy, 3);
+    wrap!(sbc, 3);
     wrap_store!(sta, 3);
 }
 
@@ -173,4 +179,5 @@ pub(crate) mod zero_page_x {
     }
 
     wrap!(adc, 4);
+    wrap!(sbc, 4);
 }

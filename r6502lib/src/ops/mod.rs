@@ -10,7 +10,7 @@ mod register;
 mod stack;
 mod store;
 
-pub(crate) use arithmetic::adc;
+pub(crate) use arithmetic::{adc, sbc};
 pub(crate) use branch::{bcc, bcs, beq, bmi, bne, bpl, bvc, bvs};
 pub(crate) use compare::{cmp, cpx, cpy};
 pub(crate) use flag::{clc, cld, cli, clv, sec, sed, sei};

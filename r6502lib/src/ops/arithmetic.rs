@@ -28,10 +28,22 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
     2
 }
 
+// http://www.6502.org/tutorials/6502opcodes.html#SBC
+// http://www.6502.org/users/obelisk/6502/reference.html#SBC
+// https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
+pub(crate) fn sbc(s: &mut VmState, operand: u8) -> Cycles {
+    if get!(s.reg, D) {
+        todo!("Decimal mode not implemented")
+    }
+
+    adc(s, !operand)
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::ops::arithmetic::adc;
-    use crate::{reg, Memory, Reg, VmState};
+    use crate::ops::arithmetic::{adc, sbc};
+    use crate::{reg, Reg, VmStateBuilder};
+    use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
@@ -45,13 +57,21 @@ mod tests {
     #[case(reg!(0x01, 0x0000, C), reg!(0xff, 0x0000, C), 0x01)]
     // LDA #1; PHP; LDA #$12; PLP; CLC; ADC #$34
     #[case(reg!(0x46, 0x0000), reg!(0x12, 0x0000), 0x34)]
-    fn basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) {
-        let mut s = VmState {
-            reg,
-            memory: Memory::new(),
-        };
+    fn adc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
+        let mut s = VmStateBuilder::default().reg(reg).build()?;
         let cycles = adc(&mut s, operand);
         assert_eq!(2, cycles);
         assert_eq!(expected_reg, s.reg);
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(reg!(0xfe, 0x0000, N, C), reg!(0xff, 0x0000, C), 0x01)]
+    fn sbc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
+        let mut s = VmStateBuilder::default().reg(reg).build()?;
+        let cycles = sbc(&mut s, operand);
+        assert_eq!(2, cycles);
+        assert_eq!(expected_reg, s.reg);
+        Ok(())
     }
 }

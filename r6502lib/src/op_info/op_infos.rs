@@ -59,6 +59,14 @@ mod items {
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
     pub(crate) const PLP: OpInfo = implied!(Plp, plp);
     pub(crate) const RTS: OpInfo = implied!(Rts, rts);
+    pub(crate) const SBC_ABS: OpInfo = absolute_wrapped!(SbcAbs, sbc);
+    pub(crate) const SBC_ABS_X: OpInfo = absolute_x_wrapped!(SbcAbsX, sbc);
+    pub(crate) const SBC_ABS_Y: OpInfo = absolute_y_wrapped!(SbcAbsY, sbc);
+    pub(crate) const SBC_IMM: OpInfo = immediate!(SbcImm, sbc);
+    pub(crate) const SBC_IND_X: OpInfo = indexed_indirect_x_wrapped!(SbcIndX, sbc);
+    pub(crate) const SBC_IND_Y: OpInfo = indirect_indexed_y_wrapped!(SbcIndY, sbc);
+    pub(crate) const SBC_ZP: OpInfo = zero_page_wrapped!(SbcZp, sbc);
+    pub(crate) const SBC_ZP_X: OpInfo = zero_page_x_wrapped!(SbcZpX, sbc);
     pub(crate) const SEC: OpInfo = implied!(Sec, sec);
     pub(crate) const SED: OpInfo = implied!(Sed, sed);
     pub(crate) const SEI: OpInfo = implied!(Sei, sei);

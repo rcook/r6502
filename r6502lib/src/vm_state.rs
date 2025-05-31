@@ -1,9 +1,14 @@
 use crate::util::{make_word, split_word};
 use crate::{Memory, Reg, STACK_BASE};
+use derive_builder::Builder;
 
-#[derive(Default)]
+#[derive(Builder, Default)]
+#[builder(pattern = "owned")]
 pub(crate) struct VmState {
+    #[builder(default)]
     pub(crate) reg: Reg,
+
+    #[builder(default)]
     pub(crate) memory: Memory,
 }
 
