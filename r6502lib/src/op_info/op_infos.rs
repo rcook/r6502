@@ -85,7 +85,10 @@ mod items {
     pub(crate) const STA_ABS: OpInfo = absolute_wrapped!(StaAbs, sta);
     pub(crate) const STA_ABS_X: OpInfo = absolute_x_wrapped!(StaAbsX, sta);
     pub(crate) const STA_ABS_Y: OpInfo = absolute_y_wrapped!(StaAbsY, sta);
+    pub(crate) const STA_IND_X: OpInfo = indexed_indirect_x_wrapped!(StaIndX, sta);
+    pub(crate) const STA_IND_Y: OpInfo = indirect_indexed_y_wrapped!(StaIndY, sta);
     pub(crate) const STA_ZP: OpInfo = zero_page_wrapped!(StaZp, sta);
+    pub(crate) const STA_ZP_X: OpInfo = zero_page_x_wrapped!(StaZpX, sta);
     pub(crate) const TAX: OpInfo = implied!(Tax, tax);
     pub(crate) const TAY: OpInfo = implied!(Tay, tay);
     pub(crate) const TXA: OpInfo = implied!(Txa, txa);

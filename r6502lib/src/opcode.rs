@@ -169,7 +169,13 @@ pub(crate) enum Opcode {
     #[strum(props(mnemonic = "STA"))]
     StaAbsY = 0x99,
     #[strum(props(mnemonic = "STA"))]
+    StaIndX = 0x81,
+    #[strum(props(mnemonic = "STA"))]
+    StaIndY = 0x91,
+    #[strum(props(mnemonic = "STA"))]
     StaZp = 0x85,
+    #[strum(props(mnemonic = "STA"))]
+    StaZpX = 0x95,
     #[strum(props(mnemonic = "TAX"))]
     Tax = 0xaa,
     #[strum(props(mnemonic = "TAY"))]
