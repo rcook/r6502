@@ -88,6 +88,8 @@ pub(crate) enum Opcode {
     Iny = 0xc8,
     #[strum(props(mnemonic = "JMP"))]
     JmpAbs = 0x4c,
+    #[strum(props(mnemonic = "JMP"))]
+    JmpInd = 0x6c,
     #[strum(props(mnemonic = "JSR"))]
     Jsr = 0x20,
     #[strum(props(mnemonic = "LDA"))]

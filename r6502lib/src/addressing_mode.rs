@@ -9,6 +9,7 @@ pub(crate) enum AddressingMode {
     Immediate,
     Implied,
     IndexedIndirectX,
+    Indirect,
     IndirectIndexedY,
     Relative,
     ZeroPage,
@@ -60,6 +61,14 @@ impl AddressingMode {
             Self::IndexedIndirectX => match instruction_info.operand {
                 Operand::Byte(value) => Ok(format!(
                     "{} (${:02X},X)",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
+            },
+            Self::Indirect => match instruction_info.operand {
+                Operand::Byte(value) => Ok(format!(
+                    "{} (${:02X})",
                     instruction_info.opcode.mnemonic(),
                     value
                 )),

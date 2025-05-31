@@ -45,6 +45,7 @@ mod items {
     pub(crate) const INX: OpInfo = implied!(Inx, inx);
     pub(crate) const INY: OpInfo = implied!(Iny, iny);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);
+    pub(crate) const JMP_IND: OpInfo = indirect!(JmpInd, jmp);
     pub(crate) const JSR: OpInfo = absolute!(Jsr, jsr);
     pub(crate) const LDA_ABS: OpInfo = absolute_wrapped!(LdaAbs, lda);
     pub(crate) const LDA_ABS_X: OpInfo = absolute_x_wrapped!(LdaAbsX, lda);

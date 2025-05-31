@@ -34,6 +34,18 @@ macro_rules! implied {
 
 pub(crate) use implied;
 
+macro_rules! indirect {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo {
+            opcode: $crate::Opcode::$opcode,
+            addressing_mode: $crate::AddressingMode::Indirect,
+            op: $crate::Op::Word($crate::WordOp::new($crate::ops::$f)),
+        }
+    };
+}
+
+pub(crate) use indirect;
+
 macro_rules! relative {
     ($opcode: ident, $f: ident) => {
         $crate::OpInfo {
