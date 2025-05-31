@@ -12,18 +12,9 @@ pub(crate) struct Args {
     #[clap(long="start", value_parser=maybe_hex::<u16>)]
     pub(crate) start: Option<u16>,
 
-    #[arg(
-        help = "Launch in debugger [default]",
-        long = "no-debug",
-        default_value_t = true,
-        action = ArgAction::SetFalse
-    )]
+    #[arg(help = "Launch in debugger", long = "debug", default_value_t = false)]
     pub(crate) debug: bool,
 
-    #[arg(
-        help = "Do not launch in debugger",
-        long = "debug",
-        overrides_with = "debug"
-    )]
-    _no_debug: bool,
+    #[arg(help = "Trace execution [", long = "trace", default_value_t = false)]
+    pub(crate) trace: bool,
 }

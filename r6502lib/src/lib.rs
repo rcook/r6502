@@ -26,39 +26,32 @@ mod word_op;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
-#[allow(unused)]
-pub(crate) use byte_op::ByteOp;
-#[allow(unused)]
-pub(crate) use constants::{IRQ, MAGIC_NUMBER, OSWRCH, STACK_BASE};
-pub(crate) use cpu::Cpu;
 pub(crate) use cycles::Cycles;
-#[allow(unused)]
-pub(crate) use image::Image;
 pub(crate) use instruction::Instruction;
-pub(crate) use instruction_info::InstructionInfo;
-pub(crate) use memory::Memory;
 #[allow(unused)]
-pub(crate) use monitor::{DummyMonitor, Monitor, TracingMonitor};
-#[allow(unused)]
-pub(crate) use no_operand_op::{NoOperandFn, NoOperandOp};
+pub(crate) use no_operand_op::NoOperandFn;
 #[allow(unused)]
 pub(crate) use op::Op;
-#[allow(unused)]
-pub(crate) use op_info::OpInfo;
-pub(crate) use opcode::Opcode;
 pub(crate) use operand::Operand;
 #[allow(unused)]
-pub(crate) use os::set_up_os;
+pub(crate) use p::{p, P_STR};
 #[allow(unused)]
-pub(crate) use p::{get, p, set, value, P, P_STR};
-#[allow(unused)]
-pub(crate) use reg::{reg, Reg};
-#[allow(unused)]
-pub(crate) use vm::{Vm, VmBuilder, VmBuilderError};
-#[allow(unused)]
-pub(crate) use vm_state::{VmState, VmStateBuilder, VmStateBuilderError};
-#[allow(unused)]
-pub(crate) use word_op::WordOp;
+pub(crate) use reg::reg;
 
-//
+pub use byte_op::ByteOp;
+pub use constants::{IRQ, IRQ_VALUE, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
+pub use cpu::Cpu;
+pub use image::Image;
+pub use instruction_info::InstructionInfo;
+pub use memory::Memory;
+pub use monitor::{DummyMonitor, Monitor, TracingMonitor};
+pub use no_operand_op::NoOperandOp;
+pub use op_info::OpInfo;
+pub use opcode::Opcode;
+pub use os::{Os, OsBuilder, OsBuilderError};
+pub use p::P;
+pub use reg::Reg;
 pub use symbol_info::SymbolInfo;
+pub use vm::{Vm, VmBuilder, VmBuilderError};
+pub use vm_state::{VmState, VmStateBuilder, VmStateBuilderError};
+pub use word_op::WordOp;

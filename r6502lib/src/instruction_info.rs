@@ -3,7 +3,7 @@ use crate::{Binding, Cpu, Instruction, Opcode, Operand};
 use anyhow::{anyhow, Result};
 
 #[allow(unused)]
-pub(crate) struct InstructionInfo {
+pub struct InstructionInfo {
     pub(crate) pc: u16,
     pub(crate) opcode: Opcode,
     pub(crate) operand: Operand,

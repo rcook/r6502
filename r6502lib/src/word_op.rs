@@ -3,7 +3,7 @@ use crate::{Cycles, VmState};
 pub(crate) type WordOpFn = fn(&mut VmState, u16) -> Cycles;
 
 #[derive(Clone)]
-pub(crate) struct WordOp(WordOpFn);
+pub struct WordOp(WordOpFn);
 
 impl WordOp {
     pub(crate) const fn new(f: WordOpFn) -> Self {

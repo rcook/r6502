@@ -6,23 +6,16 @@ use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
 use std::str::FromStr;
 
-pub(crate) struct Image {
-    #[allow(unused)]
-    pub(crate) origin: u16,
-
-    #[allow(unused)]
-    pub(crate) start: u16,
-
-    #[allow(unused)]
-    pub(crate) values: Vec<u8>,
-
-    #[allow(unused)]
-    pub(crate) symbols: Vec<SymbolInfo>,
+pub struct Image {
+    pub origin: u16,
+    pub start: u16,
+    pub values: Vec<u8>,
+    pub symbols: Vec<SymbolInfo>,
 }
 
 #[allow(unused)]
 impl Image {
-    pub(crate) fn load(
+    pub fn load(
         path: &Path,
         default_origin: Option<u16>,
         default_start: Option<u16>,

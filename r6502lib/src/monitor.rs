@@ -1,6 +1,6 @@
 use crate::{Cpu, Cycles, InstructionInfo, Reg, P_STR};
 
-pub(crate) trait Monitor {
+pub trait Monitor {
     fn on_before_fetch(&self, _reg: &Reg) {}
     fn on_before_execute(&self, _cpu: &Cpu, _reg: &Reg, _instruction: &InstructionInfo) {}
     fn on_after_execute(
@@ -13,13 +13,11 @@ pub(crate) trait Monitor {
     }
 }
 
-#[allow(unused)]
-pub(crate) struct DummyMonitor;
+pub struct DummyMonitor;
 
 impl Monitor for DummyMonitor {}
 
-#[allow(unused)]
-pub(crate) struct TracingMonitor;
+pub struct TracingMonitor;
 
 impl Monitor for TracingMonitor {
     fn on_before_execute(&self, cpu: &Cpu, reg: &Reg, instruction: &InstructionInfo) {

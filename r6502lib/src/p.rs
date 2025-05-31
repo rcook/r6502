@@ -5,7 +5,7 @@ pub(crate) const P_STR: &str = "NV1BDIZC";
 // Reference: https://www.nesdev.org/wiki/Status_flags
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq)]
-    pub(crate) struct P: u8 {
+    pub struct P: u8 {
         const N = 0b1000000; // Negative
         const V = 0b0100000; // Overflow
         const ONE = 0b00100000; // Always 1
@@ -39,17 +39,17 @@ macro_rules! p {
 
 pub(crate) use p;
 
-macro_rules! get {
+#[macro_export]
+macro_rules! p_get {
     ($reg: expr, $flag: ident) => {
         $reg.p.contains($crate::P::$flag)
     };
 }
 
-pub(crate) use get;
-
-macro_rules! value {
+#[macro_export]
+macro_rules! p_value {
     ($reg: expr, $flag: ident) => {
-        if $crate::get!($reg, $flag) {
+        if $crate::p_get!($reg, $flag) {
             1
         } else {
             0
@@ -57,15 +57,12 @@ macro_rules! value {
     };
 }
 
-pub(crate) use value;
-
-macro_rules! set {
+#[macro_export]
+macro_rules! p_set {
     ($reg: expr, $flag: ident, $value: expr) => {
         $reg.p.set($crate::P::$flag, $value)
     };
 }
-
-pub(crate) use set;
 
 #[cfg(test)]
 mod tests {

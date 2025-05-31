@@ -4,33 +4,32 @@ use derive_builder::Builder;
 
 #[derive(Builder, Default)]
 #[builder(pattern = "owned")]
-pub(crate) struct VmState {
+pub struct VmState {
     #[builder(default)]
-    pub(crate) reg: Reg,
+    pub reg: Reg,
 
     #[builder(default)]
-    pub(crate) memory: Memory,
+    pub memory: Memory,
 }
 
 impl VmState {
-    pub(crate) fn push(&mut self, value: u8) {
+    pub fn push(&mut self, value: u8) {
         self.set_stack_value(value);
         self.reg.s = self.reg.s.wrapping_sub(1);
     }
 
-    pub(crate) fn pull(&mut self) -> u8 {
+    pub fn pull(&mut self) -> u8 {
         self.reg.s = self.reg.s.wrapping_add(1);
         self.get_stack_value()
     }
 
-    pub(crate) fn push_word(&mut self, value: u16) {
+    pub fn push_word(&mut self, value: u16) {
         let (hi, lo) = split_word(value);
         self.push(hi);
         self.push(lo);
     }
 
-    #[allow(unused)]
-    pub(crate) fn pull_word(&mut self) -> u16 {
+    pub fn pull_word(&mut self) -> u16 {
         let lo = self.pull();
         let hi = self.pull();
         make_word(hi, lo)

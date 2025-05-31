@@ -1,5 +1,5 @@
 use crate::ops::helper::{is_neg, is_zero};
-use crate::{set, Cycles, VmState, P};
+use crate::{p_set, Cycles, VmState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
@@ -20,8 +20,8 @@ pub(crate) fn php(s: &mut VmState) -> Cycles {
 pub(crate) fn pla(s: &mut VmState) -> Cycles {
     let value = s.pull();
     s.reg.a = value;
-    set!(s.reg, N, is_neg(value));
-    set!(s.reg, Z, is_zero(value));
+    p_set!(s.reg, N, is_neg(value));
+    p_set!(s.reg, Z, is_zero(value));
     4
 }
 

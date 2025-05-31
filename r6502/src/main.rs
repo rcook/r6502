@@ -1,7 +1,7 @@
+#![allow(unused)]
+
 mod addressing_mode;
 mod args;
-mod cli_host;
-mod constants;
 mod debug_message;
 mod flag;
 mod image_info;
@@ -26,8 +26,6 @@ mod vm_host;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use args::Args;
-pub(crate) use cli_host::CliHost;
-pub(crate) use constants::{IRQ, IRQ_VALUE, OSHALT, OSWRCH, STACK_BASE};
 pub(crate) use debug_message::DebugMessage;
 pub(crate) use flag::Flag;
 pub(crate) use image_info::ImageInfo;

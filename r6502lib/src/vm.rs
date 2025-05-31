@@ -1,22 +1,21 @@
-use crate::{get, Cpu, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
+use crate::{p_get, Cpu, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
 use derive_builder::Builder;
 use std::result::Result as StdResult;
 
-#[allow(unused)]
 #[derive(Builder)]
 #[builder(pattern = "owned")]
-pub(crate) struct Vm {
+pub struct Vm {
     #[builder(default = "self.default_monitor()?")]
-    pub(crate) monitor: Box<dyn Monitor>,
+    pub monitor: Box<dyn Monitor>,
 
     #[builder(default)]
-    pub(crate) cpu: Cpu,
+    pub cpu: Cpu,
 
     #[builder(default)]
-    pub(crate) s: VmState,
+    pub s: VmState,
 
     #[builder(default = "0")]
-    pub(crate) cycles: u32,
+    pub cycles: u32,
 }
 
 impl Default for Vm {
@@ -37,7 +36,7 @@ impl Vm {
     }
 
     #[must_use]
-    pub(crate) fn step(&mut self) -> bool {
+    pub fn step(&mut self) -> bool {
         self.monitor.on_before_fetch(&self.s.reg);
         let instruction = Instruction::fetch(&self.cpu, &mut self.s);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
@@ -47,7 +46,7 @@ impl Vm {
         self.monitor
             .on_after_execute(&self.cpu, &self.s.reg, &instruction_info, cycles);
         self.cycles += cycles as u32;
-        !get!(self.s.reg, B)
+        !p_get!(self.s.reg, B)
     }
 
     pub(crate) fn run_until_brk(&mut self) {
@@ -64,7 +63,7 @@ impl VmBuilder {
 #[cfg(test)]
 mod tests {
     use crate::{
-        get, p, set, set_up_os, DummyMonitor, Image, Monitor, Opcode, TracingMonitor, Vm,
+        p, p_get, p_set, DummyMonitor, Image, Monitor, Opcode, OsBuilder, TracingMonitor, Vm,
         VmBuilder, IRQ, OSWRCH, P,
     };
     use anyhow::Result;
@@ -144,37 +143,39 @@ mod tests {
         vm.s.reg.pc = 0x1000;
         vm.s.memory[0x1000] = Opcode::Brk as u8;
         vm.s.memory.store_word(IRQ, 0x9876);
-        set!(vm.s.reg, B, false);
+        p_set!(vm.s.reg, B, false);
         assert!(!vm.step());
         assert_eq!(7, vm.cycles);
-        assert!(get!(vm.s.reg, B));
+        assert!(p_get!(vm.s.reg, B));
         assert_eq!(0x9876, vm.s.reg.pc);
     }
 
     #[test]
-    fn jsr_software_interrupt() {
+    fn jsr_software_interrupt() -> Result<()> {
         const START: u16 = 0x1000;
-        const OS: u16 = 0x2000;
         let p_test = P::D | P::ONE;
 
         let mut vm = Vm::default();
-        set_up_os(&mut vm, OS);
+        let os = OsBuilder::default().build()?;
+        os.initialize(&mut vm.s.memory);
 
         vm.s.memory[START] = Opcode::Jsr as u8;
         vm.s.memory.store_word(START + 1, OSWRCH);
 
         vm.s.reg.pc = START;
         vm.s.reg.p = p_test;
-        set!(vm.s.reg, B, false);
+        p_set!(vm.s.reg, B, false);
 
         assert!(vm.step());
         assert_eq!(6, vm.cycles);
-        assert!(!get!(vm.s.reg, B));
+        assert!(!p_get!(vm.s.reg, B));
         assert_eq!(OSWRCH, vm.s.reg.pc);
 
         assert!(!vm.step());
         assert_eq!(13, vm.cycles);
-        assert_eq!(Some(OSWRCH), os_brk_addr(&vm, OS));
+        assert_eq!(Some(OSWRCH), os.is_os_vector_brk(&vm));
+
+        Ok(())
     }
 
     #[rstest]
@@ -215,17 +216,7 @@ mod tests {
         Ok(())
     }
 
-    fn os_brk_addr(vm: &Vm, os: u16) -> Option<u16> {
-        if get!(vm.s.reg, B) && vm.s.reg.pc == os {
-            let addr = vm.s.peek_back_word(1).wrapping_sub(1);
-            Some(addr)
-        } else {
-            None
-        }
-    }
-
     fn capture_stdout(input: &str, start: Option<u16>, trace: bool) -> Result<String> {
-        const OS: u16 = 0x2000;
         const RETURN_ADDR: u16 = 0x1234;
 
         let image = input.parse::<Image>()?;
@@ -237,22 +228,25 @@ mod tests {
         };
 
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
+        let os = OsBuilder::default()
+            .os_vectors(vec![RETURN_ADDR, OSWRCH])
+            .build()?;
+        os.initialize(&mut vm.s.memory);
         let rts = vm
             .cpu
             .get_op_info(&Opcode::Rts)
             .expect("RTS must exist")
             .clone();
-        set_up_os(&mut vm, OS);
         vm.s.memory.load(&image);
         vm.s.push_word(RETURN_ADDR - 1);
         vm.s.reg.pc = start.unwrap_or(image.origin);
-        set!(vm.s.reg, B, false);
+        p_set!(vm.s.reg, B, false);
 
         let mut result = String::new();
         loop {
             while vm.step() {}
 
-            match os_brk_addr(&vm, OS) {
+            match os.is_os_vector_brk(&vm) {
                 Some(RETURN_ADDR) => break,
                 Some(OSWRCH) => {
                     result.push(vm.s.reg.a as char);
@@ -263,7 +257,7 @@ mod tests {
                     // Is this equivalent to RTI?
                     vm.s.pull();
                     vm.s.pull_word();
-                    set!(vm.s.reg, B, false);
+                    p_set!(vm.s.reg, B, false);
                     rts.op.execute_no_operand(&mut vm.s);
                 }
                 _ => panic!("expectation failed"),

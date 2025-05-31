@@ -1,14 +1,19 @@
 #![allow(unused)]
-use crate::{run_vm, Args, CliHost, ImageSource, TestHost, UIHost, UI};
+use crate::{run_vm, Args, ImageSource, TestHost, UIHost, UI};
 use anyhow::Result;
 use clap::Parser;
+use r6502lib::{
+    p_set, DummyMonitor, Image, Monitor, Opcode, OsBuilder, TracingMonitor, Vm, VmBuilder, OSHALT,
+    OSWRCH,
+};
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
     let args = Args::parse();
-    let image_source = Some(ImageSource::from_file(&args.path, args.origin, args.start));
+    let image = Image::load(&args.path, args.origin, args.start)?;
     if args.debug {
+        /*
         let debug_channel = channel();
         let status_channel = channel();
         let symbols = match image_source.as_ref() {
@@ -21,10 +26,53 @@ pub(crate) fn run() -> Result<()> {
             run_vm(&ui_host, image_source, !args.debug).expect("Must succeed");
         });
         ui.run();
+        */
+        todo!();
     } else {
-        let cli_host = CliHost::new();
-        run_vm(&cli_host, image_source, !args.debug)?;
+        run_cli_host(&image, args.trace)?;
     }
+    Ok(())
+}
+
+fn run_cli_host(image: &Image, trace: bool) -> Result<()> {
+    let monitor: Box<dyn Monitor> = if trace {
+        Box::new(TracingMonitor)
+    } else {
+        Box::new(DummyMonitor)
+    };
+
+    let mut vm = VmBuilder::default().monitor(monitor).build()?;
+    let os = OsBuilder::default().build()?;
+
+    let rts = vm
+        .cpu
+        .get_op_info(&Opcode::Rts)
+        .expect("RTS must exist")
+        .clone();
+
+    os.initialize(&mut vm.s.memory);
+    vm.s.memory.load(image);
+    vm.s.push_word(OSHALT - 1);
+    vm.s.reg.pc = image.start;
+
+    loop {
+        while vm.step() {}
+
+        match os.is_os_vector_brk(&vm) {
+            Some(OSHALT) => {
+                break;
+            }
+            Some(OSWRCH) => {
+                print!("{}", vm.s.reg.a as char);
+                vm.s.pull(); // Is this P?
+                vm.s.pull_word(); // What's this?
+                p_set!(vm.s.reg, B, false);
+                rts.op.execute_no_operand(&mut vm.s);
+            }
+            _ => todo!(),
+        }
+    }
+
     Ok(())
 }
 

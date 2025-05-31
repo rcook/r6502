@@ -3,13 +3,13 @@ use crate::P;
 const DEFAULT_S: u8 = 0xff;
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Reg {
-    pub(crate) a: u8,
-    pub(crate) x: u8,
-    pub(crate) y: u8,
-    pub(crate) p: P,
-    pub(crate) pc: u16,
-    pub(crate) s: u8,
+pub struct Reg {
+    pub a: u8,
+    pub x: u8,
+    pub y: u8,
+    pub p: P,
+    pub pc: u16,
+    pub s: u8,
 }
 
 impl Default for Reg {

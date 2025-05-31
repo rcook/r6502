@@ -2,13 +2,13 @@ use crate::op_info::op_infos::{Item, CONSTS};
 use crate::{AddressingMode, Op, Opcode};
 
 #[derive(Clone)]
-pub(crate) struct OpInfo {
+pub struct OpInfo {
     #[allow(unused)]
     pub(crate) opcode: Opcode,
     #[allow(unused)]
     pub(crate) addressing_mode: AddressingMode,
-    #[allow(unused)]
-    pub(crate) op: Op,
+
+    pub op: Op,
 }
 
 impl OpInfo {

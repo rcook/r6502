@@ -1,4 +1,5 @@
-use crate::{make_word, split_word, Flag, Memory, RegisterFile, STACK_BASE};
+use crate::{make_word, split_word, Flag, Memory, RegisterFile};
+use r6502lib::STACK_BASE;
 
 pub(crate) struct MachineState {
     pub(crate) reg: RegisterFile,

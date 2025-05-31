@@ -1,4 +1,4 @@
-use crate::{set, Cycles, VmState, P};
+use crate::{p_set, Cycles, VmState, P};
 
 pub(crate) fn sign(value: u8) -> bool {
     (value & 0b10000000) != 0
@@ -24,15 +24,15 @@ pub(crate) fn is_carry(value: u16) -> bool {
 }
 
 pub(crate) fn set_flags_on_value(s: &mut VmState, operand: u8) {
-    set!(s.reg, N, is_neg(operand));
-    set!(s.reg, Z, is_zero(operand));
+    p_set!(s.reg, N, is_neg(operand));
+    p_set!(s.reg, Z, is_zero(operand));
 }
 
 pub(crate) fn set_flags_on_compare(s: &mut VmState, operand: u8) {
     let neg = is_neg(operand);
-    set!(s.reg, N, neg);
-    set!(s.reg, Z, operand == 0);
-    set!(s.reg, C, !neg);
+    p_set!(s.reg, N, neg);
+    p_set!(s.reg, Z, operand == 0);
+    p_set!(s.reg, C, !neg);
 }
 
 pub(crate) fn branch(s: &mut VmState, operand: u8, p: P, flag_value: bool) -> Cycles {

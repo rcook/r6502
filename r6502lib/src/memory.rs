@@ -4,7 +4,7 @@ use crate::{
 };
 use std::ops::{Index, IndexMut};
 
-pub(crate) struct Memory([u8; 0x10000]);
+pub struct Memory([u8; 0x10000]);
 
 impl Default for Memory {
     fn default() -> Self {
@@ -18,8 +18,7 @@ impl Memory {
         Self::default()
     }
 
-    #[allow(unused)]
-    pub(crate) fn load(&mut self, image: &Image) {
+    pub fn load(&mut self, image: &Image) {
         let origin = image.origin as usize;
         let limit = origin + image.values.len();
         self.0[origin..limit].copy_from_slice(&image.values);

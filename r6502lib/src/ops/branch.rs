@@ -52,7 +52,7 @@ pub(crate) fn bvs(s: &mut VmState, operand: u8) -> Cycles {
 #[cfg(test)]
 mod tests {
     use crate::ops::branch::beq;
-    use crate::{set, Cycles, VmState};
+    use crate::{p_set, Cycles, VmState};
     use rstest::rstest;
 
     #[rstest]
@@ -68,7 +68,7 @@ mod tests {
         #[case] operand: u8,
     ) {
         let mut s = VmState::default();
-        set!(s.reg, Z, flag_value);
+        p_set!(s.reg, Z, flag_value);
         s.reg.pc = pc;
         let cycles = beq(&mut s, operand);
         assert_eq!(expected_cycles, cycles);

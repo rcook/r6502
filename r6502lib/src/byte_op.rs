@@ -3,7 +3,7 @@ use crate::{Cycles, VmState};
 pub(crate) type ByteOpFn = fn(&mut VmState, u8) -> Cycles;
 
 #[derive(Clone)]
-pub(crate) struct ByteOp(ByteOpFn);
+pub struct ByteOp(ByteOpFn);
 
 impl ByteOp {
     pub(crate) const fn new(f: ByteOpFn) -> Self {

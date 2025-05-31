@@ -1,18 +1,18 @@
 use crate::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
-use crate::{get, set, value, Cycles, VmState};
+use crate::{p_get, p_value, p_set, Cycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
-    if get!(s.reg, D) {
+    if p_get!(s.reg, D) {
         todo!("Decimal mode not implemented")
     }
 
     let lhs = s.reg.a;
     let rhs = operand;
 
-    let value_word = lhs as u16 + rhs as u16 + value!(s.reg, C);
+    let value_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
     let value = value_word as u8;
 
     let neg = is_neg(value);
@@ -21,10 +21,10 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
     let carry = is_carry(value_word);
 
     s.reg.a = value;
-    set!(s.reg, N, neg);
-    set!(s.reg, V, overflow);
-    set!(s.reg, Z, zero);
-    set!(s.reg, C, carry);
+    p_set!(s.reg, N, neg);
+    p_set!(s.reg, V, overflow);
+    p_set!(s.reg, Z, zero);
+    p_set!(s.reg, C, carry);
     2
 }
 
@@ -32,7 +32,7 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
 // http://www.6502.org/users/obelisk/6502/reference.html#SBC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub(crate) fn sbc(s: &mut VmState, operand: u8) -> Cycles {
-    if get!(s.reg, D) {
+    if p_get!(s.reg, D) {
         todo!("Decimal mode not implemented")
     }
 

@@ -1,5 +1,4 @@
 use crate::Op;
-
 pub(crate) use inner::*;
 
 pub(crate) fn iter_ops() -> impl Iterator<Item = &'static Op> {
@@ -10,7 +9,9 @@ pub(crate) fn iter_ops() -> impl Iterator<Item = &'static Op> {
 
 #[iter_mod::make_items]
 mod inner {
-    use crate::{compute_branch, AddressingMode, Cycles, Flag, MachineState, Op, OpFunc, IRQ};
+    use r6502lib::IRQ;
+
+    use crate::{compute_branch, AddressingMode, Cycles, Flag, MachineState, Op, OpFunc};
 
     pub(crate) const ADC_IMM: Op = Op {
         mnemonic: "ADC",

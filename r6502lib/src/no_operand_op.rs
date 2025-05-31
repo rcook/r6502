@@ -3,7 +3,7 @@ use crate::{Cycles, VmState};
 pub(crate) type NoOperandFn = fn(&mut VmState) -> Cycles;
 
 #[derive(Clone)]
-pub(crate) struct NoOperandOp(NoOperandFn);
+pub struct NoOperandOp(NoOperandFn);
 
 impl NoOperandOp {
     pub(crate) const fn new(f: NoOperandFn) -> Self {

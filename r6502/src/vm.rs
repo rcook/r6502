@@ -1,9 +1,10 @@
 use crate::ops::{BRK, NOP, RTI, RTS};
 use crate::{
     iter_ops, Flag, ImageSource, Instruction, MachineState, Op, OpFunc, RunVMResult, RunVMStatus,
-    Status, VMHost, IRQ, IRQ_VALUE, OSHALT, OSWRCH, STACK_BASE,
+    Status, VMHost,
 };
 use anyhow::{bail, Result};
+use r6502lib::{IRQ, IRQ_VALUE, OSHALT, OSWRCH, STACK_BASE};
 
 pub(crate) fn run_vm<H: VMHost>(
     host: &H,

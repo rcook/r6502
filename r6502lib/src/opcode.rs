@@ -6,7 +6,7 @@ use strum_macros::EnumProperty;
 
 #[derive(Clone, Copy, Debug, EnumProperty, Eq, FromPrimitive, Hash, PartialEq)]
 #[repr(u8)]
-pub(crate) enum Opcode {
+pub enum Opcode {
     #[strum(props(mnemonic = "ADC"))]
     AdcAbs = 0x6d,
     #[strum(props(mnemonic = "ADC"))]
