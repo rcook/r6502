@@ -5,8 +5,7 @@ mod items {
     use crate::op_info::macros::*;
     use crate::OpInfo;
 
-    // TBD: AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR, RTI, TSX, TXS
-    // For parity: RTI
+    // TBD: AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR, TSX, TXS
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
     pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
@@ -80,6 +79,7 @@ mod items {
     pub(crate) const PHP: OpInfo = implied!(Php, php);
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
     pub(crate) const PLP: OpInfo = implied!(Plp, plp);
+    pub(crate) const RTI: OpInfo = implied!(Rti, rti);
     pub(crate) const RTS: OpInfo = implied!(Rts, rts);
     pub(crate) const SBC_ABS: OpInfo = absolute_wrapped!(SbcAbs, sbc);
     pub(crate) const SBC_ABS_X: OpInfo = absolute_x_wrapped!(SbcAbsX, sbc);

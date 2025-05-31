@@ -1,4 +1,4 @@
-use crate::{Cycles, VmState};
+use crate::{Cycles, VmState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
@@ -11,15 +11,24 @@ pub(crate) fn jmp(s: &mut VmState, operand: u16) -> Cycles {
 // http://www.6502.org/users/obelisk/6502/reference.html#JSR
 pub(crate) fn jsr(s: &mut VmState, operand: u16) -> Cycles {
     let return_addr = s.reg.pc;
-    s.push_word(return_addr - 1);
+    s.push_word(return_addr.wrapping_sub(1));
     s.reg.pc = operand;
+    6
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#RTI
+// http://www.6502.org/users/obelisk/6502/reference.html#RTI
+pub(crate) fn rti(s: &mut VmState) -> Cycles {
+    s.reg.p = P::from_bits(s.pull()).expect("Must succeed");
+    let return_addr = s.pull_word().wrapping_add(1);
+    s.reg.pc = return_addr;
     6
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTS
 // http://www.6502.org/users/obelisk/6502/reference.html#RTS
 pub(crate) fn rts(s: &mut VmState) -> Cycles {
-    let return_addr = s.pull_word() + 1;
+    let return_addr = s.pull_word().wrapping_add(1);
     s.reg.pc = return_addr;
     6
 }

@@ -153,6 +153,8 @@ pub(crate) enum Opcode {
     Pla = 0x68,
     #[strum(props(mnemonic = "PLP"))]
     Plp = 0x28,
+    #[strum(props(mnemonic = "RTI"))]
+    Rti = 0x40,
     #[strum(props(mnemonic = "RTS"))]
     Rts = 0x60,
     #[strum(props(mnemonic = "SBC"))]
