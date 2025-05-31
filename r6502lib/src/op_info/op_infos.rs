@@ -48,6 +48,7 @@ mod absolute_x {
         };
     }
 
+    wrap!(adc, 4, 5);
     wrap!(cmp, 4, 5);
     wrap!(lda, 4, 5);
     wrap_store!(sta, 5, 5);
@@ -73,7 +74,22 @@ mod absolute_y {
         };
     }
 
+    wrap!(adc, 4, 5);
     wrap_store!(sta, 5, 5);
+}
+
+mod indexed_indirect_x {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                let effective_addr = s.memory.fetch_word(addr.wrapping_add(s.reg.x) as u16);
+                _ = $crate::ops::$f(s, s.memory[effective_addr]);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(adc, 6);
 }
 
 mod indirect_indexed_y {
@@ -90,6 +106,7 @@ mod indirect_indexed_y {
         };
     }
 
+    wrap!(adc, 5, 6);
     wrap!(lda, 5, 6);
 }
 
@@ -120,6 +137,20 @@ mod zero_page {
     wrap!(ldx, 3);
     wrap!(ldy, 3);
     wrap_store!(sta, 3);
+}
+
+mod zero_page_x {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                let effective_addr = addr.wrapping_add(s.reg.x);
+                _ = $crate::ops::$f(s, s.memory[effective_addr as u16]);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(adc, 4);
 }
 
 #[iter_mod::make_items]
@@ -200,6 +231,18 @@ mod items {
         };
     }
 
+    macro_rules! indexed_indirect_x_wrapped {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::IndexedIndirectX,
+                op: $crate::Op::Byte($crate::ByteOp::new(
+                    $crate::op_info::op_infos::indexed_indirect_x::$f,
+                )),
+            }
+        };
+    }
+
     macro_rules! indirect_indexed_y_wrapped {
         ($opcode: ident, $f: ident) => {
             $crate::OpInfo {
@@ -224,9 +267,26 @@ mod items {
         };
     }
 
+    macro_rules! zero_page_x_wrapped {
+        ($opcode: ident, $f: ident) => {
+            $crate::OpInfo {
+                opcode: $crate::Opcode::$opcode,
+                addressing_mode: $crate::AddressingMode::ZeroPageX,
+                op: $crate::Op::Byte($crate::ByteOp::new(
+                    $crate::op_info::op_infos::zero_page_x::$f,
+                )),
+            }
+        };
+    }
+
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
+    pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
+    pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
     pub(crate) const ADC_IMM: OpInfo = immediate!(AdcImm, adc);
+    pub(crate) const ADC_IND_X: OpInfo = indexed_indirect_x_wrapped!(AdcIndX, adc);
+    pub(crate) const ADC_IND_Y: OpInfo = indirect_indexed_y_wrapped!(AdcIndY, adc);
     pub(crate) const ADC_ZP: OpInfo = zero_page_wrapped!(AdcZp, adc);
+    pub(crate) const ADC_ZP_X: OpInfo = zero_page_x_wrapped!(AdcZpX, adc);
     pub(crate) const BCC: OpInfo = relative!(Bcc, bcc);
     pub(crate) const BCS: OpInfo = relative!(Bcs, bcs);
     pub(crate) const BEQ: OpInfo = relative!(Beq, beq);
