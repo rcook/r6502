@@ -1,158 +1,5 @@
 pub(crate) use items::*;
 
-mod absolute {
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f(s, s.memory[addr]);
-                $cycles
-            }
-        };
-    }
-
-    macro_rules! wrap_store {
-        ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                $crate::ops::$f(s, addr);
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 4);
-    wrap!(cmp, 4);
-    wrap!(cpx, 4);
-    wrap!(cpy, 4);
-    wrap!(lda, 4);
-    wrap!(ldx, 4);
-    wrap!(ldy, 4);
-    wrap_store!(sta, 4);
-}
-
-mod absolute_x {
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f(s, s.memory[addr.wrapping_add(s.reg.x as u16)]);
-                $cycles
-            }
-        };
-    }
-
-    macro_rules! wrap_store {
-        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                $crate::ops::$f(s, addr.wrapping_add(s.reg.x as u16));
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 4, 5);
-    wrap!(cmp, 4, 5);
-    wrap!(lda, 4, 5);
-    wrap_store!(sta, 5, 5);
-}
-
-mod absolute_y {
-    #[allow(unused)]
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f(s, s.memory[addr.wrapping_add(s.reg.y as u16)]);
-                $cycles
-            }
-        };
-    }
-
-    macro_rules! wrap_store {
-        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                $crate::ops::$f(s, addr.wrapping_add(s.reg.y as u16));
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 4, 5);
-    wrap_store!(sta, 5, 5);
-}
-
-mod indexed_indirect_x {
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
-                let effective_addr = s.memory.fetch_word(addr.wrapping_add(s.reg.x) as u16);
-                _ = $crate::ops::$f(s, s.memory[effective_addr]);
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 6);
-}
-
-mod indirect_indexed_y {
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
-                let effective_addr = s
-                    .memory
-                    .fetch_word(addr as u16)
-                    .wrapping_add(s.reg.y as u16);
-                _ = $crate::ops::$f(s, s.memory[effective_addr]);
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 5, 6);
-    wrap!(lda, 5, 6);
-}
-
-mod zero_page {
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
-                _ = $crate::ops::$f(s, s.memory[addr as u16]);
-                $cycles
-            }
-        };
-    }
-
-    macro_rules! wrap_store {
-        ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
-                $crate::ops::$f(s, addr as u16);
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 3);
-    wrap!(cmp, 3);
-    wrap!(cpx, 3);
-    wrap!(cpy, 3);
-    wrap!(lda, 3);
-    wrap!(ldx, 3);
-    wrap!(ldy, 3);
-    wrap_store!(sta, 3);
-}
-
-mod zero_page_x {
-    macro_rules! wrap {
-        ($f: ident, $cycles: expr) => {
-            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
-                let effective_addr = addr.wrapping_add(s.reg.x);
-                _ = $crate::ops::$f(s, s.memory[effective_addr as u16]);
-                $cycles
-            }
-        };
-    }
-
-    wrap!(adc, 4);
-}
-
 #[iter_mod::make_items]
 mod items {
     use crate::OpInfo;
@@ -202,7 +49,7 @@ mod items {
             $crate::OpInfo {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::Absolute,
-                op: $crate::Op::Word($crate::WordOp::new($crate::op_info::op_infos::absolute::$f)),
+                op: $crate::Op::Word($crate::WordOp::new($crate::op_info::wrappers::absolute::$f)),
             }
         };
     }
@@ -213,7 +60,7 @@ mod items {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::AbsoluteX,
                 op: $crate::Op::Word($crate::WordOp::new(
-                    $crate::op_info::op_infos::absolute_x::$f,
+                    $crate::op_info::wrappers::absolute_x::$f,
                 )),
             }
         };
@@ -225,7 +72,7 @@ mod items {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::AbsoluteY,
                 op: $crate::Op::Word($crate::WordOp::new(
-                    $crate::op_info::op_infos::absolute_y::$f,
+                    $crate::op_info::wrappers::absolute_y::$f,
                 )),
             }
         };
@@ -237,7 +84,7 @@ mod items {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::IndexedIndirectX,
                 op: $crate::Op::Byte($crate::ByteOp::new(
-                    $crate::op_info::op_infos::indexed_indirect_x::$f,
+                    $crate::op_info::wrappers::indexed_indirect_x::$f,
                 )),
             }
         };
@@ -249,7 +96,7 @@ mod items {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::IndirectIndexedY,
                 op: $crate::Op::Byte($crate::ByteOp::new(
-                    $crate::op_info::op_infos::indirect_indexed_y::$f,
+                    $crate::op_info::wrappers::indirect_indexed_y::$f,
                 )),
             }
         };
@@ -261,7 +108,7 @@ mod items {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::ZeroPage,
                 op: $crate::Op::Byte($crate::ByteOp::new(
-                    $crate::op_info::op_infos::zero_page::$f,
+                    $crate::op_info::wrappers::zero_page::$f,
                 )),
             }
         };
@@ -273,7 +120,7 @@ mod items {
                 opcode: $crate::Opcode::$opcode,
                 addressing_mode: $crate::AddressingMode::ZeroPageX,
                 op: $crate::Op::Byte($crate::ByteOp::new(
-                    $crate::op_info::op_infos::zero_page_x::$f,
+                    $crate::op_info::wrappers::zero_page_x::$f,
                 )),
             }
         };
