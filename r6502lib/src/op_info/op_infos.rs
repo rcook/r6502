@@ -5,7 +5,7 @@ mod items {
     use crate::op_info::macros::*;
     use crate::OpInfo;
 
-    // TBD: AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR, TSX, TXS
+    // TBD: AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
     pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
@@ -107,6 +107,8 @@ mod items {
     pub(crate) const STY_ZP_X: OpInfo = zero_page_x_wrapped!(StyZpX, sty);
     pub(crate) const TAX: OpInfo = implied!(Tax, tax);
     pub(crate) const TAY: OpInfo = implied!(Tay, tay);
+    pub(crate) const TSX: OpInfo = implied!(Tsx, tsx);
     pub(crate) const TXA: OpInfo = implied!(Txa, txa);
+    pub(crate) const TXS: OpInfo = implied!(Txs, txs);
     pub(crate) const TYA: OpInfo = implied!(Tya, tya);
 }

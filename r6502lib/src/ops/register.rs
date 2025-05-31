@@ -55,12 +55,29 @@ pub(crate) fn tay(s: &mut VmState) -> Cycles {
     2
 }
 
+// http://www.6502.org/tutorials/6502opcodes.html#TSX
+// http://www.6502.org/users/obelisk/6502/reference.html#TSX
+pub(crate) fn tsx(s: &mut VmState) -> Cycles {
+    let value = s.reg.s;
+    s.reg.x = value;
+    set_flags_on_value(s, value);
+    2
+}
+
 // http://www.6502.org/tutorials/6502opcodes.html#TXA
 // http://www.6502.org/users/obelisk/6502/reference.html#TXA
 pub(crate) fn txa(s: &mut VmState) -> Cycles {
     let value = s.reg.x;
     s.reg.a = value;
     set_flags_on_value(s, value);
+    2
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TXS
+// http://www.6502.org/users/obelisk/6502/reference.html#TXS
+pub(crate) fn txs(s: &mut VmState) -> Cycles {
+    let value = s.reg.x;
+    s.reg.s = value;
     2
 }
 

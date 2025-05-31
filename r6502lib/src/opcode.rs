@@ -209,8 +209,12 @@ pub(crate) enum Opcode {
     Tax = 0xaa,
     #[strum(props(mnemonic = "TAY"))]
     Tay = 0xa8,
+    #[strum(props(mnemonic = "TSX"))]
+    Tsx = 0xba,
     #[strum(props(mnemonic = "TXA"))]
     Txa = 0x8a,
+    #[strum(props(mnemonic = "TXS"))]
+    Txs = 0x9a,
     #[strum(props(mnemonic = "TYA"))]
     Tya = 0x98,
 }
