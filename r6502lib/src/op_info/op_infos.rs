@@ -5,8 +5,8 @@ mod items {
     use crate::op_info::macros::*;
     use crate::OpInfo;
 
-    // TBD: AND, ASL, BIT, DEC, EOR, INC, LSR, ORA, ROL, ROR, RTI, TSX, TXS
-    // For parity: DEC, INC, RTI
+    // TBD: AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR, RTI, TSX, TXS
+    // For parity: RTI
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
     pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
@@ -42,8 +42,16 @@ mod items {
     pub(crate) const CPY_ABS: OpInfo = absolute_wrapped!(CpyAbs, cpy);
     pub(crate) const CPY_IMM: OpInfo = immediate!(CpyImm, cpy);
     pub(crate) const CPY_ZP: OpInfo = zero_page_wrapped!(CpyZp, cpy);
+    pub(crate) const DEC_ABS: OpInfo = absolute_wrapped!(DecAbs, dec);
+    pub(crate) const DEC_ABS_X: OpInfo = absolute_x_wrapped!(DecAbsX, dec);
+    pub(crate) const DEC_ZP: OpInfo = zero_page_wrapped!(DecZp, dec);
+    pub(crate) const DEC_ZP_X: OpInfo = zero_page_x_wrapped!(DecZpX, dec);
     pub(crate) const DEX: OpInfo = implied!(Dex, dex);
     pub(crate) const DEY: OpInfo = implied!(Dey, dey);
+    pub(crate) const INC_ABS: OpInfo = absolute_wrapped!(IncAbs, inc);
+    pub(crate) const INC_ABS_X: OpInfo = absolute_x_wrapped!(IncAbsX, inc);
+    pub(crate) const INC_ZP: OpInfo = zero_page_wrapped!(IncZp, inc);
+    pub(crate) const INC_ZP_X: OpInfo = zero_page_x_wrapped!(IncZpX, inc);
     pub(crate) const INX: OpInfo = implied!(Inx, inx);
     pub(crate) const INY: OpInfo = implied!(Iny, iny);
     pub(crate) const JMP_ABS: OpInfo = absolute!(JmpAbs, jmp);

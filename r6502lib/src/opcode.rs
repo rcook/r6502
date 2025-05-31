@@ -49,7 +49,6 @@ pub(crate) enum Opcode {
     Cli = 0x58,
     #[strum(props(mnemonic = "Clv"))]
     Clv = 0xb8,
-
     #[strum(props(mnemonic = "CMP"))]
     CmpAbs = 0xcd,
     #[strum(props(mnemonic = "CMP"))]
@@ -78,10 +77,26 @@ pub(crate) enum Opcode {
     CpyImm = 0xc0,
     #[strum(props(mnemonic = "CPY"))]
     CpyZp = 0xc4,
+    #[strum(props(mnemonic = "DEC"))]
+    DecAbs = 0xce,
+    #[strum(props(mnemonic = "DEC"))]
+    DecAbsX = 0xde,
+    #[strum(props(mnemonic = "DEC"))]
+    DecZp = 0xc6,
+    #[strum(props(mnemonic = "DEC"))]
+    DecZpX = 0xd6,
     #[strum(props(mnemonic = "DEX"))]
     Dex = 0xca,
     #[strum(props(mnemonic = "DEY"))]
     Dey = 0x88,
+    #[strum(props(mnemonic = "INC"))]
+    IncAbs = 0xee,
+    #[strum(props(mnemonic = "INC"))]
+    IncAbsX = 0xfe,
+    #[strum(props(mnemonic = "INC"))]
+    IncZp = 0xe6,
+    #[strum(props(mnemonic = "INC"))]
+    IncZpX = 0xf6,
     #[strum(props(mnemonic = "INX"))]
     Inx = 0xe8,
     #[strum(props(mnemonic = "INY"))]

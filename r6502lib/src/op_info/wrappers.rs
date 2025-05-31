@@ -21,6 +21,8 @@ pub(crate) mod absolute {
     wrap!(cmp, 4);
     wrap!(cpx, 4);
     wrap!(cpy, 4);
+    wrap_store!(dec, 6);
+    wrap_store!(inc, 6);
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
@@ -61,6 +63,8 @@ pub(crate) mod absolute_x {
 
     wrap!(adc, 4, 5);
     wrap!(cmp, 4, 5);
+    wrap_store!(dec, 7, 7);
+    wrap_store!(inc, 7, 7);
     wrap!(lda, 4, 5);
     wrap!(ldy, 4, 5);
     wrap!(sbc, 4, 5);
@@ -198,6 +202,8 @@ pub(crate) mod zero_page {
     wrap!(cmp, 3);
     wrap!(cpx, 3);
     wrap!(cpy, 3);
+    wrap_store!(dec, 5);
+    wrap_store!(inc, 5);
     wrap!(lda, 3);
     wrap!(ldx, 3);
     wrap!(ldy, 3);
@@ -230,6 +236,8 @@ pub(crate) mod zero_page_x {
 
     wrap!(adc, 4);
     wrap!(cmp, 4);
+    wrap_store!(dec, 6);
+    wrap_store!(inc, 6);
     wrap!(lda, 4);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
