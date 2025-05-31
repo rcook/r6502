@@ -31,8 +31,13 @@ pub(crate) mod absolute_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f(s, s.memory[addr.wrapping_add(s.reg.x as u16)]);
-                $cycles
+                let effective_addr = addr.wrapping_add(s.reg.x as u16);
+                _ = $crate::ops::$f(s, s.memory[effective_addr]);
+                if $crate::util::crosses_page_boundary(effective_addr) {
+                    $cross_page_cycles
+                } else {
+                    $cycles
+                }
             }
         };
     }
@@ -40,8 +45,13 @@ pub(crate) mod absolute_x {
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                $crate::ops::$f(s, addr.wrapping_add(s.reg.x as u16));
-                $cycles
+                let effective_addr = addr.wrapping_add(s.reg.x as u16);
+                $crate::ops::$f(s, effective_addr);
+                if $crate::util::crosses_page_boundary(effective_addr) {
+                    $cross_page_cycles
+                } else {
+                    $cycles
+                }
             }
         };
     }
@@ -57,8 +67,13 @@ pub(crate) mod absolute_y {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                _ = $crate::ops::$f(s, s.memory[addr.wrapping_add(s.reg.y as u16)]);
-                $cycles
+                let effective_addr = addr.wrapping_add(s.reg.y as u16);
+                _ = $crate::ops::$f(s, s.memory[effective_addr]);
+                if $crate::util::crosses_page_boundary(effective_addr) {
+                    $cross_page_cycles
+                } else {
+                    $cycles
+                }
             }
         };
     }
@@ -66,8 +81,13 @@ pub(crate) mod absolute_y {
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::Cycles {
-                $crate::ops::$f(s, addr.wrapping_add(s.reg.y as u16));
-                $cycles
+                let effective_addr = addr.wrapping_add(s.reg.y as u16);
+                $crate::ops::$f(s, effective_addr);
+                if $crate::util::crosses_page_boundary(effective_addr) {
+                    $cross_page_cycles
+                } else {
+                    $cycles
+                }
             }
         };
     }
@@ -99,7 +119,11 @@ pub(crate) mod indirect_indexed_y {
                     .fetch_word(addr as u16)
                     .wrapping_add(s.reg.y as u16);
                 _ = $crate::ops::$f(s, s.memory[effective_addr]);
-                $cycles
+                if $crate::util::crosses_page_boundary(effective_addr) {
+                    $cross_page_cycles
+                } else {
+                    $cycles
+                }
             }
         };
     }
