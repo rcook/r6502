@@ -18,6 +18,7 @@ mod ops;
 mod os;
 mod p;
 mod reg;
+mod symbol_info;
 mod util;
 mod vm;
 mod vm_state;
@@ -58,3 +59,6 @@ pub(crate) use vm::{Vm, VmBuilder, VmBuilderError};
 pub(crate) use vm_state::{VmState, VmStateBuilder, VmStateBuilderError};
 #[allow(unused)]
 pub(crate) use word_op::WordOp;
+
+//
+pub use symbol_info::SymbolInfo;

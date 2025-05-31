@@ -1,5 +1,6 @@
-use crate::{make_word, ImageInfo, Memory, SymbolInfo};
+use crate::{make_word, ImageInfo, Memory};
 use anyhow::{bail, Result};
+use r6502lib::SymbolInfo;
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::{Path, PathBuf};

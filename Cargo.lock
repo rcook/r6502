@@ -750,6 +750,7 @@ dependencies = [
  "clap-num",
  "cursive",
  "iter_mod",
+ "r6502lib",
  "serde",
  "serde_json",
 ]
@@ -765,6 +766,8 @@ dependencies = [
  "num-derive",
  "num-traits",
  "rstest",
+ "serde",
+ "serde_json",
  "strum",
  "strum_macros",
 ]
