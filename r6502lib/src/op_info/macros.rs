@@ -1,10 +1,42 @@
-macro_rules! absolute {
-    ($opcode: ident, $f: ident) => {
+macro_rules! no_operand_op {
+    ($opcode: ident, $addressing_mode: ident, $f: ident) => {
         $crate::OpInfo {
             opcode: $crate::Opcode::$opcode,
-            addressing_mode: $crate::AddressingMode::Absolute,
+            addressing_mode: $crate::AddressingMode::$addressing_mode,
+            op: $crate::Op::NoOperand($crate::NoOperandOp::new($crate::ops::$f)),
+        }
+    };
+}
+
+pub(crate) use no_operand_op;
+
+macro_rules! byte_op {
+    ($opcode: ident, $addressing_mode: ident, $f: ident) => {
+        $crate::OpInfo {
+            opcode: $crate::Opcode::$opcode,
+            addressing_mode: $crate::AddressingMode::$addressing_mode,
+            op: $crate::Op::Byte($crate::ByteOp::new($crate::ops::$f)),
+        }
+    };
+}
+
+pub(crate) use byte_op;
+
+macro_rules! word_op {
+    ($opcode: ident, $addressing_mode: ident, $f: ident) => {
+        $crate::OpInfo {
+            opcode: $crate::Opcode::$opcode,
+            addressing_mode: $crate::AddressingMode::$addressing_mode,
             op: $crate::Op::Word($crate::WordOp::new($crate::ops::$f)),
         }
+    };
+}
+
+pub(crate) use word_op;
+
+macro_rules! absolute {
+    ($opcode: ident, $f: ident) => {
+        $crate::op_info::macros::word_op!($opcode, Absolute, $f)
     };
 }
 
@@ -12,11 +44,7 @@ pub(crate) use absolute;
 
 macro_rules! immediate {
     ($opcode: ident, $f: ident) => {
-        $crate::OpInfo {
-            opcode: $crate::Opcode::$opcode,
-            addressing_mode: $crate::AddressingMode::Immediate,
-            op: $crate::Op::Byte($crate::ByteOp::new($crate::ops::$f)),
-        }
+        $crate::op_info::macros::byte_op!($opcode, Immediate, $f)
     };
 }
 
@@ -24,11 +52,7 @@ pub(crate) use immediate;
 
 macro_rules! implied {
     ($opcode: ident, $f: ident) => {
-        $crate::OpInfo {
-            opcode: $crate::Opcode::$opcode,
-            addressing_mode: $crate::AddressingMode::Implied,
-            op: $crate::Op::NoOperand($crate::NoOperandOp::new($crate::ops::$f)),
-        }
+        $crate::op_info::macros::no_operand_op!($opcode, Implied, $f)
     };
 }
 
@@ -36,11 +60,7 @@ pub(crate) use implied;
 
 macro_rules! indirect {
     ($opcode: ident, $f: ident) => {
-        $crate::OpInfo {
-            opcode: $crate::Opcode::$opcode,
-            addressing_mode: $crate::AddressingMode::Indirect,
-            op: $crate::Op::Word($crate::WordOp::new($crate::ops::$f)),
-        }
+        $crate::op_info::macros::word_op!($opcode, Indirect, $f)
     };
 }
 
@@ -48,11 +68,7 @@ pub(crate) use indirect;
 
 macro_rules! relative {
     ($opcode: ident, $f: ident) => {
-        $crate::OpInfo {
-            opcode: $crate::Opcode::$opcode,
-            addressing_mode: $crate::AddressingMode::Relative,
-            op: $crate::Op::Byte($crate::ByteOp::new($crate::ops::$f)),
-        }
+        $crate::op_info::macros::byte_op!($opcode, Relative, $f)
     };
 }
 
