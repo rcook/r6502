@@ -5,6 +5,7 @@ mod items {
     use crate::op_info::macros::*;
     use crate::OpInfo;
 
+    // TBD: AND, ASL, BIT, DEC, EOR, INC, LSR, ORA, ROL, ROR, RTI, STX, STY, TSX, TXS
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
     pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
