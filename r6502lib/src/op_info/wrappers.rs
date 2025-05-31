@@ -26,6 +26,8 @@ pub(crate) mod absolute {
     wrap!(ldy, 4);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
+    wrap_store!(stx, 4);
+    wrap_store!(sty, 4);
 }
 
 pub(crate) mod absolute_x {
@@ -201,6 +203,8 @@ pub(crate) mod zero_page {
     wrap!(ldy, 3);
     wrap!(sbc, 3);
     wrap_store!(sta, 3);
+    wrap_store!(stx, 3);
+    wrap_store!(sty, 3);
 }
 
 pub(crate) mod zero_page_x {
@@ -229,6 +233,7 @@ pub(crate) mod zero_page_x {
     wrap!(lda, 4);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
+    wrap_store!(sty, 4);
 }
 
 pub(crate) mod zero_page_y {
@@ -242,5 +247,16 @@ pub(crate) mod zero_page_y {
         };
     }
 
+    macro_rules! wrap_store {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                let effective_addr = addr.wrapping_add(s.reg.y);
+                $crate::ops::$f(s, effective_addr as u16);
+                $cycles
+            }
+        };
+    }
+
     wrap!(ldx, 4);
+    wrap_store!(stx, 4);
 }

@@ -19,4 +19,4 @@ pub(crate) use load::{lda, ldx, ldy};
 pub(crate) use misc::{brk, nop};
 pub(crate) use register::{dex, dey, inx, iny, tax, tay, txa, tya};
 pub(crate) use stack::{pha, php, pla, plp};
-pub(crate) use store::sta;
+pub(crate) use store::{sta, stx, sty};
