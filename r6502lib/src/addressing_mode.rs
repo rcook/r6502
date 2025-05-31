@@ -14,6 +14,7 @@ pub(crate) enum AddressingMode {
     Relative,
     ZeroPage,
     ZeroPageX,
+    ZeroPageY,
 }
 
 impl AddressingMode {
@@ -101,6 +102,14 @@ impl AddressingMode {
             Self::ZeroPageX => match instruction_info.operand {
                 Operand::Byte(value) => Ok(format!(
                     "{} ${:02X},X",
+                    instruction_info.opcode.mnemonic(),
+                    value
+                )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
+            },
+            Self::ZeroPageY => match instruction_info.operand {
+                Operand::Byte(value) => Ok(format!(
+                    "{} ${:02X},Y",
                     instruction_info.opcode.mnemonic(),
                     value
                 )),

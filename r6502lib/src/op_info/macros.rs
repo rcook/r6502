@@ -169,3 +169,17 @@ macro_rules! zero_page_x_wrapped {
 }
 
 pub(crate) use zero_page_x_wrapped;
+
+macro_rules! zero_page_y_wrapped {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo {
+            opcode: $crate::Opcode::$opcode,
+            addressing_mode: $crate::AddressingMode::ZeroPageY,
+            op: $crate::Op::Byte($crate::ByteOp::new(
+                $crate::op_info::wrappers::zero_page_y::$f,
+            )),
+        }
+    };
+}
+
+pub(crate) use zero_page_y_wrapped;

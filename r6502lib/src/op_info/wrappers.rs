@@ -60,6 +60,7 @@ pub(crate) mod absolute_x {
     wrap!(adc, 4, 5);
     wrap!(cmp, 4, 5);
     wrap!(lda, 4, 5);
+    wrap!(ldy, 4, 5);
     wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
@@ -96,6 +97,8 @@ pub(crate) mod absolute_y {
 
     wrap!(adc, 4, 5);
     wrap!(cmp, 4, 5);
+    wrap!(lda, 4, 5);
+    wrap!(ldx, 4, 5);
     wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
@@ -113,6 +116,7 @@ pub(crate) mod indexed_indirect_x {
 
     wrap!(adc, 6);
     wrap!(cmp, 6);
+    wrap!(lda, 6);
     wrap!(sbc, 6);
 }
 
@@ -183,5 +187,20 @@ pub(crate) mod zero_page_x {
 
     wrap!(adc, 4);
     wrap!(cmp, 4);
+    wrap!(lda, 4);
     wrap!(sbc, 4);
+}
+
+pub(crate) mod zero_page_y {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::Cycles {
+                let effective_addr = addr.wrapping_add(s.reg.y);
+                _ = $crate::ops::$f(s, s.memory[effective_addr as u16]);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(ldx, 4);
 }
