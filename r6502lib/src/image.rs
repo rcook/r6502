@@ -6,6 +6,9 @@ pub(crate) struct Image {
     pub(crate) origin: u16,
 
     #[allow(unused)]
+    pub(crate) start: u16,
+
+    #[allow(unused)]
     pub(crate) values: Vec<u8>,
 }
 
@@ -50,6 +53,7 @@ impl FromStr for Image {
         let Some(line) = i.next() else {
             return Ok(Self {
                 origin: 0x0000,
+                start: 0x0000,
                 values,
             });
         };
@@ -79,7 +83,12 @@ impl FromStr for Image {
             pc = temp_pc;
         }
 
-        Ok(Self { origin, values })
+        let start = origin;
+        Ok(Self {
+            origin,
+            start,
+            values,
+        })
     }
 }
 
