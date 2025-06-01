@@ -1,7 +1,9 @@
-use crate::{initialize_vm, Args, SymbolInfo, Ui, UiHost};
+use crate::{initialize_vm, Args, Ui, UiHost};
 use anyhow::Result;
 use clap::Parser;
-use r6502lib::{DummyMonitor, Image, Monitor, TracingMonitor, VmBuilder, OSHALT, OSWRCH};
+use r6502lib::{
+    DummyMonitor, Image, Monitor, SymbolInfo, TracingMonitor, VmBuilder, OSHALT, OSWRCH,
+};
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
@@ -29,7 +31,7 @@ fn run_ui_host(args: &Args) -> Result<()> {
 
 fn run_cli_host(args: &Args) -> Result<()> {
     let monitor: Box<dyn Monitor> = if args.trace {
-        Box::new(TracingMonitor)
+        Box::new(TracingMonitor::default())
     } else {
         Box::new(DummyMonitor)
     };

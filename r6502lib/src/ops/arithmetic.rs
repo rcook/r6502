@@ -1,5 +1,5 @@
 use crate::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
-use crate::{p_get, p_value, p_set, OpCycles, VmState};
+use crate::{p_get, p_set, p_value, OpCycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC

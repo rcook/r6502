@@ -1,4 +1,4 @@
-use crate::{ByteOp, OpCycles, NoOperandOp, VmState, WordOp};
+use crate::{ByteOp, NoOperandOp, OpCycles, VmState, WordOp};
 
 #[derive(Clone)]
 pub enum Op {

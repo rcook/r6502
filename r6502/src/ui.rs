@@ -1,4 +1,4 @@
-use crate::{DebugMessage, IoMessage, MonitorMessage, Status as _Status, SymbolInfo};
+use crate::{DebugMessage, IoMessage, MonitorMessage, Status as _Status};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -6,6 +6,7 @@ use cursive::event::Key;
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
+use r6502lib::SymbolInfo;
 use std::sync::mpsc::{Receiver, Sender};
 
 const RIGHT_NAME: &str = "right";
@@ -23,7 +24,7 @@ pub(crate) struct Ui {
     cursive: CursiveRunner<CursiveRunnable>,
     monitor_rx: Receiver<MonitorMessage>,
     io_rx: Receiver<IoMessage>,
-    _symbols: Vec<SymbolInfo>,
+    symbols: Vec<SymbolInfo>,
 }
 
 impl Ui {
@@ -39,7 +40,7 @@ impl Ui {
             cursive,
             monitor_rx,
             io_rx,
-            _symbols: symbols,
+            symbols,
         })
     }
 
@@ -235,11 +236,14 @@ impl Ui {
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
                         .set_content(format!("{total_cycles}"));
-                    // TBD: Use self.symbols
                     self.cursive
                         .find_name::<TextView>(CURRENT_NAME)
                         .expect("Must exist")
-                        .set_content(instruction_info.disassembly().expect("Must succeed"));
+                        .set_content(
+                            instruction_info
+                                .display(&self.symbols)
+                                .expect("Must succeed"),
+                        );
                 }
                 AfterExecute {
                     total_cycles,
@@ -255,8 +259,9 @@ impl Ui {
                         .expect("Must exist")
                         .set_content(format!("{total_cycles}"));
 
-                    // TBD: Use self.symbols
-                    let mut s = instruction_info.disassembly().expect("Must succeed");
+                    let mut s = instruction_info
+                        .disassembly(&self.symbols)
+                        .expect("Must succeed");
                     s.push('\n');
                     self.cursive
                         .find_name::<TextView>(DISASSEMBLY_NAME)

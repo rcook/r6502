@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{Binding, OpCycles, Op, OpInfo, Opcode, VmState, MOS_6502};
+use crate::{Binding, Op, OpCycles, OpInfo, Opcode, VmState, MOS_6502};
 
 #[allow(unused)]
 pub(crate) struct Instruction {

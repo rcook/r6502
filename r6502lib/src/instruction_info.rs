@@ -1,5 +1,5 @@
 use crate::util::split_word;
-use crate::{Binding, Instruction, Opcode, Operand, MOS_6502};
+use crate::{Binding, Instruction, Opcode, Operand, SymbolInfo, MOS_6502};
 use anyhow::{anyhow, Result};
 
 #[derive(Clone)]
@@ -30,18 +30,22 @@ impl InstructionInfo {
         }
     }
 
-    pub fn display(&self) -> Result<String> {
+    pub fn display(&self, symbols: &[SymbolInfo]) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
-        op_info.addressing_mode.format_instruction_info(self)
+        op_info
+            .addressing_mode
+            .format_instruction_info(self, symbols)
     }
 
-    pub fn disassembly(&self) -> Result<String> {
+    pub fn disassembly(&self, symbols: &[SymbolInfo]) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
-        let s = op_info.addressing_mode.format_instruction_info(self)?;
+        let s = op_info
+            .addressing_mode
+            .format_instruction_info(self, symbols)?;
         Ok(match &self.operand {
             Operand::None => format!("{:04X}  {:02X}        {s}", self.pc, self.opcode as u8),
             Operand::Byte(value) => format!(
@@ -67,29 +71,39 @@ mod tests {
 
     #[test]
     fn basics() -> Result<()> {
+        let symbols = Vec::new();
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: Nop,
             operand: Operand::None,
         };
-        assert_eq!("NOP", instruction_info.display()?);
-        assert_eq!("1234  EA        NOP", instruction_info.disassembly()?);
+        assert_eq!("NOP", instruction_info.display(&symbols)?);
+        assert_eq!(
+            "1234  EA        NOP",
+            instruction_info.disassembly(&symbols)?
+        );
 
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: AdcImm,
             operand: Operand::Byte(0x12),
         };
-        assert_eq!("ADC #$12", instruction_info.display()?);
-        assert_eq!("1234  69 12     ADC #$12", instruction_info.disassembly()?);
+        assert_eq!("ADC #$12", instruction_info.display(&symbols)?);
+        assert_eq!(
+            "1234  69 12     ADC #$12",
+            instruction_info.disassembly(&symbols)?
+        );
 
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: AdcAbs,
             operand: Operand::Word(0x1234),
         };
-        assert_eq!("ADC $1234", instruction_info.display()?);
-        assert_eq!("1234  6D 34 12  ADC $1234", instruction_info.disassembly()?);
+        assert_eq!("ADC $1234", instruction_info.display(&symbols)?);
+        assert_eq!(
+            "1234  6D 34 12  ADC $1234",
+            instruction_info.disassembly(&symbols)?
+        );
 
         Ok(())
     }

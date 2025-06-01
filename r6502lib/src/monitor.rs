@@ -1,4 +1,4 @@
-use crate::{InstructionInfo, Reg, TotalCycles, P_STR};
+use crate::{InstructionInfo, Reg, SymbolInfo, TotalCycles, P_STR};
 
 pub trait Monitor {
     fn on_before_fetch(&self, _total_cycles: TotalCycles, _reg: Reg) {}
@@ -24,7 +24,16 @@ pub struct DummyMonitor;
 
 impl Monitor for DummyMonitor {}
 
-pub struct TracingMonitor;
+#[derive(Default)]
+pub struct TracingMonitor {
+    symbols: Vec<SymbolInfo>,
+}
+
+impl TracingMonitor {
+    pub fn new(symbols: Vec<SymbolInfo>) -> Self {
+        Self { symbols }
+    }
+}
 
 impl Monitor for TracingMonitor {
     fn on_before_execute(
@@ -40,7 +49,9 @@ impl Monitor for TracingMonitor {
             reg.y,
             P_STR,
             reg.p.bits(),
-            instruction_info.disassembly().expect("Must succeed")
+            instruction_info
+                .disassembly(&self.symbols)
+                .expect("Must succeed")
         )
     }
 }

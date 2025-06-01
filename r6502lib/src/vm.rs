@@ -225,7 +225,7 @@ mod tests {
         let image = input.parse::<Image>()?;
 
         let monitor: Box<dyn Monitor> = if trace {
-            Box::new(TracingMonitor)
+            Box::new(TracingMonitor::default())
         } else {
             Box::new(DummyMonitor)
         };
