@@ -1,18 +1,18 @@
 use r6502lib::Memory;
 
 use crate::{
-    Cycles, DebugMessage, Instruction, MachineState, PollResult, RegisterFile, Status,
-    StatusMessage, VmHost,
+    Cycles, DebugMessage, Instruction, MachineState, MonitorMessage, PollResult, RegisterFile,
+    Status, VmHost,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) struct UiHost {
     debug_rx: Receiver<DebugMessage>,
-    status_tx: Sender<StatusMessage>,
+    status_tx: Sender<MonitorMessage>,
 }
 
 impl UiHost {
-    pub(crate) fn new(debug_rx: Receiver<DebugMessage>, status_tx: Sender<StatusMessage>) -> Self {
+    pub(crate) fn new(debug_rx: Receiver<DebugMessage>, status_tx: Sender<MonitorMessage>) -> Self {
         Self {
             debug_rx,
             status_tx,
@@ -76,7 +76,7 @@ impl UiHost {
         assert!(end_temp >= begin_temp && end_temp <= 0x10000);
         let count = end_temp - begin_temp + 1;
         let snapshot = memory.snapshot(begin_temp, begin_temp + count);
-        _ = self.status_tx.send(StatusMessage::FetchMemoryResponse {
+        _ = self.status_tx.send(MonitorMessage::FetchMemoryResponse {
             begin,
             end,
             snapshot,
@@ -87,7 +87,7 @@ impl UiHost {
 impl VmHost for UiHost {
     fn report_before_execute(&self, reg: &RegisterFile, cycles: Cycles, instruction: &Instruction) {
         self.status_tx
-            .send(StatusMessage::BeforeExecute {
+            .send(MonitorMessage::BeforeExecute {
                 reg: reg.clone(),
                 cycles,
                 instruction: instruction.clone(),
@@ -97,7 +97,7 @@ impl VmHost for UiHost {
 
     fn report_after_execute(&self, reg: &RegisterFile, cycles: Cycles, instruction: &Instruction) {
         self.status_tx
-            .send(StatusMessage::AfterExecute {
+            .send(MonitorMessage::AfterExecute {
                 reg: reg.clone(),
                 cycles,
                 instruction: instruction.clone(),
@@ -107,13 +107,13 @@ impl VmHost for UiHost {
 
     fn report_status(&self, status: Status) {
         self.status_tx
-            .send(StatusMessage::Status(status))
+            .send(MonitorMessage::Status(status))
             .expect("Must succeed")
     }
 
     fn write_stdout(&self, c: char) {
         self.status_tx
-            .send(StatusMessage::WriteStdout(c))
+            .send(MonitorMessage::WriteStdout(c))
             .expect("Must succeed")
     }
 }

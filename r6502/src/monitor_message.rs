@@ -1,6 +1,6 @@
 use crate::{Cycles, Instruction, RegisterFile, Status};
 
-pub(crate) enum StatusMessage {
+pub(crate) enum MonitorMessage {
     BeforeExecute {
         reg: RegisterFile,
         cycles: Cycles,

@@ -1,4 +1,4 @@
-use crate::{DebugMessage, Status as _Status, StatusMessage, SymbolInfo};
+use crate::{DebugMessage, Status as _Status, MonitorMessage, SymbolInfo};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -21,13 +21,13 @@ const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
 
 pub(crate) struct Ui {
     cursive: CursiveRunner<CursiveRunnable>,
-    status_rx: Receiver<StatusMessage>,
+    status_rx: Receiver<MonitorMessage>,
     symbols: Vec<SymbolInfo>,
 }
 
 impl Ui {
     pub(crate) fn new(
-        status_rx: Receiver<StatusMessage>,
+        status_rx: Receiver<MonitorMessage>,
         debug_tx: Sender<DebugMessage>,
         symbols: Vec<SymbolInfo>,
     ) -> Result<Self> {
@@ -195,7 +195,7 @@ impl Ui {
     }
 
     fn step(&mut self) -> bool {
-        use crate::StatusMessage::*;
+        use crate::MonitorMessage::*;
 
         if !self.cursive.is_running() {
             return false;
