@@ -10,10 +10,6 @@ pub struct OpInfo {
 }
 
 impl OpInfo {
-    pub fn execute_no_operand(&self, s: &mut VmState) -> OpCycles {
-        self.op.execute_no_operand(s)
-    }
-
     pub(crate) fn iter() -> impl Iterator<Item = &'static OpInfo> {
         CONSTS.iter().map(|(_, item)| match item {
             Item::OpInfo(op) => op,
@@ -34,6 +30,10 @@ impl OpInfo {
 
     pub(crate) fn op(&self) -> &Op {
         &self.op
+    }
+
+    pub(crate) fn execute_no_operand(&self, s: &mut VmState) -> OpCycles {
+        self.op.execute_no_operand(s)
     }
 
     pub(crate) fn format_instruction_info(
