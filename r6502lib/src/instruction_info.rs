@@ -2,7 +2,7 @@ use crate::util::split_word;
 use crate::{Binding, Instruction, Opcode, Operand, MOS_6502};
 use anyhow::{anyhow, Result};
 
-#[allow(unused)]
+#[derive(Clone)]
 pub struct InstructionInfo {
     pub(crate) pc: u16,
     pub(crate) opcode: Opcode,

@@ -2,7 +2,7 @@ use crate::P;
 
 const DEFAULT_S: u8 = 0xff;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Reg {
     pub a: u8,
     pub x: u8,

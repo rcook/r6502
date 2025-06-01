@@ -75,9 +75,7 @@ fn run_cli_host(args: &Args) -> Result<()> {
         Box::new(DummyMonitor)
     };
 
-    let mut vm = VmBuilder::default()
-        .monitor(Box::new(DummyMonitor))
-        .build()?;
+    let mut vm = VmBuilder::default().monitor(monitor).build()?;
 
     let image = Image::load(&args.path, args.origin, args.start)?;
     let (os, rts) = initialize_vm(&mut vm, &image)?;

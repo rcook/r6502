@@ -29,14 +29,14 @@ impl Vm {
 
     #[must_use]
     pub fn step(&mut self) -> bool {
-        self.monitor.on_before_fetch(&self.s.reg);
+        self.monitor.on_before_fetch(self.s.reg.clone());
         let instruction = Instruction::fetch(&mut self.s);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
         self.monitor
-            .on_before_execute(&self.s.reg, &instruction_info);
+            .on_before_execute(self.s.reg.clone(), instruction_info.clone());
         let cycles = instruction.execute(&mut self.s);
         self.monitor
-            .on_after_execute(&self.s.reg, &instruction_info, cycles);
+            .on_after_execute(self.s.reg.clone(), instruction_info.clone(), cycles);
         self.cycles += cycles as u32;
         !p_get!(self.s.reg, B)
     }

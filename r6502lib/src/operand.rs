@@ -1,4 +1,4 @@
-#[allow(unused)]
+#[derive(Clone)]
 pub(crate) enum Operand {
     None,
     Byte(u8),
