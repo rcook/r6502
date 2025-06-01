@@ -1,8 +1,7 @@
 macro_rules! flag_fn {
     ($name: ident, $flag: ident, $value: expr) => {
-        pub(crate) fn $name(s: &mut $crate::VmState) -> $crate::OpCycles {
+        pub(crate) fn $name(s: &mut $crate::VmState) {
             $crate::p_set!(s.reg, $flag, $value);
-            2
         }
     };
 }

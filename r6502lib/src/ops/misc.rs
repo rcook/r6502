@@ -1,20 +1,17 @@
-use crate::{p_set, OpCycles, VmState, IRQ};
+use crate::{p_set, VmState, IRQ};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BRK
 // http://www.6502.org/users/obelisk/6502/reference.html#BRK
-pub(crate) fn brk(s: &mut VmState) -> OpCycles {
+pub(crate) fn brk(s: &mut VmState) {
     s.push_word(s.reg.pc);
     s.push(s.reg.p.bits());
     s.reg.pc = s.memory.fetch_word(IRQ);
     p_set!(s.reg, B, true);
-    7
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#NOP
 // http://www.6502.org/users/obelisk/6502/reference.html#NOP
-pub(crate) fn nop(_s: &mut VmState) -> OpCycles {
-    2
-}
+pub(crate) fn nop(_s: &mut VmState) {}
 
 #[cfg(test)]
 mod tests {
@@ -31,8 +28,7 @@ mod tests {
         assert!(!p_get!(s.reg, B));
         assert_eq!(0x0000, s.reg.pc);
         assert_eq!(0xff, s.reg.s);
-        let cycles = brk(&mut s);
-        assert_eq!(7, cycles);
+        brk(&mut s);
         assert!(p_get!(s.reg, B));
         assert_eq!(0x1234, s.reg.pc);
         assert_eq!(0xfc, s.reg.s);

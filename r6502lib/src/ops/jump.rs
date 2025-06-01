@@ -1,36 +1,32 @@
-use crate::{OpCycles, VmState, P};
+use crate::{VmState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
-pub(crate) fn jmp(s: &mut VmState, operand: u16) -> OpCycles {
+pub(crate) fn jmp(s: &mut VmState, operand: u16) {
     s.reg.pc = operand;
-    3
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#JSR
 // http://www.6502.org/users/obelisk/6502/reference.html#JSR
-pub(crate) fn jsr(s: &mut VmState, operand: u16) -> OpCycles {
+pub(crate) fn jsr(s: &mut VmState, operand: u16) {
     let return_addr = s.reg.pc;
     s.push_word(return_addr.wrapping_sub(1));
     s.reg.pc = operand;
-    6
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTI
 // http://www.6502.org/users/obelisk/6502/reference.html#RTI
-pub(crate) fn rti(s: &mut VmState) -> OpCycles {
+pub(crate) fn rti(s: &mut VmState) {
     s.reg.p = P::from_bits(s.pull()).expect("Must succeed");
     let return_addr = s.pull_word().wrapping_add(1);
     s.reg.pc = return_addr;
-    6
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTS
 // http://www.6502.org/users/obelisk/6502/reference.html#RTS
-pub(crate) fn rts(s: &mut VmState) -> OpCycles {
+pub(crate) fn rts(s: &mut VmState) {
     let return_addr = s.pull_word().wrapping_add(1);
     s.reg.pc = return_addr;
-    6
 }
 
 #[cfg(test)]
@@ -46,8 +42,7 @@ mod tests {
             reg,
             memory: Memory::new(),
         };
-        let cycles = jmp(&mut s, operand);
-        assert_eq!(3, cycles);
+        jmp(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
     }
 
@@ -58,8 +53,7 @@ mod tests {
 
         let mut s = VmState::default();
         s.reg.pc = RETURN_ADDR;
-        let cycles = jsr(&mut s, TARGET_ADDR);
-        assert_eq!(6, cycles);
+        jsr(&mut s, TARGET_ADDR);
         assert_eq!(RETURN_ADDR - 1, s.peek_word());
         assert_eq!(TARGET_ADDR, s.reg.pc)
     }

@@ -1,35 +1,31 @@
 use crate::ops::helper::{is_neg, is_zero};
-use crate::{p_set, OpCycles, VmState, P};
+use crate::{p_set, VmState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
-pub(crate) fn pha(s: &mut VmState) -> OpCycles {
+pub(crate) fn pha(s: &mut VmState) {
     s.push(s.reg.a);
-    3
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHP
 // http://www.6502.org/users/obelisk/6502/reference.html#PHP
-pub(crate) fn php(s: &mut VmState) -> OpCycles {
+pub(crate) fn php(s: &mut VmState) {
     s.push(s.reg.p.bits());
-    3
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLA
 // http://www.6502.org/users/obelisk/6502/reference.html#PLA
-pub(crate) fn pla(s: &mut VmState) -> OpCycles {
+pub(crate) fn pla(s: &mut VmState) {
     let value = s.pull();
     s.reg.a = value;
     p_set!(s.reg, N, is_neg(value));
     p_set!(s.reg, Z, is_zero(value));
-    4
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLP
 // http://www.6502.org/users/obelisk/6502/reference.html#PLP
-pub(crate) fn plp(s: &mut VmState) -> OpCycles {
+pub(crate) fn plp(s: &mut VmState) {
     s.reg.p = P::from_bits(s.pull()).expect("Must be valid");
-    4
 }
 
 #[cfg(test)]
@@ -46,9 +42,8 @@ mod tests {
         s.reg.a = 0x56;
         s.memory[STACK_BASE + 0x00ff] = 0x34;
         assert_eq!(0xff, s.reg.s);
-        let cycles = pha(&mut s);
+        pha(&mut s);
         assert_eq!(0xfe, s.reg.s);
-        assert_eq!(3, cycles);
         assert_eq!(0x56, s.reg.a);
         assert_eq!(P::default(), s.reg.p);
         assert_eq!(0x56, s.memory[STACK_BASE + 0x00ff])
@@ -66,7 +61,7 @@ mod tests {
             s.reg.a = value;
             s.memory[STACK_BASE + 0x00ff - value as u16] = 0x00;
             assert_eq!(current_s, s.reg.s);
-            _ = pha(&mut s);
+            pha(&mut s);
             assert_eq!(current_s.wrapping_sub(1), s.reg.s);
             assert_eq!(value, s.memory[STACK_BASE + 0x00ff - value as u16])
         }
@@ -80,21 +75,17 @@ mod tests {
         };
 
         s.reg.p = P::N | P::D | P::Z;
-        let cycles = php(&mut s);
-        assert_eq!(3, cycles);
+        php(&mut s);
 
         s.reg.p = P::V | P::C;
-        let cycles = php(&mut s);
-        assert_eq!(3, cycles);
+        php(&mut s);
 
         s.reg.p = P::empty();
 
-        let cycles = plp(&mut s);
-        assert_eq!(4, cycles);
+        plp(&mut s);
         assert_eq!(P::V | P::C, s.reg.p);
 
-        let cycles = plp(&mut s);
-        assert_eq!(4, cycles);
+        plp(&mut s);
         assert_eq!(P::N | P::D | P::Z, s.reg.p);
     }
 
@@ -118,18 +109,15 @@ mod tests {
         s.reg.p = P::empty();
         assert_eq!(0x11, s.reg.a);
 
-        let cycles = pla(&mut s);
-        assert_eq!(4, cycles);
+        pla(&mut s);
         assert_eq!(0x45, s.reg.a);
         assert_eq!(P::empty(), s.reg.p);
 
-        let cycles = pla(&mut s);
-        assert_eq!(4, cycles);
+        pla(&mut s);
         assert_eq!(0xf1, s.reg.a);
         assert_eq!(P::N, s.reg.p);
 
-        let cycles = pla(&mut s);
-        assert_eq!(4, cycles);
+        pla(&mut s);
         assert_eq!(0x00, s.reg.a);
         assert_eq!(P::Z, s.reg.p);
     }

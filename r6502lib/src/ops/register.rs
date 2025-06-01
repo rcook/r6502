@@ -1,93 +1,83 @@
 use super::helper::set_flags_on_value;
-use crate::{OpCycles, VmState};
+use crate::VmState;
 
 // http://www.6502.org/tutorials/6502opcodes.html#DEX
 // http://www.6502.org/users/obelisk/6502/reference.html#DEX
-pub(crate) fn dex(s: &mut VmState) -> OpCycles {
+pub(crate) fn dex(s: &mut VmState) {
     let value = s.reg.x.wrapping_sub(1);
     s.reg.x = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#DEY
 // http://www.6502.org/users/obelisk/6502/reference.html#DEY
-pub(crate) fn dey(s: &mut VmState) -> OpCycles {
+pub(crate) fn dey(s: &mut VmState) {
     let value = s.reg.y.wrapping_sub(1);
     s.reg.y = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#INX
 // http://www.6502.org/users/obelisk/6502/reference.html#INX
-pub(crate) fn inx(s: &mut VmState) -> OpCycles {
+pub(crate) fn inx(s: &mut VmState) {
     let value = s.reg.x.wrapping_add(1);
     s.reg.x = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#INY
 // http://www.6502.org/users/obelisk/6502/reference.html#INY
-pub(crate) fn iny(s: &mut VmState) -> OpCycles {
+pub(crate) fn iny(s: &mut VmState) {
     let value = s.reg.y.wrapping_add(1);
     s.reg.y = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TAX
 // http://www.6502.org/users/obelisk/6502/reference.html#TAX
-pub(crate) fn tax(s: &mut VmState) -> OpCycles {
+pub(crate) fn tax(s: &mut VmState) {
     let value = s.reg.a;
     s.reg.x = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TAY
 // http://www.6502.org/users/obelisk/6502/reference.html#TAY
-pub(crate) fn tay(s: &mut VmState) -> OpCycles {
+pub(crate) fn tay(s: &mut VmState) {
     let value = s.reg.a;
     s.reg.y = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TSX
 // http://www.6502.org/users/obelisk/6502/reference.html#TSX
-pub(crate) fn tsx(s: &mut VmState) -> OpCycles {
+pub(crate) fn tsx(s: &mut VmState) {
     let value = s.reg.s;
     s.reg.x = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TXA
 // http://www.6502.org/users/obelisk/6502/reference.html#TXA
-pub(crate) fn txa(s: &mut VmState) -> OpCycles {
+pub(crate) fn txa(s: &mut VmState) {
     let value = s.reg.x;
     s.reg.a = value;
     set_flags_on_value(s, value);
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TXS
 // http://www.6502.org/users/obelisk/6502/reference.html#TXS
-pub(crate) fn txs(s: &mut VmState) -> OpCycles {
+pub(crate) fn txs(s: &mut VmState) {
     let value = s.reg.x;
     s.reg.s = value;
-    2
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TYA
 // http://www.6502.org/users/obelisk/6502/reference.html#TYA
-pub(crate) fn tya(s: &mut VmState) -> OpCycles {
+pub(crate) fn tya(s: &mut VmState) {
     let value = s.reg.y;
     s.reg.a = value;
     set_flags_on_value(s, value);
-    2
 }
 
 #[cfg(test)]
@@ -100,7 +90,7 @@ mod tests {
         let mut s = VmState::default();
         s.reg.a = 0x22;
         s.reg.x = 0x00;
-        assert_eq!(2, tax(&mut s));
+        tax(&mut s);
         assert_eq!(0x22, s.reg.x);
     }
 
@@ -109,7 +99,7 @@ mod tests {
         let mut s = VmState::default();
         s.reg.a = 0x22;
         s.reg.y = 0x00;
-        assert_eq!(2, tay(&mut s));
+        tay(&mut s);
         assert_eq!(0x22, s.reg.y);
     }
 
@@ -118,7 +108,7 @@ mod tests {
         let mut s = VmState::default();
         s.reg.a = 0x00;
         s.reg.x = 0x22;
-        assert_eq!(2, txa(&mut s));
+        txa(&mut s);
         assert_eq!(0x22, s.reg.a);
     }
 
@@ -127,7 +117,7 @@ mod tests {
         let mut s = VmState::default();
         s.reg.a = 0x00;
         s.reg.y = 0x22;
-        assert_eq!(2, tya(&mut s));
+        tya(&mut s);
         assert_eq!(0x22, s.reg.a);
     }
 }
