@@ -1,5 +1,5 @@
 use crate::util::split_word;
-use crate::{Binding, Instruction, Opcode, Operand, SymbolInfo, MOS_6502};
+use crate::{Binding, Instruction, Opcode, Operand, SymbolInfo, Vm, MOS_6502};
 use anyhow::{anyhow, Result};
 
 #[derive(Clone)]
@@ -10,6 +10,11 @@ pub struct InstructionInfo {
 }
 
 impl InstructionInfo {
+    pub fn fetch(vm: &Vm) -> Self {
+        let instruction = Instruction::fetch(&vm.s);
+        InstructionInfo::from_instruction(&instruction)
+    }
+
     pub(crate) fn from_instruction(instruction: &Instruction) -> Self {
         match &instruction.binding {
             Binding::NoOperand(_) => Self {

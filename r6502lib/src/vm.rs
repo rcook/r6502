@@ -35,7 +35,7 @@ impl Vm {
     pub fn step(&mut self) -> bool {
         self.monitor
             .on_before_fetch(self.total_cycles, self.s.reg.clone());
-        let instruction = Instruction::fetch(&mut self.s);
+        let instruction = Instruction::fetch(&self.s);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
         self.monitor.on_before_execute(
             self.total_cycles,

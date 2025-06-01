@@ -109,11 +109,16 @@ impl Ui {
                                 command.disable();
                             });
                         }
+                        Ok(Command::SetPc(addr)) => {
+                            _ = d.send(SetPc(addr));
+                            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                                command.disable();
+                            });
+                        }
                         Err(e) => {
                             s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
                                 view.set_content(format!("{e}"));
                             });
-                            return;
                         }
                     }
                 }

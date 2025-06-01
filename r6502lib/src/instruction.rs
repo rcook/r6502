@@ -9,7 +9,7 @@ pub(crate) struct Instruction {
 }
 
 impl Instruction {
-    pub(crate) fn fetch(s: &mut VmState) -> Self {
+    pub(crate) fn fetch(s: &VmState) -> Self {
         let value = s.memory[s.reg.pc];
         match Opcode::from_u8(value) {
             Some(opcode) => match MOS_6502.get_op_info(&opcode) {

@@ -5,14 +5,15 @@ use std::str::FromStr;
 #[derive(Debug, PartialEq)]
 pub(crate) enum Command {
     FetchMemory(AddressRange),
+    SetPc(u16),
 }
 
 impl FromStr for Command {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts = s.trim().split_whitespace().collect::<Vec<_>>();
-        if parts.len() < 1 {
+        let parts = s.split_whitespace().collect::<Vec<_>>();
+        if parts.is_empty() {
             bail!("invalid command {s}")
         }
 
@@ -23,6 +24,15 @@ impl FromStr for Command {
 
             let address_range = parts[1].parse()?;
             return Ok(Self::FetchMemory(address_range));
+        }
+
+        if parts[0] == "pc" {
+            if parts.len() != 2 {
+                bail!("invalid \"pc\" command")
+            }
+
+            let addr = u16::from_str_radix(parts[1].trim(), 16)?;
+            return Ok(Self::SetPc(addr));
         }
 
         bail!("unsupported command {s}");

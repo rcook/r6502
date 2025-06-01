@@ -3,9 +3,10 @@ use crate::{
     UiMonitor, VmStatus,
 };
 use anyhow::Result;
-use r6502lib::{Image, Memory, VmBuilder, OSHALT, OSWRCH};
+use r6502lib::{Image, InstructionInfo, Vm, VmBuilder, OSHALT, OSWRCH};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
+// TBD: Come up with a better name for this struct!
 pub(crate) struct UiHost {
     debug_rx: Receiver<DebugMessage>,
     monitor_tx: Sender<MonitorMessage>,
@@ -32,7 +33,7 @@ impl UiHost {
         let mut free_running = false;
         loop {
             while vm.step() {
-                let result = self.poll(&vm.s.memory, free_running);
+                let result = self.poll(&mut vm, free_running);
                 free_running = result.free_running;
                 if !result.is_active {
                     // Handle disconnection
@@ -58,7 +59,7 @@ impl UiHost {
         }
     }
 
-    fn poll(&self, memory: &Memory, mut free_running: bool) -> PollResult {
+    fn poll(&self, vm: &mut Vm, mut free_running: bool) -> PollResult {
         loop {
             if free_running {
                 match self.debug_rx.try_recv() {
@@ -79,8 +80,9 @@ impl UiHost {
                         DebugMessage::Run => {}
                         DebugMessage::Break => free_running = false,
                         DebugMessage::FetchMemory(address_range) => {
-                            self.fetch_memory(memory, address_range)
+                            self.fetch_memory(vm, address_range)
                         }
+                        DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
                     },
                 }
             } else {
@@ -101,23 +103,34 @@ impl UiHost {
                         DebugMessage::Run => free_running = true,
                         DebugMessage::Break => {}
                         DebugMessage::FetchMemory(address_range) => {
-                            self.fetch_memory(memory, address_range)
+                            self.fetch_memory(vm, address_range)
                         }
+                        DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
                     },
                 }
             }
         }
     }
 
-    fn fetch_memory(&self, memory: &Memory, address_range: AddressRange) {
+    fn fetch_memory(&self, vm: &Vm, address_range: AddressRange) {
         let begin_temp = address_range.begin as usize;
         let end_temp = address_range.end as usize;
         assert!(end_temp >= begin_temp && end_temp <= 0x10000);
         let count = end_temp - begin_temp + 1;
-        let snapshot = memory.snapshot(begin_temp, begin_temp + count);
+        let snapshot = vm.s.memory.snapshot(begin_temp, begin_temp + count);
         _ = self.monitor_tx.send(MonitorMessage::FetchMemoryResponse {
             address_range,
             snapshot,
+        });
+    }
+
+    fn set_pc(&self, vm: &mut Vm, addr: u16) {
+        vm.s.reg.pc = addr;
+        let instruction_info = InstructionInfo::fetch(vm);
+        _ = self.monitor_tx.send(MonitorMessage::BeforeExecute {
+            total_cycles: vm.total_cycles,
+            reg: vm.s.reg.clone(),
+            instruction_info,
         });
     }
 }
