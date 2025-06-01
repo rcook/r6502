@@ -13,16 +13,16 @@ mod op_func;
 mod ops;
 mod register_file;
 mod run;
-mod run_vm_result;
 mod status;
 mod status_message;
+mod symbol_info;
 mod test_host;
 mod types;
 mod ui;
 mod ui_host;
 mod util;
-mod vm;
 mod vm_host;
+mod vm_status;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use args::Args;
@@ -36,16 +36,16 @@ pub(crate) use op::Op;
 pub(crate) use op_func::{ByteFn, Cycles, NoOperandFn, OpFunc, WordFn};
 pub(crate) use ops::iter_ops;
 pub(crate) use register_file::RegisterFile;
-pub(crate) use run_vm_result::{RunVMResult, RunVMStatus};
 pub(crate) use status::Status;
 pub(crate) use status_message::StatusMessage;
+pub(crate) use symbol_info::SymbolInfo;
 pub(crate) use test_host::TestHost;
 pub(crate) use types::Memory;
-pub(crate) use ui::UI;
-pub(crate) use ui_host::UIHost;
+pub(crate) use ui::Ui;
+pub(crate) use ui_host::UiHost;
 pub(crate) use util::{compute_branch, make_word, split_word};
-pub(crate) use vm::run_vm;
-pub(crate) use vm_host::{PollResult, VMHost};
+pub(crate) use vm_host::{PollResult, VmHost};
+pub(crate) use vm_status::VmStatus;
 
 fn main() -> anyhow::Result<()> {
     crate::run::run()

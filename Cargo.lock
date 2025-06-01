@@ -766,8 +766,6 @@ dependencies = [
  "num-derive",
  "num-traits",
  "rstest",
- "serde",
- "serde_json",
  "strum",
  "strum_macros",
 ]

@@ -5,20 +5,13 @@ pub(crate) struct PollResult {
     pub(crate) free_running: bool,
 }
 
-pub(crate) trait VMHost {
+pub(crate) trait VmHost {
     fn report_before_execute(
         &self,
         _reg: &RegisterFile,
         _cycles: Cycles,
         _instruction: &Instruction,
     ) {
-    }
-
-    fn poll(&self, _machine_state: &MachineState, free_running: bool) -> PollResult {
-        PollResult {
-            is_active: true,
-            free_running,
-        }
     }
 
     fn report_after_execute(

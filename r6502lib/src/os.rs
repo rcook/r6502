@@ -1,4 +1,4 @@
-use crate::{p_get, Memory, Opcode, Vm, IRQ, OSHALT, OSWRCH};
+use crate::{p_get, p_set, Memory, OpInfo, Opcode, Vm, IRQ, OSHALT, OSWRCH};
 use derive_builder::Builder;
 
 #[derive(Builder)]
@@ -33,6 +33,13 @@ impl Os {
         } else {
             None
         }
+    }
+
+    pub fn return_from_os_vector_brk(&self, vm: &mut Vm, rts: &OpInfo) {
+        vm.s.pull(); // Is this P?
+        vm.s.pull_word(); // What's this?
+        p_set!(vm.s.reg, B, false);
+        rts.op.execute_no_operand(&mut vm.s);
     }
 }
 

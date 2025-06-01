@@ -1,7 +1,5 @@
-use crate::{
-    util::{make_word, split_word},
-    Image,
-};
+use crate::util::{make_word, split_word};
+use crate::Image;
 use std::ops::{Index, IndexMut};
 
 pub struct Memory([u8; 0x10000]);
@@ -22,6 +20,10 @@ impl Memory {
         let origin = image.origin as usize;
         let limit = origin + image.values.len();
         self.0[origin..limit].copy_from_slice(&image.values);
+    }
+
+    pub fn snapshot(&self, begin: usize, end: usize) -> Vec<u8> {
+        self.0[begin..end].to_vec()
     }
 
     pub(crate) fn fetch_word(&self, addr: u16) -> u16 {

@@ -1,5 +1,6 @@
-use crate::{compute_branch, split_word, AddressingMode, ByteFn, NoOperandFn, Op, WordFn};
-use r6502lib::SymbolInfo;
+use crate::{
+    compute_branch, split_word, AddressingMode, ByteFn, NoOperandFn, Op, SymbolInfo, WordFn,
+};
 
 #[derive(Clone)]
 pub(crate) enum Instruction {

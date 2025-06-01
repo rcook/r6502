@@ -1,4 +1,4 @@
-use crate::{DebugMessage, Status as _Status, StatusMessage};
+use crate::{DebugMessage, Status as _Status, StatusMessage, SymbolInfo};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -6,7 +6,6 @@ use cursive::event::Key;
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
-use r6502lib::SymbolInfo;
 use std::sync::mpsc::{Receiver, Sender};
 
 const RIGHT_NAME: &str = "right";
@@ -20,13 +19,13 @@ const COMMAND_RESPONSE_NAME: &str = "command-response";
 const COMMAND_NAME: &str = "command";
 const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
 
-pub(crate) struct UI {
+pub(crate) struct Ui {
     cursive: CursiveRunner<CursiveRunnable>,
     status_rx: Receiver<StatusMessage>,
     symbols: Vec<SymbolInfo>,
 }
 
-impl UI {
+impl Ui {
     pub(crate) fn new(
         status_rx: Receiver<StatusMessage>,
         debug_tx: Sender<DebugMessage>,

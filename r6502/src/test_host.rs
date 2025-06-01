@@ -1,4 +1,4 @@
-use crate::VMHost;
+use crate::VmHost;
 use std::cell::RefCell;
 
 pub(crate) struct TestHost {
@@ -18,7 +18,7 @@ impl TestHost {
     }
 }
 
-impl VMHost for TestHost {
+impl VmHost for TestHost {
     fn write_stdout(&self, c: char) {
         self.stdout.borrow_mut().push(c)
     }

@@ -1,6 +1,6 @@
 use crate::util::make_word;
-use crate::{SymbolInfo, MAGIC_NUMBER};
-use anyhow::{anyhow, bail, Error, Result};
+use crate::MAGIC_NUMBER;
+use anyhow::{bail, Error, Result};
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
@@ -10,7 +10,6 @@ pub struct Image {
     pub origin: u16,
     pub start: u16,
     pub values: Vec<u8>,
-    pub symbols: Vec<SymbolInfo>,
 }
 
 #[allow(unused)]
@@ -20,8 +19,7 @@ impl Image {
         default_origin: Option<u16>,
         default_start: Option<u16>,
     ) -> Result<Self> {
-        let symbols = Self::load_symbols(path)?;
-        Self::read(File::open(path)?, default_origin, default_start, symbols)
+        Self::read(File::open(path)?, default_origin, default_start)
     }
 
     pub(crate) fn from_bytes(
@@ -29,19 +27,13 @@ impl Image {
         default_origin: Option<u16>,
         default_start: Option<u16>,
     ) -> Result<Self> {
-        Self::read(
-            Cursor::new(bytes),
-            default_origin,
-            default_start,
-            Vec::new(),
-        )
+        Self::read(Cursor::new(bytes), default_origin, default_start)
     }
 
     fn read<R: Read + Seek>(
         mut reader: R,
         default_origin: Option<u16>,
         default_start: Option<u16>,
-        symbols: Vec<SymbolInfo>,
     ) -> Result<Self> {
         let (origin, start) = Self::read_header(&mut reader, default_origin, default_start)?;
         let mut values = Vec::new();
@@ -50,7 +42,6 @@ impl Image {
             origin,
             start,
             values,
-            symbols,
         })
     }
 
@@ -84,25 +75,6 @@ impl Image {
             }
             Err(e) => bail!(e),
         }
-    }
-
-    fn load_symbols(path: &Path) -> Result<Vec<SymbolInfo>> {
-        let mut file_name = path
-            .file_name()
-            .ok_or_else(|| anyhow!("could not get file name"))?
-            .to_os_string();
-        file_name.push(".json");
-        let symbol_path = path
-            .parent()
-            .ok_or_else(|| anyhow!("could not get parent of path"))?
-            .join(file_name);
-
-        Ok(if symbol_path.is_file() {
-            let file = File::open(symbol_path)?;
-            serde_json::from_reader(file)?
-        } else {
-            Vec::new()
-        })
     }
 }
 
@@ -149,7 +121,6 @@ impl FromStr for Image {
                 origin: 0x0000,
                 start: 0x0000,
                 values,
-                symbols: Vec::new(),
             });
         };
 
@@ -183,7 +154,6 @@ impl FromStr for Image {
             origin,
             start,
             values,
-            symbols: Vec::new(),
         })
     }
 }
