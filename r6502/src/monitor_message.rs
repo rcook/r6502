@@ -1,13 +1,9 @@
-use crate::{AddressRange, Status};
+use crate::{AddressRange, State};
 use r6502lib::{InstructionInfo, Reg, TotalCycles};
 
 pub(crate) enum MonitorMessage {
-    BeforeFetch {
-        #[allow(unused)]
-        total_cycles: TotalCycles,
-        #[allow(unused)]
-        reg: Reg,
-    },
+    NotifyState(State),
+    NotifyInvalidBrk,
     BeforeExecute {
         total_cycles: TotalCycles,
         reg: Reg,
@@ -18,7 +14,6 @@ pub(crate) enum MonitorMessage {
         reg: Reg,
         instruction_info: InstructionInfo,
     },
-    Status(Status),
     FetchMemoryResponse {
         address_range: AddressRange,
         snapshot: Vec<u8>,

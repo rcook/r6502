@@ -1,8 +1,6 @@
 use crate::{InstructionInfo, Reg, SymbolInfo, TotalCycles, P_STR};
 
 pub trait Monitor {
-    fn on_before_fetch(&self, _total_cycles: TotalCycles, _reg: Reg) {}
-
     fn on_before_execute(
         &self,
         _total_cycles: TotalCycles,

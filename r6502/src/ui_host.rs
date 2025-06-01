@@ -1,8 +1,11 @@
+#![allow(unused)]
+
+use crate::State::*;
 use crate::{
-    initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, Status, UiMonitor,
+    initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor,
 };
 use anyhow::Result;
-use r6502lib::{Image, InstructionInfo, Vm, VmBuilder, OSHALT, OSWRCH};
+use r6502lib::{p_set, Image, InstructionInfo, OpInfo, Os, Vm, VmBuilder, OSHALT, OSWRCH};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -30,52 +33,26 @@ impl UiHost {
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
         let (os, rts) = initialize_vm(&mut vm, &image)?;
 
-        self.fetch(&vm);
-
-        let mut state = DebugState {
-            disconnected: false,
-            free_running: false,
-            waiting: false,
-        };
-
+        let mut state = Stepping;
         loop {
-            while state.waiting {
-                self.poll(&mut vm, &mut state);
-                if state.disconnected {
-                    return Ok(());
-                }
-            }
+            self.send_state(state);
 
-            loop {
-                while vm.step() {
-                    self.poll(&mut vm, &mut state);
-                    if state.disconnected {
-                        return Ok(());
-                    }
-                }
-
-                match os.is_os_vector_brk(&vm) {
-                    Some(OSHALT) => {
-                        self.monitor_tx
-                            .send(MonitorMessage::Status(Status::Halted))
-                            .expect("Must succeed");
-                        state.free_running = false;
-                        state.waiting = true;
-                        break;
-                    }
-                    Some(OSWRCH) => {
-                        self.io_tx
-                            .send(IoMessage::WriteChar(vm.s.reg.a as char))
-                            .expect("Must succeed");
-                        os.return_from_os_vector_brk(&mut vm, &rts);
-                    }
-                    _ => todo!(),
-                }
+            match state {
+                Running => state = self.handle_running(&mut vm, &os, &rts),
+                Stepping => state = self.handle_stepping(&mut vm, &os, &rts),
+                Halted => state = self.handle_halted(&mut vm),
+                Stopped => break,
             }
         }
+
+        Ok(())
     }
 
-    fn fetch(&self, vm: &Vm) {
+    fn send_state(&self, state: State) {
+        _ = self.monitor_tx.send(MonitorMessage::NotifyState(state))
+    }
+
+    fn fetch_instruction(&self, vm: &Vm) {
         let instruction_info = InstructionInfo::fetch(vm);
         _ = self.monitor_tx.send(MonitorMessage::BeforeExecute {
             total_cycles: vm.total_cycles,
@@ -84,46 +61,89 @@ impl UiHost {
         });
     }
 
-    fn poll(&self, vm: &mut Vm, state: &mut DebugState) {
+    fn handle_brk(&self, vm: &mut Vm, os: &Os, rts: &OpInfo, state: State) -> State {
+        match os.is_os_vector_brk(&vm) {
+            Some(OSHALT) => Halted,
+            Some(OSWRCH) => {
+                self.io_tx
+                    .send(IoMessage::WriteChar(vm.s.reg.a as char))
+                    .expect("Must succeed");
+                os.return_from_os_vector_brk(vm, &rts);
+                state
+            }
+            _ => {
+                _ = self.monitor_tx.send(MonitorMessage::NotifyInvalidBrk);
+                Halted
+            }
+        }
+    }
+
+    fn handle_running(&self, vm: &mut Vm, os: &Os, rts: &OpInfo) -> State {
         loop {
-            if state.free_running {
-                match self.debug_rx.try_recv() {
-                    Err(TryRecvError::Disconnected) => {
-                        state.disconnected = true;
-                        return;
-                    }
-                    Err(TryRecvError::Empty) => {
-                        return;
-                    }
-                    Ok(m) => match m {
-                        DebugMessage::Step => {}
-                        DebugMessage::Run => {}
-                        DebugMessage::Break => state.free_running = false,
-                        DebugMessage::FetchMemory(address_range) => {
-                            self.fetch_memory(vm, address_range)
-                        }
-                        DebugMessage::SetPc(addr) => {
-                            self.set_pc(vm, addr);
-                            state.waiting = true
-                        }
-                    },
+            self.fetch_instruction(vm);
+            match self.debug_rx.try_recv() {
+                Err(TryRecvError::Disconnected) => return Stopped,
+                Err(TryRecvError::Empty) => {}
+                Ok(_) => {}
+            }
+
+            if !vm.step() {
+                let new_state = self.handle_brk(vm, os, rts, Running);
+                if !matches!(new_state, Stepping) {
+                    return new_state;
                 }
-            } else {
-                match self.debug_rx.recv() {
-                    Err(_) => {
-                        state.disconnected = true;
-                        return;
+            }
+        }
+    }
+
+    fn handle_stepping(&self, vm: &mut Vm, os: &Os, rts: &OpInfo) -> State {
+        loop {
+            self.fetch_instruction(vm);
+            match self.debug_rx.recv() {
+                Err(_) => return Stopped,
+                Ok(m) => match m {
+                    DebugMessage::Step => {}
+                    DebugMessage::Run => return Running,
+                    DebugMessage::Break => {}
+                    DebugMessage::FetchMemory(address_range) => {
+                        self.fetch_memory(vm, address_range)
                     }
-                    Ok(m) => match m {
-                        DebugMessage::Step => return,
-                        DebugMessage::Run => state.free_running = true,
-                        DebugMessage::Break => {}
-                        DebugMessage::FetchMemory(address_range) => {
-                            self.fetch_memory(vm, address_range)
-                        }
-                        DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
-                    },
+                    DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
+                    DebugMessage::Go(addr) => {
+                        p_set!(vm.s.reg, B, false);
+                        self.set_pc(vm, addr);
+                    }
+                },
+            }
+
+            if !vm.step() {
+                let new_state = self.handle_brk(vm, os, rts, Stepping);
+                if !matches!(new_state, Stepping) {
+                    return new_state;
                 }
+            }
+        }
+    }
+
+    fn handle_halted(&self, vm: &mut Vm) -> State {
+        self.fetch_instruction(vm);
+        loop {
+            match self.debug_rx.recv() {
+                Err(_) => return Stopped,
+                Ok(m) => match m {
+                    DebugMessage::Step => {}
+                    DebugMessage::Run => {}
+                    DebugMessage::Break => {}
+                    DebugMessage::FetchMemory(address_range) => {
+                        self.fetch_memory(vm, address_range)
+                    }
+                    DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
+                    DebugMessage::Go(addr) => {
+                        p_set!(vm.s.reg, B, false);
+                        self.set_pc(vm, addr);
+                        return Stepping;
+                    }
+                },
             }
         }
     }
@@ -142,7 +162,7 @@ impl UiHost {
 
     fn set_pc(&self, vm: &mut Vm, addr: u16) {
         vm.s.reg.pc = addr;
-        self.fetch(vm);
+        self.fetch_instruction(vm);
     }
 }
 

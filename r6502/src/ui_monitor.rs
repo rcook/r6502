@@ -13,12 +13,6 @@ impl UiMonitor {
 }
 
 impl Monitor for UiMonitor {
-    fn on_before_fetch(&self, total_cycles: TotalCycles, reg: Reg) {
-        self.monitor_tx
-            .send(MonitorMessage::BeforeFetch { total_cycles, reg })
-            .expect("Must succeed")
-    }
-
     fn on_before_execute(
         &self,
         total_cycles: TotalCycles,

@@ -6,6 +6,7 @@ use std::str::FromStr;
 pub(crate) enum Command {
     FetchMemory(AddressRange),
     SetPc(u16),
+    Go(u16),
 }
 
 impl FromStr for Command {
@@ -17,6 +18,7 @@ impl FromStr for Command {
             bail!("invalid command {s}")
         }
 
+        // Fetch snapshot of memory
         if parts[0] == "m" || parts[0] == "mem" || parts[0] == "memory" {
             if parts.len() != 2 {
                 bail!("invalid \"memory\" command")
@@ -26,6 +28,7 @@ impl FromStr for Command {
             return Ok(Self::FetchMemory(address_range));
         }
 
+        // Set program counter
         if parts[0] == "pc" {
             if parts.len() != 2 {
                 bail!("invalid \"pc\" command")
@@ -33,6 +36,16 @@ impl FromStr for Command {
 
             let addr = u16::from_str_radix(parts[1].trim(), 16)?;
             return Ok(Self::SetPc(addr));
+        }
+
+        // Set program counter, clear B and restart
+        if parts[0] == "go" {
+            if parts.len() != 2 {
+                bail!("invalid \"pc\" command")
+            }
+
+            let addr = u16::from_str_radix(parts[1].trim(), 16)?;
+            return Ok(Self::Go(addr));
         }
 
         bail!("unsupported command {s}");

@@ -1,4 +1,4 @@
-use crate::{Command, DebugMessage, IoMessage, MonitorMessage, Status as _Status};
+use crate::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -115,6 +115,12 @@ impl Ui {
                                 command.disable();
                             });
                         }
+                        Ok(Command::Go(addr)) => {
+                            _ = d.send(Go(addr));
+                            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                                command.disable();
+                            });
+                        }
                         Err(e) => {
                             s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
                                 view.set_content(format!("{e}"));
@@ -204,10 +210,24 @@ impl Ui {
 
         while let Some(message) = self.monitor_rx.try_iter().next() {
             match message {
-                BeforeFetch {
-                    total_cycles: _,
-                    reg: _,
-                } => {}
+                NotifyState(status) => {
+                    let s = match status {
+                        State::Running => "Running",
+                        State::Stepping => "Stepping",
+                        State::Halted => "Waiting",
+                        State::Stopped => "Stopped",
+                    };
+                    self.cursive
+                        .find_name::<TextView>(STATUS_NAME)
+                        .expect("Must exist")
+                        .set_content(s);
+                }
+                NotifyInvalidBrk => {
+                    self.cursive
+                        .find_name::<TextView>(COMMAND_FEEDBACK_NAME)
+                        .expect("Must exist")
+                        .set_content("Invalid software interrupt");
+                }
                 BeforeExecute {
                     total_cycles,
                     reg,
@@ -250,16 +270,6 @@ impl Ui {
                     s.push('\n');
                     self.cursive
                         .find_name::<TextView>(DISASSEMBLY_NAME)
-                        .expect("Must exist")
-                        .append(s);
-                }
-                Status(status) => {
-                    let mut s = match status {
-                        _Status::Halted => String::from("Halted"),
-                    };
-                    s.push('\n');
-                    self.cursive
-                        .find_name::<TextView>(STATUS_NAME)
                         .expect("Must exist")
                         .append(s);
                 }

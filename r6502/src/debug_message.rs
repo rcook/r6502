@@ -6,4 +6,5 @@ pub(crate) enum DebugMessage {
     Break,
     FetchMemory(AddressRange),
     SetPc(u16),
+    Go(u16),
 }
