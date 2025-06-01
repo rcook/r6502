@@ -6,10 +6,8 @@ mod poll_result;
 mod run;
 mod status;
 mod symbol_info;
-mod test_host;
 mod ui;
 mod ui_host;
-mod vm_host;
 mod vm_status;
 
 pub(crate) use args::Args;
@@ -19,10 +17,8 @@ pub(crate) use monitor_message::MonitorMessage;
 pub(crate) use poll_result::PollResult;
 pub(crate) use status::Status;
 pub(crate) use symbol_info::SymbolInfo;
-pub(crate) use test_host::TestHost;
 pub(crate) use ui::Ui;
 pub(crate) use ui_host::UiHost;
-pub(crate) use vm_host::VmHost;
 pub(crate) use vm_status::VmStatus;
 
 fn main() -> anyhow::Result<()> {

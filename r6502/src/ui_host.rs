@@ -1,4 +1,4 @@
-use crate::{DebugMessage, MonitorMessage, PollResult, Status, VmHost};
+use crate::{DebugMessage, MonitorMessage, PollResult};
 use r6502lib::Memory;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -80,13 +80,5 @@ impl UiHost {
             end,
             snapshot,
         });
-    }
-}
-
-impl VmHost for UiHost {
-    fn report_status(&self, status: Status) {
-        self.monitor_tx
-            .send(MonitorMessage::Status(status))
-            .expect("Must succeed")
     }
 }

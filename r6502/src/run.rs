@@ -1,22 +1,19 @@
-#![allow(unused)]
 use crate::{
-    Args, DebugMessage, IoMessage, MonitorMessage, Status, SymbolInfo, TestHost, Ui, UiHost,
-    VmHost, VmStatus,
+    Args, DebugMessage, IoMessage, MonitorMessage, Status, SymbolInfo, Ui, UiHost, VmStatus,
 };
 use anyhow::Result;
 use clap::Parser;
 use r6502lib::{
-    p_set, DummyMonitor, Image, InstructionInfo, Monitor, OpInfo, Opcode, Os, OsBuilder, Reg,
-    TotalCycles, TracingMonitor, Vm, VmBuilder, MOS_6502, OSHALT, OSWRCH,
+    DummyMonitor, Image, InstructionInfo, Monitor, OpInfo, Opcode, Os, OsBuilder, Reg, TotalCycles,
+    TracingMonitor, Vm, VmBuilder, MOS_6502, OSHALT, OSWRCH,
 };
-use std::path::Path;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
     let args = Args::parse();
     if args.debug {
-        run_ui_host(&args);
+        run_ui_host(&args)?;
     } else {
         run_cli_host(&args)?;
     }
@@ -78,7 +75,7 @@ fn run_ui_host(args: &Args) -> Result<()> {
         let mut vm = VmBuilder::default().monitor(hacky_monitor).build()?;
         let (os, rts) = initialize_vm(&mut vm, &image)?;
 
-        let ui_host = UiHost::new(debug_rx, monitor_tx);
+        let ui_host = UiHost::new(debug_rx, monitor_tx.clone());
         let mut free_running = false;
         loop {
             while vm.step() {
@@ -92,11 +89,15 @@ fn run_ui_host(args: &Args) -> Result<()> {
 
             match os.is_os_vector_brk(&vm) {
                 Some(OSHALT) => {
-                    ui_host.report_status(Status::Halted);
+                    monitor_tx
+                        .send(MonitorMessage::Status(Status::Halted))
+                        .expect("Must succeed");
                     return Ok(VmStatus::Halted);
                 }
                 Some(OSWRCH) => {
-                    io_tx.send(IoMessage::WriteChar(vm.s.reg.a as char));
+                    io_tx
+                        .send(IoMessage::WriteChar(vm.s.reg.a as char))
+                        .expect("Must succeed");
                     os.return_from_os_vector_brk(&mut vm, &rts);
                 }
                 _ => todo!(),
