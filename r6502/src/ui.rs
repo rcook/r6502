@@ -1,4 +1,4 @@
-use crate::{DebugMessage, IoMessage, MonitorMessage, Status as _Status};
+use crate::{Command, DebugMessage, IoMessage, MonitorMessage, Status as _Status};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -102,40 +102,20 @@ impl Ui {
             .disabled()
             .on_submit(move |s, text| {
                 fn nasty_hack(s: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
-                    // TBD: For now we'll implement a single command "m BEGIN END"
-                    let parts = text.split_whitespace().collect::<Vec<_>>();
-                    if parts.len() != 3 {
-                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
-                            view.set_content(format!("Syntax error in \"{text}\""));
-                        });
-                        return;
+                    match text.parse::<Command>() {
+                        Ok(Command::FetchMemory(address_range)) => {
+                            _ = d.send(FetchMemory(address_range));
+                            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                                command.disable();
+                            });
+                        }
+                        Err(e) => {
+                            s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                                view.set_content(format!("{e}"));
+                            });
+                            return;
+                        }
                     }
-
-                    if parts[0] != "m" {
-                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
-                            view.set_content(format!("Unknown command \"{}\"", parts[0]));
-                        });
-                        return;
-                    }
-
-                    let Ok(begin) = u16::from_str_radix(parts[1], 16) else {
-                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
-                            view.set_content(format!("Invalid begin address \"{}\"", parts[1]));
-                        });
-                        return;
-                    };
-
-                    let Ok(end) = u16::from_str_radix(parts[2], 16) else {
-                        s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
-                            view.set_content(format!("Invalid end address \"{}\"", parts[2]));
-                        });
-                        return;
-                    };
-
-                    _ = d.send(FetchMemory { begin, end });
-                    s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
-                        command.disable();
-                    });
                 }
                 nasty_hack(s, text, &d)
             })
@@ -279,13 +259,13 @@ impl Ui {
                         .append(s);
                 }
                 FetchMemoryResponse {
-                    begin,
-                    end,
+                    address_range,
                     snapshot,
                 } => {
                     const CHUNK_SIZE: usize = 16;
-                    let mut s = format!("${begin:04X}:${end:04X}\n");
-                    let mut addr = begin as usize;
+                    let mut s =
+                        format!("${:04X}:${:04X}\n", address_range.begin, address_range.end);
+                    let mut addr = address_range.begin as usize;
                     for chunk in snapshot.chunks(CHUNK_SIZE) {
                         s.push_str(&format!("{addr:04X} "));
                         let mut chars = String::with_capacity(CHUNK_SIZE);

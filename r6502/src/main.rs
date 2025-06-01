@@ -1,4 +1,6 @@
+mod address_range;
 mod args;
+mod command;
 mod debug_message;
 mod io_message;
 mod monitor_message;
@@ -11,7 +13,9 @@ mod ui_monitor;
 mod util;
 mod vm_status;
 
+pub(crate) use address_range::AddressRange;
 pub(crate) use args::Args;
+pub(crate) use command::Command;
 pub(crate) use debug_message::DebugMessage;
 pub(crate) use io_message::IoMessage;
 pub(crate) use monitor_message::MonitorMessage;

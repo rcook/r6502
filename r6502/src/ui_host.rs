@@ -1,5 +1,6 @@
 use crate::{
-    initialize_vm, DebugMessage, IoMessage, MonitorMessage, PollResult, Status, UiMonitor, VmStatus,
+    initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, PollResult, Status,
+    UiMonitor, VmStatus,
 };
 use anyhow::Result;
 use r6502lib::{Image, Memory, VmBuilder, OSHALT, OSWRCH};
@@ -77,8 +78,8 @@ impl UiHost {
                         DebugMessage::Step => {}
                         DebugMessage::Run => {}
                         DebugMessage::Break => free_running = false,
-                        DebugMessage::FetchMemory { begin, end } => {
-                            self.fetch_memory(memory, begin, end)
+                        DebugMessage::FetchMemory(address_range) => {
+                            self.fetch_memory(memory, address_range)
                         }
                     },
                 }
@@ -99,8 +100,8 @@ impl UiHost {
                         }
                         DebugMessage::Run => free_running = true,
                         DebugMessage::Break => {}
-                        DebugMessage::FetchMemory { begin, end } => {
-                            self.fetch_memory(memory, begin, end)
+                        DebugMessage::FetchMemory(address_range) => {
+                            self.fetch_memory(memory, address_range)
                         }
                     },
                 }
@@ -108,15 +109,14 @@ impl UiHost {
         }
     }
 
-    fn fetch_memory(&self, memory: &Memory, begin: u16, end: u16) {
-        let begin_temp = begin as usize;
-        let end_temp = end as usize;
+    fn fetch_memory(&self, memory: &Memory, address_range: AddressRange) {
+        let begin_temp = address_range.begin as usize;
+        let end_temp = address_range.end as usize;
         assert!(end_temp >= begin_temp && end_temp <= 0x10000);
         let count = end_temp - begin_temp + 1;
         let snapshot = memory.snapshot(begin_temp, begin_temp + count);
         _ = self.monitor_tx.send(MonitorMessage::FetchMemoryResponse {
-            begin,
-            end,
+            address_range,
             snapshot,
         });
     }

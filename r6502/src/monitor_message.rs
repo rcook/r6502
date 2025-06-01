@@ -1,4 +1,4 @@
-use crate::Status;
+use crate::{AddressRange, Status};
 use r6502lib::{InstructionInfo, Reg, TotalCycles};
 
 pub(crate) enum MonitorMessage {
@@ -20,8 +20,7 @@ pub(crate) enum MonitorMessage {
     },
     Status(Status),
     FetchMemoryResponse {
-        begin: u16,
-        end: u16,
+        address_range: AddressRange,
         snapshot: Vec<u8>,
     },
 }

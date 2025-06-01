@@ -10,3 +10,6 @@ clap-num = "1.2.0"
 cursive = "0.21.1"
 iter_mod = "0.1.0"
 r6502lib = { path = "../r6502lib" }
+
+[dev-dependencies]
+rstest = "0.25.0"
