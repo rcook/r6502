@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::Parser;
 use r6502lib::{
     p_set, DummyMonitor, Image, Monitor, OpInfo, Opcode, Os, OsBuilder, TracingMonitor, Vm,
-    VmBuilder, OSHALT, OSWRCH,
+    VmBuilder, MOS_6502, OSHALT, OSWRCH,
 };
 use std::path::Path;
 use std::sync::mpsc::channel;
@@ -103,8 +103,7 @@ fn run_cli_host(args: &Args) -> Result<()> {
 fn initialize_vm(vm: &mut Vm, image: &Image) -> Result<(Os, OpInfo)> {
     let os = OsBuilder::default().build()?;
 
-    let rts = vm
-        .cpu
+    let rts = MOS_6502
         .get_op_info(&Opcode::Rts)
         .expect("RTS must exist")
         .clone();

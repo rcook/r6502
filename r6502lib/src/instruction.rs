@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{Binding, Cpu, Cycles, Op, OpInfo, Opcode, VmState};
+use crate::{Binding, Cycles, Op, OpInfo, Opcode, VmState, MOS_6502};
 
 #[allow(unused)]
 pub(crate) struct Instruction {
@@ -9,10 +9,10 @@ pub(crate) struct Instruction {
 }
 
 impl Instruction {
-    pub(crate) fn fetch(cpu: &Cpu, s: &mut VmState) -> Self {
+    pub(crate) fn fetch(s: &mut VmState) -> Self {
         let value = s.memory[s.reg.pc];
         match Opcode::from_u8(value) {
-            Some(opcode) => match cpu.get_op_info(&opcode) {
+            Some(opcode) => match MOS_6502.get_op_info(&opcode) {
                 Some(OpInfo {
                     opcode: _,
                     addressing_mode: _,

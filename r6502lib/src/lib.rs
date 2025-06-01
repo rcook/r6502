@@ -39,7 +39,7 @@ pub(crate) use reg::reg;
 
 pub use byte_op::ByteOp;
 pub use constants::{IRQ, IRQ_VALUE, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
-pub use cpu::Cpu;
+pub use cpu::{Cpu, MOS_6502};
 pub use image::Image;
 pub use instruction_info::InstructionInfo;
 pub use memory::Memory;

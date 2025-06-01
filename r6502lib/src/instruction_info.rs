@@ -1,5 +1,5 @@
 use crate::util::split_word;
-use crate::{Binding, Cpu, Instruction, Opcode, Operand};
+use crate::{Binding, Instruction, Opcode, Operand, MOS_6502};
 use anyhow::{anyhow, Result};
 
 #[allow(unused)]
@@ -31,16 +31,16 @@ impl InstructionInfo {
     }
 
     #[allow(unused)]
-    pub(crate) fn display(&self, cpu: &Cpu) -> Result<String> {
-        let op_info = cpu
+    pub(crate) fn display(&self) -> Result<String> {
+        let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
         op_info.addressing_mode.format_instruction_info(self)
     }
 
     #[allow(unused)]
-    pub(crate) fn disassembly(&self, cpu: &Cpu) -> Result<String> {
-        let op_info = cpu
+    pub(crate) fn disassembly(&self) -> Result<String> {
+        let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
         let s = op_info.addressing_mode.format_instruction_info(self)?;
@@ -64,42 +64,34 @@ impl InstructionInfo {
 #[cfg(test)]
 mod tests {
     use crate::Opcode::*;
-    use crate::{Cpu, InstructionInfo, Operand};
+    use crate::{InstructionInfo, Operand};
     use anyhow::Result;
 
     #[test]
     fn basics() -> Result<()> {
-        let cpu = Cpu::make_6502();
-
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: Nop,
             operand: Operand::None,
         };
-        assert_eq!("NOP", instruction_info.display(&cpu)?);
-        assert_eq!("1234  EA        NOP", instruction_info.disassembly(&cpu)?);
+        assert_eq!("NOP", instruction_info.display()?);
+        assert_eq!("1234  EA        NOP", instruction_info.disassembly()?);
 
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: AdcImm,
             operand: Operand::Byte(0x12),
         };
-        assert_eq!("ADC #$12", instruction_info.display(&cpu)?);
-        assert_eq!(
-            "1234  69 12     ADC #$12",
-            instruction_info.disassembly(&cpu)?
-        );
+        assert_eq!("ADC #$12", instruction_info.display()?);
+        assert_eq!("1234  69 12     ADC #$12", instruction_info.disassembly()?);
 
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: AdcAbs,
             operand: Operand::Word(0x1234),
         };
-        assert_eq!("ADC $1234", instruction_info.display(&cpu)?);
-        assert_eq!(
-            "1234  6D 34 12  ADC $1234",
-            instruction_info.disassembly(&cpu)?
-        );
+        assert_eq!("ADC $1234", instruction_info.display()?);
+        assert_eq!("1234  6D 34 12  ADC $1234", instruction_info.disassembly()?);
 
         Ok(())
     }

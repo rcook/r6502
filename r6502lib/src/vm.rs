@@ -1,4 +1,4 @@
-use crate::{p_get, Cpu, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
+use crate::{p_get, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
 use derive_builder::Builder;
 use std::result::Result as StdResult;
 
@@ -7,9 +7,6 @@ use std::result::Result as StdResult;
 pub struct Vm {
     #[builder(default = "self.default_monitor()?")]
     pub monitor: Box<dyn Monitor>,
-
-    #[builder(default)]
-    pub cpu: Cpu,
 
     #[builder(default)]
     pub s: VmState,
@@ -26,25 +23,20 @@ impl Default for Vm {
 
 #[allow(unused)]
 impl Vm {
-    pub(crate) fn new(monitor: Box<dyn Monitor>, cpu: Cpu, s: VmState, cycles: u32) -> Self {
-        Self {
-            monitor,
-            cpu,
-            s,
-            cycles,
-        }
+    pub(crate) fn new(monitor: Box<dyn Monitor>, s: VmState, cycles: u32) -> Self {
+        Self { monitor, s, cycles }
     }
 
     #[must_use]
     pub fn step(&mut self) -> bool {
         self.monitor.on_before_fetch(&self.s.reg);
-        let instruction = Instruction::fetch(&self.cpu, &mut self.s);
+        let instruction = Instruction::fetch(&mut self.s);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
         self.monitor
-            .on_before_execute(&self.cpu, &self.s.reg, &instruction_info);
+            .on_before_execute(&self.s.reg, &instruction_info);
         let cycles = instruction.execute(&mut self.s);
         self.monitor
-            .on_after_execute(&self.cpu, &self.s.reg, &instruction_info, cycles);
+            .on_after_execute(&self.s.reg, &instruction_info, cycles);
         self.cycles += cycles as u32;
         !p_get!(self.s.reg, B)
     }
@@ -64,7 +56,7 @@ impl VmBuilder {
 mod tests {
     use crate::{
         p, p_get, p_set, DummyMonitor, Image, Monitor, Opcode, OsBuilder, TracingMonitor, Vm,
-        VmBuilder, IRQ, OSWRCH, P,
+        VmBuilder, IRQ, MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -232,8 +224,7 @@ mod tests {
             .os_vectors(vec![RETURN_ADDR, OSWRCH])
             .build()?;
         os.initialize(&mut vm.s.memory);
-        let rts = vm
-            .cpu
+        let rts = MOS_6502
             .get_op_info(&Opcode::Rts)
             .expect("RTS must exist")
             .clone();
