@@ -3,11 +3,8 @@ use crate::{AddressingMode, Op, Opcode};
 
 #[derive(Clone)]
 pub struct OpInfo {
-    #[allow(unused)]
     pub(crate) opcode: Opcode,
-    #[allow(unused)]
     pub(crate) addressing_mode: AddressingMode,
-
     pub op: Op,
 }
 
