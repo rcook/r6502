@@ -40,17 +40,6 @@ mod tests {
 }
 
 /*
-pub(crate) const AND_IMM: Op = Op {
-    mnemonic: "AND",
-    addressing_mode: AddressingMode::Immediate,
-    opcode: 0x29,
-    func: OpFunc::Byte(|m, operand| {
-        m.reg.a &= operand;
-        m.set_flags_for(m.reg.a);
-        2
-    }),
-};
-
 pub(crate) const ASL_A: Op = Op {
     mnemonic: "ASL",
     addressing_mode: AddressingMode::Accumulator,
@@ -59,31 +48,6 @@ pub(crate) const ASL_A: Op = Op {
         let value = m.reg.a;
         m.set_flag(Flag::Carry, (value & 0x80) != 0);
         m.reg.a = value << 1;
-        m.set_flags_for(m.reg.a);
-        2
-    }),
-};
-
-pub(crate) const BIT_ABS: Op = Op {
-    mnemonic: "BIT",
-    addressing_mode: AddressingMode::Absolute,
-    opcode: 0x2c,
-    func: OpFunc::Word(|m, operand| {
-        let value = m.fetch(operand);
-        let result = m.reg.a & value;
-        m.set_flag(Flag::Z, result == 0);
-        m.set_flag(Flag::N, (value & 0x80) != 0);
-        m.set_flag(Flag::V, (value & 0x40) != 0);
-        4
-    }),
-};
-
-pub(crate) const EOR_IMM: Op = Op {
-    mnemonic: "EOR",
-    addressing_mode: AddressingMode::Immediate,
-    opcode: 0x49,
-    func: OpFunc::Byte(|m, operand| {
-        m.reg.a ^= operand;
         m.set_flags_for(m.reg.a);
         2
     }),
@@ -102,16 +66,6 @@ pub(crate) const LSR_A: Op = Op {
     }),
 };
 
-pub(crate) const ORA_IMM: Op = Op {
-    mnemonic: "ORA",
-    addressing_mode: AddressingMode::Immediate,
-    opcode: 0x09,
-    func: OpFunc::Byte(|m, operand| {
-        m.reg.a |= operand;
-        m.set_flags_for(m.reg.a);
-        2
-    }),
-};
 
 pub(crate) const ROL_A: Op = Op {
     mnemonic: "ROL",

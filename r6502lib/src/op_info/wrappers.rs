@@ -18,14 +18,18 @@ pub(crate) mod absolute {
     }
 
     wrap!(adc, 4);
+    wrap!(and, 4);
+    wrap!(bit, 4);
     wrap!(cmp, 4);
     wrap!(cpx, 4);
     wrap!(cpy, 4);
     wrap_store!(dec, 6);
+    wrap!(eor, 4);
     wrap_store!(inc, 6);
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
+    wrap!(ora, 4);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
     wrap_store!(stx, 4);
@@ -62,11 +66,14 @@ pub(crate) mod absolute_x {
     }
 
     wrap!(adc, 4, 5);
+    wrap!(and, 4, 5);
     wrap!(cmp, 4, 5);
     wrap_store!(dec, 7, 7);
+    wrap!(eor, 4, 5);
     wrap_store!(inc, 7, 7);
     wrap!(lda, 4, 5);
     wrap!(ldy, 4, 5);
+    wrap!(ora, 4, 5);
     wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
@@ -102,9 +109,12 @@ pub(crate) mod absolute_y {
     }
 
     wrap!(adc, 4, 5);
+    wrap!(and, 4, 5);
     wrap!(cmp, 4, 5);
+    wrap!(eor, 4, 5);
     wrap!(lda, 4, 5);
     wrap!(ldx, 4, 5);
+    wrap!(ora, 4, 5);
     wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
@@ -131,8 +141,11 @@ pub(crate) mod indexed_indirect_x {
     }
 
     wrap!(adc, 6);
+    wrap!(and, 6);
     wrap!(cmp, 6);
+    wrap!(eor, 6);
     wrap!(lda, 6);
+    wrap!(ora, 6);
     wrap!(sbc, 6);
     wrap_store!(sta, 6);
 }
@@ -173,8 +186,11 @@ pub(crate) mod indirect_indexed_y {
     }
 
     wrap!(adc, 5, 6);
+    wrap!(and, 5, 6);
     wrap!(cmp, 5, 6);
+    wrap!(eor, 5, 6);
     wrap!(lda, 5, 6);
+    wrap!(ora, 5, 6);
     wrap!(sbc, 5, 6);
     wrap_store!(sta, 5, 6);
 }
@@ -199,14 +215,18 @@ pub(crate) mod zero_page {
     }
 
     wrap!(adc, 3);
+    wrap!(and, 3);
+    wrap!(bit, 3);
     wrap!(cmp, 3);
     wrap!(cpx, 3);
     wrap!(cpy, 3);
     wrap_store!(dec, 5);
+    wrap!(eor, 3);
     wrap_store!(inc, 5);
     wrap!(lda, 3);
     wrap!(ldx, 3);
     wrap!(ldy, 3);
+    wrap!(ora, 3);
     wrap!(sbc, 3);
     wrap_store!(sta, 3);
     wrap_store!(stx, 3);
@@ -235,10 +255,13 @@ pub(crate) mod zero_page_x {
     }
 
     wrap!(adc, 4);
+    wrap!(and, 4);
     wrap!(cmp, 4);
     wrap_store!(dec, 6);
+    wrap!(eor, 4);
     wrap_store!(inc, 6);
     wrap!(lda, 4);
+    wrap!(ora, 4);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
     wrap_store!(sty, 4);

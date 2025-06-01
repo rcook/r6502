@@ -5,7 +5,15 @@ mod items {
     use crate::op_info::macros::*;
     use crate::OpInfo;
 
-    // TBD: AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR
+    // TBD: ASL, LSR, ORA, ROL, ROR
+    pub(crate) const AND_ABS: OpInfo = absolute_wrapped!(AndAbs, and);
+    pub(crate) const AND_ABS_X: OpInfo = absolute_x_wrapped!(AndAbsX, and);
+    pub(crate) const AND_ABS_Y: OpInfo = absolute_y_wrapped!(AndAbsY, and);
+    pub(crate) const AND_IMM: OpInfo = immediate!(AndImm, and);
+    pub(crate) const AND_IND_X: OpInfo = indexed_indirect_x_wrapped!(AndIndX, and);
+    pub(crate) const AND_IND_Y: OpInfo = indirect_indexed_y_wrapped!(AndIndY, and);
+    pub(crate) const AND_ZP: OpInfo = zero_page_wrapped!(AndZp, and);
+    pub(crate) const AND_ZP_X: OpInfo = zero_page_x_wrapped!(AndZpX, and);
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
     pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
@@ -17,6 +25,8 @@ mod items {
     pub(crate) const BCC: OpInfo = relative!(Bcc, bcc);
     pub(crate) const BCS: OpInfo = relative!(Bcs, bcs);
     pub(crate) const BEQ: OpInfo = relative!(Beq, beq);
+    pub(crate) const BIT_ABS: OpInfo = absolute_wrapped!(BitAbs, bit);
+    pub(crate) const BIT_ZP: OpInfo = zero_page_wrapped!(BitZp, bit);
     pub(crate) const BMI: OpInfo = relative!(Bmi, bmi);
     pub(crate) const BNE: OpInfo = relative!(Bne, bne);
     pub(crate) const BPL: OpInfo = relative!(Bpl, bpl);
@@ -47,6 +57,14 @@ mod items {
     pub(crate) const DEC_ZP_X: OpInfo = zero_page_x_wrapped!(DecZpX, dec);
     pub(crate) const DEX: OpInfo = implied!(Dex, dex);
     pub(crate) const DEY: OpInfo = implied!(Dey, dey);
+    pub(crate) const EOR_ABS: OpInfo = absolute_wrapped!(EorAbs, eor);
+    pub(crate) const EOR_ABS_X: OpInfo = absolute_x_wrapped!(EorAbsX, eor);
+    pub(crate) const EOR_ABS_Y: OpInfo = absolute_y_wrapped!(EorAbsY, eor);
+    pub(crate) const EOR_IMM: OpInfo = immediate!(EorImm, eor);
+    pub(crate) const EOR_IND_X: OpInfo = indexed_indirect_x_wrapped!(EorIndX, eor);
+    pub(crate) const EOR_IND_Y: OpInfo = indirect_indexed_y_wrapped!(EorIndY, eor);
+    pub(crate) const EOR_ZP: OpInfo = zero_page_wrapped!(EorZp, eor);
+    pub(crate) const EOR_ZP_X: OpInfo = zero_page_x_wrapped!(EorZpX, eor);
     pub(crate) const INC_ABS: OpInfo = absolute_wrapped!(IncAbs, inc);
     pub(crate) const INC_ABS_X: OpInfo = absolute_x_wrapped!(IncAbsX, inc);
     pub(crate) const INC_ZP: OpInfo = zero_page_wrapped!(IncZp, inc);
@@ -75,6 +93,14 @@ mod items {
     pub(crate) const LDY_ZP: OpInfo = zero_page_wrapped!(LdyZp, ldy);
     pub(crate) const LDY_ZP_X: OpInfo = zero_page_wrapped!(LdyZpX, ldy);
     pub(crate) const NOP: OpInfo = implied!(Nop, nop);
+    pub(crate) const ORA_ABS: OpInfo = absolute_wrapped!(OraAbs, ora);
+    pub(crate) const ORA_ABS_X: OpInfo = absolute_x_wrapped!(OraAbsX, ora);
+    pub(crate) const ORA_ABS_Y: OpInfo = absolute_y_wrapped!(OraAbsY, ora);
+    pub(crate) const ORA_IMM: OpInfo = immediate!(OraImm, ora);
+    pub(crate) const ORA_IND_X: OpInfo = indexed_indirect_x_wrapped!(OraIndX, ora);
+    pub(crate) const ORA_IND_Y: OpInfo = indirect_indexed_y_wrapped!(OraIndY, ora);
+    pub(crate) const ORA_ZP: OpInfo = zero_page_wrapped!(OraZp, ora);
+    pub(crate) const ORA_ZP_X: OpInfo = zero_page_x_wrapped!(OraZpX, ora);
     pub(crate) const PHA: OpInfo = implied!(Pha, pha);
     pub(crate) const PHP: OpInfo = implied!(Php, php);
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
