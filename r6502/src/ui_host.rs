@@ -1,6 +1,6 @@
 use crate::{
-    initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, PollResult, Status,
-    UiMonitor, VmStatus,
+    initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, Status, UiMonitor,
+    VmStatus,
 };
 use anyhow::Result;
 use r6502lib::{Image, InstructionInfo, Vm, VmBuilder, OSHALT, OSWRCH};
@@ -30,77 +30,94 @@ impl UiHost {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
         let (os, rts) = initialize_vm(&mut vm, &image)?;
-        let mut free_running = false;
+
+        self.fetch(&vm);
+
+        let mut state = DebugState {
+            disconnected: false,
+            free_running: false,
+            waiting: false,
+        };
+
         loop {
-            while vm.step() {
-                let result = self.poll(&mut vm, free_running);
-                free_running = result.free_running;
-                if !result.is_active {
-                    // Handle disconnection
+            while state.waiting {
+                self.poll(&mut vm, &mut state);
+                if state.disconnected {
                     return Ok(VmStatus::Disconnected);
                 }
             }
 
-            match os.is_os_vector_brk(&vm) {
-                Some(OSHALT) => {
-                    self.monitor_tx
-                        .send(MonitorMessage::Status(Status::Halted))
-                        .expect("Must succeed");
-                    return Ok(VmStatus::Halted);
+            loop {
+                while vm.step() {
+                    self.poll(&mut vm, &mut state);
+                    if state.disconnected {
+                        return Ok(VmStatus::Disconnected);
+                    }
                 }
-                Some(OSWRCH) => {
-                    self.io_tx
-                        .send(IoMessage::WriteChar(vm.s.reg.a as char))
-                        .expect("Must succeed");
-                    os.return_from_os_vector_brk(&mut vm, &rts);
+
+                match os.is_os_vector_brk(&vm) {
+                    Some(OSHALT) => {
+                        self.monitor_tx
+                            .send(MonitorMessage::Status(Status::Halted))
+                            .expect("Must succeed");
+                        state.free_running = false;
+                        state.waiting = true;
+                        break;
+                    }
+                    Some(OSWRCH) => {
+                        self.io_tx
+                            .send(IoMessage::WriteChar(vm.s.reg.a as char))
+                            .expect("Must succeed");
+                        os.return_from_os_vector_brk(&mut vm, &rts);
+                    }
+                    _ => todo!(),
                 }
-                _ => todo!(),
             }
         }
     }
 
-    fn poll(&self, vm: &mut Vm, mut free_running: bool) -> PollResult {
+    fn fetch(&self, vm: &Vm) {
+        let instruction_info = InstructionInfo::fetch(vm);
+        _ = self.monitor_tx.send(MonitorMessage::BeforeExecute {
+            total_cycles: vm.total_cycles,
+            reg: vm.s.reg.clone(),
+            instruction_info,
+        });
+    }
+
+    fn poll(&self, vm: &mut Vm, state: &mut DebugState) {
         loop {
-            if free_running {
+            if state.free_running {
                 match self.debug_rx.try_recv() {
                     Err(TryRecvError::Disconnected) => {
-                        return PollResult {
-                            is_active: false,
-                            free_running,
-                        }
+                        state.disconnected = true;
+                        return;
                     }
                     Err(TryRecvError::Empty) => {
-                        return PollResult {
-                            is_active: true,
-                            free_running,
-                        }
+                        return;
                     }
                     Ok(m) => match m {
                         DebugMessage::Step => {}
                         DebugMessage::Run => {}
-                        DebugMessage::Break => free_running = false,
+                        DebugMessage::Break => state.free_running = false,
                         DebugMessage::FetchMemory(address_range) => {
                             self.fetch_memory(vm, address_range)
                         }
-                        DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
+                        DebugMessage::SetPc(addr) => {
+                            self.set_pc(vm, addr);
+                            state.waiting = true
+                        }
                     },
                 }
             } else {
                 match self.debug_rx.recv() {
                     Err(_) => {
-                        return PollResult {
-                            is_active: false,
-                            free_running,
-                        }
+                        state.disconnected = true;
+                        return;
                     }
                     Ok(m) => match m {
-                        DebugMessage::Step => {
-                            return PollResult {
-                                is_active: true,
-                                free_running,
-                            }
-                        }
-                        DebugMessage::Run => free_running = true,
+                        DebugMessage::Step => return,
+                        DebugMessage::Run => state.free_running = true,
                         DebugMessage::Break => {}
                         DebugMessage::FetchMemory(address_range) => {
                             self.fetch_memory(vm, address_range)
@@ -126,11 +143,12 @@ impl UiHost {
 
     fn set_pc(&self, vm: &mut Vm, addr: u16) {
         vm.s.reg.pc = addr;
-        let instruction_info = InstructionInfo::fetch(vm);
-        _ = self.monitor_tx.send(MonitorMessage::BeforeExecute {
-            total_cycles: vm.total_cycles,
-            reg: vm.s.reg.clone(),
-            instruction_info,
-        });
+        self.fetch(vm);
     }
+}
+
+struct DebugState {
+    disconnected: bool,
+    free_running: bool,
+    waiting: bool,
 }
