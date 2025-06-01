@@ -1,9 +1,11 @@
-use crate::{Cycles, Instruction, RegisterFile, Status};
+use crate::Status;
 use r6502lib::{InstructionInfo, Reg, TotalCycles};
 
 pub(crate) enum MonitorMessage {
     BeforeFetch {
+        #[allow(unused)]
         total_cycles: TotalCycles,
+        #[allow(unused)]
         reg: Reg,
     },
     BeforeExecute {

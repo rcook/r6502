@@ -1,7 +1,7 @@
 #![allow(unused)]
 use crate::{
-    Args, DebugMessage, ImageSource, IoMessage, MonitorMessage, Status, SymbolInfo, TestHost, Ui,
-    UiHost, VmHost, VmStatus,
+    Args, DebugMessage, IoMessage, MonitorMessage, Status, SymbolInfo, TestHost, Ui, UiHost,
+    VmHost, VmStatus,
 };
 use anyhow::Result;
 use clap::Parser;
@@ -35,6 +35,11 @@ fn run_ui_host(args: &Args) -> Result<()> {
         }
 
         impl Monitor for HackyMonitor {
+            fn on_before_fetch(&self, total_cycles: TotalCycles, reg: Reg) {
+                self.monitor_tx
+                    .send(MonitorMessage::BeforeFetch { total_cycles, reg })
+                    .expect("Must succeed")
+            }
             fn on_before_execute(
                 &self,
                 total_cycles: TotalCycles,

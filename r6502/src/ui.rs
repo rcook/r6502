@@ -23,7 +23,7 @@ pub(crate) struct Ui {
     cursive: CursiveRunner<CursiveRunnable>,
     monitor_rx: Receiver<MonitorMessage>,
     io_rx: Receiver<IoMessage>,
-    symbols: Vec<SymbolInfo>,
+    _symbols: Vec<SymbolInfo>,
 }
 
 impl Ui {
@@ -39,7 +39,7 @@ impl Ui {
             cursive,
             monitor_rx,
             io_rx,
-            symbols,
+            _symbols: symbols,
         })
     }
 
@@ -218,7 +218,10 @@ impl Ui {
 
         while let Some(message) = self.monitor_rx.try_iter().next() {
             match message {
-                BeforeFetch { total_cycles, reg } => {}
+                BeforeFetch {
+                    total_cycles: _,
+                    reg: _,
+                } => {}
                 BeforeExecute {
                     total_cycles,
                     reg,

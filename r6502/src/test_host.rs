@@ -18,8 +18,4 @@ impl TestHost {
     }
 }
 
-impl VmHost for TestHost {
-    fn write_stdout(&self, c: char) {
-        self.stdout.borrow_mut().push(c)
-    }
-}
+impl VmHost for TestHost {}

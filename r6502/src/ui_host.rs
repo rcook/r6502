@@ -1,8 +1,5 @@
-use crate::{
-    Cycles, DebugMessage, Instruction, MachineState, MonitorMessage, PollResult, RegisterFile,
-    Status, VmHost,
-};
-use r6502lib::{InstructionInfo, Memory, Reg, TotalCycles};
+use crate::{DebugMessage, MonitorMessage, PollResult, Status, VmHost};
+use r6502lib::Memory;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 pub(crate) struct UiHost {

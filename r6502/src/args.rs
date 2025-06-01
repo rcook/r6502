@@ -1,4 +1,4 @@
-use clap::{ArgAction, Parser};
+use clap::Parser;
 use clap_num::maybe_hex;
 use std::path::PathBuf;
 
