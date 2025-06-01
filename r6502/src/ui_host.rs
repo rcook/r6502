@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use crate::State::*;
 use crate::{
     initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor,
@@ -62,13 +60,13 @@ impl UiHost {
     }
 
     fn handle_brk(&self, vm: &mut Vm, os: &Os, rts: &OpInfo, state: State) -> State {
-        match os.is_os_vector_brk(&vm) {
+        match os.is_os_vector_brk(vm) {
             Some(OSHALT) => Halted,
             Some(OSWRCH) => {
                 self.io_tx
                     .send(IoMessage::WriteChar(vm.s.reg.a as char))
                     .expect("Must succeed");
-                os.return_from_os_vector_brk(vm, &rts);
+                os.return_from_os_vector_brk(vm, rts);
                 state
             }
             _ => {
@@ -164,10 +162,4 @@ impl UiHost {
         vm.s.reg.pc = addr;
         self.fetch_instruction(vm);
     }
-}
-
-struct DebugState {
-    disconnected: bool,
-    free_running: bool,
-    waiting: bool,
 }
