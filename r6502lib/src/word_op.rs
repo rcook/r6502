@@ -1,6 +1,6 @@
-use crate::{Cycles, VmState};
+use crate::{OpCycles, VmState};
 
-pub(crate) type WordOpFn = fn(&mut VmState, u16) -> Cycles;
+pub(crate) type WordOpFn = fn(&mut VmState, u16) -> OpCycles;
 
 #[derive(Clone)]
 pub struct WordOp(WordOpFn);
@@ -10,7 +10,7 @@ impl WordOp {
         Self(f)
     }
 
-    pub(crate) fn execute(&self, s: &mut VmState, value: &u16) -> Cycles {
+    pub(crate) fn execute(&self, s: &mut VmState, value: &u16) -> OpCycles {
         self.0(s, *value)
     }
 }

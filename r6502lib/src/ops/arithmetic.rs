@@ -1,10 +1,10 @@
 use crate::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
-use crate::{p_get, p_value, p_set, Cycles, VmState};
+use crate::{p_get, p_value, p_set, OpCycles, VmState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn adc(s: &mut VmState, operand: u8) -> OpCycles {
     if p_get!(s.reg, D) {
         todo!("Decimal mode not implemented")
     }
@@ -31,7 +31,7 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) -> Cycles {
 // http://www.6502.org/tutorials/6502opcodes.html#SBC
 // http://www.6502.org/users/obelisk/6502/reference.html#SBC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-pub(crate) fn sbc(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn sbc(s: &mut VmState, operand: u8) -> OpCycles {
     if p_get!(s.reg, D) {
         todo!("Decimal mode not implemented")
     }

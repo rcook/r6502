@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{Binding, Cycles, Op, OpInfo, Opcode, VmState, MOS_6502};
+use crate::{Binding, OpCycles, Op, OpInfo, Opcode, VmState, MOS_6502};
 
 #[allow(unused)]
 pub(crate) struct Instruction {
@@ -43,7 +43,7 @@ impl Instruction {
         }
     }
 
-    pub(crate) fn execute(&self, s: &mut VmState) -> Cycles {
+    pub(crate) fn execute(&self, s: &mut VmState) -> OpCycles {
         match &self.binding {
             Binding::NoOperand(f) => {
                 s.reg.pc += 1;

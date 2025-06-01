@@ -1,23 +1,23 @@
 use crate::ops::helper::{is_neg, is_zero};
-use crate::{p_set, Cycles, VmState, P};
+use crate::{p_set, OpCycles, VmState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
-pub(crate) fn pha(s: &mut VmState) -> Cycles {
+pub(crate) fn pha(s: &mut VmState) -> OpCycles {
     s.push(s.reg.a);
     3
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHP
 // http://www.6502.org/users/obelisk/6502/reference.html#PHP
-pub(crate) fn php(s: &mut VmState) -> Cycles {
+pub(crate) fn php(s: &mut VmState) -> OpCycles {
     s.push(s.reg.p.bits());
     3
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLA
 // http://www.6502.org/users/obelisk/6502/reference.html#PLA
-pub(crate) fn pla(s: &mut VmState) -> Cycles {
+pub(crate) fn pla(s: &mut VmState) -> OpCycles {
     let value = s.pull();
     s.reg.a = value;
     p_set!(s.reg, N, is_neg(value));
@@ -27,7 +27,7 @@ pub(crate) fn pla(s: &mut VmState) -> Cycles {
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLP
 // http://www.6502.org/users/obelisk/6502/reference.html#PLP
-pub(crate) fn plp(s: &mut VmState) -> Cycles {
+pub(crate) fn plp(s: &mut VmState) -> OpCycles {
     s.reg.p = P::from_bits(s.pull()).expect("Must be valid");
     4
 }

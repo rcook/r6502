@@ -1,58 +1,58 @@
 use crate::ops::helper::branch;
-use crate::{Cycles, VmState, P};
+use crate::{OpCycles, VmState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCC
 // http://www.6502.org/users/obelisk/6502/reference.html#BCC
-pub(crate) fn bcc(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bcc(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::C, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCS
 // http://www.6502.org/users/obelisk/6502/reference.html#BCS
-pub(crate) fn bcs(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bcs(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::C, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BEQ
 // http://www.6502.org/users/obelisk/6502/reference.html#BEQ
-pub(crate) fn beq(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn beq(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::Z, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BMI
 // http://www.6502.org/users/obelisk/6502/reference.html#BMI
-pub(crate) fn bmi(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bmi(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::N, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BNE
 // http://www.6502.org/users/obelisk/6502/reference.html#BNE
-pub(crate) fn bne(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bne(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::Z, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BPL
 // http://www.6502.org/users/obelisk/6502/reference.html#BPL
-pub(crate) fn bpl(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bpl(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::N, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVC
 // http://www.6502.org/users/obelisk/6502/reference.html#BVC
-pub(crate) fn bvc(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bvc(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::V, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVS
 // http://www.6502.org/users/obelisk/6502/reference.html#BVS
-pub(crate) fn bvs(s: &mut VmState, operand: u8) -> Cycles {
+pub(crate) fn bvs(s: &mut VmState, operand: u8) -> OpCycles {
     branch(s, operand, P::V, true)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ops::branch::beq;
-    use crate::{p_set, Cycles, VmState};
+    use crate::{p_set, OpCycles, VmState};
     use rstest::rstest;
 
     #[rstest]
@@ -61,7 +61,7 @@ mod tests {
     #[case(3, 0x10e0, true, 0x10f0, 0xf0)]
     #[case(4, 0x0ff0, true, 0x1000, 0xf0)]
     fn basics(
-        #[case] expected_cycles: Cycles,
+        #[case] expected_cycles: OpCycles,
         #[case] expected_pc: u16,
         #[case] flag_value: bool,
         #[case] pc: u16,

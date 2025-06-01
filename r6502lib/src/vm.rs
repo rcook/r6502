@@ -1,4 +1,4 @@
-use crate::{p_get, DummyMonitor, Instruction, InstructionInfo, Monitor, VmState};
+use crate::{p_get, DummyMonitor, Instruction, InstructionInfo, Monitor, TotalCycles, VmState};
 use derive_builder::Builder;
 use std::result::Result as StdResult;
 
@@ -12,7 +12,7 @@ pub struct Vm {
     pub s: VmState,
 
     #[builder(default = "0")]
-    pub cycles: u32,
+    pub total_cycles: TotalCycles,
 }
 
 impl Default for Vm {
@@ -23,21 +23,32 @@ impl Default for Vm {
 
 #[allow(unused)]
 impl Vm {
-    pub(crate) fn new(monitor: Box<dyn Monitor>, s: VmState, cycles: u32) -> Self {
-        Self { monitor, s, cycles }
+    pub(crate) fn new(monitor: Box<dyn Monitor>, s: VmState, total_cycles: TotalCycles) -> Self {
+        Self {
+            monitor,
+            s,
+            total_cycles,
+        }
     }
 
     #[must_use]
     pub fn step(&mut self) -> bool {
-        self.monitor.on_before_fetch(self.s.reg.clone());
+        self.monitor
+            .on_before_fetch(self.total_cycles, self.s.reg.clone());
         let instruction = Instruction::fetch(&mut self.s);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
-        self.monitor
-            .on_before_execute(self.s.reg.clone(), instruction_info.clone());
-        let cycles = instruction.execute(&mut self.s);
-        self.monitor
-            .on_after_execute(self.s.reg.clone(), instruction_info.clone(), cycles);
-        self.cycles += cycles as u32;
+        self.monitor.on_before_execute(
+            self.total_cycles,
+            self.s.reg.clone(),
+            instruction_info.clone(),
+        );
+        let instruction_cycles = instruction.execute(&mut self.s);
+        self.monitor.on_after_execute(
+            self.total_cycles,
+            self.s.reg.clone(),
+            instruction_info.clone(),
+        );
+        self.total_cycles += instruction_cycles as TotalCycles;
         !p_get!(self.s.reg, B)
     }
 
@@ -67,7 +78,7 @@ mod tests {
         vm.s.reg.a = 0x12;
         vm.s.memory[0x0000] = Opcode::Nop as u8;
         assert!(vm.step());
-        assert_eq!(2, vm.cycles);
+        assert_eq!(2, vm.total_cycles);
         assert_eq!(0x12, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
         assert_eq!(0x0001, vm.s.reg.pc)
@@ -80,7 +91,7 @@ mod tests {
         vm.s.memory[0x0000] = Opcode::AdcImm as u8;
         vm.s.memory[0x0001] = 0x34;
         assert!(vm.step());
-        assert_eq!(2, vm.cycles);
+        assert_eq!(2, vm.total_cycles);
         assert_eq!(0x46, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
         assert_eq!(0x0002, vm.s.reg.pc)
@@ -94,7 +105,7 @@ mod tests {
         vm.s.memory[0x0001] = 0x34;
         vm.s.memory[0x0034] = 0x56;
         assert!(vm.step());
-        assert_eq!(3, vm.cycles);
+        assert_eq!(3, vm.total_cycles);
         assert_eq!(0x68, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
         assert_eq!(0x0002, vm.s.reg.pc)
@@ -108,7 +119,7 @@ mod tests {
         vm.s.memory[0x0001] = 0x00;
         vm.s.memory[0x0002] = 0x10;
         assert!(vm.step());
-        assert_eq!(3, vm.cycles);
+        assert_eq!(3, vm.total_cycles);
         assert_eq!(0x12, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
         assert_eq!(0x1000, vm.s.reg.pc)
@@ -123,7 +134,7 @@ mod tests {
         vm.s.memory[0x0002] = 0x34;
         vm.s.memory[0x3412] = 0x13;
         assert!(vm.step());
-        assert_eq!(4, vm.cycles);
+        assert_eq!(4, vm.total_cycles);
         assert_eq!(0x38, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
         assert_eq!(0x0003, vm.s.reg.pc)
@@ -137,7 +148,7 @@ mod tests {
         vm.s.memory.store_word(IRQ, 0x9876);
         p_set!(vm.s.reg, B, false);
         assert!(!vm.step());
-        assert_eq!(7, vm.cycles);
+        assert_eq!(7, vm.total_cycles);
         assert!(p_get!(vm.s.reg, B));
         assert_eq!(0x9876, vm.s.reg.pc);
     }
@@ -159,12 +170,12 @@ mod tests {
         p_set!(vm.s.reg, B, false);
 
         assert!(vm.step());
-        assert_eq!(6, vm.cycles);
+        assert_eq!(6, vm.total_cycles);
         assert!(!p_get!(vm.s.reg, B));
         assert_eq!(OSWRCH, vm.s.reg.pc);
 
         assert!(!vm.step());
-        assert_eq!(13, vm.cycles);
+        assert_eq!(13, vm.total_cycles);
         assert_eq!(Some(OSWRCH), os.is_os_vector_brk(&vm));
 
         Ok(())
@@ -193,7 +204,7 @@ mod tests {
         let mut vm = load_into_vm(include_str!("../../examples/add8.r6502.txt"))?;
         vm.s.reg.pc = 0x0e01;
         vm.run_until_brk();
-        assert_eq!(21, vm.cycles);
+        assert_eq!(21, vm.total_cycles);
         assert_eq!(0x46, vm.s.memory[0x0e00]);
         Ok(())
     }
@@ -203,7 +214,7 @@ mod tests {
         let mut vm = load_into_vm(include_str!("../../examples/add16.r6502.txt"))?;
         vm.s.reg.pc = 0x0e02;
         vm.run_until_brk();
-        assert_eq!(33, vm.cycles);
+        assert_eq!(33, vm.total_cycles);
         assert_eq!(0xac68, vm.s.memory.fetch_word(0x0e00));
         Ok(())
     }

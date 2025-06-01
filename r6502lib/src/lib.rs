@@ -3,7 +3,6 @@ mod binding;
 mod byte_op;
 mod constants;
 mod cpu;
-mod cycles;
 mod image;
 mod instruction;
 mod instruction_info;
@@ -11,6 +10,7 @@ mod memory;
 mod monitor;
 mod no_operand_op;
 mod op;
+mod op_cycles;
 mod op_info;
 mod opcode;
 mod operand;
@@ -18,6 +18,7 @@ mod ops;
 mod os;
 mod p;
 mod reg;
+mod total_cycles;
 mod util;
 mod vm;
 mod vm_state;
@@ -25,17 +26,18 @@ mod word_op;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
-pub(crate) use cycles::Cycles;
 pub(crate) use instruction::Instruction;
 #[allow(unused)]
 pub(crate) use no_operand_op::NoOperandFn;
 #[allow(unused)]
 pub(crate) use op::Op;
+pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;
 #[allow(unused)]
 pub(crate) use p::{p, P_STR};
 #[allow(unused)]
 pub(crate) use reg::reg;
+pub(crate) use total_cycles::TotalCycles;
 
 pub use byte_op::ByteOp;
 pub use constants::{IRQ, IRQ_VALUE, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};

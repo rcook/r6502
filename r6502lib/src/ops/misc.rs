@@ -1,8 +1,8 @@
-use crate::{p_set, Cycles, VmState, IRQ};
+use crate::{p_set, OpCycles, VmState, IRQ};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BRK
 // http://www.6502.org/users/obelisk/6502/reference.html#BRK
-pub(crate) fn brk(s: &mut VmState) -> Cycles {
+pub(crate) fn brk(s: &mut VmState) -> OpCycles {
     s.push_word(s.reg.pc);
     s.push(s.reg.p.bits());
     s.reg.pc = s.memory.fetch_word(IRQ);
@@ -12,7 +12,7 @@ pub(crate) fn brk(s: &mut VmState) -> Cycles {
 
 // http://www.6502.org/tutorials/6502opcodes.html#NOP
 // http://www.6502.org/users/obelisk/6502/reference.html#NOP
-pub(crate) fn nop(_s: &mut VmState) -> Cycles {
+pub(crate) fn nop(_s: &mut VmState) -> OpCycles {
     2
 }
 
