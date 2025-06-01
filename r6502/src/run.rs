@@ -1,14 +1,8 @@
-use crate::{
-    Args, DebugMessage, IoMessage, MonitorMessage, Status, SymbolInfo, Ui, UiHost, UiMonitor,
-    VmStatus,
-};
+use crate::{initialize_vm, Args, SymbolInfo, Ui, UiHost};
 use anyhow::Result;
 use clap::Parser;
-use r6502lib::{
-    DummyMonitor, Image, Monitor, OpInfo, Opcode, Os, OsBuilder, TracingMonitor, Vm, VmBuilder,
-    MOS_6502, OSHALT, OSWRCH,
-};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use r6502lib::{DummyMonitor, Image, Monitor, TracingMonitor, VmBuilder, OSHALT, OSWRCH};
+use std::sync::mpsc::channel;
 use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
@@ -22,52 +16,13 @@ pub(crate) fn run() -> Result<()> {
 }
 
 fn run_ui_host(args: &Args) -> Result<()> {
-    fn run_vm(
-        image: Image,
-        debug_rx: Receiver<DebugMessage>,
-        monitor_tx: Sender<MonitorMessage>,
-        io_tx: Sender<IoMessage>,
-    ) -> Result<VmStatus> {
-        let monitor = Box::new(UiMonitor::new(monitor_tx.clone()));
-        let mut vm = VmBuilder::default().monitor(monitor).build()?;
-        let (os, rts) = initialize_vm(&mut vm, &image)?;
-        let ui_host = UiHost::new(debug_rx, monitor_tx.clone());
-        let mut free_running = false;
-        loop {
-            while vm.step() {
-                let result = ui_host.poll(&vm.s.memory, free_running);
-                free_running = result.free_running;
-                if !result.is_active {
-                    // Handle disconnection
-                    return Ok(VmStatus::Disconnected);
-                }
-            }
-
-            match os.is_os_vector_brk(&vm) {
-                Some(OSHALT) => {
-                    monitor_tx
-                        .send(MonitorMessage::Status(Status::Halted))
-                        .expect("Must succeed");
-                    return Ok(VmStatus::Halted);
-                }
-                Some(OSWRCH) => {
-                    io_tx
-                        .send(IoMessage::WriteChar(vm.s.reg.a as char))
-                        .expect("Must succeed");
-                    os.return_from_os_vector_brk(&mut vm, &rts);
-                }
-                _ => todo!(),
-            }
-        }
-    }
-
     let image = Image::load(&args.path, args.origin, args.start)?;
     let symbols = SymbolInfo::load(&args.path)?;
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
     let mut ui = Ui::new(monitor_channel.1, io_channel.1, debug_channel.0, symbols)?;
-    spawn(move || run_vm(image, debug_channel.1, monitor_channel.0, io_channel.0));
+    spawn(move || UiHost::new(debug_channel.1, monitor_channel.0, io_channel.0).run(image));
     ui.run();
     Ok(())
 }
@@ -100,22 +55,6 @@ fn run_cli_host(args: &Args) -> Result<()> {
     }
 
     Ok(())
-}
-
-fn initialize_vm(vm: &mut Vm, image: &Image) -> Result<(Os, OpInfo)> {
-    let os = OsBuilder::default().build()?;
-
-    let rts = MOS_6502
-        .get_op_info(&Opcode::Rts)
-        .expect("RTS must exist")
-        .clone();
-
-    os.initialize(&mut vm.s.memory);
-    vm.s.memory.load(image);
-    vm.s.push_word(OSHALT - 1);
-    vm.s.reg.pc = image.start;
-
-    Ok((os, rts))
 }
 
 /*

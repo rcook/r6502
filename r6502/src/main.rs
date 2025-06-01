@@ -9,6 +9,7 @@ mod symbol_info;
 mod ui;
 mod ui_host;
 mod ui_monitor;
+mod util;
 mod vm_status;
 
 pub(crate) use args::Args;
@@ -21,6 +22,7 @@ pub(crate) use symbol_info::SymbolInfo;
 pub(crate) use ui::Ui;
 pub(crate) use ui_host::UiHost;
 pub(crate) use ui_monitor::UiMonitor;
+pub(crate) use util::initialize_vm;
 pub(crate) use vm_status::VmStatus;
 
 fn main() -> anyhow::Result<()> {
