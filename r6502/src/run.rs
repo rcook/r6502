@@ -24,7 +24,11 @@ fn run_ui_host(args: &Args) -> Result<()> {
     let monitor_channel = channel();
     let io_channel = channel();
     let mut ui = Ui::new(monitor_channel.1, io_channel.1, debug_channel.0, symbols)?;
-    spawn(move || UiHost::new(debug_channel.1, monitor_channel.0, io_channel.0).run(image));
+    spawn(move || {
+        UiHost::new(debug_channel.1, monitor_channel.0, io_channel.0)
+            .run(image)
+            .expect("Must succeed")
+    });
     ui.run();
     Ok(())
 }

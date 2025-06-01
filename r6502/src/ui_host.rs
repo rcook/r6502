@@ -1,6 +1,5 @@
 use crate::{
     initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, Status, UiMonitor,
-    VmStatus,
 };
 use anyhow::Result;
 use r6502lib::{Image, InstructionInfo, Vm, VmBuilder, OSHALT, OSWRCH};
@@ -26,7 +25,7 @@ impl UiHost {
         }
     }
 
-    pub(crate) fn run(&self, image: Image) -> Result<VmStatus> {
+    pub(crate) fn run(&self, image: Image) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
         let (os, rts) = initialize_vm(&mut vm, &image)?;
@@ -43,7 +42,7 @@ impl UiHost {
             while state.waiting {
                 self.poll(&mut vm, &mut state);
                 if state.disconnected {
-                    return Ok(VmStatus::Disconnected);
+                    return Ok(());
                 }
             }
 
@@ -51,7 +50,7 @@ impl UiHost {
                 while vm.step() {
                     self.poll(&mut vm, &mut state);
                     if state.disconnected {
-                        return Ok(VmStatus::Disconnected);
+                        return Ok(());
                     }
                 }
 
