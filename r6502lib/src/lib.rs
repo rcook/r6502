@@ -37,7 +37,6 @@ pub(crate) use operand::Operand;
 pub(crate) use p::{p, P_STR};
 #[allow(unused)]
 pub(crate) use reg::reg;
-pub(crate) use total_cycles::TotalCycles;
 
 pub use byte_op::ByteOp;
 pub use constants::{IRQ, IRQ_VALUE, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
@@ -52,6 +51,7 @@ pub use opcode::Opcode;
 pub use os::{Os, OsBuilder, OsBuilderError};
 pub use p::P;
 pub use reg::Reg;
+pub use total_cycles::TotalCycles;
 pub use vm::{Vm, VmBuilder, VmBuilderError};
 pub use vm_state::{VmState, VmStateBuilder, VmStateBuilderError};
 pub use word_op::WordOp;

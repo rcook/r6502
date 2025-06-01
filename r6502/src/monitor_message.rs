@@ -1,18 +1,22 @@
 use crate::{Cycles, Instruction, RegisterFile, Status};
+use r6502lib::{InstructionInfo, Reg, TotalCycles};
 
 pub(crate) enum MonitorMessage {
+    BeforeFetch {
+        total_cycles: TotalCycles,
+        reg: Reg,
+    },
     BeforeExecute {
-        reg: RegisterFile,
-        cycles: Cycles,
-        instruction: Instruction,
+        total_cycles: TotalCycles,
+        reg: Reg,
+        instruction_info: InstructionInfo,
     },
     AfterExecute {
-        reg: RegisterFile,
-        cycles: Cycles,
-        instruction: Instruction,
+        total_cycles: TotalCycles,
+        reg: Reg,
+        instruction_info: InstructionInfo,
     },
     Status(Status),
-    WriteStdout(char),
     FetchMemoryResponse {
         begin: u16,
         end: u16,

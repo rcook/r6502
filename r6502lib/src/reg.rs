@@ -12,6 +12,15 @@ pub struct Reg {
     pub s: u8,
 }
 
+impl Reg {
+    pub fn display(&self) -> String {
+        format!(
+            "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
+            self.pc, self.p, self.a, self.x, self.y, self.s,
+        )
+    }
+}
+
 impl Default for Reg {
     fn default() -> Self {
         Self {

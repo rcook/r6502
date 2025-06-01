@@ -1,4 +1,4 @@
-use crate::{DebugMessage, Status as _Status, MonitorMessage, SymbolInfo};
+use crate::{DebugMessage, IoMessage, MonitorMessage, Status as _Status, SymbolInfo};
 use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
@@ -21,13 +21,15 @@ const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
 
 pub(crate) struct Ui {
     cursive: CursiveRunner<CursiveRunnable>,
-    status_rx: Receiver<MonitorMessage>,
+    monitor_rx: Receiver<MonitorMessage>,
+    io_rx: Receiver<IoMessage>,
     symbols: Vec<SymbolInfo>,
 }
 
 impl Ui {
     pub(crate) fn new(
-        status_rx: Receiver<MonitorMessage>,
+        monitor_rx: Receiver<MonitorMessage>,
+        io_rx: Receiver<IoMessage>,
         debug_tx: Sender<DebugMessage>,
         symbols: Vec<SymbolInfo>,
     ) -> Result<Self> {
@@ -35,7 +37,8 @@ impl Ui {
         let cursive = Self::make_ui(&symbols, debug_tx);
         Ok(Self {
             cursive,
-            status_rx,
+            monitor_rx,
+            io_rx,
             symbols,
         })
     }
@@ -195,47 +198,62 @@ impl Ui {
     }
 
     fn step(&mut self) -> bool {
+        use crate::IoMessage::*;
         use crate::MonitorMessage::*;
 
         if !self.cursive.is_running() {
             return false;
         }
 
-        while let Some(message) = self.status_rx.try_iter().next() {
+        while let Some(message) = self.io_rx.try_iter().next() {
             match message {
+                WriteChar(ch) => {
+                    self.cursive
+                        .find_name::<TextView>(STDOUT_NAME)
+                        .expect("Must exist")
+                        .append(ch);
+                }
+            }
+        }
+
+        while let Some(message) = self.monitor_rx.try_iter().next() {
+            match message {
+                BeforeFetch { total_cycles, reg } => {}
                 BeforeExecute {
+                    total_cycles,
                     reg,
-                    cycles,
-                    instruction,
+                    instruction_info,
                 } => {
                     self.cursive
                         .find_name::<TextView>(REGISTERS_NAME)
                         .expect("Must exist")
-                        .set_content(reg.pretty());
+                        .set_content(reg.display());
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
-                        .set_content(format!("{cycles}"));
+                        .set_content(format!("{total_cycles}"));
+                    // TBD: Use self.symbols
                     self.cursive
                         .find_name::<TextView>(CURRENT_NAME)
                         .expect("Must exist")
-                        .set_content(instruction.pretty_current(&self.symbols));
+                        .set_content(instruction_info.disassembly().expect("Must succeed"));
                 }
                 AfterExecute {
+                    total_cycles,
                     reg,
-                    cycles,
-                    instruction,
+                    instruction_info,
                 } => {
                     self.cursive
                         .find_name::<TextView>(REGISTERS_NAME)
                         .expect("Must exist")
-                        .set_content(reg.pretty());
+                        .set_content(reg.display());
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
-                        .set_content(format!("{cycles}"));
+                        .set_content(format!("{total_cycles}"));
 
-                    let mut s = instruction.pretty_disassembly(&self.symbols);
+                    // TBD: Use self.symbols
+                    let mut s = instruction_info.disassembly().expect("Must succeed");
                     s.push('\n');
                     self.cursive
                         .find_name::<TextView>(DISASSEMBLY_NAME)
@@ -251,12 +269,6 @@ impl Ui {
                         .find_name::<TextView>(STATUS_NAME)
                         .expect("Must exist")
                         .append(s);
-                }
-                WriteStdout(c) => {
-                    self.cursive
-                        .find_name::<TextView>(STDOUT_NAME)
-                        .expect("Must exist")
-                        .append(c);
                 }
                 FetchMemoryResponse {
                     begin,

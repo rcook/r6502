@@ -1,1 +1,1 @@
-pub(crate) type TotalCycles = u32;
+pub type TotalCycles = u32;

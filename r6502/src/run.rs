@@ -1,13 +1,16 @@
 #![allow(unused)]
-use crate::{Args, ImageSource, SymbolInfo, TestHost, Ui, UiHost, VmHost, VmStatus};
+use crate::{
+    Args, DebugMessage, ImageSource, IoMessage, MonitorMessage, Status, SymbolInfo, TestHost, Ui,
+    UiHost, VmHost, VmStatus,
+};
 use anyhow::Result;
 use clap::Parser;
 use r6502lib::{
-    p_set, DummyMonitor, Image, Monitor, OpInfo, Opcode, Os, OsBuilder, TracingMonitor, Vm,
-    VmBuilder, MOS_6502, OSHALT, OSWRCH,
+    p_set, DummyMonitor, Image, InstructionInfo, Monitor, OpInfo, Opcode, Os, OsBuilder, Reg,
+    TotalCycles, TracingMonitor, Vm, VmBuilder, MOS_6502, OSHALT, OSWRCH,
 };
 use std::path::Path;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
@@ -21,15 +24,58 @@ pub(crate) fn run() -> Result<()> {
 }
 
 fn run_ui_host(args: &Args) -> Result<()> {
-    fn run_vm(image: Image, ui_host: UiHost) -> Result<VmStatus> {
+    fn run_vm(
+        image: Image,
+        debug_rx: Receiver<DebugMessage>,
+        monitor_tx: Sender<MonitorMessage>,
+        io_tx: Sender<IoMessage>,
+    ) -> Result<VmStatus> {
+        struct HackyMonitor {
+            monitor_tx: Sender<MonitorMessage>,
+        }
+
+        impl Monitor for HackyMonitor {
+            fn on_before_execute(
+                &self,
+                total_cycles: TotalCycles,
+                reg: Reg,
+                instruction_info: InstructionInfo,
+            ) {
+                self.monitor_tx
+                    .send(MonitorMessage::BeforeExecute {
+                        total_cycles,
+                        reg,
+                        instruction_info,
+                    })
+                    .expect("Must succeed")
+            }
+
+            fn on_after_execute(
+                &self,
+                total_cycles: TotalCycles,
+                reg: Reg,
+                instruction_info: InstructionInfo,
+            ) {
+                self.monitor_tx
+                    .send(MonitorMessage::AfterExecute {
+                        total_cycles,
+                        reg,
+                        instruction_info,
+                    })
+                    .expect("Must succeed")
+            }
+        }
+
+        let hacky_monitor = Box::new(HackyMonitor {
+            monitor_tx: monitor_tx.clone(),
+        });
+
+        let mut vm = VmBuilder::default().monitor(hacky_monitor).build()?;
+        let (os, rts) = initialize_vm(&mut vm, &image)?;
+
+        let ui_host = UiHost::new(debug_rx, monitor_tx);
         let mut free_running = false;
         loop {
-            let mut vm = VmBuilder::default()
-                .monitor(Box::new(DummyMonitor))
-                .build()?;
-
-            let (os, rts) = initialize_vm(&mut vm, &image)?;
-
             while vm.step() {
                 let result = ui_host.poll(&vm.s.memory, free_running);
                 free_running = result.free_running;
@@ -41,11 +87,11 @@ fn run_ui_host(args: &Args) -> Result<()> {
 
             match os.is_os_vector_brk(&vm) {
                 Some(OSHALT) => {
-                    // TBD host.report_status(Status::Halted);
+                    ui_host.report_status(Status::Halted);
                     return Ok(VmStatus::Halted);
                 }
                 Some(OSWRCH) => {
-                    //print!("{}", vm.s.reg.a as char);
+                    io_tx.send(IoMessage::WriteChar(vm.s.reg.a as char));
                     os.return_from_os_vector_brk(&mut vm, &rts);
                 }
                 _ => todo!(),
@@ -55,16 +101,12 @@ fn run_ui_host(args: &Args) -> Result<()> {
 
     let image = Image::load(&args.path, args.origin, args.start)?;
     let symbols = SymbolInfo::load(&args.path)?;
-
     let debug_channel = channel();
-    let status_channel = channel();
-    let mut ui = Ui::new(status_channel.1, debug_channel.0, symbols)?;
-
-    let ui_host = UiHost::new(debug_channel.1, status_channel.0);
-    spawn(move || run_vm(image, ui_host));
-
+    let monitor_channel = channel();
+    let io_channel = channel();
+    let mut ui = Ui::new(monitor_channel.1, io_channel.1, debug_channel.0, symbols)?;
+    spawn(move || run_vm(image, debug_channel.1, monitor_channel.0, io_channel.0));
     ui.run();
-
     Ok(())
 }
 

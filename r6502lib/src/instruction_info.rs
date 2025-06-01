@@ -30,16 +30,14 @@ impl InstructionInfo {
         }
     }
 
-    #[allow(unused)]
-    pub(crate) fn display(&self) -> Result<String> {
+    pub fn display(&self) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
         op_info.addressing_mode.format_instruction_info(self)
     }
 
-    #[allow(unused)]
-    pub(crate) fn disassembly(&self) -> Result<String> {
+    pub fn disassembly(&self) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
