@@ -1,22 +1,22 @@
- 0000  A9 00     LDA  #$00
- 0002  85 2A     STA  $2A
- 0004  85 2B     STA  $2B
- 0006  A2 10     LDX  #$10
- 0008  06 26     ASL  $26
- 000A  26 27     ROL  $27
- 000C  26 2A     ROL  $2A
- 000E  26 2B     ROL  $2B
- 0010  A5 2A     LDA  $2A
- 0012  38        SEC  
- 0013  E5 28     SBC  $28
- 0015  A8        TAY  
- 0016  A5 2B     LDA  $2B
- 0018  E5 29     SBC  $29
- 001A  90 06     BCC  $0022
- 001C  85 2B     STA  $2B
- 001E  84 2A     STY  $2A
- 0020  E6 26     INC  $26
- 0022  CA        DEX  
- 0023  D0 E3     BNE  $0008
- 0025  60        RTS  
- 0026  34 12 0A 00 00 00                                |4.....          |
+ 0E00  A9 00     LDA  #$00
+ 0E02  8D 37 0E  STA  $0E37
+ 0E05  8D 38 0E  STA  $0E38
+ 0E08  A2 10     LDX  #$10
+ 0E0A  0E 33 0E  ASL  $0E33
+ 0E0D  2E 34 0E  ROL  $0E34
+ 0E10  2E 37 0E  ROL  $0E37
+ 0E13  2E 38 0E  ROL  $0E38
+ 0E16  AD 37 0E  LDA  $0E37
+ 0E19  38        SEC  
+ 0E1A  ED 35 0E  SBC  $0E35
+ 0E1D  A8        TAY  
+ 0E1E  AD 38 0E  LDA  $0E38
+ 0E21  ED 36 0E  SBC  $0E36
+ 0E24  90 09     BCC  $0E2F
+ 0E26  8D 38 0E  STA  $0E38
+ 0E29  8C 37 0E  STY  $0E37
+ 0E2C  EE 33 0E  INC  $0E33
+ 0E2F  CA        DEX  
+ 0E30  D0 D8     BNE  $0E0A
+ 0E32  60        RTS  
+ 0E33  34 12 0A 00 00 00                                |4.....          |

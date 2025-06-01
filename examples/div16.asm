@@ -1,6 +1,6 @@
 ; Reference: https://www.llx.com/Neil/a2/mult.html
 
-.org $0000
+.org $0e00
 start:
     lda #0
     sta REM
