@@ -39,7 +39,7 @@ impl Os {
         vm.s.pull(); // Is this P?
         vm.s.pull_word(); // What's this?
         p_set!(vm.s.reg, B, false);
-        rts.op.execute_no_operand(&mut vm.s);
+        rts.execute_no_operand(&mut vm.s);
     }
 }
 

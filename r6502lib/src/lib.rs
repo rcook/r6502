@@ -30,7 +30,6 @@ pub(crate) use binding::Binding;
 pub(crate) use instruction::Instruction;
 #[allow(unused)]
 pub(crate) use no_operand_op::NoOperandFn;
-#[allow(unused)]
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;

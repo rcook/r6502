@@ -39,18 +39,14 @@ impl InstructionInfo {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
-        op_info
-            .addressing_mode
-            .format_instruction_info(self, symbols)
+        op_info.format_instruction_info(self, symbols)
     }
 
     pub fn disassembly(&self, symbols: &[SymbolInfo]) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
-        let s = op_info
-            .addressing_mode
-            .format_instruction_info(self, symbols)?;
+        let s = op_info.format_instruction_info(self, symbols)?;
         Ok(match &self.operand {
             Operand::None => format!("{:04X}  {:02X}        {s}", self.pc, self.opcode as u8),
             Operand::Byte(value) => format!(

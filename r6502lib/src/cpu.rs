@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::LazyLock};
 
 pub static MOS_6502: LazyLock<Cpu> = LazyLock::new(|| {
     Cpu(OpInfo::iter()
-        .map(|o| (o.opcode, o.clone()))
+        .map(|o| (o.opcode(), o.clone()))
         .collect::<HashMap<_, _>>())
 });
 

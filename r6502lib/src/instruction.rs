@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{Binding, Op, OpCycles, OpInfo, Opcode, VmState, MOS_6502};
+use crate::{Binding, Op, OpCycles, Opcode, VmState, MOS_6502};
 
 #[allow(unused)]
 pub(crate) struct Instruction {
@@ -13,11 +13,7 @@ impl Instruction {
         let value = s.memory[s.reg.pc];
         match Opcode::from_u8(value) {
             Some(opcode) => match MOS_6502.get_op_info(&opcode) {
-                Some(OpInfo {
-                    opcode: _,
-                    addressing_mode: _,
-                    op,
-                }) => match op {
+                Some(op_info) => match op_info.op() {
                     Op::NoOperand(inner) => Self {
                         pc: s.reg.pc,
                         opcode,

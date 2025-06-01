@@ -274,7 +274,7 @@ mod tests {
                     vm.s.pull();
                     vm.s.pull_word();
                     p_set!(vm.s.reg, B, false);
-                    rts.op.execute_no_operand(&mut vm.s);
+                    rts.execute_no_operand(&mut vm.s);
                 }
                 _ => panic!("expectation failed"),
             }
