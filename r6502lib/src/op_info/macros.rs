@@ -1,87 +1,3 @@
-macro_rules! no_operand_op {
-    ($opcode: ident, $addressing_mode: ident, $f: ident) => {
-        $crate::OpInfo::new(
-            $crate::Opcode::$opcode,
-            $crate::AddressingMode::$addressing_mode,
-            $crate::Op::NoOperand($crate::NoOperandOp::new($crate::ops::$f)),
-        )
-    };
-}
-
-pub(crate) use no_operand_op;
-
-macro_rules! byte_op {
-    ($opcode: ident, $addressing_mode: ident, $f: ident) => {
-        $crate::OpInfo::new(
-            $crate::Opcode::$opcode,
-            $crate::AddressingMode::$addressing_mode,
-            $crate::Op::Byte($crate::ByteOp::new($crate::ops::$f)),
-        )
-    };
-}
-
-pub(crate) use byte_op;
-
-macro_rules! word_op {
-    ($opcode: ident, $addressing_mode: ident, $f: ident) => {
-        $crate::OpInfo::new(
-            $crate::Opcode::$opcode,
-            $crate::AddressingMode::$addressing_mode,
-            $crate::Op::Word($crate::WordOp::new($crate::ops::$f)),
-        )
-    };
-}
-
-pub(crate) use word_op;
-
-macro_rules! absolute {
-    ($opcode: ident, $f: ident) => {
-        $crate::op_info::macros::word_op!($opcode, Absolute, $f)
-    };
-}
-
-pub(crate) use absolute;
-
-macro_rules! accumulator {
-    ($opcode: ident, $f: ident) => {
-        $crate::op_info::macros::no_operand_op!($opcode, Accumulator, $f)
-    };
-}
-
-pub(crate) use accumulator;
-
-macro_rules! immediate {
-    ($opcode: ident, $f: ident) => {
-        $crate::op_info::macros::byte_op!($opcode, Immediate, $f)
-    };
-}
-
-pub(crate) use immediate;
-
-macro_rules! implied {
-    ($opcode: ident, $f: ident) => {
-        $crate::op_info::macros::no_operand_op!($opcode, Implied, $f)
-    };
-}
-
-pub(crate) use implied;
-
-macro_rules! indirect {
-    ($opcode: ident, $f: ident) => {
-        $crate::op_info::macros::word_op!($opcode, Indirect, $f)
-    };
-}
-
-pub(crate) use indirect;
-
-macro_rules! relative {
-    ($opcode: ident, $f: ident) => {
-        $crate::op_info::macros::byte_op!($opcode, Relative, $f)
-    };
-}
-
-pub(crate) use relative;
-
 macro_rules! absolute_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::OpInfo::new(
@@ -122,6 +38,48 @@ macro_rules! absolute_y_wrapped {
 
 pub(crate) use absolute_y_wrapped;
 
+macro_rules! accumulator_wrapped {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo::new(
+            $crate::Opcode::$opcode,
+            $crate::AddressingMode::Accumulator,
+            $crate::Op::NoOperand($crate::NoOperandOp::new(
+                $crate::op_info::wrappers::accumulator::$f,
+            )),
+        )
+    };
+}
+
+pub(crate) use accumulator_wrapped;
+
+macro_rules! immediate_wrapped {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo::new(
+            $crate::Opcode::$opcode,
+            $crate::AddressingMode::Immediate,
+            $crate::Op::Byte($crate::ByteOp::new(
+                $crate::op_info::wrappers::immediate::$f,
+            )),
+        )
+    };
+}
+
+pub(crate) use immediate_wrapped;
+
+macro_rules! implied_wrapped {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo::new(
+            $crate::Opcode::$opcode,
+            $crate::AddressingMode::Implied,
+            $crate::Op::NoOperand($crate::NoOperandOp::new(
+                $crate::op_info::wrappers::implied::$f,
+            )),
+        )
+    };
+}
+
+pub(crate) use implied_wrapped;
+
 macro_rules! indexed_indirect_x_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::OpInfo::new(
@@ -136,6 +94,18 @@ macro_rules! indexed_indirect_x_wrapped {
 
 pub(crate) use indexed_indirect_x_wrapped;
 
+macro_rules! indirect_wrapped {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo::new(
+            $crate::Opcode::$opcode,
+            $crate::AddressingMode::Indirect,
+            $crate::Op::Word($crate::WordOp::new($crate::op_info::wrappers::indirect::$f)),
+        )
+    };
+}
+
+pub(crate) use indirect_wrapped;
+
 macro_rules! indirect_indexed_y_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::OpInfo::new(
@@ -149,6 +119,18 @@ macro_rules! indirect_indexed_y_wrapped {
 }
 
 pub(crate) use indirect_indexed_y_wrapped;
+
+macro_rules! relative_wrapped {
+    ($opcode: ident, $f: ident) => {
+        $crate::OpInfo::new(
+            $crate::Opcode::$opcode,
+            $crate::AddressingMode::Relative,
+            $crate::Op::Byte($crate::ByteOp::new($crate::op_info::wrappers::relative::$f)),
+        )
+    };
+}
+
+pub(crate) use relative_wrapped;
 
 macro_rules! zero_page_wrapped {
     ($opcode: ident, $f: ident) => {

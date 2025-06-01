@@ -1,6 +1,7 @@
 mod arithmetic;
 mod bitwise;
 mod branch;
+mod branch_result;
 mod compare;
 mod flag;
 mod helper;
@@ -15,6 +16,7 @@ mod store;
 pub(crate) use arithmetic::{adc, sbc};
 pub(crate) use bitwise::{and, bit, eor, ora};
 pub(crate) use branch::{bcc, bcs, beq, bmi, bne, bpl, bvc, bvs};
+pub(crate) use branch_result::BranchResult;
 pub(crate) use compare::{cmp, cpx, cpy};
 pub(crate) use flag::{clc, cld, cli, clv, sec, sed, sei};
 pub(crate) use jump::{jmp, jsr, rti, rts};

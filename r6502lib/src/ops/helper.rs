@@ -1,4 +1,4 @@
-use crate::{p_set, OpCycles, VmState, P};
+use crate::{p_set, VmState};
 
 pub(crate) fn sign(value: u8) -> bool {
     (value & 0b10000000) != 0
@@ -33,24 +33,4 @@ pub(crate) fn set_flags_on_compare(s: &mut VmState, operand: u8) {
     p_set!(s.reg, N, neg);
     p_set!(s.reg, Z, operand == 0);
     p_set!(s.reg, C, !neg);
-}
-
-pub(crate) fn branch(s: &mut VmState, operand: u8, p: P, flag_value: bool) -> OpCycles {
-    if s.reg.p.contains(p) == flag_value {
-        // Sign-extend the operand before adding it
-        let new_pc = s.reg.pc.wrapping_add((operand as i8) as u16);
-
-        let current_page = s.reg.pc >> 8;
-        let new_page = new_pc >> 8;
-
-        s.reg.pc = new_pc;
-
-        if new_page == current_page {
-            3
-        } else {
-            4
-        }
-    } else {
-        2
-    }
 }

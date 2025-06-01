@@ -225,7 +225,7 @@ mod tests {
         let mut vm = load_into_vm(include_str!("../../examples/div16.r6502.txt"))?;
         vm.s.reg.pc = 0x0e02;
         vm.run_until_brk();
-        assert_eq!(919, vm.total_cycles);
+        assert_eq!(893, vm.total_cycles);
         let quotient = vm.s.memory.fetch_word(NUM1);
         let remainder = vm.s.memory.fetch_word(REM);
         assert_eq!(0x01d2, quotient);

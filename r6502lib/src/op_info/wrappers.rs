@@ -8,6 +8,15 @@ pub(crate) mod absolute {
         };
     }
 
+    macro_rules! wrap_jump {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::OpCycles {
+                $crate::ops::$f(s, addr);
+                $cycles
+            }
+        };
+    }
+
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::OpCycles {
@@ -27,6 +36,8 @@ pub(crate) mod absolute {
     wrap_store!(dec, 6);
     wrap!(eor, 4);
     wrap_store!(inc, 6);
+    wrap_jump!(jmp, 3);
+    wrap_jump!(jsr, 6);
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
@@ -87,7 +98,6 @@ pub(crate) mod absolute_x {
 }
 
 pub(crate) mod absolute_y {
-    #[allow(unused)]
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::OpCycles {
@@ -127,6 +137,82 @@ pub(crate) mod absolute_y {
     wrap_store!(sta, 5, 5);
 }
 
+pub(crate) mod accumulator {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState) -> $crate::OpCycles {
+                $crate::ops::$f(s);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(asl_acc, 2);
+    wrap!(lsr_acc, 2);
+    wrap!(rol_acc, 2);
+    wrap!(ror_acc, 2);
+}
+
+pub(crate) mod immediate {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, value: u8) -> $crate::OpCycles {
+                $crate::ops::$f(s, value);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(adc, 2);
+    wrap!(and, 2);
+    wrap!(cmp, 2);
+    wrap!(cpx, 2);
+    wrap!(cpy, 2);
+    wrap!(eor, 2);
+    wrap!(lda, 2);
+    wrap!(ldx, 2);
+    wrap!(ldy, 2);
+    wrap!(ora, 2);
+    wrap!(sbc, 2);
+}
+
+pub(crate) mod implied {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState) -> $crate::OpCycles {
+                $crate::ops::$f(s);
+                $cycles
+            }
+        };
+    }
+
+    wrap!(brk, 7);
+    wrap!(clc, 2);
+    wrap!(cld, 2);
+    wrap!(cli, 2);
+    wrap!(clv, 2);
+    wrap!(dex, 2);
+    wrap!(dey, 2);
+    wrap!(inx, 2);
+    wrap!(iny, 2);
+    wrap!(nop, 2);
+    wrap!(pha, 3);
+    wrap!(php, 3);
+    wrap!(pla, 4);
+    wrap!(plp, 4);
+    wrap!(rti, 6);
+    wrap!(rts, 6);
+    wrap!(sec, 2);
+    wrap!(sed, 2);
+    wrap!(sei, 2);
+    wrap!(tax, 2);
+    wrap!(tay, 2);
+    wrap!(tsx, 2);
+    wrap!(txa, 2);
+    wrap!(txs, 2);
+    wrap!(tya, 2);
+}
+
 pub(crate) mod indexed_indirect_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
@@ -156,6 +242,19 @@ pub(crate) mod indexed_indirect_x {
     wrap!(ora, 6);
     wrap!(sbc, 6);
     wrap_store!(sta, 6);
+}
+
+pub(crate) mod indirect {
+    macro_rules! wrap {
+        ($f: ident, $cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::OpCycles {
+                $crate::ops::$f(s, s.memory.fetch_word(addr));
+                $cycles
+            }
+        };
+    }
+
+    wrap!(jmp, 5);
 }
 
 pub(crate) mod indirect_indexed_y {
@@ -201,6 +300,29 @@ pub(crate) mod indirect_indexed_y {
     wrap!(ora, 5, 6);
     wrap!(sbc, 5, 6);
     wrap_store!(sta, 5, 6);
+}
+
+pub(crate) mod relative {
+    macro_rules! wrap {
+        ($f: ident, $not_taken_cycles: expr, $taken_cycles: expr, $taken_cross_page_cycles: expr) => {
+            pub(crate) fn $f(s: &mut $crate::VmState, offset: u8) -> $crate::OpCycles {
+                match $crate::ops::$f(s, offset) {
+                    $crate::ops::BranchResult::NotTaken => $not_taken_cycles,
+                    $crate::ops::BranchResult::Taken => $not_taken_cycles,
+                    $crate::ops::BranchResult::TakenCrossPage => $taken_cross_page_cycles,
+                }
+            }
+        };
+    }
+
+    wrap!(bcc, 2, 3, 4);
+    wrap!(bcs, 2, 3, 4);
+    wrap!(beq, 2, 3, 4);
+    wrap!(bmi, 2, 3, 4);
+    wrap!(bne, 2, 3, 4);
+    wrap!(bpl, 2, 3, 4);
+    wrap!(bvc, 2, 3, 4);
+    wrap!(bvs, 2, 3, 4);
 }
 
 pub(crate) mod zero_page {
