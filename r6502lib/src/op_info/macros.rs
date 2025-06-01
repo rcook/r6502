@@ -42,6 +42,14 @@ macro_rules! absolute {
 
 pub(crate) use absolute;
 
+macro_rules! accumulator {
+    ($opcode: ident, $f: ident) => {
+        $crate::op_info::macros::no_operand_op!($opcode, Accumulator, $f)
+    };
+}
+
+pub(crate) use accumulator;
+
 macro_rules! immediate {
     ($opcode: ident, $f: ident) => {
         $crate::op_info::macros::byte_op!($opcode, Immediate, $f)

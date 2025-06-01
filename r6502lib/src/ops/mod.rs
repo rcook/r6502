@@ -8,6 +8,7 @@ mod jump;
 mod load;
 mod misc;
 mod register;
+mod shift_rotate;
 mod stack;
 mod store;
 
@@ -20,5 +21,6 @@ pub(crate) use jump::{jmp, jsr, rti, rts};
 pub(crate) use load::{lda, ldx, ldy};
 pub(crate) use misc::{brk, nop};
 pub(crate) use register::{dex, dey, inx, iny, tax, tay, tsx, txa, txs, tya};
+pub(crate) use shift_rotate::{asl, asl_acc, lsr, lsr_acc, rol, rol_acc, ror, ror_acc};
 pub(crate) use stack::{pha, php, pla, plp};
 pub(crate) use store::{dec, inc, sta, stx, sty};

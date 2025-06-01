@@ -19,6 +19,7 @@ pub(crate) mod absolute {
 
     wrap!(adc, 4);
     wrap!(and, 4);
+    wrap_store!(asl, 6);
     wrap!(bit, 4);
     wrap!(cmp, 4);
     wrap!(cpx, 4);
@@ -29,7 +30,10 @@ pub(crate) mod absolute {
     wrap!(lda, 4);
     wrap!(ldx, 4);
     wrap!(ldy, 4);
+    wrap_store!(lsr, 6);
     wrap!(ora, 4);
+    wrap_store!(rol, 6);
+    wrap_store!(ror, 6);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
     wrap_store!(stx, 4);
@@ -66,6 +70,7 @@ pub(crate) mod absolute_x {
     }
 
     wrap!(adc, 4, 5);
+    wrap_store!(asl, 7, 7);
     wrap!(and, 4, 5);
     wrap!(cmp, 4, 5);
     wrap_store!(dec, 7, 7);
@@ -73,7 +78,10 @@ pub(crate) mod absolute_x {
     wrap_store!(inc, 7, 7);
     wrap!(lda, 4, 5);
     wrap!(ldy, 4, 5);
+    wrap_store!(lsr, 7, 7);
     wrap!(ora, 4, 5);
+    wrap_store!(rol, 7, 7);
+    wrap_store!(ror, 7, 7);
     wrap!(sbc, 4, 5);
     wrap_store!(sta, 5, 5);
 }
@@ -216,6 +224,7 @@ pub(crate) mod zero_page {
 
     wrap!(adc, 3);
     wrap!(and, 3);
+    wrap_store!(asl, 5);
     wrap!(bit, 3);
     wrap!(cmp, 3);
     wrap!(cpx, 3);
@@ -226,7 +235,10 @@ pub(crate) mod zero_page {
     wrap!(lda, 3);
     wrap!(ldx, 3);
     wrap!(ldy, 3);
+    wrap_store!(lsr, 5);
     wrap!(ora, 3);
+    wrap_store!(rol, 5);
+    wrap_store!(ror, 5);
     wrap!(sbc, 3);
     wrap_store!(sta, 3);
     wrap_store!(stx, 3);
@@ -256,12 +268,16 @@ pub(crate) mod zero_page_x {
 
     wrap!(adc, 4);
     wrap!(and, 4);
+    wrap_store!(asl, 6);
     wrap!(cmp, 4);
     wrap_store!(dec, 6);
     wrap!(eor, 4);
     wrap_store!(inc, 6);
     wrap!(lda, 4);
+    wrap_store!(lsr, 6);
     wrap!(ora, 4);
+    wrap_store!(rol, 6);
+    wrap_store!(ror, 6);
     wrap!(sbc, 4);
     wrap_store!(sta, 4);
     wrap_store!(sty, 4);

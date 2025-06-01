@@ -5,15 +5,6 @@ mod items {
     use crate::op_info::macros::*;
     use crate::OpInfo;
 
-    // TBD: ASL, LSR, ORA, ROL, ROR
-    pub(crate) const AND_ABS: OpInfo = absolute_wrapped!(AndAbs, and);
-    pub(crate) const AND_ABS_X: OpInfo = absolute_x_wrapped!(AndAbsX, and);
-    pub(crate) const AND_ABS_Y: OpInfo = absolute_y_wrapped!(AndAbsY, and);
-    pub(crate) const AND_IMM: OpInfo = immediate!(AndImm, and);
-    pub(crate) const AND_IND_X: OpInfo = indexed_indirect_x_wrapped!(AndIndX, and);
-    pub(crate) const AND_IND_Y: OpInfo = indirect_indexed_y_wrapped!(AndIndY, and);
-    pub(crate) const AND_ZP: OpInfo = zero_page_wrapped!(AndZp, and);
-    pub(crate) const AND_ZP_X: OpInfo = zero_page_x_wrapped!(AndZpX, and);
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);
     pub(crate) const ADC_ABS_X: OpInfo = absolute_x_wrapped!(AdcAbsX, adc);
     pub(crate) const ADC_ABS_Y: OpInfo = absolute_y_wrapped!(AdcAbsY, adc);
@@ -22,6 +13,19 @@ mod items {
     pub(crate) const ADC_IND_Y: OpInfo = indirect_indexed_y_wrapped!(AdcIndY, adc);
     pub(crate) const ADC_ZP: OpInfo = zero_page_wrapped!(AdcZp, adc);
     pub(crate) const ADC_ZP_X: OpInfo = zero_page_x_wrapped!(AdcZpX, adc);
+    pub(crate) const AND_ABS: OpInfo = absolute_wrapped!(AndAbs, and);
+    pub(crate) const AND_ABS_X: OpInfo = absolute_x_wrapped!(AndAbsX, and);
+    pub(crate) const AND_ABS_Y: OpInfo = absolute_y_wrapped!(AndAbsY, and);
+    pub(crate) const AND_IMM: OpInfo = immediate!(AndImm, and);
+    pub(crate) const AND_IND_X: OpInfo = indexed_indirect_x_wrapped!(AndIndX, and);
+    pub(crate) const AND_IND_Y: OpInfo = indirect_indexed_y_wrapped!(AndIndY, and);
+    pub(crate) const AND_ZP: OpInfo = zero_page_wrapped!(AndZp, and);
+    pub(crate) const AND_ZP_X: OpInfo = zero_page_x_wrapped!(AndZpX, and);
+    pub(crate) const ASL_ABS: OpInfo = absolute_wrapped!(AslAbs, asl);
+    pub(crate) const ASL_ABS_X: OpInfo = absolute_x_wrapped!(AslAbsX, asl);
+    pub(crate) const ASL_ACC: OpInfo = accumulator!(AslAcc, asl_acc);
+    pub(crate) const ASL_ZP: OpInfo = zero_page_wrapped!(AslZp, asl);
+    pub(crate) const ASL_ZP_X: OpInfo = zero_page_x_wrapped!(AslZpX, asl);
     pub(crate) const BCC: OpInfo = relative!(Bcc, bcc);
     pub(crate) const BCS: OpInfo = relative!(Bcs, bcs);
     pub(crate) const BEQ: OpInfo = relative!(Beq, beq);
@@ -92,6 +96,11 @@ mod items {
     pub(crate) const LDY_IMM: OpInfo = immediate!(LdyImm, ldy);
     pub(crate) const LDY_ZP: OpInfo = zero_page_wrapped!(LdyZp, ldy);
     pub(crate) const LDY_ZP_X: OpInfo = zero_page_wrapped!(LdyZpX, ldy);
+    pub(crate) const LSR_ABS: OpInfo = absolute_wrapped!(LsrAbs, lsr);
+    pub(crate) const LSR_ABS_X: OpInfo = absolute_x_wrapped!(LsrAbsX, lsr);
+    pub(crate) const LSR_ACC: OpInfo = accumulator!(LsrAcc, lsr_acc);
+    pub(crate) const LSR_ZP: OpInfo = zero_page_wrapped!(LsrZp, lsr);
+    pub(crate) const LSR_ZP_X: OpInfo = zero_page_x_wrapped!(LsrZpX, lsr);
     pub(crate) const NOP: OpInfo = implied!(Nop, nop);
     pub(crate) const ORA_ABS: OpInfo = absolute_wrapped!(OraAbs, ora);
     pub(crate) const ORA_ABS_X: OpInfo = absolute_x_wrapped!(OraAbsX, ora);
@@ -105,6 +114,16 @@ mod items {
     pub(crate) const PHP: OpInfo = implied!(Php, php);
     pub(crate) const PLA: OpInfo = implied!(Pla, pla);
     pub(crate) const PLP: OpInfo = implied!(Plp, plp);
+    pub(crate) const ROL_ABS: OpInfo = absolute_wrapped!(RolAbs, rol);
+    pub(crate) const ROL_ABS_X: OpInfo = absolute_x_wrapped!(RolAbsX, rol);
+    pub(crate) const ROL_ACC: OpInfo = accumulator!(RolAcc, rol_acc);
+    pub(crate) const ROL_ZP: OpInfo = zero_page_wrapped!(RolZp, rol);
+    pub(crate) const ROL_ZP_X: OpInfo = zero_page_x_wrapped!(RolZpX, rol);
+    pub(crate) const ROR_ABS: OpInfo = absolute_wrapped!(RorAbs, ror);
+    pub(crate) const ROR_ABS_X: OpInfo = absolute_x_wrapped!(RorAbsX, ror);
+    pub(crate) const ROR_ACC: OpInfo = accumulator!(RorAcc, ror_acc);
+    pub(crate) const ROR_ZP: OpInfo = zero_page_wrapped!(RorZp, ror);
+    pub(crate) const ROR_ZP_X: OpInfo = zero_page_x_wrapped!(RorZpX, ror);
     pub(crate) const RTI: OpInfo = implied!(Rti, rti);
     pub(crate) const RTS: OpInfo = implied!(Rts, rts);
     pub(crate) const SBC_ABS: OpInfo = absolute_wrapped!(SbcAbs, sbc);

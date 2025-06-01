@@ -6,6 +6,7 @@ pub(crate) enum AddressingMode {
     Absolute,
     AbsoluteX,
     AbsoluteY,
+    Accumulator,
     Immediate,
     Implied,
     IndexedIndirectX,
@@ -46,6 +47,10 @@ impl AddressingMode {
                     instruction_info.opcode.mnemonic(),
                     self.format_addr(symbols, value)
                 )),
+                _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
+            },
+            Self::Accumulator => match instruction_info.operand {
+                Operand::None => Ok(format!("{} A", instruction_info.opcode.mnemonic())),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
             Self::Immediate => match instruction_info.operand {
