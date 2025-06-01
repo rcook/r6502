@@ -1,11 +1,12 @@
 use crate::{
-    Args, DebugMessage, IoMessage, MonitorMessage, Status, SymbolInfo, Ui, UiHost, VmStatus,
+    Args, DebugMessage, IoMessage, MonitorMessage, Status, SymbolInfo, Ui, UiHost, UiMonitor,
+    VmStatus,
 };
 use anyhow::Result;
 use clap::Parser;
 use r6502lib::{
-    DummyMonitor, Image, InstructionInfo, Monitor, OpInfo, Opcode, Os, OsBuilder, Reg, TotalCycles,
-    TracingMonitor, Vm, VmBuilder, MOS_6502, OSHALT, OSWRCH,
+    DummyMonitor, Image, Monitor, OpInfo, Opcode, Os, OsBuilder, TracingMonitor, Vm, VmBuilder,
+    MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread::spawn;
@@ -27,54 +28,9 @@ fn run_ui_host(args: &Args) -> Result<()> {
         monitor_tx: Sender<MonitorMessage>,
         io_tx: Sender<IoMessage>,
     ) -> Result<VmStatus> {
-        struct HackyMonitor {
-            monitor_tx: Sender<MonitorMessage>,
-        }
-
-        impl Monitor for HackyMonitor {
-            fn on_before_fetch(&self, total_cycles: TotalCycles, reg: Reg) {
-                self.monitor_tx
-                    .send(MonitorMessage::BeforeFetch { total_cycles, reg })
-                    .expect("Must succeed")
-            }
-            fn on_before_execute(
-                &self,
-                total_cycles: TotalCycles,
-                reg: Reg,
-                instruction_info: InstructionInfo,
-            ) {
-                self.monitor_tx
-                    .send(MonitorMessage::BeforeExecute {
-                        total_cycles,
-                        reg,
-                        instruction_info,
-                    })
-                    .expect("Must succeed")
-            }
-
-            fn on_after_execute(
-                &self,
-                total_cycles: TotalCycles,
-                reg: Reg,
-                instruction_info: InstructionInfo,
-            ) {
-                self.monitor_tx
-                    .send(MonitorMessage::AfterExecute {
-                        total_cycles,
-                        reg,
-                        instruction_info,
-                    })
-                    .expect("Must succeed")
-            }
-        }
-
-        let hacky_monitor = Box::new(HackyMonitor {
-            monitor_tx: monitor_tx.clone(),
-        });
-
-        let mut vm = VmBuilder::default().monitor(hacky_monitor).build()?;
+        let monitor = Box::new(UiMonitor::new(monitor_tx.clone()));
+        let mut vm = VmBuilder::default().monitor(monitor).build()?;
         let (os, rts) = initialize_vm(&mut vm, &image)?;
-
         let ui_host = UiHost::new(debug_rx, monitor_tx.clone());
         let mut free_running = false;
         loop {
