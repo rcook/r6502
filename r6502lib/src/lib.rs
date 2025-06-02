@@ -25,6 +25,9 @@ mod vm;
 mod vm_state;
 mod word_op;
 
+#[cfg(test)]
+mod single_step_tests;
+
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
 pub(crate) use instruction::Instruction;
