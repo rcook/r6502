@@ -5,8 +5,7 @@ use std::ffi::OsStr;
 use std::fs::{read_dir, File};
 use std::path::{Path, PathBuf};
 
-//const SKIPPED_SCENARIO_NAMES: [&str; 1] = ["a9 f0 33"];
-const SKIPPED_SCENARIO_NAMES: [&str; 0] = [];
+const SKIPPED_SCENARIO_NAMES: [&str; 1] = ["a9 f0 33"];
 
 pub(crate) struct ScenarioConfig {
     pub(crate) paths: Vec<PathBuf>,

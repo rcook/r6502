@@ -1,6 +1,8 @@
 use crate::single_step_tests::{Scenario, ScenarioConfig};
 use crate::Vm;
 use anyhow::Result;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::panic::catch_unwind;
 
 pub fn run_scenarios(filter: &Option<String>) -> Result<()> {
@@ -27,6 +29,7 @@ pub fn run_scenarios(filter: &Option<String>) -> Result<()> {
                     "Scenario \"{}\" failed: rerun with --filter \"{},{}\"",
                     scenario.name, file_name, scenario.name
                 );
+                record_failure(scenario)?;
                 failure_count += 1;
             }
 
@@ -77,4 +80,13 @@ fn run_scenario(scenario: &Scenario) -> bool {
     }
 
     true
+}
+
+fn record_failure(scenario: &Scenario) -> Result<()> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open("failures.log")?;
+    writeln!(file, "{}", scenario.name)?;
+    Ok(())
 }
