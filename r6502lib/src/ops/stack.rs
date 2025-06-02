@@ -97,13 +97,13 @@ mod tests {
         };
 
         s.reg.a = 0x00;
-        _ = pha(&mut s);
+        pha(&mut s);
 
         s.reg.a = 0xf1;
-        _ = pha(&mut s);
+        pha(&mut s);
 
         s.reg.a = 0x45;
-        _ = pha(&mut s);
+        pha(&mut s);
 
         s.reg.a = 0x11;
         s.reg.p = P::empty();
