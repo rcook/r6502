@@ -6,25 +6,41 @@ use crate::{p_get, p_set, p_value, VmState};
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub(crate) fn adc(s: &mut VmState, operand: u8) {
     if p_get!(s.reg, D) {
-        todo!("Decimal mode not implemented")
+        // TBD: Do BCD fixup!
+        let lhs = s.reg.a;
+        let rhs = operand;
+
+        let value_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
+        let value = value_word as u8;
+
+        let neg = is_neg(value);
+        let overflow = is_overflow(lhs, rhs, value);
+        let zero = is_zero(value);
+        let carry = is_carry(value_word);
+
+        s.reg.a = value;
+        p_set!(s.reg, N, neg);
+        p_set!(s.reg, V, overflow);
+        p_set!(s.reg, Z, zero);
+        p_set!(s.reg, C, carry);
+    } else {
+        let lhs = s.reg.a;
+        let rhs = operand;
+
+        let value_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
+        let value = value_word as u8;
+
+        let neg = is_neg(value);
+        let overflow = is_overflow(lhs, rhs, value);
+        let zero = is_zero(value);
+        let carry = is_carry(value_word);
+
+        s.reg.a = value;
+        p_set!(s.reg, N, neg);
+        p_set!(s.reg, V, overflow);
+        p_set!(s.reg, Z, zero);
+        p_set!(s.reg, C, carry);
     }
-
-    let lhs = s.reg.a;
-    let rhs = operand;
-
-    let value_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
-    let value = value_word as u8;
-
-    let neg = is_neg(value);
-    let overflow = is_overflow(lhs, rhs, value);
-    let zero = is_zero(value);
-    let carry = is_carry(value_word);
-
-    s.reg.a = value;
-    p_set!(s.reg, N, neg);
-    p_set!(s.reg, V, overflow);
-    p_set!(s.reg, Z, zero);
-    p_set!(s.reg, C, carry);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#SBC
@@ -57,6 +73,23 @@ mod tests {
     // LDA #1; PHP; LDA #$12; PLP; CLC; ADC #$34
     #[case(reg!(0x46, 0x0000), reg!(0x12, 0x0000), 0x34)]
     fn adc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
+        let mut s = VmStateBuilder::default().reg(reg).build()?;
+        adc(&mut s, operand);
+        assert_eq!(expected_reg, s.reg);
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(reg!(0xff, 0x0000, N, D), reg!(0xff, 0x0000, D), 0x00)]
+    #[case(reg!(0x00, 0x0000, D, Z, C), reg!(0xff, 0x0000, D), 0x01)]
+    #[case(reg!(0x00, 0x0000, D, Z, C), reg!(0xff, 0x0000, D, C), 0x00)]
+    #[case(reg!(0x01, 0x0000, D, C), reg!(0xff, 0x0000, D, C), 0x01)]
+    #[case(reg!(0x46, 0x0000, D), reg!(0x12, 0x0000, D), 0x34)]
+    fn adc_decimal_basics(
+        #[case] expected_reg: Reg,
+        #[case] reg: Reg,
+        #[case] operand: u8,
+    ) -> Result<()> {
         let mut s = VmStateBuilder::default().reg(reg).build()?;
         adc(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
