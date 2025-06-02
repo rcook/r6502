@@ -30,22 +30,22 @@ pub fn run_scenarios(filter: &Option<String>) -> Result<()> {
             record_message(&format!("Unsupported opcode ${:02X}", opcode_value))?;
             skipped_opcode_count += 1;
         } else {
-            let scenarios = config.read_scenario_file(path)?;
+            let scenarios = config.read_scenarios(path)?;
             println!(
                 "Running {} scenarios defined in {}",
                 scenarios.len(),
                 path.display()
             );
 
-            for (file_name, scenario) in scenarios.iter() {
+            for scenario in scenarios {
                 let result = match catch_unwind(|| run_scenario(&scenario)) {
                     Ok(result) => result,
                     Err(_) => false,
                 };
                 if !result {
                     println!(
-                        "Scenario \"{}\" failed: rerun with --filter \"{},{}\"",
-                        scenario.name, file_name, scenario.name
+                        "Scenario \"{}\" failed: rerun with --filter \"{}\"",
+                        scenario.name, scenario.name
                     );
                     record_message(&scenario.name)?;
                     failure_count += 1;

@@ -17,56 +17,55 @@ impl ScenarioConfig {
     pub(crate) fn new(filter: &Option<String>) -> Result<Self> {
         let scenario_dir = Self::scenario_dir()?;
 
-        match filter {
-            Some(s) => match s.split_once(',') {
-                Some((file_name, name)) => Ok(Self {
-                    paths: vec![scenario_dir.join(file_name)],
-                    scenario_name: Some(String::from(name)),
-                    skipped_scenario_names: Vec::new(),
-                }),
-                None => Ok(Self {
-                    paths: vec![scenario_dir.join(s)],
-                    scenario_name: None,
-                    skipped_scenario_names: SKIPPED_SCENARIO_NAMES
-                        .iter()
-                        .map(|n| String::from(*n))
-                        .collect(),
-                }),
-            },
-            None => {
-                let mut paths = Vec::new();
-                for p in read_dir(&scenario_dir)? {
-                    let p = p?;
-                    if p.path().extension().and_then(OsStr::to_str) == Some("json") {
-                        paths.push(p.path());
-                    }
+        let Some(s) = filter else {
+            let mut paths = Vec::new();
+            for p in read_dir(&scenario_dir)? {
+                let p = p?;
+                if p.path().extension().and_then(OsStr::to_str) == Some("json") {
+                    paths.push(p.path());
                 }
-                Ok(Self {
-                    paths,
-                    scenario_name: None,
-                    skipped_scenario_names: SKIPPED_SCENARIO_NAMES
-                        .iter()
-                        .map(|n| String::from(*n))
-                        .collect(),
-                })
             }
-        }
+            return Ok(Self {
+                paths,
+                scenario_name: None,
+                skipped_scenario_names: SKIPPED_SCENARIO_NAMES
+                    .iter()
+                    .map(|n| String::from(*n))
+                    .collect(),
+            });
+        };
+
+        let Some((opcode_value, _)) = s.split_once(' ') else {
+            let opcode = u8::from_str_radix(s, 16)?;
+            return Ok(Self {
+                paths: vec![scenario_dir.join(format!("{opcode:02x}.json"))],
+                scenario_name: None,
+                skipped_scenario_names: SKIPPED_SCENARIO_NAMES
+                    .iter()
+                    .map(|n| String::from(*n))
+                    .collect(),
+            });
+        };
+
+        let opcode = u8::from_str_radix(opcode_value, 16)?;
+
+        Ok(Self {
+            paths: vec![scenario_dir.join(format!("{opcode:02x}.json"))],
+            scenario_name: Some(String::from(s)),
+            skipped_scenario_names: Vec::new(),
+        })
     }
 
-    pub(crate) fn read_scenario_file(&self, path: &Path) -> Result<Vec<(String, Scenario)>> {
+    pub(crate) fn read_scenarios(&self, path: &Path) -> Result<Vec<Scenario>> {
+        println!("Reading scenarios from {}", path.display());
         let file = File::open(path)?;
-        let file_name = path
-            .file_name()
-            .ok_or_else(|| anyhow!("Cannot get file name from {}", path.display()))?
-            .to_str()
-            .ok_or_else(|| anyhow!("Cannot get file name from path {}", path.display()))?;
         let scenarios = serde_json::from_reader::<_, Vec<Scenario>>(file)?;
         Ok(scenarios
             .into_iter()
             .filter_map(|s| match &self.scenario_name {
                 Some(n) => {
                     if s.name == *n {
-                        Some((String::from(file_name), s))
+                        Some(s)
                     } else {
                         None
                     }
@@ -75,7 +74,7 @@ impl ScenarioConfig {
                     if self.skipped_scenario_names.contains(&s.name) {
                         None
                     } else {
-                        Some((String::from(file_name), s))
+                        Some(s)
                     }
                 }
             })
