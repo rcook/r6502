@@ -2,6 +2,7 @@ use crate::single_step_tests::AddressValue;
 use anyhow::Result;
 use serde::de::{Error as SerdeError, SeqAccess, Visitor};
 use std::fmt::{Formatter, Result as FmtResult};
+use std::result::Result as StdResult;
 
 pub(crate) struct AddressValueVisitor;
 
@@ -12,7 +13,7 @@ impl<'de> Visitor<'de> for AddressValueVisitor {
         formatter.write_str("[u16, u8]")
     }
 
-    fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+    fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> StdResult<Self::Value, A::Error> {
         let address = access
             .next_element::<u16>()?
             .ok_or_else(|| SerdeError::custom("Unexpected type"))?;

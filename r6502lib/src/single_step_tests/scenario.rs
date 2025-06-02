@@ -2,7 +2,7 @@ use crate::single_step_tests::{Cycle, State};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct TestCase {
+pub(crate) struct Scenario {
     #[serde(rename = "name")]
     pub(crate) name: String,
     #[serde(rename = "initial")]
