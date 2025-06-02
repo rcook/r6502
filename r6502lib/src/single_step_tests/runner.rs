@@ -1,9 +1,10 @@
 use crate::single_step_tests::{Scenario, ScenarioConfig};
 use crate::Vm;
 use anyhow::Result;
-use std::fs::OpenOptions;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::panic::catch_unwind;
+use std::path::Path;
 
 pub fn run_scenarios(filter: &Option<String>) -> Result<()> {
     let config = ScenarioConfig::new(filter)?;
@@ -83,10 +84,12 @@ fn run_scenario(scenario: &Scenario) -> bool {
 }
 
 fn record_failure(scenario: &Scenario) -> Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("failures.log")?;
+    let path = Path::new("failures.log");
+    let mut file = if path.is_file() {
+        OpenOptions::new().write(true).append(true).open(path)?
+    } else {
+        File::create(path)?
+    };
     writeln!(file, "{}", scenario.name)?;
     Ok(())
 }
