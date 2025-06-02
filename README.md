@@ -1,4 +1,20 @@
+# r6502
+
+MOS 6502 emulator and debugger
+
+
+# r6502
+
+This is the emulator and debugger.
+
+# r6502validation
+
+This runs the 6502 validation suite.
+
 # r6502asm
+
+This is a wrapper script to generate binary files in the format expected
+by r6502.
 
 ```bash
 python -m pip install --upgrade pip
