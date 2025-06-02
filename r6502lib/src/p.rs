@@ -6,14 +6,14 @@ pub(crate) const P_STR: &str = "NV1BDIZC";
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct P: u8 {
-        const N = 0b1000000; // Negative
-        const V = 0b0100000; // Overflow
-        const ONE = 0b00100000; // Always 1
-        const B = 0b00010000; // B
-        const D = 0b00001000; // Decimal
-        const I = 0b00000100; // Interrupt Disable
-        const Z = 0b00000010; // Zero
-        const C = 0b00000001; // Carry
+        const N =           0b10000000; // Negative
+        const V =           0b01000000; // Overflow
+        const ALWAYS_ONE =  0b00100000; // Always 1
+        const B =           0b00010000; // B
+        const D =           0b00001000; // Decimal
+        const I =           0b00000100; // Interrupt Disable
+        const Z =           0b00000010; // Zero
+        const C =           0b00000001; // Carry
     }
 }
 
@@ -74,5 +74,13 @@ mod tests {
         assert_eq!(P::empty(), p!());
         assert_eq!(P::N, p!(N));
         assert_eq!(P::N | P::V, p!(N, V));
+    }
+
+    #[test]
+    fn from_bits() {
+        assert_eq!(
+            Some(P::N | P::V | P::ALWAYS_ONE | P::D | P::I | P::C),
+            P::from_bits(0b11101101)
+        )
     }
 }

@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn jsr_software_interrupt() -> Result<()> {
         const START: u16 = 0x1000;
-        let p_test = P::D | P::ONE;
+        let p_test = P::D | P::ALWAYS_ONE;
 
         let mut vm = Vm::default();
         let os = OsBuilder::default().build()?;
