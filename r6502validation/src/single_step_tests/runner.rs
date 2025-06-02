@@ -8,7 +8,7 @@ use std::panic::catch_unwind;
 use std::path::Path;
 use std::sync::LazyLock;
 
-const LOG_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("failures.log"));
+static LOG_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("failures.log"));
 
 pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
     let config = ScenarioConfig::new(filter)?;
@@ -38,10 +38,7 @@ pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
             );
 
             for scenario in scenarios {
-                let result = match catch_unwind(|| run_scenario(&scenario)) {
-                    Ok(result) => result,
-                    Err(_) => false,
-                };
+                let result = catch_unwind(|| run_scenario(&scenario)).unwrap_or_default();
                 if !result {
                     println!(
                         "Scenario \"{}\" failed: rerun with --filter \"{}\"",
@@ -105,20 +102,17 @@ fn run_scenario(scenario: &Scenario) -> bool {
 }
 
 fn init_messages() -> Result<()> {
-    match remove_file(&*LOG_PATH) {
+    match remove_file(*LOG_PATH) {
         Ok(()) => {}
         Err(e) if e.kind() == ErrorKind::NotFound => {}
         Err(e) => bail!(e),
     }
-    _ = File::create_new(&*LOG_PATH)?;
+    _ = File::create_new(*LOG_PATH)?;
     Ok(())
 }
 
 fn record_message(s: &str) -> Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(&*LOG_PATH)?;
+    let mut file = OpenOptions::new().append(true).open(*LOG_PATH)?;
     writeln!(file, "{s}")?;
     Ok(())
 }
