@@ -1,74 +1,83 @@
 use crate::single_step_tests::Scenario;
-use anyhow::{anyhow, bail, Result};
-use std::env::{current_dir, var, VarError};
+use anyhow::{anyhow, Result};
+use std::env::current_dir;
 use std::ffi::OsStr;
 use std::fs::{read_dir, File};
 use std::path::{Path, PathBuf};
 
-// R6502LIB_SCENARIOS=1 means "run all scenarios (except skipped ones)"
-// R6502LIB_SCENARIOS="a9.json,a9 cc 21" means "run this single scenario (even it's skipped)"
-// R6502LIB_SCENARIOS=a9.json means "run this set of scenarios (except skipped ones)"
-// Otherwise do nothing since these tests are quite time-consuming
-pub(crate) const ENV_NAME: &str = "R6502LIB_SCENARIOS";
+//const SKIPPED_SCENARIO_NAMES: [&str; 1] = ["a9 f0 33"];
+const SKIPPED_SCENARIO_NAMES: [&str; 0] = [];
 
 pub(crate) struct ScenarioConfig {
     pub(crate) paths: Vec<PathBuf>,
+    pub(crate) scenario_name: Option<String>,
     pub(crate) skipped_scenario_names: Vec<String>,
 }
 
 impl ScenarioConfig {
-    pub(crate) fn from_env(skipped_scenario_names: &[&str]) -> Result<Self> {
+    pub(crate) fn new(filter: &Option<String>) -> Result<Self> {
         let scenario_dir = Self::scenario_dir()?;
 
-        Ok(match var(ENV_NAME) {
-            Ok(s) => match s.split_once(',') {
-                Some((file_name, name)) => Self {
+        match filter {
+            Some(s) => match s.split_once(',') {
+                Some((file_name, name)) => Ok(Self {
                     paths: vec![scenario_dir.join(file_name)],
+                    scenario_name: Some(String::from(name)),
                     skipped_scenario_names: Vec::new(),
-                },
-                None => {
-                    let skipped_scenario_names = skipped_scenario_names
+                }),
+                None => Ok(Self {
+                    paths: vec![scenario_dir.join(s)],
+                    scenario_name: None,
+                    skipped_scenario_names: SKIPPED_SCENARIO_NAMES
                         .iter()
                         .map(|n| String::from(*n))
-                        .collect();
-                    if s == "1" {
-                        let mut paths = Vec::new();
-                        for p in read_dir(&scenario_dir)? {
-                            let p = p?;
-                            if p.path().extension().and_then(OsStr::to_str) == Some("json") {
-                                paths.push(p.path());
-                            }
-                        }
-                        Self {
-                            paths,
-                            skipped_scenario_names,
-                        }
-                    } else {
-                        Self {
-                            paths: vec![scenario_dir.join(s)],
-                            skipped_scenario_names,
-                        }
+                        .collect(),
+                }),
+            },
+            None => {
+                let mut paths = Vec::new();
+                for p in read_dir(&scenario_dir)? {
+                    let p = p?;
+                    if p.path().extension().and_then(OsStr::to_str) == Some("json") {
+                        paths.push(p.path());
                     }
                 }
-            },
-            Err(VarError::NotPresent) => Self {
-                paths: Vec::new(),
-                skipped_scenario_names: vec![],
-            },
-            Err(e) => bail!(e),
-        })
+                Ok(Self {
+                    paths,
+                    scenario_name: None,
+                    skipped_scenario_names: SKIPPED_SCENARIO_NAMES
+                        .iter()
+                        .map(|n| String::from(*n))
+                        .collect(),
+                })
+            }
+        }
     }
 
     pub(crate) fn read_scenario_file(&self, path: &Path) -> Result<Vec<(String, Scenario)>> {
         let file = File::open(path)?;
+        let file_name = path
+            .file_name()
+            .ok_or_else(|| anyhow!("Cannot get file name from {}", path.display()))?
+            .to_str()
+            .ok_or_else(|| anyhow!("Cannot get file name from path {}", path.display()))?;
         let scenarios = serde_json::from_reader::<_, Vec<Scenario>>(file)?;
         Ok(scenarios
             .into_iter()
-            .filter_map(|s| {
-                if self.skipped_scenario_names.contains(&s.name) {
-                    None
-                } else {
-                    Some((String::from("a9.json"), s))
+            .filter_map(|s| match &self.scenario_name {
+                Some(n) => {
+                    if s.name == *n {
+                        Some((String::from(file_name), s))
+                    } else {
+                        None
+                    }
+                }
+                None => {
+                    if self.skipped_scenario_names.contains(&s.name) {
+                        None
+                    } else {
+                        Some((String::from(file_name), s))
+                    }
                 }
             })
             .collect())
@@ -83,9 +92,7 @@ impl ScenarioConfig {
     }
 
     fn current_source_path() -> Result<PathBuf> {
-        let cwd = current_dir()?;
-        let workspace_dir = Self::strip_parents(&cwd, 1)?;
-        Ok(workspace_dir.join(file!()))
+        Ok(current_dir()?.join(file!()))
     }
 
     fn scenario_dir() -> Result<PathBuf> {

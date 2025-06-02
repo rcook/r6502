@@ -18,28 +18,13 @@ mod ops;
 mod os;
 mod p;
 mod reg;
+mod single_step_tests;
 mod symbol_info;
 mod total_cycles;
 mod util;
 mod vm;
 mod vm_state;
 mod word_op;
-
-#[cfg(test)]
-mod single_step_tests;
-
-pub(crate) use addressing_mode::AddressingMode;
-pub(crate) use binding::Binding;
-pub(crate) use instruction::Instruction;
-#[allow(unused)]
-pub(crate) use no_operand_op::NoOperandFn;
-pub(crate) use op::Op;
-pub(crate) use op_cycles::OpCycles;
-pub(crate) use operand::Operand;
-#[allow(unused)]
-pub(crate) use p::{p, P_STR};
-#[allow(unused)]
-pub(crate) use reg::reg;
 
 pub use byte_op::ByteOp;
 pub use constants::{IRQ, IRQ_VALUE, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
@@ -54,8 +39,22 @@ pub use opcode::Opcode;
 pub use os::{Os, OsBuilder, OsBuilderError};
 pub use p::P;
 pub use reg::Reg;
+pub use single_step_tests::run_scenarios;
 pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;
 pub use vm::{Vm, VmBuilder, VmBuilderError};
 pub use vm_state::{VmState, VmStateBuilder, VmStateBuilderError};
 pub use word_op::WordOp;
+
+pub(crate) use addressing_mode::AddressingMode;
+pub(crate) use binding::Binding;
+pub(crate) use instruction::Instruction;
+#[allow(unused)]
+pub(crate) use no_operand_op::NoOperandFn;
+pub(crate) use op::Op;
+pub(crate) use op_cycles::OpCycles;
+pub(crate) use operand::Operand;
+#[allow(unused)]
+pub(crate) use p::{p, P_STR};
+#[allow(unused)]
+pub(crate) use reg::reg;

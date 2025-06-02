@@ -2,6 +2,7 @@ use crate::single_step_tests::CycleVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 
+#[allow(unused)]
 #[derive(Debug)]
 pub(crate) struct Cycle {
     pub(crate) address: u16,

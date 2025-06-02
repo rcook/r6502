@@ -1,25 +1,36 @@
+use crate::args::Command;
 use crate::{initialize_vm, Args, Ui, UiHost};
 use anyhow::Result;
 use clap::Parser;
 use r6502lib::{
-    DummyMonitor, Image, Monitor, SymbolInfo, TracingMonitor, VmBuilder, OSHALT, OSWRCH,
+    run_scenarios, DummyMonitor, Image, Monitor, SymbolInfo, TracingMonitor, VmBuilder, OSHALT,
+    OSWRCH,
 };
+use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
-    let args = Args::parse();
-    if args.debug {
-        run_ui_host(&args)?;
-    } else {
-        run_cli_host(&args)?;
+    match Args::parse().command {
+        Command::Run {
+            path,
+            origin,
+            start,
+            trace,
+        } => run_cli_host(&path, origin, start, trace)?,
+        Command::Debug {
+            path,
+            origin,
+            start,
+        } => run_ui_host(&path, origin, start)?,
+        Command::RunValidation { filter } => run_scenarios(&filter)?,
     }
     Ok(())
 }
 
-fn run_ui_host(args: &Args) -> Result<()> {
-    let image = Image::load(&args.path, args.origin, args.start)?;
-    let symbols = SymbolInfo::load(&args.path)?;
+fn run_ui_host(path: &Path, origin: Option<u16>, start: Option<u16>) -> Result<()> {
+    let image = Image::load(path, origin, start)?;
+    let symbols = SymbolInfo::load(path)?;
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
@@ -33,8 +44,8 @@ fn run_ui_host(args: &Args) -> Result<()> {
     Ok(())
 }
 
-fn run_cli_host(args: &Args) -> Result<()> {
-    let monitor: Box<dyn Monitor> = if args.trace {
+fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: bool) -> Result<()> {
+    let monitor: Box<dyn Monitor> = if trace {
         Box::new(TracingMonitor::default())
     } else {
         Box::new(DummyMonitor)
@@ -42,7 +53,7 @@ fn run_cli_host(args: &Args) -> Result<()> {
 
     let mut vm = VmBuilder::default().monitor(monitor).build()?;
 
-    let image = Image::load(&args.path, args.origin, args.start)?;
+    let image = Image::load(path, origin, start)?;
     let (os, rts) = initialize_vm(&mut vm, &image)?;
 
     loop {
