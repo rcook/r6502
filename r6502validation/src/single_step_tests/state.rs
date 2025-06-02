@@ -1,5 +1,5 @@
 use crate::single_step_tests::AddressValue;
-use crate::P;
+use r6502lib::P;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;

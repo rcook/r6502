@@ -312,7 +312,7 @@ pub enum Opcode {
 }
 
 impl Opcode {
-    pub(crate) fn from_u8(value: u8) -> Option<Self> {
+    pub fn from_u8(value: u8) -> Option<Self> {
         FromPrimitive::from_u8(value)
     }
 

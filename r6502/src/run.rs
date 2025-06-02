@@ -3,8 +3,7 @@ use crate::{initialize_vm, Args, Ui, UiHost};
 use anyhow::Result;
 use clap::Parser;
 use r6502lib::{
-    run_scenarios, DummyMonitor, Image, Monitor, SymbolInfo, TracingMonitor, VmBuilder, OSHALT,
-    OSWRCH,
+    DummyMonitor, Image, Monitor, SymbolInfo, TracingMonitor, VmBuilder, OSHALT, OSWRCH,
 };
 use std::path::Path;
 use std::sync::mpsc::channel;
@@ -23,7 +22,6 @@ pub(crate) fn run() -> Result<()> {
             origin,
             start,
         } => run_ui_host(&path, origin, start)?,
-        Command::RunValidation { filter } => run_scenarios(&filter)?,
     }
     Ok(())
 }

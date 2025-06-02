@@ -772,6 +772,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "r6502validation"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "r6502lib",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"

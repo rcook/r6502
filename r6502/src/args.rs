@@ -34,10 +34,4 @@ pub(crate) enum Command {
         #[arg(long = "start", value_parser = maybe_hex::<u16>)]
         start: Option<u16>,
     },
-
-    #[command(name = "run-validation", about = "Run validation suite")]
-    RunValidation {
-        #[arg(long = "filter")]
-        filter: Option<String>,
-    },
 }

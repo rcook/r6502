@@ -1,6 +1,6 @@
 use crate::single_step_tests::{Scenario, ScenarioConfig};
-use crate::{Opcode, Vm};
 use anyhow::{anyhow, bail, Result};
+use r6502lib::{Opcode, Vm};
 use std::ffi::OsStr;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{ErrorKind, Write};
@@ -10,7 +10,7 @@ use std::sync::LazyLock;
 
 const LOG_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("failures.log"));
 
-pub fn run_scenarios(filter: &Option<String>) -> Result<()> {
+pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
     let config = ScenarioConfig::new(filter)?;
 
     let mut count = 0;
