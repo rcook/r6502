@@ -21,23 +21,23 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         let t0 = lhs_lo + rhs_lo + p_value!(s.reg, C);
         let t1 = if t0 < 10 { t0 } else { t0 + 6 };
         let result_lo = t1 & 0x0f;
-        let carry = t1 >> 4;
+        let carry = (t1 >> 4) != 0;
 
         // 6502 quirk: see https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
         let temp_result = (temp_result & 0xf0) + result_lo;
         p_set!(s.reg, N, is_neg(temp_result));
         p_set!(s.reg, V, is_overflow(lhs, rhs, temp_result));
 
-        let t2 = lhs_hi + rhs_hi + carry;
+        let t2 = lhs_hi + rhs_hi + if carry { 1 } else { 0 };
         let t3 = if t2 < 10 { t2 } else { t2 + 6 };
         let result_hi = t3 & 0x0f;
-        let carry = t3 >> 4;
+        let carry = (t3 >> 4) != 0;
 
         let result = (result_hi << 4) + result_lo;
 
         s.reg.a = result;
         p_set!(s.reg, Z, is_zero(result));
-        p_set!(s.reg, C, carry != 0);
+        p_set!(s.reg, C, carry);
 
         //println!("a(after)  = {a} {a:02X}", a = s.reg.a);
         //println!("p(after)  = {p} {p:08b}", p = s.reg.p.bits());
@@ -107,6 +107,8 @@ mod tests {
     #[case(_p!(40), 85, _p!(235), 80, 4)]
     // cargo run -p r6502validation -- run-json '{ "name": "61 14 ee", "initial": { "pc": 60514, "s": 195, "a": 123, "x": 182, "y": 114, "p": 170, "ram": [ [60514, 97], [60515, 20], [60516, 238], [20, 30], [202, 1], [203, 232], [59393, 82]]}, "final": { "pc": 60516, "s": 195, "a": 51, "x": 182, "y": 114, "p": 233, "ram": [ [20, 30], [202, 1], [203, 232], [59393, 82], [60514, 97], [60515, 20], [60516, 238]]}, "cycles": [ [60514, 97, "read"], [60515, 20, "read"], [20, 30, "read"], [202, 1, "read"], [203, 232, "read"], [59393, 82, "read"]] }'
     #[case(_p!(233), 51, _p!(170), 123, 82)]
+    // cargo run -p r6502validation -- run-json '{ "name": "61 1e 49", "initial": { "pc": 26086, "s": 108, "a": 250, "x": 117, "y": 104, "p": 173, "ram": [ [26086, 97], [26087, 30], [26088, 73], [30, 225], [147, 188], [148, 211], [54204, 79]]}, "final": { "pc": 26088, "s": 108, "a": 160, "x": 117, "y": 104, "p": 45, "ram": [ [30, 225], [147, 188], [148, 211], [26086, 97], [26087, 30], [26088, 73], [54204, 79]]}, "cycles": [ [26086, 97, "read"], [26087, 30, "read"], [30, 225, "read"], [147, 188, "read"], [148, 211, "read"], [54204, 79, "read"]] }'
+    #[case(_p!(45), 160, _p!(173), 250, 79)]
     fn adc_decimal_basics(
         #[case] expected_p: P,
         #[case] expected_a: u8,
