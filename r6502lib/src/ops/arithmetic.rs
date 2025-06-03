@@ -9,9 +9,9 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         let lhs = s.reg.a;
         let rhs = operand;
 
-        println!("p(before) = {p} {p:08b}", p = s.reg.p.bits());
-        println!("a         = {a} {a:02X}", a = lhs);
-        println!("value     = {value} {value:02X}", value = rhs);
+        //println!("p(before) = {p} {p:08b}", p = s.reg.p.bits());
+        //println!("a         = {a} {a:02X}", a = lhs);
+        //println!("value     = {value} {value:02X}", value = rhs);
 
         let temp_result = lhs.wrapping_add(rhs).wrapping_add(p_value!(s.reg, C));
 
@@ -23,8 +23,10 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         let result_lo = t1 & 0x0f;
         let carry = t1 >> 4;
 
+        // 6502 quirk: see https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
         let temp_result = (temp_result & 0xf0) + result_lo;
         p_set!(s.reg, N, is_neg(temp_result));
+        p_set!(s.reg, V, is_overflow(lhs, rhs, temp_result));
 
         let t2 = lhs_hi + rhs_hi + carry;
         let t3 = if t2 < 10 { t2 } else { t2 + 6 };
@@ -34,18 +36,14 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         let result = (result_hi << 4) + result_lo;
 
         s.reg.a = result;
-        p_set!(s.reg, V, is_overflow(lhs, rhs, result));
         p_set!(s.reg, Z, is_zero(result));
         p_set!(s.reg, C, carry != 0);
 
-        println!("p(after)  = {p} {p:08b}", p = s.reg.p.bits());
+        //println!("a(after)  = {a} {a:02X}", a = s.reg.a);
+        //println!("p(after)  = {p} {p:08b}", p = s.reg.p.bits());
     } else {
         let lhs = s.reg.a;
         let rhs = operand;
-
-        println!("p(before) = {p} {p:08b}", p = s.reg.p.bits());
-        println!("a         = {a} {a:02X}", a = lhs);
-        println!("value     = {value} {value:02X}", value = rhs);
 
         let result_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
         let result = result_word as u8;
@@ -55,8 +53,6 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         p_set!(s.reg, V, is_overflow(lhs, rhs, result));
         p_set!(s.reg, Z, is_zero(result));
         p_set!(s.reg, C, is_carry(result_word));
-
-        println!("p(after)  = {p} {p:08b}", p = s.reg.p.bits());
     }
 }
 
@@ -109,6 +105,8 @@ mod tests {
     #[case(_p!(173), 89, _p!(175), 136, 106)]
     // cargo run -p r6502validation -- run-json '{ "name": "61 7b 59", "initial": { "pc": 12139, "s": 205, "a": 80, "x": 208, "y": 251, "p": 235, "ram": [ [12139, 97], [12140, 123], [12141, 89], [123, 219], [75, 208], [76, 222], [57040, 4]]}, "final": { "pc": 12141, "s": 205, "a": 85, "x": 208, "y": 251, "p": 40, "ram": [ [75, 208], [76, 222], [123, 219], [12139, 97], [12140, 123], [12141, 89], [57040, 4]]}, "cycles": [ [12139, 97, "read"], [12140, 123, "read"], [123, 219, "read"], [75, 208, "read"], [76, 222, "read"], [57040, 4, "read"]] }'
     #[case(_p!(40), 85, _p!(235), 80, 4)]
+    // cargo run -p r6502validation -- run-json '{ "name": "61 14 ee", "initial": { "pc": 60514, "s": 195, "a": 123, "x": 182, "y": 114, "p": 170, "ram": [ [60514, 97], [60515, 20], [60516, 238], [20, 30], [202, 1], [203, 232], [59393, 82]]}, "final": { "pc": 60516, "s": 195, "a": 51, "x": 182, "y": 114, "p": 233, "ram": [ [20, 30], [202, 1], [203, 232], [59393, 82], [60514, 97], [60515, 20], [60516, 238]]}, "cycles": [ [60514, 97, "read"], [60515, 20, "read"], [20, 30, "read"], [202, 1, "read"], [203, 232, "read"], [59393, 82, "read"]] }'
+    #[case(_p!(233), 51, _p!(170), 123, 82)]
     fn adc_decimal_basics(
         #[case] expected_p: P,
         #[case] expected_a: u8,
