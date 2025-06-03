@@ -36,8 +36,8 @@ impl Display for State {
         writeln!(f, "  a : ${:02X}", self.a)?;
         writeln!(f, "  x : ${:02X}", self.x)?;
         writeln!(f, "  y : ${:02X}", self.y)?;
-        writeln!(f, "       {P_STR}")?;
-        writeln!(f, "  p : ${:08b}", self.p.bits())?;
+        writeln!(f, "        {P_STR}")?;
+        writeln!(f, "  p : 0b{:08b}", self.p.bits())?;
 
         let mut ram = self.ram.clone();
         ram.sort_by(|a, b| a.address.cmp(&b.address));
