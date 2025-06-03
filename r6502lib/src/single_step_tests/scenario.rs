@@ -33,9 +33,11 @@ impl Scenario {
     pub fn run_scenarios_with_filter(report_path: &Path, filter: &Option<String>) -> Result<()> {
         let config = ScenarioConfig::new(filter)?;
 
-        let mut count = 0;
-        let mut failure_count = 0;
+        let mut all_total_count = 0;
+        let mut all_failure_count = 0;
         let mut skipped_opcode_count = 0;
+
+        let mut failure_counts = Vec::new();
 
         Self::init_messages(report_path)?;
 
@@ -46,39 +48,57 @@ impl Scenario {
                     .ok_or_else(|| anyhow!("Invalid path {}", path.display()))?,
                 16,
             )?;
-            if Opcode::from_u8(opcode_value).is_none() {
-                Self::record_message(
-                    report_path,
-                    &format!("Unsupported opcode ${:02X}", opcode_value),
-                )?;
-                skipped_opcode_count += 1;
-            } else {
-                let scenarios = config.read_scenarios(path)?;
-                println!(
-                    "Running {} scenarios defined in {}",
-                    scenarios.len(),
-                    path.display()
-                );
+            match Opcode::from_u8(opcode_value) {
+                None => {
+                    Self::record_message(
+                        report_path,
+                        &format!("Unsupported opcode ${:02X}", opcode_value),
+                    )?;
+                    skipped_opcode_count += 1;
+                }
+                Some(opcode) => {
+                    let scenarios = config.read_scenarios(path)?;
+                    println!(
+                        "Running {} scenarios defined in {}",
+                        scenarios.len(),
+                        path.display()
+                    );
 
-                for scenario in scenarios {
-                    let (result, _) = scenario.run();
-                    if !result {
-                        println!(
-                            "Scenario \"{}\" failed: rerun with --filter \"{}\"",
-                            scenario.name, scenario.name
-                        );
-                        Self::record_message(report_path, &scenario.name)?;
-                        failure_count += 1;
+                    let mut total_count = 0;
+                    let mut failure_count = 0;
+                    for scenario in scenarios {
+                        let (result, _) = scenario.run();
+                        if !result {
+                            println!(
+                                "Scenario \"{}\" failed: rerun with --filter \"{}\"",
+                                scenario.name, scenario.name
+                            );
+                            Self::record_message(report_path, &scenario.name)?;
+                            failure_count += 1;
+                        }
+                        total_count += 1;
                     }
-                    count += 1;
+
+                    failure_counts.push((opcode, failure_count));
+
+                    all_total_count += total_count;
+                    all_failure_count += failure_count;
                 }
             }
         }
 
-        if failure_count > 0 {
-            panic!("Out of {count} scenarios, {failure_count} failed")
+        if !failure_counts.is_empty() {
+            failure_counts.sort_by(|a, b| b.1.cmp(&a.1));
+            Self::record_message(report_path, "Failure counts:")?;
+            for p in failure_counts {
+                Self::record_message(report_path, &format!("{} {}", p.0, p.1))?;
+            }
+        }
+
+        if all_failure_count > 0 {
+            panic!("Out of {all_total_count} scenarios, {all_failure_count} failed")
         } else {
-            println!("All {count} scenarios passed")
+            println!("All {all_total_count} scenarios passed")
         }
         if skipped_opcode_count > 0 {
             println!("Skipped {skipped_opcode_count} unsupported opcodes");
@@ -129,7 +149,6 @@ impl Scenario {
                 let expected = self.r#final.$reg;
                 let actual = vm.s.reg.$reg;
                 if actual != expected {
-                    println!("{:<2}: ${:02X} ${:04X}", stringify!($reg), expected, actual);
                     println!(
                         "Scenario \"{name}\": actual value ${actual:02X} ({actual}) for register {reg} does not match expected value ${expected:02X} ({expected}) ({file}:{line})",
                         name = self.name,
