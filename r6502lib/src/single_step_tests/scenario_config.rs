@@ -25,6 +25,8 @@ impl ScenarioConfig {
                     paths.push(p.path());
                 }
             }
+            paths.sort();
+
             return Ok(Self {
                 paths,
                 scenario_name: None,

@@ -8,9 +8,6 @@ use std::fs::{remove_file, File, OpenOptions};
 use std::io::{ErrorKind, Write};
 use std::panic::catch_unwind;
 use std::path::Path;
-use std::sync::LazyLock;
-
-static LOG_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("failures.log"));
 
 #[derive(Debug, Deserialize)]
 pub struct Scenario {
@@ -33,14 +30,14 @@ impl Scenario {
         serde_json::from_str(s).map_err(|e| anyhow!(e))
     }
 
-    pub fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
+    pub fn run_scenarios_with_filter(report_path: &Path, filter: &Option<String>) -> Result<()> {
         let config = ScenarioConfig::new(filter)?;
 
         let mut count = 0;
         let mut failure_count = 0;
         let mut skipped_opcode_count = 0;
 
-        Self::init_messages()?;
+        Self::init_messages(report_path)?;
 
         for path in &config.paths {
             let opcode_value = u8::from_str_radix(
@@ -50,7 +47,10 @@ impl Scenario {
                 16,
             )?;
             if Opcode::from_u8(opcode_value).is_none() {
-                Self::record_message(&format!("Unsupported opcode ${:02X}", opcode_value))?;
+                Self::record_message(
+                    report_path,
+                    &format!("Unsupported opcode ${:02X}", opcode_value),
+                )?;
                 skipped_opcode_count += 1;
             } else {
                 let scenarios = config.read_scenarios(path)?;
@@ -67,7 +67,7 @@ impl Scenario {
                             "Scenario \"{}\" failed: rerun with --filter \"{}\"",
                             scenario.name, scenario.name
                         );
-                        Self::record_message(&scenario.name)?;
+                        Self::record_message(report_path, &scenario.name)?;
                         failure_count += 1;
                     }
                     count += 1;
@@ -158,18 +158,18 @@ impl Scenario {
         (true, final_state)
     }
 
-    fn init_messages() -> Result<()> {
-        match remove_file(*LOG_PATH) {
+    fn init_messages(report_path: &Path) -> Result<()> {
+        match remove_file(report_path) {
             Ok(()) => {}
             Err(e) if e.kind() == ErrorKind::NotFound => {}
             Err(e) => bail!(e),
         }
-        _ = File::create_new(*LOG_PATH)?;
+        _ = File::create_new(report_path)?;
         Ok(())
     }
 
-    fn record_message(s: &str) -> Result<()> {
-        let mut file = OpenOptions::new().append(true).open(*LOG_PATH)?;
+    fn record_message(report_path: &Path, s: &str) -> Result<()> {
+        let mut file = OpenOptions::new().append(true).open(report_path)?;
         writeln!(file, "{s}")?;
         Ok(())
     }

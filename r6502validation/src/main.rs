@@ -6,7 +6,10 @@ fn main() -> anyhow::Result<()> {
     use r6502lib::single_step_tests::Scenario;
 
     match Args::parse().command {
-        Command::Run { filter } => Scenario::run_scenarios_with_filter(&filter)?,
+        Command::Run {
+            report_path,
+            filter,
+        } => Scenario::run_scenarios_with_filter(&report_path, &filter)?,
         Command::RunJson { json } => {
             let scenario = Scenario::from_json(&json)?;
             println!("{scenario}");
