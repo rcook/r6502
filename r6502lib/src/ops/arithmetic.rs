@@ -9,9 +9,9 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         let lhs = s.reg.a;
         let rhs = operand;
 
-        //println!("p(before) = {p} {p:08b}", p = s.reg.p.bits());
-        //println!("a         = {a} {a:02X}", a = lhs);
-        //println!("value     = {value} {value:02X}", value = rhs);
+        //println!("p(before) = {p:>3} {p:08b}", p = s.reg.p.bits());
+        //println!("a         = {a:>3} {a:02X}", a = lhs);
+        //println!("value     = {value:>3} {value:02X}", value = rhs);
 
         let temp_result = lhs.wrapping_add(rhs).wrapping_add(p_value!(s.reg, C));
 
@@ -39,8 +39,8 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         p_set!(s.reg, Z, is_zero(result));
         p_set!(s.reg, C, carry);
 
-        //println!("a(after)  = {a} {a:02X}", a = s.reg.a);
-        //println!("p(after)  = {p} {p:08b}", p = s.reg.p.bits());
+        //println!("a(after)  = {a:>3} {a:02X}", a = s.reg.a);
+        //println!("p(after)  = {p:>3} {p:08b}", p = s.reg.p.bits());
     } else {
         let lhs = s.reg.a;
         let rhs = operand;
@@ -109,6 +109,8 @@ mod tests {
     #[case(_p!(233), 51, _p!(170), 123, 82)]
     // cargo run -p r6502validation -- run-json '{ "name": "61 1e 49", "initial": { "pc": 26086, "s": 108, "a": 250, "x": 117, "y": 104, "p": 173, "ram": [ [26086, 97], [26087, 30], [26088, 73], [30, 225], [147, 188], [148, 211], [54204, 79]]}, "final": { "pc": 26088, "s": 108, "a": 160, "x": 117, "y": 104, "p": 45, "ram": [ [30, 225], [147, 188], [148, 211], [26086, 97], [26087, 30], [26088, 73], [54204, 79]]}, "cycles": [ [26086, 97, "read"], [26087, 30, "read"], [30, 225, "read"], [147, 188, "read"], [148, 211, "read"], [54204, 79, "read"]] }'
     #[case(_p!(45), 160, _p!(173), 250, 79)]
+    // cargo run -p r6502validation -- run-json '{ "name": "61 8b 47", "initial": { "pc": 8970, "s": 138, "a": 190, "x": 116, "y": 121, "p": 169, "ram": [ [8970, 97], [8971, 139], [8972, 71], [139, 215], [255, 241], [0, 87], [22513, 19]]}, "final": { "pc": 8972, "s": 138, "a": 56, "x": 116, "y": 121, "p": 169, "ram": [ [0, 87], [139, 215], [255, 241], [8970, 97], [8971, 139], [8972, 71], [22513, 19]]}, "cycles": [ [8970, 97, "read"], [8971, 139, "read"], [139, 215, "read"], [255, 241, "read"], [0, 87, "read"], [22513, 19, "read"]] }'
+    //#[case(_p!(0), 56, _p!(169), 190, 0)]
     fn adc_decimal_basics(
         #[case] expected_p: P,
         #[case] expected_a: u8,
