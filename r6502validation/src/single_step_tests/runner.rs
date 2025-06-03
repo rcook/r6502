@@ -1,4 +1,4 @@
-use crate::single_step_tests::{Scenario, ScenarioConfig};
+use crate::single_step_tests::{AddressValue, Scenario, ScenarioConfig, State};
 use anyhow::{anyhow, bail, Result};
 use r6502lib::{Opcode, Vm};
 use std::ffi::OsStr;
@@ -38,7 +38,8 @@ pub(crate) fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
             );
 
             for scenario in scenarios {
-                let result = catch_unwind(|| run_scenario_inner(&scenario)).unwrap_or_default();
+                let result =
+                    catch_unwind(|| run_scenario_inner(&scenario, false)).unwrap_or_default();
                 if !result {
                     println!(
                         "Scenario \"{}\" failed: rerun with --filter \"{}\"",
@@ -68,7 +69,7 @@ pub(crate) fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
 pub(crate) fn run_scenario_from_json(json: &str) -> Result<()> {
     let scenario = serde_json::from_str::<Scenario>(json)?;
     println!("{scenario}");
-    if run_scenario_inner(&scenario) {
+    if run_scenario_inner(&scenario, true) {
         println!("Scenario passed")
     } else {
         println!("Scenario failed")
@@ -76,7 +77,7 @@ pub(crate) fn run_scenario_from_json(json: &str) -> Result<()> {
     Ok(())
 }
 
-fn run_scenario_inner(scenario: &Scenario) -> bool {
+fn run_scenario_inner(scenario: &Scenario, show_final_state: bool) -> bool {
     macro_rules! fail_if_not_eq {
         ($expected: expr, $actual: expr) => {
             let expected = $expected;
@@ -106,6 +107,26 @@ fn run_scenario_inner(scenario: &Scenario) -> bool {
     }
 
     fail_if_not_eq!(true, vm.step());
+
+    if show_final_state {
+        let mut ram = Vec::new();
+        for address_value in &scenario.r#final.ram {
+            ram.push(AddressValue {
+                address: address_value.address,
+                value: vm.s.memory[address_value.address],
+            });
+        }
+        let state = State {
+            pc: vm.s.reg.pc,
+            s: vm.s.reg.s,
+            a: vm.s.reg.a,
+            x: vm.s.reg.x,
+            y: vm.s.reg.y,
+            p: vm.s.reg.p,
+            ram,
+        };
+        println!("Actual:\n{state}");
+    }
 
     fail_if_not_eq!(scenario.r#final.pc, vm.s.reg.pc);
     fail_if_not_eq!(scenario.r#final.s, vm.s.reg.s);
