@@ -21,6 +21,79 @@ python -m pip install --upgrade pip
 pip install -e r6502asm
 ```
 
+# Buggy opcodes
+
+```
+$2A 9980
+$B4 9912
+$28 7554
+$2C 6497
+$24 6420
+$E1 5076
+$F9 5064
+$E5 5046
+$F5 5024
+$80 5011
+$F1 4984
+$FD 4960
+$ED 4936
+$E9 4921
+$C9 2533
+$C1 2528
+$C4 2525
+$C5 2521
+$CD 2515
+$D9 2499
+$CC 2491
+$C0 2488
+$D1 2480
+$D5 2461
+$DD 2460
+$E0 2456
+$EC 2447
+$E4 2443
+$71 293
+$65 250
+$6D 240
+$79 230
+$75 218
+$7D 208
+$61 207
+$69 206
+$91 53
+$6C 49
+$81 41
+$11 34
+$31 33
+$B1 32
+$51 31
+$AD 3
+$5E 2
+$05 1
+$20 1
+$26 1
+$2E 1
+$30 1
+$3D 1
+$3E 1
+$56 1
+$5D 1
+$66 1
+$8C 1
+$8D 1
+$98 1
+$A1 1
+$A2 1
+$AA 1
+$AC 1
+$B5 1
+$BC 1
+$C6 1
+$D0 1
+$D8 1
+$FE 1
+```
+
 https://logicalmoon.com/2017/11/using-vs-code-to-create-a-6502-hello-world/
 https://github.com/stardot/beebasm
 http://www.6502.org/tutorials/6502opcodes.html
