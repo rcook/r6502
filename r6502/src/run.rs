@@ -57,7 +57,7 @@ fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: boo
     loop {
         while vm.step() {}
 
-        match os.is_os_vector_brk(&vm) {
+        match os.is_os_vector(&vm) {
             Some(OSHALT) => {
                 break;
             }

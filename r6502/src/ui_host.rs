@@ -60,7 +60,7 @@ impl UiHost {
     }
 
     fn handle_brk(&self, vm: &mut Vm, os: &Os, rts: &OpInfo, state: State) -> State {
-        match os.is_os_vector_brk(vm) {
+        match os.is_os_vector(vm) {
             Some(OSHALT) => Halted,
             Some(OSWRCH) => {
                 self.io_tx

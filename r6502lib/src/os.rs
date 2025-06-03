@@ -1,4 +1,4 @@
-use crate::{p_get, p_set, Memory, OpInfo, Opcode, Vm, IRQ, OSHALT, OSWRCH};
+use crate::{p_set, Memory, OpInfo, Opcode, Vm, IRQ, OSHALT, OSWRCH};
 use derive_builder::Builder;
 
 #[derive(Builder)]
@@ -22,9 +22,9 @@ impl Os {
         }
     }
 
-    pub fn is_os_vector_brk(&self, vm: &Vm) -> Option<u16> {
-        if p_get!(vm.s.reg, B) && vm.s.reg.pc == self.os_addr {
-            let addr = vm.s.peek_back_word(1).wrapping_sub(1);
+    pub fn is_os_vector(&self, vm: &Vm) -> Option<u16> {
+        if vm.s.reg.pc == self.os_addr {
+            let addr = vm.s.peek_back_word(1).wrapping_sub(2);
             if self.os_vectors.contains(&addr) {
                 Some(addr)
             } else {
