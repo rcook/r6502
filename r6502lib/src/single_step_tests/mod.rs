@@ -5,6 +5,7 @@ mod cycle_visitor;
 mod scenario;
 mod scenario_config;
 mod state;
+mod test_scenarios;
 
 pub use scenario::Scenario;
 pub use state::State;
