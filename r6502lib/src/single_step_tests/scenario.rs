@@ -96,7 +96,6 @@ impl Scenario {
 
     fn run_inner(&self) -> (bool, State) {
         let mut vm = Vm::default();
-
         vm.s.reg.pc = self.initial.pc;
         vm.s.reg.s = self.initial.s;
         vm.s.reg.a = self.initial.a;
@@ -127,32 +126,60 @@ impl Scenario {
                 .collect(),
         };
 
-        macro_rules! fail_if_not_eq {
-            ($expected: expr, $actual: expr) => {
+        macro_rules! check {
+            ($reg: ident) => {
+                let expected = self.r#final.$reg;
+                let actual = vm.s.reg.$reg;
+                if actual != expected {
+                    println!("{:<2}: ${:02X} ${:04X}", stringify!($reg), expected, actual);
+                    println!(
+                        "Scenario \"{name}\": actual value ${actual:02X} ({actual}) for register {reg} does not match expected value ${expected:02X} ({expected}) ({file}:{line})",
+                        name = self.name,
+                        file = file!(),
+                        line = line!(),
+                        reg = stringify!($reg),
+                        expected = expected,
+                        actual = actual,
+                    );
+                    return (false, final_state);
+                }
+            };
+            ($addr: expr, $expected: expr, $actual: expr) => {
                 let expected = $expected;
                 let actual = $actual;
                 if actual != expected {
                     println!(
-                        "Scenario \"{}\": assert failed at {}:{} (actual({actual:?}) != expected({expected:?}))",
-                        self.name,
-                        file!(),
-                        line!()
+                        "Scenario \"{name}\": actual value ${actual:02X} ({actual}) at location ${addr:04X} does not match expected value ${expected:02X} ({expected}) ({file}:{line})",
+                        name = self.name,
+                        file = file!(),
+                        line = line!(),
+                        addr = $addr,
+                        expected = expected,
+                        actual = actual,
                     );
                     return (false, final_state);
                 }
             };
         }
 
-        fail_if_not_eq!(true, result);
+        if !result {
+            panic!(
+                "Scenario \"{name}\": step unexpectedly hit a breakpoint ({file}:{line})",
+                name = self.name,
+                file = file!(),
+                line = line!(),
+            )
+        }
 
-        fail_if_not_eq!(self.r#final.pc, vm.s.reg.pc);
-        fail_if_not_eq!(self.r#final.s, vm.s.reg.s);
-        fail_if_not_eq!(self.r#final.a, vm.s.reg.a);
-        fail_if_not_eq!(self.r#final.x, vm.s.reg.x);
-        fail_if_not_eq!(self.r#final.y, vm.s.reg.y);
-        fail_if_not_eq!(self.r#final.p.bits(), vm.s.reg.p.bits());
-        for address_value in &self.r#final.ram {
-            fail_if_not_eq!(address_value.value, vm.s.memory[address_value.address]);
+        check!(pc);
+        check!(s);
+        check!(a);
+        check!(x);
+        check!(y);
+        check!(p);
+
+        for p in &self.r#final.ram {
+            check!(p.address, p.value, vm.s.memory[p.address]);
         }
 
         (true, final_state)

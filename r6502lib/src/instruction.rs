@@ -42,9 +42,7 @@ impl Instruction {
     pub(crate) fn execute(&self, s: &mut VmState) -> OpCycles {
         match &self.binding {
             Binding::NoOperand(f) => {
-                println!("BEFORE {:04X}", s.reg.pc);
                 s.reg.pc += 1;
-                println!("AFTER {:04X}", s.reg.pc);
                 f.execute(s)
             }
             Binding::Byte(f, value) => {

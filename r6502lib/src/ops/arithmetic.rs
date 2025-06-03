@@ -70,7 +70,7 @@ pub(crate) fn sbc(s: &mut VmState, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{reg, Reg, RegBuilder, VmStateBuilder, _p, P};
+    use crate::{reg, Reg, RegBuilder, VmStateBuilder, _p};
     use anyhow::Result;
     use rstest::rstest;
 

@@ -1,4 +1,5 @@
 use bitflags::bitflags;
+use std::fmt::{Display, Formatter, Result as StdResult};
 
 pub const P_STR: &str = "NV1BDIZC";
 
@@ -21,6 +22,12 @@ impl Default for P {
     fn default() -> Self {
         // TBD: What is the initial state of the P register?
         Self::empty()
+    }
+}
+
+impl Display for P {
+    fn fmt(&self, f: &mut Formatter<'_>) -> StdResult {
+        write!(f, "0b{:08b}", self.bits())
     }
 }
 
