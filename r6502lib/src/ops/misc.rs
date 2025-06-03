@@ -20,7 +20,7 @@ pub(crate) fn nop(_s: &mut VmState) {}
 
 #[cfg(test)]
 mod tests {
-    use crate::ops::misc::brk;
+    use crate::ops::brk;
     use crate::{p_get, reg, Memory, RegBuilder, VmState, VmStateBuilder, _p, IRQ};
     use anyhow::Result;
     use rstest::rstest;

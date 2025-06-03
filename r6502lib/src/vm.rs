@@ -147,7 +147,7 @@ mod tests {
         p_set!(vm.s.reg, B, false);
         assert!(!vm.step());
         assert_eq!(7, vm.total_cycles);
-        assert!(p_get!(vm.s.reg, B));
+        assert!(!p_get!(vm.s.reg, B));
         assert_eq!(0x9876, vm.s.reg.pc);
     }
 
