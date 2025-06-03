@@ -67,10 +67,10 @@ mod tests {
         const INITIAL_S: u8 = 0x6e;
         let reg = RegBuilder::default().p(_p!(0x63)).s(INITIAL_S).build()?;
         let mut s = VmStateBuilder::default().reg(reg).build()?;
-        s.memory[INITIAL_S as u16] = 0x98;
-        s.memory[INITIAL_S as u16 + 1] = 0x9c; // P
-        s.memory[INITIAL_S as u16 + 2] = 0xaa; // lo(return_attr)
-        s.memory[INITIAL_S as u16 + 3] = 0x65; // hi(return_attr)
+        s.memory[0x0100 + INITIAL_S as u16] = 0x98;
+        s.memory[0x0100 + INITIAL_S as u16 + 1] = 0x9c; // P
+        s.memory[0x0100 + INITIAL_S as u16 + 2] = 0xaa; // lo(return_attr)
+        s.memory[0x0100 + INITIAL_S as u16 + 3] = 0x65; // hi(return_attr)
         s.reg.pc = 0x8771 + 1;
         rti(&mut s);
         assert_eq!(0x65aa, s.reg.pc);
