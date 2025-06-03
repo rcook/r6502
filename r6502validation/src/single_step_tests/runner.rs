@@ -68,7 +68,15 @@ pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
 fn run_scenario(scenario: &Scenario) -> bool {
     macro_rules! fail_if_not_eq {
         ($expected: expr, $actual: expr) => {
-            if $actual != $expected {
+            let expected = $expected;
+            let actual = $actual;
+            if actual != expected {
+                println!(
+                    "Scenario \"{}\": assert failed at {}:{} (actual({actual:?}) != expected({expected:?}))",
+                    scenario.name,
+                    file!(),
+                    line!()
+                );
                 return false;
             }
         };
