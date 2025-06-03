@@ -195,7 +195,7 @@ mod tests {
         #[cfg(feature = "not-implemented")]
         const TRACE: bool = true;
         #[cfg(not(feature = "not-implemented"))]
-        const TRACE: bool = false;
+        const TRACE: bool = true;
         assert_eq!(expected_stdout, capture_stdout(input, start, TRACE)?);
         Ok(())
     }
@@ -276,7 +276,7 @@ mod tests {
                     // Is this equivalent to RTI?
                     vm.s.pull();
                     vm.s.pull_word();
-                    p_set!(vm.s.reg, B, false);
+                    p_set!(vm.s.reg, I, false);
                     rts.execute_no_operand(&mut vm.s);
                 }
                 _ => panic!("expectation failed"),
