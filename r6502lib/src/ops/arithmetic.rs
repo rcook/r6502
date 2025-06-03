@@ -5,56 +5,37 @@ use crate::{p_get, p_set, p_value, VmState};
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub(crate) fn adc(s: &mut VmState, operand: u8) {
-    fn hi_nibble(value: u8) -> u8 {
-        value >> 4
+    fn nibbles(value: u8) -> (u8, u8) {
+        (value >> 4, value & 0x0f)
     }
 
-    fn lo_nibble(value: u8) -> u8 {
-        value & 0xf
-    }
-
-    fn is_bcd(value: u8) -> bool {
-        hi_nibble(value) < 10 && lo_nibble(value) < 10
-    }
-
-    fn carry_nibble(value: u8) -> (u8, bool) {
-        if value < 10 {
-            (value, false)
-        } else {
-            (value - 10, true)
-        }
+    fn from_nibbles(hi: u8, lo: u8) -> u8 {
+        assert!(hi < 10 && lo < 10);
+        (hi << 4) + lo
     }
 
     let lhs = s.reg.a;
     let rhs = operand;
 
     if p_get!(s.reg, D) {
-        // What do we do if operands are not valid BCD to start with?
-        assert!(is_bcd(lhs) && is_bcd(rhs));
+        let (lhs_hi, lhs_lo) = nibbles(lhs);
+        let (rhs_hi, rhs_lo) = nibbles(rhs);
 
-        let value_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
-        let value = value_word as u8;
+        let t0 = lhs_lo + rhs_lo + p_value!(s.reg, C);
+        let (t1, t2) = nibbles(t0);
+        let (t3, result_lo) = (t2 / 10, t2 % 10);
+        let carry = t1 + t3;
 
-        let (lo, carry) = carry_nibble(value & 0x0f);
-        let (hi, _) = carry_nibble((value >> 4) + if carry { 1 } else { 0 });
+        let t5 = lhs_hi + rhs_hi + carry;
+        let (carry, result_hi) = (t5 / 10, t5 % 10);
 
-        let new_value = (hi << 4) + lo;
+        let result = from_nibbles(result_hi, result_lo);
 
-        /*
-        let neg = is_neg(value);
-        let overflow = is_overflow(lhs, rhs, value);
-        let zero = is_zero(value);
-        let carry = is_carry(value_word);
-        */
-
-        s.reg.a = new_value;
-
-        /*
-        p_set!(s.reg, N, neg);
-        p_set!(s.reg, V, overflow);
-        p_set!(s.reg, Z, zero);
-        p_set!(s.reg, C, carry);
-        */
+        s.reg.a = result;
+        p_set!(s.reg, N, is_neg(result));
+        //p_set!(s.reg, V, overflow); // TBD
+        //p_set!(s.reg, Z, zero); // TBD
+        p_set!(s.reg, C, carry != 0);
     } else {
         let value_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
         let value = value_word as u8;
@@ -86,7 +67,7 @@ pub(crate) fn sbc(s: &mut VmState, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{reg, Reg, VmStateBuilder};
+    use crate::{reg, Reg, RegBuilder, VmBuilder, VmStateBuilder, P};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -119,6 +100,23 @@ mod tests {
         let mut s = VmStateBuilder::default().reg(reg).build()?;
         adc(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
+        Ok(())
+    }
+
+    #[test]
+    fn foo() -> Result<()> {
+        let reg = RegBuilder::default()
+            .pc(50999)
+            .s(33)
+            .a(0x7f)
+            .x(5)
+            .y(99)
+            .p(P::from_bits(0b10101010).expect("Must be valid"))
+            .build()?;
+        let mut s = VmStateBuilder::default().reg(reg).build()?;
+        adc(&mut s, 0x87);
+        assert_eq!(0x66, s.reg.a);
+        assert_eq!(P::from_bits(0b00101011).expect("Must be valid"), s.reg.p);
         Ok(())
     }
 

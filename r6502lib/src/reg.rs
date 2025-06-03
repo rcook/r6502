@@ -1,8 +1,9 @@
 use crate::P;
+use derive_builder::Builder;
 
 const DEFAULT_S: u8 = 0xff;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Builder, Clone, Debug, PartialEq)]
 pub struct Reg {
     pub a: u8,
     pub x: u8,

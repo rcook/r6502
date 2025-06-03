@@ -37,7 +37,7 @@ pub use op_info::OpInfo;
 pub use opcode::Opcode;
 pub use os::{Os, OsBuilder, OsBuilderError};
 pub use p::P;
-pub use reg::Reg;
+pub use reg::{Reg, RegBuilder, RegBuilderError};
 pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;
 pub use vm::{Vm, VmBuilder, VmBuilderError};
