@@ -36,7 +36,7 @@ pub use no_operand_op::NoOperandOp;
 pub use op_info::OpInfo;
 pub use opcode::Opcode;
 pub use os::{Os, OsBuilder, OsBuilderError};
-pub use p::P;
+pub use p::{P, P_STR};
 pub use reg::{Reg, RegBuilder, RegBuilderError};
 pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;
@@ -53,6 +53,6 @@ pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;
 #[allow(unused)]
-pub(crate) use p::{p, P_STR};
+pub(crate) use p::p;
 #[allow(unused)]
 pub(crate) use reg::reg;

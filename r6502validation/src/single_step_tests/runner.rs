@@ -66,7 +66,8 @@ pub(crate) fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
 }
 
 pub(crate) fn run_scenario_from_json(json: &str) -> Result<()> {
-    let scenario = serde_json::from_str(json)?;
+    let scenario = serde_json::from_str::<Scenario>(json)?;
+    println!("{scenario}");
     if run_scenario_inner(&scenario) {
         println!("Scenario passed")
     } else {

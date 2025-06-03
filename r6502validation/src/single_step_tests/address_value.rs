@@ -2,7 +2,7 @@ use crate::single_step_tests::AddressValueVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct AddressValue {
     pub(crate) address: u16,
     pub(crate) value: u8,
