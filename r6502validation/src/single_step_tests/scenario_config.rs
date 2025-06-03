@@ -95,6 +95,8 @@ impl ScenarioConfig {
 
     fn scenario_dir() -> Result<PathBuf> {
         Ok(Self::strip_parents(&Self::current_source_path()?, 4)?
-            .join("SingleStepTests-65x02/6502/v1"))
+            .join("SingleStepTests-65x02")
+            .join("6502")
+            .join("v1"))
     }
 }
