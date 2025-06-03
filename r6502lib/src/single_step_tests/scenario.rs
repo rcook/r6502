@@ -79,7 +79,9 @@ impl Scenario {
                         total_count += 1;
                     }
 
-                    failure_counts.push((opcode, failure_count));
+                    if failure_count > 0 {
+                        failure_counts.push((opcode, failure_count));
+                    }
 
                     all_total_count += total_count;
                     all_failure_count += failure_count;
