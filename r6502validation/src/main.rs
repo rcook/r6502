@@ -7,7 +7,7 @@ fn main() -> anyhow::Result<()> {
     use clap::Parser;
 
     match Args::parse().command {
-        Command::Run { filter } => crate::single_step_tests::run_scenarios_with_filter(&filter)?,
+        Command::Run { filter } => Scenario::run_scenarios_with_filter(&filter)?,
         Command::RunJson { json } => {
             let scenario = Scenario::from_json(&json)?;
             println!("{scenario}");
