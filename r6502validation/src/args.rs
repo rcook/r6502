@@ -13,4 +13,10 @@ pub(crate) enum Command {
         #[arg(long = "filter")]
         filter: Option<String>,
     },
+
+    #[command(name = "run-json", about = "Run scenario provided on command line")]
+    RunJson {
+        #[arg(required = true)]
+        json: String,
+    },
 }

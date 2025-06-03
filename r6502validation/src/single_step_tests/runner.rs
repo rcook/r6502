@@ -10,7 +10,7 @@ use std::sync::LazyLock;
 
 static LOG_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("failures.log"));
 
-pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
+pub(crate) fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
     let config = ScenarioConfig::new(filter)?;
 
     let mut count = 0;
@@ -38,7 +38,7 @@ pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
             );
 
             for scenario in scenarios {
-                let result = catch_unwind(|| run_scenario(&scenario)).unwrap_or_default();
+                let result = catch_unwind(|| run_scenario_inner(&scenario)).unwrap_or_default();
                 if !result {
                     println!(
                         "Scenario \"{}\" failed: rerun with --filter \"{}\"",
@@ -65,7 +65,17 @@ pub(crate) fn run_scenarios(filter: &Option<String>) -> Result<()> {
     Ok(())
 }
 
-fn run_scenario(scenario: &Scenario) -> bool {
+pub(crate) fn run_scenario_from_json(json: &str) -> Result<()> {
+    let scenario = serde_json::from_str(json)?;
+    if run_scenario_inner(&scenario) {
+        println!("Scenario passed")
+    } else {
+        println!("Scenario failed")
+    }
+    Ok(())
+}
+
+fn run_scenario_inner(scenario: &Scenario) -> bool {
     macro_rules! fail_if_not_eq {
         ($expected: expr, $actual: expr) => {
             let expected = $expected;
@@ -101,7 +111,7 @@ fn run_scenario(scenario: &Scenario) -> bool {
     fail_if_not_eq!(scenario.r#final.a, vm.s.reg.a);
     fail_if_not_eq!(scenario.r#final.x, vm.s.reg.x);
     fail_if_not_eq!(scenario.r#final.y, vm.s.reg.y);
-    fail_if_not_eq!(scenario.r#final.p, vm.s.reg.p);
+    fail_if_not_eq!(scenario.r#final.p.bits(), vm.s.reg.p.bits());
     for address_value in &scenario.r#final.ram {
         fail_if_not_eq!(address_value.value, vm.s.memory[address_value.address]);
     }
