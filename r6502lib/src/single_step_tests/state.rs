@@ -31,13 +31,13 @@ pub struct State {
 
 impl Display for State {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        writeln!(f, "  pc: ${pc:04X}", pc = self.pc)?;
-        writeln!(f, "  s : ${s:02X}", s = self.s)?;
-        writeln!(f, "  a : ${a:02X} ({a})", a = self.a)?;
-        writeln!(f, "  x : ${x:02X} ({x})", x = self.x)?;
-        writeln!(f, "  y : ${y:02X} ({y})", y = self.y)?;
+        writeln!(f, "  pc: ${pc:04X} ({pc})", pc = self.pc)?;
+        writeln!(f, "  s : ${s:02X}  ({s})", s = self.s)?;
+        writeln!(f, "  a : ${a:02X}  ({a})", a = self.a)?;
+        writeln!(f, "  x : ${x:02X}  ({x})", x = self.x)?;
+        writeln!(f, "  y : ${y:02X}  ({y})", y = self.y)?;
         writeln!(f, "        {P_STR}")?;
-        writeln!(f, "  p : 0b{p:08b} (${p:02X}) ({p})", p = self.p.bits())?;
+        writeln!(f, "  p : 0b{p:08b}  (${p:02X}) ({p})", p = self.p.bits())?;
 
         let mut ram = self.ram.clone();
         ram.sort_by(|a, b| a.address.cmp(&b.address));
