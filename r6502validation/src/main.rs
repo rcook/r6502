@@ -11,15 +11,15 @@ fn main() -> anyhow::Result<()> {
             let scenario = Scenario::from_json(&json)?;
             println!("{scenario}");
             let (result, final_state) = scenario.run();
-            if let Some(final_state) = final_state {
-                println!("Actual:\n{final_state}");
-            } else {
-                println!("Actual: (not available)");
-            }
             if result {
                 println!("Scenario passed")
             } else {
-                println!("Scenario failed")
+                println!("Scenario failed");
+                if let Some(final_state) = final_state {
+                    println!("Actual:\n{final_state}");
+                } else {
+                    println!("Actual: (not available)");
+                }
             }
         }
     }

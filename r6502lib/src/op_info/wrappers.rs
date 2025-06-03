@@ -217,8 +217,12 @@ pub(crate) mod indexed_indirect_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::OpCycles {
-                let effective_addr = s.memory.fetch_word(addr.wrapping_add(s.reg.x) as u16);
-                $crate::ops::$f(s, s.memory[effective_addr]);
+                let addr_with_index = addr.wrapping_add(s.reg.x);
+                let lo = s.memory[addr_with_index as u16];
+                let hi = s.memory[addr_with_index.wrapping_add(1) as u16];
+                let target_addr = $crate::util::make_word(hi, lo);
+                let value = s.memory[target_addr];
+                $crate::ops::$f(s, value);
                 $cycles
             }
         };
