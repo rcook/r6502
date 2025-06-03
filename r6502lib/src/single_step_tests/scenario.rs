@@ -1,6 +1,6 @@
 use crate::single_step_tests::{AddressValue, Cycle, ScenarioConfig, State};
+use crate::{Opcode, Vm};
 use anyhow::{anyhow, bail, Result};
-use r6502lib::{Opcode, Vm};
 use serde::Deserialize;
 use std::ffi::OsStr;
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -13,7 +13,7 @@ use std::sync::LazyLock;
 static LOG_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("failures.log"));
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct Scenario {
+pub struct Scenario {
     #[serde(rename = "name")]
     pub(crate) name: String,
 
@@ -29,11 +29,11 @@ pub(crate) struct Scenario {
 }
 
 impl Scenario {
-    pub(crate) fn from_json(s: &str) -> Result<Self> {
+    pub fn from_json(s: &str) -> Result<Self> {
         serde_json::from_str(s).map_err(|e| anyhow!(e))
     }
 
-    pub(crate) fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
+    pub fn run_scenarios_with_filter(filter: &Option<String>) -> Result<()> {
         let config = ScenarioConfig::new(filter)?;
 
         let mut count = 0;
@@ -87,7 +87,7 @@ impl Scenario {
         Ok(())
     }
 
-    pub(crate) fn run(&self) -> (bool, Option<State>) {
+    pub fn run(&self) -> (bool, Option<State>) {
         match catch_unwind(|| self.run_inner()) {
             Ok((result, state)) => (result, Some(state)),
             Err(_) => (false, None),

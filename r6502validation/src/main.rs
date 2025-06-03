@@ -1,10 +1,9 @@
 mod args;
-mod single_step_tests;
 
 fn main() -> anyhow::Result<()> {
-    use crate::single_step_tests::Scenario;
     use args::{Args, Command};
     use clap::Parser;
+    use r6502lib::single_step_tests::Scenario;
 
     match Args::parse().command {
         Command::Run { filter } => Scenario::run_scenarios_with_filter(&filter)?,

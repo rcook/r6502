@@ -1,3 +1,5 @@
+pub mod single_step_tests;
+
 mod addressing_mode;
 mod binding;
 mod byte_op;

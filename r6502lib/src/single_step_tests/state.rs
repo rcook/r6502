@@ -1,12 +1,12 @@
 use crate::single_step_tests::AddressValue;
-use r6502lib::{P, P_STR};
+use crate::{P, P_STR};
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::result::Result as StdResult;
 
 #[derive(Debug, Deserialize)]
-pub(crate) struct State {
+pub struct State {
     #[serde(rename = "pc")]
     pub(crate) pc: u16,
 
