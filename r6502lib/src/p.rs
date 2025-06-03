@@ -24,7 +24,13 @@ impl Default for P {
     }
 }
 
-#[allow(unused)]
+#[macro_export]
+macro_rules! _p {
+    ($value: expr) => {
+        $crate::P::from_bits($value).unwrap()
+    };
+}
+
 macro_rules! p {
     () => {
         $crate::P::empty()
