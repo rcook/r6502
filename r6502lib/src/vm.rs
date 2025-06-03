@@ -47,7 +47,7 @@ impl Vm {
             instruction_info.clone(),
         );
         self.total_cycles += instruction_cycles as TotalCycles;
-        !p_get!(self.s.reg, B)
+        !p_get!(self.s.reg, I)
     }
 
     pub(crate) fn run_until_brk(&mut self) {

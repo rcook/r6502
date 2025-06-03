@@ -28,7 +28,7 @@ mod vm_state;
 mod word_op;
 
 pub use byte_op::ByteOp;
-pub use constants::{IRQ, IRQ_VALUE, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
+pub use constants::{IRQ, IRQ_ADDR, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
 pub use image::Image;
 pub use instruction_info::InstructionInfo;
 pub use instruction_set::{InstructionSet, MOS_6502};
