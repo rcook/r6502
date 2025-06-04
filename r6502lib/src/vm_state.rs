@@ -18,6 +18,7 @@ impl VmState {
         self.reg.s = self.reg.s.wrapping_sub(1);
     }
 
+    #[must_use]
     pub fn pull(&mut self) -> u8 {
         self.reg.s = self.reg.s.wrapping_add(1);
         self.get_stack_value()
@@ -29,6 +30,7 @@ impl VmState {
         self.push(lo);
     }
 
+    #[must_use]
     pub fn pull_word(&mut self) -> u16 {
         let lo = self.pull();
         let hi = self.pull();
@@ -47,10 +49,12 @@ impl VmState {
     */
 
     #[cfg(test)]
+    #[must_use]
     pub(crate) fn peek_word(&self) -> u16 {
         self.peek_back_word(0x00)
     }
 
+    #[must_use]
     pub(crate) fn peek_back_word(&self, offset: u8) -> u16 {
         let stack_addr = (STACK_BASE + self.reg.s as u16).wrapping_add(offset as u16);
         let hi = self.memory[stack_addr.wrapping_add(2)];
@@ -58,6 +62,7 @@ impl VmState {
         make_word(hi, lo)
     }
 
+    #[must_use]
     fn get_stack_value(&self) -> u8 {
         self.memory[STACK_BASE + self.reg.s as u16]
     }

@@ -271,8 +271,8 @@ mod tests {
                     }
 
                     // Is this equivalent to RTI?
-                    vm.s.pull();
-                    vm.s.pull_word();
+                    _ = vm.s.pull();
+                    _ = vm.s.pull_word();
                     p_set!(vm.s.reg, I, false);
                     rts.execute_no_operand(&mut vm.s);
                 }

@@ -36,8 +36,8 @@ impl Os {
     }
 
     pub fn return_from_os_vector_brk(&self, vm: &mut Vm, rts: &OpInfo) {
-        vm.s.pull(); // Is this P?
-        vm.s.pull_word(); // What's this?
+        _ = vm.s.pull(); // Is this P?
+        _ = vm.s.pull_word(); // What's this?
         p_set!(vm.s.reg, B, false);
         rts.execute_no_operand(&mut vm.s);
     }
