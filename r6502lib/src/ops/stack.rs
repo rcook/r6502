@@ -36,7 +36,7 @@ pub(crate) fn plp(s: &mut VmState) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{reg, Memory, Vm, VmBuilder, VmState, _p, P, STACK_BASE};
+    use crate::{reg, Memory, Vm, VmBuilder, VmState, VmStateBuilder, _p, P, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -75,11 +75,8 @@ mod tests {
     }
 
     #[test]
-    fn php_basics() {
-        let mut s = VmState {
-            reg: reg!(0xff, 0x0000),
-            memory: Memory::new(),
-        };
+    fn php_basics() -> Result<()> {
+        let mut s = VmStateBuilder::default().build()?;
 
         s.reg.p = P::N | P::D | P::Z;
         php(&mut s);
@@ -90,10 +87,12 @@ mod tests {
         s.reg.p = P::empty();
 
         plp(&mut s);
-        assert_eq!(P::V | P::B | P::C, s.reg.p);
+        assert_eq!(P::V | P::ALWAYS_ONE | P::B | P::C, s.reg.p);
 
         plp(&mut s);
-        assert_eq!(P::N | P::B | P::D | P::Z, s.reg.p);
+        assert_eq!(P::N | P::ALWAYS_ONE | P::B | P::D | P::Z, s.reg.p);
+
+        Ok(())
     }
 
     #[rstest]

@@ -20,7 +20,7 @@ pub struct Reg {
     #[builder(default = 0x0000)]
     pub pc: u16,
 
-    #[builder(default = 0x00ff)]
+    #[builder(default = 0xff)]
     pub s: u8,
 }
 
