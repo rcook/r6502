@@ -23,10 +23,6 @@ pip install -e r6502asm
 # Buggy opcodes
 
 ```
-$81 41
-$11 34
-$31 33
-$B1 32
 $51 31
 $AD 3
 $5E 2
