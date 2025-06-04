@@ -262,14 +262,21 @@ pub(crate) mod indirect {
 }
 
 pub(crate) mod indirect_indexed_y {
+    use crate::VmState;
+
+    // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502
+    fn compute_effective_addr(s: &mut VmState, addr: u8) -> u16 {
+        let (lo, carry) = s.memory[addr as u16].overflowing_add(s.reg.y);
+        let next_addr = addr.wrapping_add(1);
+        let hi = s.memory[next_addr as u16].wrapping_add(if carry { 1 } else { 0 });
+        let effective_addr = ((hi as u16) << 8) + lo as u16;
+        effective_addr
+    }
+
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::OpCycles {
-                let (lo, carry) = s.memory[addr as u16].overflowing_add(s.reg.y);
-                let next_addr = addr.wrapping_add(1);
-                let hi = s.memory[next_addr as u16].wrapping_add(if carry { 1 } else { 0 });
-                let effective_addr = ((hi as u16) << 8) + lo as u16;
+                let effective_addr = compute_effective_addr(s, addr);
                 $crate::ops::$f(s, s.memory[effective_addr]);
                 if $crate::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
@@ -283,10 +290,7 @@ pub(crate) mod indirect_indexed_y {
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u8) -> $crate::OpCycles {
-                let effective_addr = s
-                    .memory
-                    .fetch_word(addr as u16)
-                    .wrapping_add(s.reg.y as u16);
+                let effective_addr = compute_effective_addr(s, addr);
                 $crate::ops::$f(s, effective_addr);
                 if $crate::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
