@@ -8,6 +8,7 @@ use crate::{p_set, VmState, IRQ, P};
 // https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 // https://retrocomputing.stackexchange.com/questions/29923/why-does-the-brk-instruction-set-the-b-flag
 // https://forums.nesdev.org/viewtopic.php?p=64224#p64224
+// https://www.pagetable.com/?p=410
 pub(crate) fn brk(s: &mut VmState) {
     s.push_word(s.reg.pc + 1);
     s.push((s.reg.p | P::B).bits());
@@ -22,27 +23,15 @@ pub(crate) fn nop(_s: &mut VmState) {}
 #[cfg(test)]
 mod tests {
     use crate::ops::brk;
-    use crate::{p_get, RegBuilder, VmState, VmStateBuilder, _p, IRQ};
+    use crate::{VmState, _p, IRQ, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
-    #[test]
-    fn brk_basics() {
-        let mut s = VmState::default();
-        s.memory.store_word(IRQ, 0x1234);
-        assert!(!p_get!(s.reg, I));
-        assert_eq!(0x0000, s.reg.pc);
-        assert_eq!(0xff, s.reg.s);
-        brk(&mut s);
-        assert!(p_get!(s.reg, I));
-        assert_eq!(0x1234, s.reg.pc);
-        assert_eq!(0xfc, s.reg.s);
-    }
-
     #[rstest]
+    #[case(0x1234, 0xfc, 0b10101110, 0x0100, 0xff, 0b10101010, 0x1234)]
     // cargo run -p r6502validation -- run-json '{ "name": "00 3f f7", "initial": { "pc": 35714, "s": 81, "a": 203, "x": 117, "y": 162, "p": 106, "ram": [ [35714, 0], [35715, 63], [35716, 247], [65534, 212], [65535, 37], [9684, 237]]}, "final": { "pc": 9684, "s": 78, "a": 203, "x": 117, "y": 162, "p": 110, "ram": [ [335, 122], [336, 132], [337, 139], [9684, 237], [35714, 0], [35715, 63], [35716, 247], [65534, 212], [65535, 37]]}, "cycles": [ [35714, 0, "read"], [35715, 63, "read"], [337, 139, "write"], [336, 132, "write"], [335, 122, "write"], [65534, 212, "read"], [65535, 37, "read"]] }'
     #[case(0x25d4, 78, 110, 0x8b82, 81, 106, 0x25d4)]
-    fn brk_scenarios(
+    fn brk_basics(
         #[case] expected_pc: u16,
         #[case] expected_s: u8,
         #[case] expected_p: u8,
@@ -51,14 +40,19 @@ mod tests {
         #[case] p: u8,
         #[case] irq_addr: u16,
     ) -> Result<()> {
-        let reg = RegBuilder::default().p(_p!(p)).s(s).build()?;
-        let mut s = VmStateBuilder::default().reg(reg).build()?;
-        s.memory.store_word(IRQ, irq_addr);
-        s.reg.pc = pc + 1;
-        brk(&mut s);
-        assert_eq!(expected_pc, s.reg.pc);
-        assert_eq!(_p!(expected_p), s.reg.p);
-        assert_eq!(expected_s, s.reg.s);
+        let mut vm_state = VmState::default();
+        vm_state.reg.p = _p!(p);
+        vm_state.reg.pc = pc + 1;
+        vm_state.reg.s = s;
+        vm_state.memory.store_word(IRQ, irq_addr);
+        brk(&mut vm_state);
+        assert_eq!(_p!(expected_p), vm_state.reg.p);
+        assert_eq!(expected_pc, vm_state.reg.pc);
+        assert_eq!(expected_s, vm_state.reg.s);
+        assert_eq!(
+            p | 0b00010000,
+            vm_state.memory[STACK_BASE + expected_s as u16 + 1]
+        ); // P with B flag set
         Ok(())
     }
 }
