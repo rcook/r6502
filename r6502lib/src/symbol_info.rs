@@ -1,10 +1,9 @@
 use anyhow::{anyhow, Result};
 use serde::de::Error as SerdeError;
-use serde::{Deserialize, Deserializer, Serializer};
+use serde::{Deserialize, Deserializer};
 use std::fs::File;
 use std::path::Path;
 
-#[allow(unused)]
 #[derive(Debug, Deserialize)]
 pub struct SymbolInfo {
     #[serde(rename = "name")]
@@ -58,10 +57,11 @@ where
     }
 }
 
-#[allow(unused)]
+/*
 fn serialize_value<S>(value: u16, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     serializer.serialize_str(&format!("${:04X}", value))
 }
+*/

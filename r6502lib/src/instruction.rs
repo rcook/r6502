@@ -1,7 +1,6 @@
 use crate::util::make_word;
 use crate::{Binding, Op, OpCycles, Opcode, VmState, MOS_6502};
 
-#[allow(unused)]
 pub(crate) struct Instruction {
     pub(crate) pc: u16,
     pub(crate) opcode: Opcode,

@@ -52,7 +52,7 @@ pub(crate) fn rts(s: &mut VmState) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, Reg, RegBuilder, Vm, VmState, VmStateBuilder, _p, OSWRCH};
+    use crate::{reg, Reg, RegBuilder, Vm, VmState, VmStateBuilder, _p};
     use anyhow::Result;
     use rstest::rstest;
 

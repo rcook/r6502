@@ -22,16 +22,13 @@ pub(crate) fn nop(_s: &mut VmState) {}
 #[cfg(test)]
 mod tests {
     use crate::ops::brk;
-    use crate::{p_get, reg, Memory, RegBuilder, VmState, VmStateBuilder, _p, IRQ};
+    use crate::{p_get, RegBuilder, VmState, VmStateBuilder, _p, IRQ};
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
     fn brk_basics() {
-        let mut s = VmState {
-            reg: reg!(0xff, 0x0000),
-            memory: Memory::new(),
-        };
+        let mut s = VmState::default();
         s.memory.store_word(IRQ, 0x1234);
         assert!(!p_get!(s.reg, I));
         assert_eq!(0x0000, s.reg.pc);

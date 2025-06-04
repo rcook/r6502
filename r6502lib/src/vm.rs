@@ -21,8 +21,8 @@ impl Default for Vm {
     }
 }
 
-#[allow(unused)]
 impl Vm {
+    /*
     pub(crate) fn new(monitor: Box<dyn Monitor>, s: VmState, total_cycles: TotalCycles) -> Self {
         Self {
             monitor,
@@ -30,6 +30,7 @@ impl Vm {
             total_cycles,
         }
     }
+    */
 
     #[must_use]
     pub fn step(&mut self) -> bool {
@@ -48,10 +49,6 @@ impl Vm {
         );
         self.total_cycles += instruction_cycles as TotalCycles;
         !p_get!(self.s.reg, I)
-    }
-
-    pub(crate) fn run_until_brk(&mut self) {
-        while self.step() {}
     }
 }
 
@@ -204,7 +201,7 @@ mod tests {
     fn add8() -> Result<()> {
         let mut vm = load_into_vm(include_str!("../../examples/add8.r6502.txt"))?;
         vm.s.reg.pc = 0x0e01;
-        vm.run_until_brk();
+        while vm.step() {}
         assert_eq!(21, vm.total_cycles);
         assert_eq!(0x46, vm.s.memory[0x0e00]);
         Ok(())
@@ -214,7 +211,7 @@ mod tests {
     fn add16() -> Result<()> {
         let mut vm = load_into_vm(include_str!("../../examples/add16.r6502.txt"))?;
         vm.s.reg.pc = 0x0e02;
-        vm.run_until_brk();
+        while vm.step() {}
         assert_eq!(33, vm.total_cycles);
         assert_eq!(0xac68, vm.s.memory.fetch_word(0x0e00));
         Ok(())
@@ -227,7 +224,7 @@ mod tests {
 
         let mut vm = load_into_vm(include_str!("../../examples/div16.r6502.txt"))?;
         vm.s.reg.pc = 0x0e02;
-        vm.run_until_brk();
+        while vm.step() {}
         assert_eq!(893, vm.total_cycles);
         let quotient = vm.s.memory.fetch_word(NUM1);
         let remainder = vm.s.memory.fetch_word(REM);

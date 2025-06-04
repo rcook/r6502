@@ -41,16 +41,13 @@ pub(crate) fn plp(s: &mut VmState) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{reg, Memory, Vm, VmBuilder, VmState, VmStateBuilder, _p, P, STACK_BASE};
+    use crate::{Vm, VmBuilder, VmState, VmStateBuilder, _p, P, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
     fn pha_basics() {
-        let mut s = VmState {
-            reg: reg!(0xff, 0x0000),
-            memory: Memory::new(),
-        };
+        let mut s = VmState::default();
         s.reg.a = 0x56;
         s.memory[STACK_BASE + 0x00ff] = 0x34;
         assert_eq!(0xff, s.reg.s);
@@ -63,10 +60,7 @@ mod tests {
 
     #[test]
     fn pha_wraparound() {
-        let mut s = VmState {
-            reg: reg!(0xff, 0x0000),
-            memory: Memory::new(),
-        };
+        let mut s = VmState::default();
 
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
@@ -120,10 +114,7 @@ mod tests {
 
     #[test]
     fn pla_basics() {
-        let mut s = VmState {
-            reg: reg!(0xff, 0x0000),
-            memory: Memory::new(),
-        };
+        let mut s = VmState::default();
 
         s.reg.a = 0x00;
         pha(&mut s);

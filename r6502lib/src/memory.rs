@@ -11,10 +11,11 @@ impl Default for Memory {
 }
 
 impl Memory {
-    #[allow(unused)]
+    /*
     pub(crate) fn new() -> Self {
         Self::default()
     }
+    */
 
     pub fn load(&mut self, image: &Image) {
         let origin = image.origin as usize;
@@ -32,7 +33,6 @@ impl Memory {
         make_word(hi, lo)
     }
 
-    #[allow(unused)]
     pub(crate) fn store_word(&mut self, addr: u16, value: u16) {
         let (hi, lo) = split_word(value);
         self[addr] = lo;

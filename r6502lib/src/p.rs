@@ -38,7 +38,7 @@ macro_rules! _p {
     };
 }
 
-#[allow(unused)]
+#[cfg(test)]
 macro_rules! p {
     () => {
         $crate::P::empty()
@@ -51,6 +51,7 @@ macro_rules! p {
     };
 }
 
+#[cfg(test)]
 pub(crate) use p;
 
 #[macro_export]

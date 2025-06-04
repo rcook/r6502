@@ -49,12 +49,12 @@ pub use word_op::WordOp;
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
 pub(crate) use instruction::Instruction;
-#[allow(unused)]
-pub(crate) use no_operand_op::NoOperandFn;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;
-#[allow(unused)]
+
+#[cfg(test)]
 pub(crate) use p::p;
-#[allow(unused)]
+
+#[cfg(test)]
 pub(crate) use reg::reg;

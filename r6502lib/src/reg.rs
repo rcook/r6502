@@ -46,7 +46,7 @@ impl Default for Reg {
     }
 }
 
-#[allow(unused)]
+#[cfg(test)]
 macro_rules! reg {
     ($a: expr, $pc: expr) => {
         $crate::Reg {
@@ -65,6 +65,7 @@ macro_rules! reg {
     };
 }
 
+#[cfg(test)]
 pub(crate) use reg;
 
 #[cfg(test)]

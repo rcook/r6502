@@ -2,7 +2,7 @@ use crate::util::make_word;
 use crate::MAGIC_NUMBER;
 use anyhow::{bail, Error, Result};
 use std::fs::File;
-use std::io::{Cursor, ErrorKind, Read, Seek};
+use std::io::{ErrorKind, Read, Seek};
 use std::path::Path;
 use std::str::FromStr;
 
@@ -12,7 +12,6 @@ pub struct Image {
     pub values: Vec<u8>,
 }
 
-#[allow(unused)]
 impl Image {
     pub fn load(
         path: &Path,
@@ -22,6 +21,7 @@ impl Image {
         Self::read(File::open(path)?, default_origin, default_start)
     }
 
+    /*
     pub(crate) fn from_bytes(
         bytes: &[u8],
         default_origin: Option<u16>,
@@ -29,6 +29,7 @@ impl Image {
     ) -> Result<Self> {
         Self::read(Cursor::new(bytes), default_origin, default_start)
     }
+    */
 
     fn read<R: Read + Seek>(
         mut reader: R,

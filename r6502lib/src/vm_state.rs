@@ -35,18 +35,18 @@ impl VmState {
         make_word(hi, lo)
     }
 
-    #[allow(unused)]
+    /*
     pub(crate) fn peek(&self) -> u8 {
         self.peek_back(0x00)
     }
 
-    #[allow(unused)]
     pub(crate) fn peek_back(&self, offset: u8) -> u8 {
         let stack_addr = (STACK_BASE + self.reg.s as u16).wrapping_add(offset as u16);
         self.memory[stack_addr.wrapping_add(1)]
     }
+    */
 
-    #[allow(unused)]
+    #[cfg(test)]
     pub(crate) fn peek_word(&self) -> u16 {
         self.peek_back_word(0x00)
     }
