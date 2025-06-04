@@ -2,7 +2,6 @@
 
 MOS 6502 emulator and debugger
 
-
 # r6502
 
 This is the emulator and debugger.
@@ -24,7 +23,6 @@ pip install -e r6502asm
 # Buggy opcodes
 
 ```
-$80 5011
 $C9 2533
 $C1 2528
 $C4 2525

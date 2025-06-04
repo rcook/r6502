@@ -52,7 +52,7 @@ pub enum Opcode {
     #[strum(props(mnemonic = "BCC"))]
     Bcc = 0x90,
     #[strum(props(mnemonic = "BCS"))]
-    Bcs = 0x80,
+    Bcs = 0xb0,
     #[strum(props(mnemonic = "BEQ"))]
     Beq = 0xf0,
     #[strum(props(mnemonic = "BIT"))]
