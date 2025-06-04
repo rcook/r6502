@@ -27,10 +27,3 @@ pub(crate) fn set_flags_on_value(s: &mut VmState, operand: u8) {
     p_set!(s.reg, N, is_neg(operand));
     p_set!(s.reg, Z, is_zero(operand));
 }
-
-pub(crate) fn set_flags_on_compare(s: &mut VmState, operand: u8) {
-    let neg = is_neg(operand);
-    p_set!(s.reg, N, neg);
-    p_set!(s.reg, Z, operand == 0);
-    p_set!(s.reg, C, !neg);
-}
