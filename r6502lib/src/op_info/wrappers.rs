@@ -400,6 +400,7 @@ pub(crate) mod zero_page_x {
     wrap!(eor, 4);
     wrap_store!(inc, 6);
     wrap!(lda, 4);
+    wrap!(ldy, 4);
     wrap_store!(lsr, 6);
     wrap!(ora, 4);
     wrap_store!(rol, 6);

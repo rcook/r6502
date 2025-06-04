@@ -24,7 +24,6 @@ pip install -e r6502asm
 # Buggy opcodes
 
 ```
-$B4 9912
 $28 7554
 $2C 6497
 $24 6420

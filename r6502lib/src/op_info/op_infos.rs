@@ -95,7 +95,7 @@ mod items {
     pub(crate) const LDY_ABS_X: OpInfo = absolute_x_wrapped!(LdyAbsX, ldy);
     pub(crate) const LDY_IMM: OpInfo = immediate_wrapped!(LdyImm, ldy);
     pub(crate) const LDY_ZP: OpInfo = zero_page_wrapped!(LdyZp, ldy);
-    pub(crate) const LDY_ZP_X: OpInfo = zero_page_wrapped!(LdyZpX, ldy);
+    pub(crate) const LDY_ZP_X: OpInfo = zero_page_x_wrapped!(LdyZpX, ldy);
     pub(crate) const LSR_ABS: OpInfo = absolute_wrapped!(LsrAbs, lsr);
     pub(crate) const LSR_ABS_X: OpInfo = absolute_x_wrapped!(LsrAbsX, lsr);
     pub(crate) const LSR_ACC: OpInfo = accumulator_wrapped!(LsrAcc, lsr_acc);
