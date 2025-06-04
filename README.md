@@ -23,33 +23,6 @@ python -m pip install --upgrade pip
 pip install -e r6502asm
 ```
 
-# Buggy opcodes
-
-```
-$20 1
-$26 1
-$2E 1
-$30 1
-$3D 1
-$3E 1
-$56 1
-$5D 1
-$66 1
-$8C 1
-$8D 1
-$98 1
-$A1 1
-$A2 1
-$AA 1
-$AC 1
-$B5 1
-$BC 1
-$C6 1
-$D0 1
-$D8 1
-$FE 1
-```
-
 https://logicalmoon.com/2017/11/using-vs-code-to-create-a-6502-hello-world/
 https://github.com/stardot/beebasm
 http://www.6502.org/tutorials/6502opcodes.html
@@ -62,6 +35,6 @@ https://stackoverflow.com/questions/78122826/how-to-create-a-new-dialog-after-cu
 https://web.archive.org/web/20211204234443if_/http://archive.6502.org/datasheets/mos_6501-6505_mpu_preliminary_aug_1975.pdf
 https://www.masswerk.at/6502/6502_instruction_set.html
 https://github.com/Klaus2m5/6502_65C02_functional_tests
-
+https://github.com/C-Chads/MyLittle6502
 
 [single-step-tests]: https://github.com/SingleStepTests/65x02
