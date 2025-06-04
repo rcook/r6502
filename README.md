@@ -2,6 +2,9 @@
 
 MOS 6502 emulator and debugger
 
+Emulator verified using [SingleStepTests/65x02][single-step-tests] test
+suite
+
 # r6502
 
 This is the emulator and debugger.
@@ -23,10 +26,6 @@ pip install -e r6502asm
 # Buggy opcodes
 
 ```
-$51 31
-$AD 3
-$5E 2
-$05 1
 $20 1
 $26 1
 $2E 1
@@ -63,3 +62,6 @@ https://stackoverflow.com/questions/78122826/how-to-create-a-new-dialog-after-cu
 https://web.archive.org/web/20211204234443if_/http://archive.6502.org/datasheets/mos_6501-6505_mpu_preliminary_aug_1975.pdf
 https://www.masswerk.at/6502/6502_instruction_set.html
 https://github.com/Klaus2m5/6502_65C02_functional_tests
+
+
+[single-step-tests]: https://github.com/SingleStepTests/65x02
