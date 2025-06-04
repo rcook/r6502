@@ -24,7 +24,7 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
         p_set!(
             s.reg,
             V,
-            !(((a ^ value) & 0x80) != 0) && (((a ^ (ah << 4)) & 0x80) != 0)
+            ((a ^ value) & 0x80) == 0 && (((a ^ (ah << 4)) & 0x80) != 0)
         );
         p_set!(s.reg, C, false);
         if ah > 9 {
@@ -32,7 +32,7 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
             ah -= 10;
             ah &= 0xf;
         }
-        s.reg.a = (((al as u8) & 0xf) | ((ah as u8) << 4)) & 0xff;
+        s.reg.a = ((al as u8) & 0xf) | ((ah as u8) << 4);
     } else {
         let lhs = s.reg.a;
         let rhs = operand;
