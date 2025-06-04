@@ -1,10 +1,6 @@
 use crate::ops::helper::{is_neg, is_zero};
 use crate::{p_set, VmState, _p, P};
 
-fn set_p(s: &mut VmState, value: u8) {
-    s.reg.p = _p!(value | 0b00110000)
-}
-
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
 pub(crate) fn pha(s: &mut VmState) {
@@ -14,6 +10,8 @@ pub(crate) fn pha(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#PHP
 // http://www.6502.org/users/obelisk/6502/reference.html#PHP
 pub(crate) fn php(s: &mut VmState) {
+    // https://www.nesdev.org/wiki/Status_flags
+    // "B is 0 when pushed by interrupts (NMI and IRQ) and 1 when pushed by instructions (BRK and PHP)"
     s.push((s.reg.p | P::B).bits());
 }
 
@@ -29,8 +27,15 @@ pub(crate) fn pla(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#PLP
 // http://www.6502.org/users/obelisk/6502/reference.html#PLP
 pub(crate) fn plp(s: &mut VmState) {
-    let value = s.pull();
-    set_p(s, value);
+    // Retain ALWAYS_ONE and B
+    let current_p = s.reg.p.bits();
+    assert!((current_p & 0b00100000) == 0b00100000);
+    let b_only = current_p & 0b00110000;
+
+    // Without B
+    let value = s.pull() & 0b11101111;
+
+    s.reg.p = _p!(b_only | value);
 }
 
 #[cfg(test)]
@@ -78,19 +83,19 @@ mod tests {
     fn php_basics() -> Result<()> {
         let mut s = VmStateBuilder::default().build()?;
 
-        s.reg.p = P::N | P::D | P::Z;
+        s.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
         php(&mut s);
 
-        s.reg.p = P::V | P::C;
+        s.reg.p = P::V | P::ALWAYS_ONE | P::C;
         php(&mut s);
 
-        s.reg.p = P::empty();
+        s.reg.p = P::ALWAYS_ONE;
 
         plp(&mut s);
-        assert_eq!(P::V | P::ALWAYS_ONE | P::B | P::C, s.reg.p);
+        assert_eq!(P::V | P::ALWAYS_ONE | P::C, s.reg.p);
 
         plp(&mut s);
-        assert_eq!(P::N | P::ALWAYS_ONE | P::B | P::D | P::Z, s.reg.p);
+        assert_eq!(P::N | P::ALWAYS_ONE | P::D | P::Z, s.reg.p);
 
         Ok(())
     }
@@ -152,11 +157,13 @@ mod tests {
             vm.s.memory[start + 1] = value; // the test value
             vm.s.reg.p = _p!(0b00110000);
             vm.s.reg.pc = start;
-            _ = vm.step();
-            vm.s.reg.pc = start + 2;
-            _ = vm.step();
-            vm.s.reg.pc = start + 3;
-            _ = vm.step();
+            _ = vm.step(); // LDA #value
+            assert_eq!(start + 2, vm.s.reg.pc);
+            assert_eq!(value, vm.s.reg.a);
+            _ = vm.step(); // PHA
+            assert_eq!(start + 3, vm.s.reg.pc);
+            assert_eq!(value, vm.s.memory[STACK_BASE + vm.s.reg.s as u16 + 1]);
+            _ = vm.step(); // PLP
             assert_eq!(_p!(expected_p), vm.s.reg.p);
         }
         const START: u16 = 0x1000;
@@ -171,6 +178,7 @@ mod tests {
         do_test(0b00110000, &mut vm, START, 0b00000000);
         do_test(0b00110000, &mut vm, START, 0b00110000);
         do_test(0b00110001, &mut vm, START, 0b00110001);
+        do_test(0b10110001, &mut vm, START, 0b10110001);
 
         Ok(())
     }

@@ -7,6 +7,7 @@ use crate::{p_set, VmState, IRQ, P};
 // https://www.nesdev.org/wiki/Visual6502wiki/6502_BRK_and_B_bit
 // https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 // https://retrocomputing.stackexchange.com/questions/29923/why-does-the-brk-instruction-set-the-b-flag
+// https://forums.nesdev.org/viewtopic.php?p=64224#p64224
 pub(crate) fn brk(s: &mut VmState) {
     s.push_word(s.reg.pc + 1);
     s.push((s.reg.p | P::B).bits());

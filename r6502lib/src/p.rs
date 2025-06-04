@@ -38,6 +38,7 @@ macro_rules! _p {
     };
 }
 
+#[allow(unused)]
 macro_rules! p {
     () => {
         $crate::P::empty()

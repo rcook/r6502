@@ -1,4 +1,4 @@
-use crate::{p, P};
+use crate::{_p, P};
 use derive_builder::Builder;
 
 const DEFAULT_S: u8 = 0xff;
@@ -14,7 +14,7 @@ pub struct Reg {
     #[builder(default = 0x00)]
     pub y: u8,
 
-    #[builder(default = p!())]
+    #[builder(default = _p!(0b00110000))]
     pub p: P,
 
     #[builder(default = 0x0000)]
