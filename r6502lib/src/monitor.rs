@@ -1,4 +1,4 @@
-use crate::{InstructionInfo, Reg, SymbolInfo, TotalCycles, P_STR};
+use crate::{InstructionInfo, Reg, SymbolInfo, TotalCycles};
 
 pub trait Monitor {
     fn on_before_execute(
@@ -41,12 +41,11 @@ impl Monitor for TracingMonitor {
         instruction_info: InstructionInfo,
     ) {
         println!(
-            "A({:02X}) X({:02X}) Y({:02X}) {}({:08b})  {}",
+            "A({:02X}) X({:02X}) Y({:02X}) P({})  {}",
             reg.a,
             reg.x,
             reg.y,
-            P_STR,
-            reg.p.bits(),
+            reg.p,
             instruction_info
                 .disassembly(&self.symbols)
                 .expect("Must succeed")

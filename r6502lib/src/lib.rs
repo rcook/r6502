@@ -38,7 +38,7 @@ pub use no_operand_op::NoOperandOp;
 pub use op_info::OpInfo;
 pub use opcode::Opcode;
 pub use os::{Os, OsBuilder, OsBuilderError};
-pub use p::{P, P_STR};
+pub use p::P;
 pub use reg::{Reg, RegBuilder, RegBuilderError};
 pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;

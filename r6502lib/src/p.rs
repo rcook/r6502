@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use std::fmt::{Display, Formatter, Result as StdResult};
 
-pub const P_STR: &str = "NVXBDIZC";
+const P_STR: &str = "NVXBDIZC";
 
 // TBD: Consider using bitvec (https://docs.rs/bitvec/0.22.3/bitvec/) for this
 // Reference: https://www.nesdev.org/wiki/Status_flags

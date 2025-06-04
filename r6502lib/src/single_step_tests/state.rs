@@ -1,5 +1,5 @@
 use crate::single_step_tests::AddressValue;
-use crate::{P, P_STR};
+use crate::P;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -36,8 +36,12 @@ impl Display for State {
         writeln!(f, "  a : ${a:02X}  ({a})", a = self.a)?;
         writeln!(f, "  x : ${x:02X}  ({x})", x = self.x)?;
         writeln!(f, "  y : ${y:02X}  ({y})", y = self.y)?;
-        writeln!(f, "        {P_STR}")?;
-        writeln!(f, "  p : 0b{p:08b}  (${p:02X}) ({p})", p = self.p.bits())?;
+        writeln!(
+            f,
+            "  p : {p} (0b{p_value:08b}) (${p_value:02X}) ({p_value})",
+            p = self.p,
+            p_value = self.p.bits()
+        )?;
 
         let mut ram = self.ram.clone();
         ram.sort_by(|a, b| a.address.cmp(&b.address));
