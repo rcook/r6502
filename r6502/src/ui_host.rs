@@ -29,15 +29,15 @@ impl UiHost {
     pub(crate) fn run(&self, image: Image) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
-        let (os, rts) = initialize_vm(&mut vm, &image)?;
+        let (os, rti) = initialize_vm(&mut vm, &image)?;
 
         let mut state = Stepping;
         loop {
             self.send_state(state);
 
             match state {
-                Running => state = self.handle_running(&mut vm, &os, &rts),
-                Stepping => state = self.handle_stepping(&mut vm, &os, &rts),
+                Running => state = self.handle_running(&mut vm, &os, &rti),
+                Stepping => state = self.handle_stepping(&mut vm, &os, &rti),
                 Halted => state = self.handle_halted(&mut vm),
                 Stopped => break,
             }
@@ -59,14 +59,14 @@ impl UiHost {
         });
     }
 
-    fn handle_brk(&self, vm: &mut Vm, os: &Os, rts: &OpInfo, state: State) -> State {
+    fn handle_brk(&self, vm: &mut Vm, os: &Os, rti: &OpInfo, state: State) -> State {
         match os.is_os_vector(vm) {
             Some(OSHALT) => Halted,
             Some(OSWRCH) => {
                 self.io_tx
                     .send(IoMessage::WriteChar(vm.s.reg.a as char))
                     .expect("Must succeed");
-                os.return_from_os_vector_brk(vm, rts);
+                rti.execute_no_operand(&mut vm.s);
                 state
             }
             _ => {
@@ -76,7 +76,7 @@ impl UiHost {
         }
     }
 
-    fn handle_running(&self, vm: &mut Vm, os: &Os, rts: &OpInfo) -> State {
+    fn handle_running(&self, vm: &mut Vm, os: &Os, rti: &OpInfo) -> State {
         loop {
             self.fetch_instruction(vm);
             match self.debug_rx.try_recv() {
@@ -86,7 +86,7 @@ impl UiHost {
             }
 
             if !vm.step() {
-                let new_state = self.handle_brk(vm, os, rts, Running);
+                let new_state = self.handle_brk(vm, os, rti, Running);
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }
@@ -94,7 +94,7 @@ impl UiHost {
         }
     }
 
-    fn handle_stepping(&self, vm: &mut Vm, os: &Os, rts: &OpInfo) -> State {
+    fn handle_stepping(&self, vm: &mut Vm, os: &Os, rti: &OpInfo) -> State {
         loop {
             self.fetch_instruction(vm);
             match self.debug_rx.recv() {
@@ -115,7 +115,7 @@ impl UiHost {
             }
 
             if !vm.step() {
-                let new_state = self.handle_brk(vm, os, rts, Stepping);
+                let new_state = self.handle_brk(vm, os, rti, Stepping);
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }

@@ -24,16 +24,16 @@ impl OpInfo {
         }
     }
 
+    pub fn execute_no_operand(&self, s: &mut VmState) -> OpCycles {
+        self.op.execute_no_operand(s)
+    }
+
     pub(crate) fn opcode(&self) -> Opcode {
         self.opcode
     }
 
     pub(crate) fn op(&self) -> &Op {
         &self.op
-    }
-
-    pub(crate) fn execute_no_operand(&self, s: &mut VmState) -> OpCycles {
-        self.op.execute_no_operand(s)
     }
 
     pub(crate) fn format_instruction_info(

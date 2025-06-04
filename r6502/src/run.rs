@@ -52,7 +52,7 @@ fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: boo
     let mut vm = VmBuilder::default().monitor(monitor).build()?;
 
     let image = Image::load(path, origin, start)?;
-    let (os, rts) = initialize_vm(&mut vm, &image)?;
+    let (os, rti) = initialize_vm(&mut vm, &image)?;
 
     loop {
         while vm.step() {}
@@ -63,7 +63,7 @@ fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: boo
             }
             Some(OSWRCH) => {
                 print!("{}", vm.s.reg.a as char);
-                os.return_from_os_vector_brk(&mut vm, &rts);
+                rti.execute_no_operand(&mut vm.s);
             }
             _ => todo!(),
         }
