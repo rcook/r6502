@@ -1,5 +1,9 @@
 use crate::ops::helper::{is_neg, is_zero};
-use crate::{p_set, VmState, P};
+use crate::{p_set, VmState, _p, P};
+
+fn set_p(s: &mut VmState, value: u8) {
+    s.reg.p = _p!(value | 0b00110000)
+}
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
@@ -25,13 +29,15 @@ pub(crate) fn pla(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#PLP
 // http://www.6502.org/users/obelisk/6502/reference.html#PLP
 pub(crate) fn plp(s: &mut VmState) {
-    s.reg.p = P::from_bits(s.pull()).expect("Must be valid");
+    let value = s.pull();
+    set_p(s, value);
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{reg, Memory, VmState, _p, P, STACK_BASE};
+    use crate::{reg, Memory, Vm, VmBuilder, VmState, _p, P, STACK_BASE};
+    use anyhow::Result;
     use rstest::rstest;
 
     #[test]
@@ -139,5 +145,34 @@ mod tests {
         pla(&mut s);
         assert_eq!(0x00, s.reg.a);
         assert_eq!(P::Z, s.reg.p);
+    }
+
+    #[test]
+    fn p_flag_basics() -> Result<()> {
+        fn do_test(expected_p: u8, vm: &mut Vm, start: u16, value: u8) {
+            vm.s.memory[start + 1] = value; // the test value
+            vm.s.reg.p = _p!(0b00110000);
+            vm.s.reg.pc = start;
+            _ = vm.step();
+            vm.s.reg.pc = start + 2;
+            _ = vm.step();
+            vm.s.reg.pc = start + 3;
+            _ = vm.step();
+            assert_eq!(_p!(expected_p), vm.s.reg.p);
+        }
+        const START: u16 = 0x1000;
+
+        let mut vm = VmBuilder::default().build()?;
+
+        vm.s.memory[START] = 0xa9; // LDA_IMM
+        vm.s.memory[START + 2] = 0x48; // PHA
+        vm.s.memory[START + 3] = 0x28; // PLP
+
+        do_test(0b11111111, &mut vm, START, 0b11111111);
+        do_test(0b00110000, &mut vm, START, 0b00000000);
+        do_test(0b00110000, &mut vm, START, 0b00110000);
+        do_test(0b00110001, &mut vm, START, 0b00110001);
+
+        Ok(())
     }
 }
