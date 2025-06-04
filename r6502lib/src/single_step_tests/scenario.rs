@@ -128,6 +128,8 @@ impl Scenario {
             vm.s.memory[address_value.address] = address_value.value;
         }
 
+        _ = vm.step();
+
         let final_state = State {
             pc: vm.s.reg.pc,
             s: vm.s.reg.s,
@@ -180,8 +182,6 @@ impl Scenario {
                 }
             };
         }
-
-        _ = vm.step();
 
         /*
         if !result {
