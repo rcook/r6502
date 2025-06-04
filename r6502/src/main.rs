@@ -9,7 +9,6 @@ mod state;
 mod ui;
 mod ui_host;
 mod ui_monitor;
-mod util;
 
 pub(crate) use address_range::AddressRange;
 pub(crate) use args::Args;
@@ -21,7 +20,6 @@ pub(crate) use state::State;
 pub(crate) use ui::Ui;
 pub(crate) use ui_host::UiHost;
 pub(crate) use ui_monitor::UiMonitor;
-pub(crate) use util::initialize_vm;
 
 fn main() -> anyhow::Result<()> {
     crate::run::run()

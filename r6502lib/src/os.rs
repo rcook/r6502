@@ -1,4 +1,4 @@
-use crate::{Memory, Opcode, Vm, IRQ, OSHALT, OSWRCH};
+use crate::{Opcode, Vm, IRQ, OSHALT, OSWRCH};
 use derive_builder::Builder;
 
 #[derive(Builder)]
@@ -12,14 +12,14 @@ pub struct Os {
 }
 
 impl Os {
-    pub fn initialize(&self, memory: &mut Memory) {
-        memory.store_word(IRQ, self.os_addr);
-
+    pub fn load_into_vm(&self, vm: &mut Vm) {
+        vm.s.memory.store_word(IRQ, self.os_addr);
         for os_vector in self.os_vectors.iter().cloned() {
-            memory[os_vector] = Opcode::Brk as u8;
-            memory[os_vector + 1] = Opcode::Nop as u8;
-            memory[os_vector + 2] = Opcode::Rts as u8;
+            vm.s.memory[os_vector] = Opcode::Brk as u8;
+            vm.s.memory[os_vector + 1] = Opcode::Nop as u8;
+            vm.s.memory[os_vector + 2] = Opcode::Rts as u8;
         }
+        vm.s.push_word(OSHALT - 1);
     }
 
     pub fn is_os_vector(&self, vm: &Vm) -> Option<u16> {

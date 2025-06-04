@@ -1,9 +1,10 @@
 use crate::args::Command;
-use crate::{initialize_vm, Args, Ui, UiHost};
-use anyhow::Result;
+use crate::{Args, Ui, UiHost};
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use r6502lib::{
-    DummyMonitor, Image, Monitor, SymbolInfo, TracingMonitor, VmBuilder, OSHALT, OSWRCH,
+    DummyMonitor, Image, Monitor, Opcode, OsBuilder, SymbolInfo, TracingMonitor, VmBuilder,
+    MOS_6502, OSHALT, OSWRCH,
 };
 use std::path::Path;
 use std::sync::mpsc::channel;
@@ -50,9 +51,17 @@ fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: boo
     };
 
     let mut vm = VmBuilder::default().monitor(monitor).build()?;
-
     let image = Image::load(path, origin, start)?;
-    let (os, rti) = initialize_vm(&mut vm, &image)?;
+    vm.s.memory.load(&image);
+    vm.s.reg.pc = image.start;
+
+    let os = OsBuilder::default().build()?;
+    os.load_into_vm(&mut vm);
+
+    let rti = MOS_6502
+        .get_op_info(&Opcode::Rti)
+        .ok_or_else(|| anyhow!("RTI must exist"))?
+        .clone();
 
     loop {
         while vm.step() {}

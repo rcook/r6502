@@ -156,7 +156,7 @@ mod tests {
 
         let mut vm = Vm::default();
         let os = OsBuilder::default().os_addr(OS_ADDR).build()?;
-        os.initialize(&mut vm.s.memory);
+        os.load_into_vm(&mut vm);
 
         vm.s.memory[START] = Opcode::Jsr as u8;
         vm.s.memory.store_word(START + 1, OSWRCH);
@@ -180,20 +180,16 @@ mod tests {
     }
 
     #[rstest]
-    #[case("HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"), None)]
-    #[case("Hello, world\r\n", include_str!("../../examples/test.r6502.txt"), None)]
-    #[case("Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"), None)]
-    #[case("String0\nString1\n", include_str!("../../examples/strings.r6502.txt"), None)]
-    fn stdout(
-        #[case] expected_stdout: &str,
-        #[case] input: &str,
-        #[case] start: Option<u16>,
-    ) -> Result<()> {
+    #[case("HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"))]
+    #[case("Hello, world\r\n", include_str!("../../examples/test.r6502.txt"))]
+    #[case("Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"))]
+    #[case("String0\nString1\n", include_str!("../../examples/strings.r6502.txt"))]
+    fn stdout(#[case] expected_stdout: &str, #[case] input: &str) -> Result<()> {
         #[cfg(feature = "not-implemented")]
         const TRACE: bool = true;
         #[cfg(not(feature = "not-implemented"))]
         const TRACE: bool = true;
-        assert_eq!(expected_stdout, capture_stdout(input, start, TRACE)?);
+        assert_eq!(expected_stdout, capture_stdout(input, TRACE)?);
         Ok(())
     }
 
@@ -233,10 +229,8 @@ mod tests {
         Ok(())
     }
 
-    fn capture_stdout(input: &str, start: Option<u16>, trace: bool) -> Result<String> {
+    fn capture_stdout(input: &str, trace: bool) -> Result<String> {
         const RETURN_ADDR: u16 = 0x1234;
-
-        let image = input.parse::<Image>()?;
 
         let monitor: Box<dyn Monitor> = if trace {
             Box::new(TracingMonitor::default())
@@ -245,17 +239,21 @@ mod tests {
         };
 
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
+        let image = input.parse::<Image>()?;
+        vm.s.memory.load(&image);
+        vm.s.reg.pc = image.start;
+
         let os = OsBuilder::default()
             .os_vectors(vec![RETURN_ADDR, OSWRCH])
             .build()?;
-        os.initialize(&mut vm.s.memory);
+        os.load_into_vm(&mut vm);
+
         let rts = MOS_6502
             .get_op_info(&Opcode::Rts)
             .expect("RTS must exist")
             .clone();
-        vm.s.memory.load(&image);
+
         vm.s.push_word(RETURN_ADDR - 1);
-        vm.s.reg.pc = start.unwrap_or(image.origin);
         p_set!(vm.s.reg, B, false);
 
         let mut result = String::new();

@@ -1,9 +1,10 @@
 use crate::State::*;
-use crate::{
-    initialize_vm, AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor,
+use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
+use anyhow::{anyhow, Result};
+use r6502lib::{
+    p_set, Image, InstructionInfo, OpInfo, Opcode, Os, OsBuilder, Vm, VmBuilder, MOS_6502, OSHALT,
+    OSWRCH,
 };
-use anyhow::Result;
-use r6502lib::{p_set, Image, InstructionInfo, OpInfo, Os, Vm, VmBuilder, OSHALT, OSWRCH};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -28,8 +29,18 @@ impl UiHost {
 
     pub(crate) fn run(&self, image: Image) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
+
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
-        let (os, rti) = initialize_vm(&mut vm, &image)?;
+        vm.s.memory.load(&image);
+        vm.s.reg.pc = image.start;
+
+        let os = OsBuilder::default().build()?;
+        os.load_into_vm(&mut vm);
+
+        let rti = MOS_6502
+            .get_op_info(&Opcode::Rti)
+            .ok_or_else(|| anyhow!("RTI must exist"))?
+            .clone();
 
         let mut state = Stepping;
         loop {
