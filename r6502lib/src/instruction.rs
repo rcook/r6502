@@ -22,14 +22,17 @@ impl Instruction {
                     Op::Byte(inner) => Self {
                         pc: s.reg.pc,
                         opcode,
-                        binding: Binding::Byte(inner.clone(), s.memory[s.reg.pc + 1]),
+                        binding: Binding::Byte(inner.clone(), s.memory[s.reg.pc.wrapping_add(1)]),
                     },
                     Op::Word(inner) => Self {
                         pc: s.reg.pc,
                         opcode,
                         binding: Binding::Word(
                             inner.clone(),
-                            make_word(s.memory[s.reg.pc + 2], s.memory[s.reg.pc + 1]),
+                            make_word(
+                                s.memory[s.reg.pc.wrapping_add(2)],
+                                s.memory[s.reg.pc.wrapping_add(1)],
+                            ),
                         ),
                     },
                 },
@@ -42,15 +45,15 @@ impl Instruction {
     pub(crate) fn execute(&self, s: &mut VmState) -> OpCycles {
         match &self.binding {
             Binding::NoOperand(f) => {
-                s.reg.pc += 1;
+                s.reg.pc = s.reg.pc.wrapping_add(1);
                 f.execute(s)
             }
             Binding::Byte(f, value) => {
-                s.reg.pc += 2;
+                s.reg.pc = s.reg.pc.wrapping_add(2);
                 f.execute(s, value)
             }
             Binding::Word(f, value) => {
-                s.reg.pc += 3;
+                s.reg.pc = s.reg.pc.wrapping_add(3);
                 f.execute(s, value)
             }
         }

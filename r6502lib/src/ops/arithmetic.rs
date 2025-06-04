@@ -56,15 +56,97 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
     }
 }
 
+/*
+"MOS 6502 Emulator" refers to https://itema-as.github.io/6502js/
+"Visual6502" refers to http://visual6502.org/JSSim/expert.html
+
+Visual6502 is more or less authoritative and agress with Tom Harte tests. MOS 6502 Emulator does not match.
+
+Conclusion: We're not calculating N properly
+
+"e9 c4 08"
+    SED
+    SEI
+    SEC
+    LDA #$40
+    STA $1000
+    BIT $1000
+    PHP
+    LDA #$9c
+    PLP         ; A=$9c, (MOS 6502 Emulator: P=0b01x11101) (Visual6502: P=nV‑BDIzC)
+    SBC #$c4    ; A=$78, (MOS 6502 Emulator: P=0b00111100) (Visual6502: P=Nv‑BDIzc)
+
+Address  Hexdump   Dissassembly
+-------------------------------
+$0600    f8        SED
+$0601    78        SEI
+$0602    38        SEC
+$0603    a9 40     LDA #$40
+$0605    8d 00 10  STA $1000
+$0608    2c 00 10  BIT $1000
+$060b    08        PHP
+$060c    a9 9c     LDA #$9c
+$060e    28        PLP
+$060f    e9 c4     SBC #$c4
+
+Initial:
+  pc: $0084 (132)
+  s : $26  (38)
+  a : $9C  (156)
+  x : $72  (114)
+  y : $CC  (204)
+        NV1BDIZC
+  p : 0b01101101  ($6D) (109)
+    0084 E9 (233)
+    0085 C4 (196)
+    0086 08 (8)
+Final:
+  pc: $0086 (134)
+  s : $26  (38)
+  a : $78  (120)
+  x : $72  (114)
+  y : $CC  (204)
+        NV1BDIZC
+  p : 0b10101100  ($AC) (172)
+    0084 E9 (233)
+    0085 C4 (196)
+    0086 08 (8)
+*/
+
 // http://www.6502.org/tutorials/6502opcodes.html#SBC
 // http://www.6502.org/users/obelisk/6502/reference.html#SBC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
+// https://github.com/mre/mos6502.git
+// https://github.com/mattgodbolt/jsbeeb
+// http://www.visual6502.org/JSSim/expert.html?graphics=false&a=0&d=a900f8e988eaeaea&steps=18
+// http://vice-emu.sourceforge.net/plain/64doc.txt
+// https://github.com/mattgodbolt/jsbeeb/blob/main/src/6502.js
 pub(crate) fn sbc(s: &mut VmState, operand: u8) {
     if p_get!(s.reg, D) {
-        todo!("Decimal mode not implemented")
-    }
+        let carry = if p_get!(s.reg, C) { 0 } else { 1 };
 
-    adc(s, !operand)
+        let a = s.reg.a as i32;
+        let value = operand as i32;
+
+        let mut al = (a & 0xf) - (value & 0xf) - carry;
+        let mut ah = (a >> 4) - (value >> 4);
+        if (al & 0x10) != 0 {
+            al = (al - 6) & 0xf;
+            ah -= 1;
+        }
+        if (ah & 0x10) != 0 {
+            ah = (ah - 6) & 0xf;
+        }
+
+        let result = a - value - carry;
+        p_set!(s.reg, N, (result & 0x80) != 0);
+        p_set!(s.reg, Z, (result & 0xff) == 0);
+        p_set!(s.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
+        p_set!(s.reg, C, (result & 0x100) == 0);
+        s.reg.a = (al as u8) | ((ah as u8) << 4);
+    } else {
+        adc(s, !operand);
+    }
 }
 
 #[cfg(test)]
@@ -127,6 +209,26 @@ mod tests {
         let mut s = VmStateBuilder::default().reg(reg).build()?;
         sbc(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
+        Ok(())
+    }
+
+    // cargo run -p r6502validation -- run-json '{ "name": "e9 c4 08", "initial": { "pc": 132, "s": 38, "a": 156, "x": 114, "y": 204, "p": 109, "ram": [ [132, 233], [133, 196], [134, 8]]}, "final": { "pc": 134, "s": 38, "a": 120, "x": 114, "y": 204, "p": 172, "ram": [ [132, 233], [133, 196], [134, 8]]}, "cycles": [ [132, 233, "read"], [133, 196, "read"]] }'
+    #[rstest]
+    #[case(0x78, 0b10101100, 0x9c, 0b01101101, 0xc4)]
+    #[case(0x2d, 0b11101000, 0x50, 0b11101010, 0xcc)]
+    fn sbc_scenarios(
+        #[case] expected_a: u8,
+        #[case] expected_p: u8,
+        #[case] a: u8,
+        #[case] p: u8,
+        #[case] operand: u8,
+    ) -> Result<()> {
+        let mut s = VmStateBuilder::default().build()?;
+        s.reg.a = a;
+        s.reg.p = _p!(p);
+        sbc(&mut s, operand);
+        assert_eq!(expected_a, s.reg.a);
+        assert_eq!(_p!(expected_p), s.reg.p);
         Ok(())
     }
 }
