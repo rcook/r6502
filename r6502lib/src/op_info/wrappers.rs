@@ -252,7 +252,13 @@ pub(crate) mod indirect {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(s: &mut $crate::VmState, addr: u16) -> $crate::OpCycles {
-                $crate::ops::$f(s, s.memory.fetch_word(addr));
+                // http://www.6502.org/tutorials/6502opcodes.html
+                // "AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON THE LAST BYTE OF A PAGE"
+                let lo_addr = s.memory[addr];
+                let hi_addr =
+                    s.memory[(addr & 0xff00) + ((addr & 0x00ff).wrapping_add(1) & 0x00ff)];
+                let effective_addr = ((hi_addr as u16) << 8) + lo_addr as u16;
+                $crate::ops::$f(s, effective_addr);
                 $cycles
             }
         };
