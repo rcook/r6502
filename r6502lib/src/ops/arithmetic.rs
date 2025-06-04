@@ -6,41 +6,33 @@ use crate::{p_get, p_set, p_value, VmState};
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub(crate) fn adc(s: &mut VmState, operand: u8) {
     if p_get!(s.reg, D) {
-        let lhs = s.reg.a;
-        let rhs = operand;
+        let a = s.reg.a as i32;
+        let value = operand as i32;
+        let carry = p_value!(s.reg, C);
 
-        //println!("p(before) = {p:>3} {p:08b}", p = s.reg.p.bits());
-        //println!("a         = {a:>3} {a:02X}", a = lhs);
-        //println!("value     = {value:>3} {value:02X}", value = rhs);
-
-        let temp_result = lhs.wrapping_add(rhs).wrapping_add(p_value!(s.reg, C));
-
-        let (lhs_hi, lhs_lo) = (lhs >> 4, lhs & 0xf);
-        let (rhs_hi, rhs_lo) = (rhs >> 4, rhs & 0xf);
-
-        let t0 = lhs_lo + rhs_lo + p_value!(s.reg, C);
-        let t1 = if t0 < 10 { t0 } else { t0 + 6 };
-        let result_lo = t1 & 0x0f;
-        let carry = (t1 >> 4) != 0;
-
-        // 6502 quirk: see https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-        let temp_result = (temp_result & 0xf0) + result_lo;
-        p_set!(s.reg, N, is_neg(temp_result));
-        p_set!(s.reg, V, is_overflow(lhs, rhs, temp_result));
-
-        let t2 = lhs_hi + rhs_hi + if carry { 1 } else { 0 };
-        let t3 = if t2 < 10 { t2 } else { t2 + 6 };
-        let result_hi = t3 & 0x0f;
-        let carry = (t3 >> 4) != 0;
-
-        let result = (result_hi << 4) + result_lo;
-
-        s.reg.a = result;
-        p_set!(s.reg, Z, is_zero(result));
-        p_set!(s.reg, C, carry);
-
-        //println!("a(after)  = {a:>3} {a:02X}", a = s.reg.a);
-        //println!("p(after)  = {p:>3} {p:08b}", p = s.reg.p.bits());
+        let mut ah = 0;
+        let tempb = (a + value + carry) & 0xff;
+        p_set!(s.reg, Z, tempb == 0);
+        let mut al = (a & 0xf) + (value & 0xf) + carry;
+        if al > 9 {
+            al -= 10;
+            al &= 0xf;
+            ah = 1;
+        }
+        ah += (a >> 4) + (value >> 4);
+        p_set!(s.reg, N, (ah & 8) != 0);
+        p_set!(
+            s.reg,
+            V,
+            !(((a ^ value) & 0x80) != 0) && (((a ^ (ah << 4)) & 0x80) != 0)
+        );
+        p_set!(s.reg, C, false);
+        if ah > 9 {
+            p_set!(s.reg, C, true);
+            ah -= 10;
+            ah &= 0xf;
+        }
+        s.reg.a = (((al as u8) & 0xf) | ((ah as u8) << 4)) & 0xff;
     } else {
         let lhs = s.reg.a;
         let rhs = operand;
@@ -212,7 +204,24 @@ mod tests {
         Ok(())
     }
 
-    // cargo run -p r6502validation -- run-json '{ "name": "e9 c4 08", "initial": { "pc": 132, "s": 38, "a": 156, "x": 114, "y": 204, "p": 109, "ram": [ [132, 233], [133, 196], [134, 8]]}, "final": { "pc": 134, "s": 38, "a": 120, "x": 114, "y": 204, "p": 172, "ram": [ [132, 233], [133, 196], [134, 8]]}, "cycles": [ [132, 233, "read"], [133, 196, "read"]] }'
+    #[rstest]
+    #[case(0x00, 0b10101001, 0xe3, 0b00101000, 0xb7)]
+    fn adc_scenarios(
+        #[case] expected_a: u8,
+        #[case] expected_p: u8,
+        #[case] a: u8,
+        #[case] p: u8,
+        #[case] operand: u8,
+    ) -> Result<()> {
+        let mut s = VmStateBuilder::default().build()?;
+        s.reg.a = a;
+        s.reg.p = _p!(p);
+        adc(&mut s, operand);
+        assert_eq!(expected_a, s.reg.a);
+        assert_eq!(_p!(expected_p), s.reg.p);
+        Ok(())
+    }
+
     #[rstest]
     #[case(0x78, 0b10101100, 0x9c, 0b01101101, 0xc4)]
     #[case(0x2d, 0b11101000, 0x50, 0b11101010, 0xcc)]
