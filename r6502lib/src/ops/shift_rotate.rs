@@ -28,7 +28,7 @@ pub(crate) fn lsr(s: &mut VmState, addr: u16) {
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
 pub(crate) fn rol_acc(s: &mut VmState) {
-    s.reg.a = lsr_helper(s, s.reg.a);
+    s.reg.a = rol_helper(s, s.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
@@ -77,4 +77,30 @@ fn ror_helper(s: &mut VmState, operand: u8) -> u8 {
     let new_value = (operand >> 1) | (if old_carry { 0x80 } else { 0x00 });
     set_flags_on_value(s, new_value);
     new_value
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ops::rol_acc;
+    use crate::{VmStateBuilder, _p};
+    use anyhow::Result;
+    use rstest::rstest;
+
+    #[rstest]
+    // cargo run -p r6502validation -- run-json '{ "name": "2a d4 c3", "initial": { "pc": 21085, "s": 186, "a": 175, "x": 190, "y": 239, "p": 174, "ram": [ [21085, 42], [21086, 212], [21087, 195]]}, "final": { "pc": 21086, "s": 186, "a": 94, "x": 190, "y": 239, "p": 45, "ram": [ [21085, 42], [21086, 212], [21087, 195]]}, "cycles": [ [21085, 42, "read"], [21086, 212, "read"]] }'
+    #[case(45, 94, 174, 175)]
+    fn rol_basics(
+        #[case] expected_p: u8,
+        #[case] expected_a: u8,
+        #[case] p: u8,
+        #[case] a: u8,
+    ) -> Result<()> {
+        let mut s = VmStateBuilder::default().build()?;
+        s.reg.p = _p!(p);
+        s.reg.a = a;
+        rol_acc(&mut s);
+        assert_eq!(_p!(expected_p), s.reg.p);
+        assert_eq!(expected_a, s.reg.a);
+        Ok(())
+    }
 }
