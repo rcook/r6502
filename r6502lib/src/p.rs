@@ -1,8 +1,9 @@
 use bitflags::bitflags;
 use std::fmt::{Display, Formatter, Result as StdResult};
 
-pub const P_STR: &str = "NV1BDIZC";
+pub const P_STR: &str = "NVXBDIZC";
 
+// TBD: Consider using bitvec (https://docs.rs/bitvec/0.22.3/bitvec/) for this
 // Reference: https://www.nesdev.org/wiki/Status_flags
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -27,7 +28,17 @@ impl Default for P {
 
 impl Display for P {
     fn fmt(&self, f: &mut Formatter<'_>) -> StdResult {
-        write!(f, "0b{:08b}", self.bits())
+        let mut mask = 0b10000000;
+        let value = self.bits();
+        for c in P_STR.chars() {
+            if (value & mask) == 0 {
+                write!(f, "{c}", c = c.to_lowercase())?
+            } else {
+                write!(f, "{c}")?
+            }
+            mask >>= 1;
+        }
+        Ok(())
     }
 }
 
@@ -82,6 +93,16 @@ macro_rules! p_set {
 #[cfg(test)]
 mod tests {
     use crate::P;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("nvxbdizc", _p!(0b00000000))]
+    #[case("NVXBDIZC", _p!(0b11111111))]
+    #[case("NVxBDIZC", _p!(0b11011111))]
+    #[case("NVxBDizC", _p!(0b11011001))]
+    fn display(#[case] expected: &str, #[case] input: P) {
+        assert_eq!(expected, input.to_string());
+    }
 
     #[test]
     fn basics() {
