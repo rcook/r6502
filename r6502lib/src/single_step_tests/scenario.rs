@@ -119,7 +119,7 @@ impl Scenario {
     fn run_inner(&self) -> (bool, State) {
         let mut vm = Vm::default();
         vm.s.reg.pc = self.initial.pc;
-        vm.s.reg.s = self.initial.s;
+        vm.s.reg.sp = self.initial.sp;
         vm.s.reg.a = self.initial.a;
         vm.s.reg.x = self.initial.x;
         vm.s.reg.y = self.initial.y;
@@ -132,7 +132,7 @@ impl Scenario {
 
         let final_state = State {
             pc: vm.s.reg.pc,
-            s: vm.s.reg.s,
+            sp: vm.s.reg.sp,
             a: vm.s.reg.a,
             x: vm.s.reg.x,
             y: vm.s.reg.y,
@@ -195,7 +195,7 @@ impl Scenario {
         */
 
         check!(pc);
-        check!(s);
+        check!(sp);
         check!(a);
         check!(x);
         check!(y);

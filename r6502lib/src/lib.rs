@@ -28,7 +28,7 @@ mod vm_state;
 mod word_op;
 
 pub use byte_op::ByteOp;
-pub use constants::{IRQ, IRQ_ADDR, MAGIC_NUMBER, OSHALT, OSWRCH, STACK_BASE};
+pub use constants::{IRQ, IRQ_ADDR, OSHALT, OSWRCH, STACK_BASE};
 pub use image::Image;
 pub use instruction_info::InstructionInfo;
 pub use instruction_set::{InstructionSet, MOS_6502};
@@ -48,6 +48,9 @@ pub use word_op::WordOp;
 
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
+pub(crate) use constants::{
+    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
+};
 pub(crate) use instruction::Instruction;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;

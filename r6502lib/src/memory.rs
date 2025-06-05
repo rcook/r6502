@@ -18,9 +18,9 @@ impl Memory {
     */
 
     pub fn load(&mut self, image: &Image) {
-        let origin = image.origin as usize;
-        let limit = origin + image.values.len();
-        self.0[origin..limit].copy_from_slice(&image.values);
+        let load = image.load as usize;
+        let limit = load + image.values.len();
+        self.0[load..limit].copy_from_slice(&image.values);
     }
 
     pub fn snapshot(&self, begin: usize, end: usize) -> Vec<u8> {

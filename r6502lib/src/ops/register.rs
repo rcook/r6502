@@ -52,7 +52,7 @@ pub(crate) fn tay(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#TSX
 // http://www.6502.org/users/obelisk/6502/reference.html#TSX
 pub(crate) fn tsx(s: &mut VmState) {
-    let value = s.reg.s;
+    let value = s.reg.sp;
     s.reg.x = value;
     set_flags_on_value(s, value);
 }
@@ -69,7 +69,7 @@ pub(crate) fn txa(s: &mut VmState) {
 // http://www.6502.org/users/obelisk/6502/reference.html#TXS
 pub(crate) fn txs(s: &mut VmState) {
     let value = s.reg.x;
-    s.reg.s = value;
+    s.reg.sp = value;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TYA

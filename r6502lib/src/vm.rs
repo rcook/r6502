@@ -283,7 +283,7 @@ mod tests {
 
     fn load_into_vm(input: &str) -> Result<Vm> {
         let image = input.parse::<Image>()?;
-        assert_eq!(0x0e00, image.origin);
+        assert_eq!(0x0e00, image.load);
         let mut vm = Vm::default();
         vm.s.memory.load(&image);
         Ok(vm)

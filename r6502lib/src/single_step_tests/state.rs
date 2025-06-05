@@ -11,7 +11,7 @@ pub struct State {
     pub(crate) pc: u16,
 
     #[serde(rename = "s")]
-    pub(crate) s: u8,
+    pub(crate) sp: u8,
 
     #[serde(rename = "a")]
     pub(crate) a: u8,
@@ -32,7 +32,7 @@ pub struct State {
 impl Display for State {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         writeln!(f, "  pc: ${pc:04X} ({pc})", pc = self.pc)?;
-        writeln!(f, "  s : ${s:02X}  ({s})", s = self.s)?;
+        writeln!(f, "  s : ${s:02X}  ({s})", s = self.sp)?;
         writeln!(f, "  a : ${a:02X}  ({a})", a = self.a)?;
         writeln!(f, "  x : ${x:02X}  ({x})", x = self.x)?;
         writeln!(f, "  y : ${y:02X}  ({y})", y = self.y)?;

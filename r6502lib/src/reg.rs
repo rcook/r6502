@@ -21,14 +21,14 @@ pub struct Reg {
     pub pc: u16,
 
     #[builder(default = 0xff)]
-    pub s: u8,
+    pub sp: u8,
 }
 
 impl Reg {
     pub fn display(&self) -> String {
         format!(
             "pc={:04X} NV1BDIZC={:08b} a={:02X} x={:02X} y={:02X} s={:02X}",
-            self.pc, self.p, self.a, self.x, self.y, self.s,
+            self.pc, self.p, self.a, self.x, self.y, self.sp,
         )
     }
 }
@@ -41,7 +41,7 @@ impl Default for Reg {
             y: u8::default(),
             p: P::default(),
             pc: u16::default(),
-            s: DEFAULT_S,
+            sp: DEFAULT_S,
         }
     }
 }
@@ -82,7 +82,7 @@ mod tests {
                 y: 0x00,
                 p: P::default(),
                 pc: 0x0000,
-                s: DEFAULT_S,
+                sp: DEFAULT_S,
             },
             reg!(0x12, 0x0000)
         );
@@ -93,7 +93,7 @@ mod tests {
                 y: 0x00,
                 p: P::N,
                 pc: 0x1000,
-                s: DEFAULT_S,
+                sp: DEFAULT_S,
             },
             reg!(0x23, 0x1000, N)
         );
@@ -104,7 +104,7 @@ mod tests {
                 y: 0x00,
                 p: P::N | P::Z,
                 pc: 0x2000,
-                s: DEFAULT_S,
+                sp: DEFAULT_S,
             },
             reg!(0x34, 0x2000, N, Z)
         );

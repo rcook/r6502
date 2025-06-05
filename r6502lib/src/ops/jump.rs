@@ -93,7 +93,7 @@ mod tests {
     fn jsr_smashing_stack() {
         let mut vm = Vm::default();
         vm.s.reg.pc = 0x017b;
-        vm.s.reg.s = 0x7d;
+        vm.s.reg.sp = 0x7d;
         vm.s.reg.a = 0x9e; // Probably irrelevant
         vm.s.reg.x = 0x89; // Probably irrelevant
         vm.s.reg.y = 0x34; // Probably irrelevant
@@ -104,7 +104,7 @@ mod tests {
         vm.s.memory[0x017d] = 0x13;
         _ = vm.step();
         assert_eq!(0x0155, vm.s.reg.pc);
-        assert_eq!(0x7b, vm.s.reg.s);
+        assert_eq!(0x7b, vm.s.reg.sp);
         assert_eq!(0x9e, vm.s.reg.a);
         assert_eq!(0x89, vm.s.reg.x);
         assert_eq!(0x34, vm.s.reg.y);
@@ -118,18 +118,18 @@ mod tests {
     #[test]
     // cargo run -p r6502validation -- run-json '{ "name": "40 9c 2c", "initial": { "pc": 34673, "s": 110, "a": 162, "x": 129, "y": 126, "p": 99, "ram": [ [34673, 64], [34674, 156], [34675, 44], [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14]]}, "final": { "pc": 26026, "s": 113, "a": 162, "x": 129, "y": 126, "p": 172, "ram": [ [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14], [34673, 64], [34674, 156], [34675, 44]]}, "cycles": [ [34673, 64, "read"], [34674, 156, "read"], [366, 152, "read"], [367, 156, "read"], [368, 170, "read"], [369, 101, "read"]] }'
     fn rti_scenario() -> Result<()> {
-        const INITIAL_S: u8 = 0x6e;
-        let reg = RegBuilder::default().p(_p!(0x63)).s(INITIAL_S).build()?;
+        const INITIAL_SP: u8 = 0x6e;
+        let reg = RegBuilder::default().p(_p!(0x63)).sp(INITIAL_SP).build()?;
         let mut s = VmStateBuilder::default().reg(reg).build()?;
-        s.memory[0x0100 + INITIAL_S as u16] = 0x98;
-        s.memory[0x0100 + INITIAL_S as u16 + 1] = 0x9c; // P
-        s.memory[0x0100 + INITIAL_S as u16 + 2] = 0xaa; // lo(return_attr)
-        s.memory[0x0100 + INITIAL_S as u16 + 3] = 0x65; // hi(return_attr)
+        s.memory[0x0100 + INITIAL_SP as u16] = 0x98;
+        s.memory[0x0100 + INITIAL_SP as u16 + 1] = 0x9c; // P
+        s.memory[0x0100 + INITIAL_SP as u16 + 2] = 0xaa; // lo(return_attr)
+        s.memory[0x0100 + INITIAL_SP as u16 + 3] = 0x65; // hi(return_attr)
         s.reg.pc = 0x8771 + 1;
         rti(&mut s);
         assert_eq!(0x65aa, s.reg.pc);
         assert_eq!(_p!(0xac), s.reg.p); // P & 0b11101111
-        assert_eq!(INITIAL_S + 3, s.reg.s);
+        assert_eq!(INITIAL_SP + 3, s.reg.sp);
         Ok(())
     }
 }

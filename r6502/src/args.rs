@@ -14,22 +14,25 @@ pub(crate) enum Command {
     Run {
         path: PathBuf,
 
-        #[arg(long = "origin", value_parser = maybe_hex::<u16>)]
-        origin: Option<u16>,
+        #[arg(long = "load", value_parser = maybe_hex::<u16>)]
+        load: Option<u16>,
 
         #[arg(long = "start", value_parser = maybe_hex::<u16>)]
         start: Option<u16>,
 
         #[arg(help = "Trace execution", long = "trace", default_value_t = false)]
         trace: bool,
+
+        #[arg(help = "Report cycles", long = "cycles", default_value_t = false)]
+        cycles: bool,
     },
 
     #[command(name = "debug", about = "Debug program")]
     Debug {
         path: PathBuf,
 
-        #[arg(long = "origin", value_parser = maybe_hex::<u16>)]
-        origin: Option<u16>,
+        #[arg(long = "load", value_parser = maybe_hex::<u16>)]
+        load: Option<u16>,
 
         #[arg(long = "start", value_parser = maybe_hex::<u16>)]
         start: Option<u16>,

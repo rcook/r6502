@@ -50,9 +50,9 @@ mod tests {
         let mut s = VmState::default();
         s.reg.a = 0x56;
         s.memory[STACK_BASE + 0x00ff] = 0x34;
-        assert_eq!(0xff, s.reg.s);
+        assert_eq!(0xff, s.reg.sp);
         pha(&mut s);
-        assert_eq!(0xfe, s.reg.s);
+        assert_eq!(0xfe, s.reg.sp);
         assert_eq!(0x56, s.reg.a);
         assert_eq!(P::default(), s.reg.p);
         assert_eq!(0x56, s.memory[STACK_BASE + 0x00ff])
@@ -66,9 +66,9 @@ mod tests {
             let current_s = 0xff - value;
             s.reg.a = value;
             s.memory[STACK_BASE + 0x00ff - value as u16] = 0x00;
-            assert_eq!(current_s, s.reg.s);
+            assert_eq!(current_s, s.reg.sp);
             pha(&mut s);
-            assert_eq!(current_s.wrapping_sub(1), s.reg.s);
+            assert_eq!(current_s.wrapping_sub(1), s.reg.sp);
             assert_eq!(value, s.memory[STACK_BASE + 0x00ff - value as u16])
         }
     }
@@ -105,10 +105,10 @@ mod tests {
         #[case] p: u8,
     ) {
         let mut vm_state = VmState::default();
-        vm_state.reg.s = s;
+        vm_state.reg.sp = s;
         vm_state.reg.p = _p!(p);
         php(&mut vm_state);
-        assert_eq!(expected_s, vm_state.reg.s);
+        assert_eq!(expected_s, vm_state.reg.sp);
         assert_eq!(expected_value, vm_state.memory[expected_addr]);
     }
 
@@ -153,7 +153,7 @@ mod tests {
             assert_eq!(value, vm.s.reg.a);
             _ = vm.step(); // PHA
             assert_eq!(start + 3, vm.s.reg.pc);
-            assert_eq!(value, vm.s.memory[STACK_BASE + vm.s.reg.s as u16 + 1]);
+            assert_eq!(value, vm.s.memory[STACK_BASE + vm.s.reg.sp as u16 + 1]);
             _ = vm.step(); // PLP
             assert_eq!(_p!(expected_p), vm.s.reg.p);
         }

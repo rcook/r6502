@@ -43,12 +43,12 @@ mod tests {
         let mut vm_state = VmState::default();
         vm_state.reg.p = _p!(p);
         vm_state.reg.pc = pc + 1;
-        vm_state.reg.s = s;
+        vm_state.reg.sp = s;
         vm_state.memory.store_word(IRQ, irq_addr);
         brk(&mut vm_state);
         assert_eq!(_p!(expected_p), vm_state.reg.p);
         assert_eq!(expected_pc, vm_state.reg.pc);
-        assert_eq!(expected_s, vm_state.reg.s);
+        assert_eq!(expected_s, vm_state.reg.sp);
         assert_eq!(
             p | 0b00010000,
             vm_state.memory[STACK_BASE + expected_s as u16 + 1]

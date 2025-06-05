@@ -7,6 +7,7 @@ use r6502lib::{
     MOS_6502, OSHALT, OSWRCH,
 };
 use std::path::Path;
+use std::process::exit;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
@@ -14,21 +15,18 @@ pub(crate) fn run() -> Result<()> {
     match Args::parse().command {
         Command::Run {
             path,
-            origin,
+            load,
             start,
             trace,
-        } => run_cli_host(&path, origin, start, trace)?,
-        Command::Debug {
-            path,
-            origin,
-            start,
-        } => run_ui_host(&path, origin, start)?,
+            cycles,
+        } => run_cli_host(&path, load, start, trace, cycles)?,
+        Command::Debug { path, load, start } => run_ui_host(&path, load, start)?,
     }
     Ok(())
 }
 
-fn run_ui_host(path: &Path, origin: Option<u16>, start: Option<u16>) -> Result<()> {
-    let image = Image::load(path, origin, start)?;
+fn run_ui_host(path: &Path, load: Option<u16>, start: Option<u16>) -> Result<()> {
+    let image = Image::load(path, load, start, None)?;
     let symbols = SymbolInfo::load(path)?;
     let debug_channel = channel();
     let monitor_channel = channel();
@@ -43,7 +41,13 @@ fn run_ui_host(path: &Path, origin: Option<u16>, start: Option<u16>) -> Result<(
     Ok(())
 }
 
-fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: bool) -> Result<()> {
+fn run_cli_host(
+    path: &Path,
+    load: Option<u16>,
+    start: Option<u16>,
+    trace: bool,
+    cycles: bool,
+) -> Result<()> {
     let monitor: Box<dyn Monitor> = if trace {
         Box::new(TracingMonitor::default())
     } else {
@@ -51,7 +55,7 @@ fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: boo
     };
 
     let mut vm = VmBuilder::default().monitor(monitor).build()?;
-    let image = Image::load(path, origin, start)?;
+    let image = Image::load(path, load, start, None)?;
     vm.s.memory.load(&image);
     vm.s.reg.pc = image.start;
 
@@ -74,7 +78,13 @@ fn run_cli_host(path: &Path, origin: Option<u16>, start: Option<u16>, trace: boo
                 print!("{}", vm.s.reg.a as char);
                 rti.execute_no_operand(&mut vm.s);
             }
-            _ => todo!(),
+            _ => {
+                // Program hit BRK: return contents of A as exit code
+                if cycles {
+                    println!("Total cycles: {}", vm.total_cycles);
+                }
+                exit(vm.s.reg.a as i32);
+            }
         }
     }
 
