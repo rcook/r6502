@@ -17,4 +17,4 @@ clean:
 	$(RM) $(SOURCES:.s=.o) $(PROGRAM) $(PROGRAM:bin=lst) $(PROGRAM:bin=map)
 
 run: $(PROGRAM)
-	sim65 --verbose --cycles $(PROGRAM)
+	sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
