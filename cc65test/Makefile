@@ -8,13 +8,13 @@ TARGET = sim6502
 all: $(PROGRAM)
 
 %.o: %.s
-	ca65 -U -o $@ $<
+	ca65 -U -l $(@:o=lst) -o $@ $<
 
 $(PROGRAM): $(SOURCES:.s=.o)
-	ld65 -t $(TARGET) -m $(PROGRAM).map -o $@ $^ sim6502.lib
+	ld65 -t $(TARGET) -m $(PROGRAM:bin=map) -o $@ $^ sim6502.lib
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(PROGRAM) $(PROGRAM).map
+	$(RM) $(SOURCES:.s=.o) $(PROGRAM) $(PROGRAM:bin=lst) $(PROGRAM:bin=map)
 
 run: $(PROGRAM)
 	sim65 --verbose --cycles $(PROGRAM)
