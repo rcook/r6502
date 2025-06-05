@@ -36,5 +36,8 @@ https://web.archive.org/web/20211204234443if_/http://archive.6502.org/datasheets
 https://www.masswerk.at/6502/6502_instruction_set.html
 https://github.com/Klaus2m5/6502_65C02_functional_tests
 https://github.com/C-Chads/MyLittle6502
+https://github.com/andymccall/neo6502-development
+https://github.com/PeteGollan/Neo6502-programs/tree/main/HelloNeo6502-CC65
+https://github.com/paulscottrobson/neo6502-firmware/releases
 
 [single-step-tests]: https://github.com/SingleStepTests/65x02
