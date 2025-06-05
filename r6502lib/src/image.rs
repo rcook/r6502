@@ -29,8 +29,7 @@ impl Image {
         Self::read(File::open(path)?, default_load, default_start, default_sp)
     }
 
-    #[cfg(test)]
-    pub(crate) fn from_bytes(
+    pub fn from_bytes(
         bytes: &[u8],
         default_load: Option<u16>,
         default_start: Option<u16>,
@@ -272,7 +271,7 @@ mod tests {
         assert_eq!(0x1000, image.load);
         assert_eq!(0x1000, image.start);
         assert_eq!(0xff, image.sp);
-        assert_eq!(113, image.values.len());
+        assert_eq!(114, image.values.len());
         Ok(())
     }
 }

@@ -41,7 +41,12 @@ impl Vm {
             self.s.reg.clone(),
             instruction_info.clone(),
         );
+        //let before = Instant::now();
         let instruction_cycles = instruction.execute(&mut self.s);
+        //let after = Instant::now();
+        //let d0 = after - before;
+        //let d1 = Duration::from_micros(instruction_cycles as u64).saturating_sub(d0);
+        //sleep(d1);
         self.monitor.on_after_execute(
             self.total_cycles,
             self.s.reg.clone(),
