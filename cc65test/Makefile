@@ -17,4 +17,4 @@ clean:
 	$(RM) $(SOURCES:.s=.o) $(PROGRAM) $(PROGRAM).map
 
 run: $(PROGRAM)
-	sim65 --cycles $(PROGRAM)
+	sim65 --verbose --cycles $(PROGRAM)
