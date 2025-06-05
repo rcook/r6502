@@ -1,6 +1,6 @@
-SOURCES = program.s
+SOURCES = div16.s
 
-PROGRAM = program.bin
+PROGRAM = div16.bin
 TARGET = sim6502
 
 .SUFFIXES:
