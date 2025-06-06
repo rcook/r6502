@@ -73,7 +73,7 @@ pub enum Opcode {
     Bvs = 0x70,
     #[strum(props(mnemonic = "CLC"))]
     Clc = 0x18,
-    #[strum(props(mnemonic = "ClD"))]
+    #[strum(props(mnemonic = "CLD"))]
     Cld = 0xd8,
     #[strum(props(mnemonic = "CLI"))]
     Cli = 0x58,
