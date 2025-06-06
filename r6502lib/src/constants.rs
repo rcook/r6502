@@ -14,3 +14,13 @@ pub(crate) const SIM6502_MAGIC_NUMBER: &str = "sim65";
 pub(crate) const DEFAULT_LOAD: u16 = 0x0000;
 pub(crate) const DEFAULT_START: u16 = 0x0000;
 pub(crate) const DEFAULT_SP: u8 = 0xff;
+
+// Apple 1 PIA addresses etc.
+#[allow(unused)]
+pub(crate) const KBD: u16 = 0xD010; // PIA.A keyboard input
+#[allow(unused)]
+pub(crate) const KBDCR: u16 = 0xD011; // PIA.A keyboard control register
+#[allow(unused)]
+pub(crate) const DSP: u16 = 0xD012; // PIA.B display output register
+#[allow(unused)]
+pub(crate) const DSPCR: u16 = 0xD013; //  PIA.B display control register
