@@ -98,10 +98,10 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case("nvxbdizc", _p!(0b00000000))]
-    #[case("NVXBDIZC", _p!(0b11111111))]
-    #[case("NVxBDIZC", _p!(0b11011111))]
-    #[case("NVxBDizC", _p!(0b11011001))]
+    #[case("[--------]", _p!(0b00000000))]
+    #[case("[NVXBDIZC]", _p!(0b11111111))]
+    #[case("[NV-BDIZC]", _p!(0b11011111))]
+    #[case("[NV-BD--C]", _p!(0b11011001))]
     fn display(#[case] expected: &str, #[case] input: P) {
         assert_eq!(expected, input.to_string());
     }
