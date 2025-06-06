@@ -1,6 +1,7 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use clap_num::maybe_hex;
 use path_absolutize::Absolutize;
+use r6502lib::OsEmulation;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -50,15 +51,42 @@ pub(crate) struct RunOptions {
     )]
     pub(crate) reset: bool,
 
-    #[arg(
-        help = "Load my fake OS into memory",
-        long = "fake-os",
-        default_value_t = false
-    )]
-    pub(crate) fake_os: bool,
-
     #[arg(help = "Stop after given number of cycles", long = "stop-after")]
     pub(crate) stop_after: Option<u32>,
+
+    #[arg(
+        help = "OS emulation mode",
+        long = "emu",
+        value_enum,
+        default_value_t = Emulation::None
+    )]
+    pub(crate) emulation: Emulation,
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub(crate) enum Emulation {
+    #[clap(name = "none")]
+    None,
+
+    #[clap(name = "sim65")]
+    Sim6502,
+
+    #[clap(name = "acorn")]
+    AcornStyle,
+
+    #[clap(name = "apple1")]
+    Apple1Style,
+}
+
+impl From<Emulation> for OsEmulation {
+    fn from(value: Emulation) -> Self {
+        match value {
+            Emulation::None => OsEmulation::None,
+            Emulation::Sim6502 => OsEmulation::Sim6502,
+            Emulation::AcornStyle => OsEmulation::AcornStyle,
+            Emulation::Apple1Style => OsEmulation::Apple1Style,
+        }
+    }
 }
 
 fn parse_absolute_path(s: &str) -> Result<PathBuf, String> {

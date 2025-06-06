@@ -2,8 +2,8 @@ use crate::State::*;
 use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, Image, InstructionInfo, OpInfo, Opcode, Os, OsBuilder, Vm, VmBuilder, MOS_6502, OSHALT,
-    OSWRCH,
+    p_set, Image, InstructionInfo, OpInfo, Opcode, Os, OsEmulation, Vm, VmBuilder, MOS_6502,
+    OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -34,7 +34,7 @@ impl UiHost {
         vm.s.memory.load(&image)?;
         vm.s.reg.pc = image.start;
 
-        let os = OsBuilder::default().build()?;
+        let os = Os::emulate(OsEmulation::AcornStyle)?;
         os.load_into_vm(&mut vm);
 
         let rti = MOS_6502

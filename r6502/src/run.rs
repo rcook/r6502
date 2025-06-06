@@ -3,8 +3,8 @@ use crate::{Args, Ui, UiHost};
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use r6502lib::{
-    DummyMonitor, Image, Monitor, Opcode, OsBuilder, SymbolInfo, TracingMonitor, VmBuilder,
-    MOS_6502, OSHALT, OSWRCH, RESET,
+    DummyMonitor, Image, Monitor, Opcode, Os, SymbolInfo, TracingMonitor, VmBuilder, MOS_6502,
+    OSHALT, OSWRCH, RESET,
 };
 use std::path::Path;
 use std::process::exit;
@@ -51,13 +51,7 @@ fn run_cli_host(opts: &RunOptions) -> Result<()> {
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
 
     vm.s.memory.load(&image)?;
-    let os = if opts.fake_os {
-        let os = OsBuilder::default().build()?;
-        os.load_into_vm(&mut vm);
-        Some(os)
-    } else {
-        None
-    };
+    let os = Os::emulate(opts.emulation.into())?;
 
     let start = if opts.reset {
         vm.s.memory.fetch_word(RESET)
@@ -116,36 +110,25 @@ fn run_cli_host(opts: &RunOptions) -> Result<()> {
 
     vm.s.reg.pc = start;
 
-    if let Some(os) = &os {
-        'outer: loop {
-            while vm.step() {
-                if let Some(stop_after) = opts.stop_after {
-                    if vm.total_cycles >= stop_after {
-                        stopped_after = true;
-                        break 'outer;
-                    }
-                }
-            }
-
-            match os.is_os_vector(&vm) {
-                Some(OSHALT) => {
-                    break;
-                }
-                Some(OSWRCH) => {
-                    print!("{}", vm.s.reg.a as char);
-                    rti.execute_no_operand(&mut vm.s);
-                }
-                _ => break,
-            }
-        }
-    } else {
+    'outer: loop {
         while vm.step() {
             if let Some(stop_after) = opts.stop_after {
                 if vm.total_cycles >= stop_after {
                     stopped_after = true;
-                    break;
+                    break 'outer;
                 }
             }
+        }
+
+        match os.is_os_vector(&vm) {
+            Some(OSHALT) => {
+                break;
+            }
+            Some(OSWRCH) => {
+                print!("{}", vm.s.reg.a as char);
+                rti.execute_no_operand(&mut vm.s);
+            }
+            _ => break,
         }
     }
 

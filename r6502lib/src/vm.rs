@@ -155,12 +155,15 @@ mod tests {
 
     #[test]
     fn jsr_brk() -> Result<()> {
-        const OS_ADDR: u16 = 0x7000;
+        const IRQ_ADDR: u16 = 0x7000;
         const START: u16 = 0x1000;
         let p_test = P::D | P::ALWAYS_ONE;
 
         let mut vm = Vm::default();
-        let os = OsBuilder::default().os_addr(OS_ADDR).build()?;
+        let os = OsBuilder::default()
+            .irq_addr(IRQ_ADDR)
+            .os_vectors(vec![OSWRCH])
+            .build()?;
         os.load_into_vm(&mut vm);
 
         vm.s.memory[START] = Opcode::Jsr as u8;
@@ -178,7 +181,7 @@ mod tests {
         assert!(!vm.step());
         assert_eq!(13, vm.total_cycles);
         assert!(!p_get!(vm.s.reg, B));
-        assert_eq!(OS_ADDR, vm.s.reg.pc);
+        assert_eq!(IRQ_ADDR, vm.s.reg.pc);
         assert_eq!(Some(OSWRCH), os.is_os_vector(&vm));
 
         Ok(())
@@ -249,6 +252,7 @@ mod tests {
         vm.s.reg.pc = image.start;
 
         let os = OsBuilder::default()
+            .irq_addr(0x8000)
             .os_vectors(vec![RETURN_ADDR, OSWRCH])
             .build()?;
         os.load_into_vm(&mut vm);
