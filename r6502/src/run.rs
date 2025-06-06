@@ -112,6 +112,8 @@ fn run_cli_host(opts: &RunOptions) -> Result<()> {
         }
     }
 
+    let mut stopped_after = false;
+
     vm.s.reg.pc = start;
 
     if let Some(os) = &os {
@@ -119,6 +121,7 @@ fn run_cli_host(opts: &RunOptions) -> Result<()> {
             while vm.step() {
                 if let Some(stop_after) = opts.stop_after {
                     if vm.total_cycles >= stop_after {
+                        stopped_after = true;
                         break 'outer;
                     }
                 }
@@ -139,15 +142,21 @@ fn run_cli_host(opts: &RunOptions) -> Result<()> {
         while vm.step() {
             if let Some(stop_after) = opts.stop_after {
                 if vm.total_cycles >= stop_after {
+                    stopped_after = true;
                     break;
                 }
             }
         }
     }
 
-    // Program hit BRK: return contents of A as exit code
     if opts.cycles {
-        println!("Total cycles: {}", vm.total_cycles);
+        if stopped_after {
+            println!("Stopped after {} cycles", vm.total_cycles)
+        } else {
+            println!("Completed after {} total cycles", vm.total_cycles);
+        }
     }
-    exit(vm.s.reg.a as i32);
+
+    // If program hit BRK: return contents of A as exit code
+    exit(if stopped_after { 0 } else { vm.s.reg.a as i32 });
 }
