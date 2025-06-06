@@ -1,6 +1,8 @@
 {
   "files.eol": "\n",
   "files.exclude": {
+    "**/*.bin": true,
+    "**/*.o": true,
     "**/.vscode/": true,
     "**/target/": true,
     "**/__pycache__/": true,

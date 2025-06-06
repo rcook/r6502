@@ -1,6 +1,6 @@
-SOURCES = div16.s
-
-PROGRAM = div16.bin
+NAME = div16
+SOURCES = $(NAME).s
+PROGRAM = $(NAME).bin
 TARGET = sim6502
 
 .SUFFIXES:
