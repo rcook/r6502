@@ -25,7 +25,7 @@ pub(crate) fn ldy(s: &mut VmState, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::load::{lda, ldx, ldy};
-    use crate::{p, VmState, P};
+    use crate::{p, Memory, Reg, VmState, P};
     use rstest::rstest;
 
     #[rstest]
@@ -36,7 +36,8 @@ mod tests {
     // LDA #$255
     #[case(p!(N), 0xff)]
     fn lda_basics(#[case] expected_p: P, #[case] operand: u8) {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0xff;
         lda(&mut s, operand);
         assert_eq!(operand, s.reg.a);
@@ -51,7 +52,8 @@ mod tests {
     // LDX #$255
     #[case(p!(N), 0xff)]
     fn ldx_basics(#[case] expected_p: P, #[case] operand: u8) {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.x = 0xff;
         ldx(&mut s, operand);
         assert_eq!(operand, s.reg.x);
@@ -66,7 +68,8 @@ mod tests {
     // LDY #$255
     #[case(p!(N), 0xff)]
     fn ldy_basics(#[case] expected_p: P, #[case] operand: u8) {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.y = 0xff;
         ldy(&mut s, operand);
         assert_eq!(operand, s.reg.y);

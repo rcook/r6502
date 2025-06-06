@@ -10,7 +10,9 @@ pub(crate) fn asl_acc(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
 pub(crate) fn asl(s: &mut VmState, addr: u16) {
-    s.memory[addr] = asl_helper(s, s.memory[addr]);
+    let value = s.memory.load(addr);
+    let value = asl_helper(s, value);
+    s.memory.store(addr, value)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
@@ -22,7 +24,9 @@ pub(crate) fn lsr_acc(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
 pub(crate) fn lsr(s: &mut VmState, addr: u16) {
-    s.memory[addr] = lsr_helper(s, s.memory[addr]);
+    let value = s.memory.load(addr);
+    let value = lsr_helper(s, value);
+    s.memory.store(addr, value)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
@@ -34,7 +38,9 @@ pub(crate) fn rol_acc(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
 pub(crate) fn rol(s: &mut VmState, addr: u16) {
-    s.memory[addr] = rol_helper(s, s.memory[addr]);
+    let value = s.memory.load(addr);
+    let value = rol_helper(s, value);
+    s.memory.store(addr, value)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
@@ -46,7 +52,9 @@ pub(crate) fn ror_acc(s: &mut VmState) {
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
 pub(crate) fn ror(s: &mut VmState, addr: u16) {
-    s.memory[addr] = ror_helper(s, s.memory[addr]);
+    let value = s.memory.load(addr);
+    let value = ror_helper(s, value);
+    s.memory.store(addr, value)
 }
 
 fn asl_helper(s: &mut VmState, operand: u8) -> u8 {
@@ -82,7 +90,7 @@ fn ror_helper(s: &mut VmState, operand: u8) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::ops::rol_acc;
-    use crate::{VmStateBuilder, _p};
+    use crate::{Memory, Reg, VmState, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -95,7 +103,8 @@ mod tests {
         #[case] p: u8,
         #[case] a: u8,
     ) -> Result<()> {
-        let mut s = VmStateBuilder::default().build()?;
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.p = _p!(p);
         s.reg.a = a;
         rol_acc(&mut s);

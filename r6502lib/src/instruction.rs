@@ -9,7 +9,7 @@ pub(crate) struct Instruction {
 
 impl Instruction {
     pub(crate) fn fetch(s: &VmState) -> Self {
-        let value = s.memory[s.reg.pc];
+        let value = s.memory.load(s.reg.pc);
         match Opcode::from_u8(value) {
             Some(opcode) => match MOS_6502.get_op_info(&opcode) {
                 Some(op_info) => match op_info.op() {
@@ -21,7 +21,10 @@ impl Instruction {
                     Op::Byte(inner) => Self {
                         pc: s.reg.pc,
                         opcode,
-                        binding: Binding::Byte(inner.clone(), s.memory[s.reg.pc.wrapping_add(1)]),
+                        binding: Binding::Byte(
+                            inner.clone(),
+                            s.memory.load(s.reg.pc.wrapping_add(1)),
+                        ),
                     },
                     Op::Word(inner) => Self {
                         pc: s.reg.pc,
@@ -29,8 +32,8 @@ impl Instruction {
                         binding: Binding::Word(
                             inner.clone(),
                             make_word(
-                                s.memory[s.reg.pc.wrapping_add(2)],
-                                s.memory[s.reg.pc.wrapping_add(1)],
+                                s.memory.load(s.reg.pc.wrapping_add(2)),
+                                s.memory.load(s.reg.pc.wrapping_add(1)),
                             ),
                         ),
                     },

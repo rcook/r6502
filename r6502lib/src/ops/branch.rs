@@ -53,7 +53,7 @@ pub(crate) fn bvs(s: &mut VmState, offset: u8) -> BranchResult {
 mod tests {
     use crate::ops::branch::{bcs, beq};
     use crate::ops::BranchResult;
-    use crate::{p_set, VmState};
+    use crate::{p_set, Memory, Reg, VmState};
     use rstest::rstest;
 
     #[rstest]
@@ -68,7 +68,8 @@ mod tests {
         #[case] pc: u16,
         #[case] offset: u8,
     ) {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(crate::Reg::default(), memory.view());
         p_set!(s.reg, Z, flag_value);
         s.reg.pc = pc;
         let branch_result = beq(&mut s, offset);
@@ -84,7 +85,8 @@ mod tests {
         #[case] offset: u8,
         #[case] carry: bool,
     ) {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         p_set!(s.reg, C, carry);
         s.reg.pc = pc.wrapping_add(2);
         bcs(&mut s, offset);

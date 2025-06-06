@@ -2,13 +2,14 @@ use crate::State::*;
 use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, Image, InstructionInfo, OpInfo, Opcode, Os, OsEmulation, Vm, VmBuilder, MOS_6502,
-    OSHALT, OSWRCH,
+    p_set, Image, InstructionInfo, Memory, OpInfo, Opcode, Os, OsEmulation, Reg, Vm, VmState,
+    MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
 pub(crate) struct UiHost {
+    memory: Memory,
     debug_rx: Receiver<DebugMessage>,
     monitor_tx: Sender<MonitorMessage>,
     io_tx: Sender<IoMessage>,
@@ -21,6 +22,7 @@ impl UiHost {
         io_tx: Sender<IoMessage>,
     ) -> Self {
         Self {
+            memory: Memory::new(),
             debug_rx,
             monitor_tx,
             io_tx,
@@ -30,8 +32,9 @@ impl UiHost {
     pub(crate) fn run(&self, image: Image) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
 
-        let mut vm = VmBuilder::default().monitor(monitor).build()?;
-        vm.s.memory.load(&image)?;
+        self.memory.store_image(&image)?;
+
+        let mut vm = Vm::new(monitor, VmState::new(Reg::default(), self.memory.view()));
         vm.s.reg.pc = image.start;
 
         let os = Os::emulate(OsEmulation::AcornStyle)?;
@@ -114,9 +117,7 @@ impl UiHost {
                     DebugMessage::Step => {}
                     DebugMessage::Run => return Running,
                     DebugMessage::Break => {}
-                    DebugMessage::FetchMemory(address_range) => {
-                        self.fetch_memory(vm, address_range)
-                    }
+                    DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
                     DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
                     DebugMessage::Go(addr) => {
                         p_set!(vm.s.reg, B, false);
@@ -143,9 +144,7 @@ impl UiHost {
                     DebugMessage::Step => {}
                     DebugMessage::Run => {}
                     DebugMessage::Break => {}
-                    DebugMessage::FetchMemory(address_range) => {
-                        self.fetch_memory(vm, address_range)
-                    }
+                    DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
                     DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
                     DebugMessage::Go(addr) => {
                         p_set!(vm.s.reg, B, false);
@@ -157,12 +156,12 @@ impl UiHost {
         }
     }
 
-    fn fetch_memory(&self, vm: &Vm, address_range: AddressRange) {
+    fn fetch_memory(&self, address_range: AddressRange) {
         let begin_temp = address_range.begin as usize;
         let end_temp = address_range.end as usize;
         assert!(end_temp >= begin_temp && end_temp <= 0x10000);
         let count = end_temp - begin_temp + 1;
-        let snapshot = vm.s.memory.snapshot(begin_temp, begin_temp + count);
+        let snapshot = self.memory.snapshot(begin_temp, begin_temp + count);
         _ = self.monitor_tx.send(MonitorMessage::FetchMemoryResponse {
             address_range,
             snapshot,

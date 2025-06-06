@@ -15,7 +15,7 @@ pub(crate) fn jsr(s: &mut VmState, addr: u16) {
     // to this function.
     let hi_addr = s.reg.pc.wrapping_sub(1);
     let lo_addr = s.reg.pc.wrapping_sub(2);
-    let effective_addr = make_word(s.memory[hi_addr], s.memory[lo_addr]);
+    let effective_addr = make_word(s.memory.load(hi_addr), s.memory.load(lo_addr));
     assert_eq!(addr, effective_addr);
 
     // The real JSR instruction starts to push the return address onto
@@ -26,7 +26,7 @@ pub(crate) fn jsr(s: &mut VmState, addr: u16) {
     // even if it's garbage.
     let (return_hi, return_lo) = split_word(s.reg.pc.wrapping_sub(1));
     s.push(return_hi);
-    let effective_addr = make_word(s.memory[hi_addr], s.memory[lo_addr]);
+    let effective_addr = make_word(s.memory.load(hi_addr), s.memory.load(lo_addr));
     s.push(return_lo);
     s.reg.pc = effective_addr;
 }
@@ -52,14 +52,15 @@ pub(crate) fn rts(s: &mut VmState) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, Reg, RegBuilder, Vm, VmState, VmStateBuilder, _p};
+    use crate::{reg, DummyMonitor, Memory, Reg, RegBuilder, Vm, VmState, _p};
     use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
     #[case(reg!(0x12, 0x1000), reg!(0x12, 0x0000), 0x1000)]
     fn jmp_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u16) -> Result<()> {
-        let mut s = VmStateBuilder::default().reg(reg).build()?;
+        let memory = Memory::new();
+        let mut s = VmState::new(reg, memory.view());
         jmp(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
         Ok(())
@@ -69,11 +70,12 @@ mod tests {
     fn jsr_basics() {
         const TARGET_ADDR: u16 = 0x1234;
 
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
-        s.memory[0x1000] = 0x20;
-        s.memory[0x1001] = target_lo;
-        s.memory[0x1002] = target_hi;
+        memory.store(0x1000, 0x20);
+        memory.store(0x1001, target_lo);
+        memory.store(0x1002, target_hi);
 
         // TBD: Restructure VM so that instruction and operand decoding
         // is taken account of properly. For now, we'll work around this
@@ -90,18 +92,23 @@ mod tests {
     // operands are fetched, so that JSR to address at the top of the
     // stack will have bizarre behaviour
     #[test]
-    fn jsr_smashing_stack() {
-        let mut vm = Vm::default();
+    fn jsr_smashing_stack() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.pc = 0x017b;
         vm.s.reg.sp = 0x7d;
         vm.s.reg.a = 0x9e; // Probably irrelevant
         vm.s.reg.x = 0x89; // Probably irrelevant
         vm.s.reg.y = 0x34; // Probably irrelevant
         vm.s.reg.p = _p!(0b11100110); // Probably irrelevant
-        vm.s.memory[0x0155] = 0xad;
-        vm.s.memory[0x017b] = 0x20; // JSR abs
-        vm.s.memory[0x017c] = 0x55;
-        vm.s.memory[0x017d] = 0x13;
+        memory.store(0x0155, 0xad);
+        memory.store(0x017b, 0x20); // JSR abs
+        memory.store(0x017c, 0x55);
+        memory.store(0x017d, 0x13);
         _ = vm.step();
         assert_eq!(0x0155, vm.s.reg.pc);
         assert_eq!(0x7b, vm.s.reg.sp);
@@ -109,10 +116,11 @@ mod tests {
         assert_eq!(0x89, vm.s.reg.x);
         assert_eq!(0x34, vm.s.reg.y);
         assert_eq!(_p!(0b11100110), vm.s.reg.p);
-        assert_eq!(0xad, vm.s.memory[0x0155]);
-        assert_eq!(0x20, vm.s.memory[0x017b]);
-        assert_eq!(0x7d, vm.s.memory[0x017c]);
-        assert_eq!(0x01, vm.s.memory[0x017d]);
+        assert_eq!(0xad, memory.load(0x0155));
+        assert_eq!(0x20, memory.load(0x017b));
+        assert_eq!(0x7d, memory.load(0x017c));
+        assert_eq!(0x01, memory.load(0x017d));
+        Ok(())
     }
 
     #[test]
@@ -120,11 +128,12 @@ mod tests {
     fn rti_scenario() -> Result<()> {
         const INITIAL_SP: u8 = 0x6e;
         let reg = RegBuilder::default().p(_p!(0x63)).sp(INITIAL_SP).build()?;
-        let mut s = VmStateBuilder::default().reg(reg).build()?;
-        s.memory[0x0100 + INITIAL_SP as u16] = 0x98;
-        s.memory[0x0100 + INITIAL_SP as u16 + 1] = 0x9c; // P
-        s.memory[0x0100 + INITIAL_SP as u16 + 2] = 0xaa; // lo(return_attr)
-        s.memory[0x0100 + INITIAL_SP as u16 + 3] = 0x65; // hi(return_attr)
+        let memory = Memory::new();
+        let mut s = VmState::new(reg, memory.view());
+        memory.store(0x0100 + INITIAL_SP as u16, 0x98);
+        memory.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
+        memory.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)
+        memory.store(0x0100 + INITIAL_SP as u16 + 3, 0x65); // hi(return_attr)
         s.reg.pc = 0x8771 + 1;
         rti(&mut s);
         assert_eq!(0x65aa, s.reg.pc);

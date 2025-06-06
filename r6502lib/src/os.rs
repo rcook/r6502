@@ -1,4 +1,6 @@
-use crate::{constants::NMI, Opcode, OsEmulation, Vm, IRQ, OSHALT, OSWRCH, RESET};
+use crate::{
+    constants::NMI, util::split_word, Opcode, OsEmulation, Vm, IRQ, OSHALT, OSWRCH, RESET,
+};
 use anyhow::Result;
 use derive_builder::Builder;
 
@@ -37,19 +39,27 @@ impl Os {
 
     pub fn load_into_vm(&self, vm: &mut Vm) {
         if let Some(nmi_addr) = self.nmi_addr {
-            vm.s.memory.store_word(NMI, nmi_addr);
+            let (hi, lo) = split_word(nmi_addr);
+            vm.s.memory.store(NMI, lo);
+            vm.s.memory.store(NMI.wrapping_add(1), hi)
         }
         if let Some(reset_addr) = self.reset_addr {
-            vm.s.memory.store_word(RESET, reset_addr);
+            let (hi, lo) = split_word(reset_addr);
+            vm.s.memory.store(RESET, lo);
+            vm.s.memory.store(RESET.wrapping_add(1), hi)
         }
         if let Some(irq_addr) = self.irq_addr {
-            vm.s.memory.store_word(IRQ, irq_addr);
+            let (hi, lo) = split_word(irq_addr);
+            vm.s.memory.store(IRQ, lo);
+            vm.s.memory.store(IRQ.wrapping_add(1), hi)
         }
 
         for os_vector in self.os_vectors.iter().cloned() {
-            vm.s.memory[os_vector] = Opcode::Brk as u8;
-            vm.s.memory[os_vector + 1] = Opcode::Nop as u8;
-            vm.s.memory[os_vector + 2] = Opcode::Rts as u8;
+            vm.s.memory.store(os_vector, Opcode::Brk as u8);
+            vm.s.memory
+                .store(os_vector.wrapping_add(1), Opcode::Nop as u8);
+            vm.s.memory
+                .store(os_vector.wrapping_add(2), Opcode::Rts as u8);
         }
 
         if let Some(return_addr) = self.return_addr {

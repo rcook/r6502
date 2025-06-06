@@ -1,31 +1,23 @@
 use crate::args::RunOptions;
+use crate::run_pia;
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    DummyMonitor, Image, Monitor, Opcode, Os, TracingMonitor, VmBuilder, MOS_6502, OSHALT, OSWRCH,
-    RESET,
+    DummyMonitor, Image, Memory, MemoryView, Monitor, Opcode, Os, Reg, TracingMonitor, Vm, VmState,
+    MOS_6502, OSHALT, OSWRCH,
 };
 use std::process::exit;
+use std::thread::scope;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
-    let monitor: Box<dyn Monitor> = if opts.trace {
-        Box::new(TracingMonitor::default())
-    } else {
-        Box::new(DummyMonitor)
-    };
-
-    let mut vm = VmBuilder::default().monitor(monitor).build()?;
-    let rti = MOS_6502
-        .get_op_info(&Opcode::Rti)
-        .ok_or_else(|| anyhow!("RTI must exist"))?
-        .clone();
-
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
 
-    vm.s.memory.load(&image)?;
+    let memory = Memory::new();
+    memory.store_image(&image)?;
+
     let os = Os::emulate(opts.emulation.into())?;
 
     let start = if opts.reset {
-        vm.s.memory.fetch_word(RESET)
+        memory.load_reset_unsafe()
     } else {
         image.start
     };
@@ -77,9 +69,40 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         }
     }
 
-    let mut stopped_after = false;
+    let mut code = None;
+    let p = &mut code;
 
+    scope(|scope| {
+        let mut m = memory.view();
+        _ = scope.spawn(move || run_pia(&mut m));
+
+        let m = memory.view();
+        _ = scope.spawn(move || *p = Some(run_vm(m, &os, start, opts).expect("Must succeed")));
+    });
+
+    // If program hit BRK: return contents of A as exit code
+    match code {
+        Some(code) => exit(code),
+        None => exit(0),
+    }
+}
+
+fn run_vm(memory: MemoryView, os: &Os, start: u16, opts: &RunOptions) -> Result<i32> {
+    let monitor: Box<dyn Monitor> = if opts.trace {
+        Box::new(TracingMonitor::default())
+    } else {
+        Box::new(DummyMonitor)
+    };
+
+    let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory));
     vm.s.reg.pc = start;
+
+    let rti = MOS_6502
+        .get_op_info(&Opcode::Rti)
+        .ok_or_else(|| anyhow!("RTI must exist"))?
+        .clone();
+
+    let mut stopped_after = false;
 
     'outer: loop {
         while vm.step() {
@@ -111,6 +134,5 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         }
     }
 
-    // If program hit BRK: return contents of A as exit code
-    exit(if stopped_after { 0 } else { vm.s.reg.a as i32 });
+    Ok(if stopped_after { 0 } else { vm.s.reg.a as i32 })
 }

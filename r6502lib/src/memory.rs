@@ -1,18 +1,44 @@
-use crate::util::{make_word, split_word};
-use crate::{Image, MEMORY_SIZE};
+use crate::constants::NMI;
+use crate::util::make_word;
+use crate::{Image, MemoryView, IRQ, MEMORY_SIZE, RESET};
 use anyhow::{bail, Result};
-use std::ops::{Index, IndexMut};
+use std::sync::atomic::{AtomicU8, Ordering};
 
-pub struct Memory([u8; MEMORY_SIZE]);
+pub struct Memory([AtomicU8; MEMORY_SIZE]);
 
 impl Default for Memory {
     fn default() -> Self {
-        Self([0x00; 0x10000])
+        Self::new()
     }
 }
 
 impl Memory {
-    pub fn load(&mut self, image: &Image) -> Result<()> {
+    pub fn new() -> Self {
+        Self([const { AtomicU8::new(0x00) }; MEMORY_SIZE])
+    }
+
+    // Don't call this when more than one thread is concurrently accessing memory
+    pub fn load_nmi_unsafe(&self) -> u16 {
+        let lo = self.load(NMI);
+        let hi = self.load(NMI + 1);
+        make_word(hi, lo)
+    }
+
+    // Don't call this when more than one thread is concurrently accessing memory
+    pub fn load_reset_unsafe(&self) -> u16 {
+        let lo = self.load(RESET);
+        let hi = self.load(RESET + 1);
+        make_word(hi, lo)
+    }
+
+    // Don't call this when more than one thread is concurrently accessing memory
+    pub fn load_irq_unsafe(&self) -> u16 {
+        let lo = self.load(IRQ);
+        let hi = self.load(IRQ + 1);
+        make_word(hi, lo)
+    }
+
+    pub fn store_image(&self, image: &Image) -> Result<()> {
         let load = image.load as usize;
         if load > self.0.len() {
             bail!("Load address ${load:04X} out of range");
@@ -26,37 +52,32 @@ impl Memory {
             );
         }
 
-        self.0[load..limit].copy_from_slice(&image.values);
+        // Cannot do this unfortunately!
+        // self.0[load..limit].copy_from_slice(&image.values);
+        for (i, value) in image.values.iter().enumerate() {
+            self.0[i + load].store(*value, Ordering::Relaxed)
+        }
+
         Ok(())
     }
 
     pub fn snapshot(&self, begin: usize, end: usize) -> Vec<u8> {
-        self.0[begin..end].to_vec()
+        let mut result = Vec::with_capacity(end - begin);
+        for value in self.0[begin..end].iter() {
+            result.push(value.load(Ordering::Relaxed));
+        }
+        result
     }
 
-    pub fn fetch_word(&self, addr: u16) -> u16 {
-        let lo = self[addr];
-        let hi = self[addr + 1];
-        make_word(hi, lo)
+    pub fn view(&self) -> MemoryView {
+        MemoryView::new(self)
     }
 
-    pub(crate) fn store_word(&mut self, addr: u16, value: u16) {
-        let (hi, lo) = split_word(value);
-        self[addr] = lo;
-        self[addr + 1] = hi;
+    pub fn load(&self, addr: u16) -> u8 {
+        self.0[addr as usize].load(Ordering::Relaxed)
     }
-}
 
-impl Index<u16> for Memory {
-    type Output = u8;
-
-    fn index(&self, index: u16) -> &Self::Output {
-        &self.0[index as usize]
-    }
-}
-
-impl IndexMut<u16> for Memory {
-    fn index_mut(&mut self, index: u16) -> &mut Self::Output {
-        &mut self.0[index as usize]
+    pub fn store(&self, addr: u16, value: u8) {
+        self.0[addr as usize].store(value, Ordering::Relaxed)
     }
 }

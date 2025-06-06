@@ -1,5 +1,5 @@
 use crate::single_step_tests::{AddressValue, Cycle, ScenarioConfig, State};
-use crate::{Opcode, Vm};
+use crate::{DummyMonitor, Memory, Opcode, Reg, Vm, VmState};
 use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
 use std::ffi::OsStr;
@@ -117,7 +117,11 @@ impl Scenario {
     }
 
     fn run_inner(&self) -> (bool, State) {
-        let mut vm = Vm::default();
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
         vm.s.reg.pc = self.initial.pc;
         vm.s.reg.sp = self.initial.sp;
         vm.s.reg.a = self.initial.a;
@@ -125,7 +129,8 @@ impl Scenario {
         vm.s.reg.y = self.initial.y;
         vm.s.reg.p = self.initial.p;
         for address_value in &self.initial.ram {
-            vm.s.memory[address_value.address] = address_value.value;
+            vm.s.memory
+                .store(address_value.address, address_value.value);
         }
 
         _ = vm.step();
@@ -143,7 +148,7 @@ impl Scenario {
                 .iter()
                 .map(|address_value| AddressValue {
                     address: address_value.address,
-                    value: vm.s.memory[address_value.address],
+                    value: vm.s.memory.load(address_value.address),
                 })
                 .collect(),
         };
@@ -202,7 +207,7 @@ impl Scenario {
         check!(p);
 
         for p in &self.r#final.ram {
-            check!(p.address, p.value, vm.s.memory[p.address]);
+            check!(p.address, p.value, vm.s.memory.load(p.address));
         }
 
         (true, final_state)

@@ -83,11 +83,12 @@ pub(crate) fn tya(s: &mut VmState) {
 #[cfg(test)]
 mod tests {
     use crate::ops::register::{tax, tay, txa, tya};
-    use crate::VmState;
+    use crate::{Memory, Reg, VmState};
 
     #[test]
     fn tax_basics() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x22;
         s.reg.x = 0x00;
         tax(&mut s);
@@ -96,7 +97,8 @@ mod tests {
 
     #[test]
     fn tay_basics() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x22;
         s.reg.y = 0x00;
         tay(&mut s);
@@ -105,7 +107,8 @@ mod tests {
 
     #[test]
     fn txa_basics() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x00;
         s.reg.x = 0x22;
         txa(&mut s);
@@ -114,7 +117,8 @@ mod tests {
 
     #[test]
     fn tya_basics() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x00;
         s.reg.y = 0x22;
         tya(&mut s);

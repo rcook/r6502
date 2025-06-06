@@ -1,18 +1,16 @@
 use crate::util::{make_word, split_word};
-use crate::{Memory, Reg, STACK_BASE};
-use derive_builder::Builder;
+use crate::{MemoryView, Reg, STACK_BASE};
 
-#[derive(Builder, Default)]
-#[builder(pattern = "owned")]
-pub struct VmState {
-    #[builder(default)]
+pub struct VmState<'a> {
     pub reg: Reg,
-
-    #[builder(default)]
-    pub memory: Memory,
+    pub memory: MemoryView<'a>,
 }
 
-impl VmState {
+impl<'a> VmState<'a> {
+    pub fn new(reg: Reg, memory: MemoryView<'a>) -> Self {
+        Self { reg, memory }
+    }
+
     pub fn push(&mut self, value: u8) {
         self.set_stack_value(value);
         self.reg.sp = self.reg.sp.wrapping_sub(1);
@@ -37,17 +35,6 @@ impl VmState {
         make_word(hi, lo)
     }
 
-    /*
-    pub(crate) fn peek(&self) -> u8 {
-        self.peek_back(0x00)
-    }
-
-    pub(crate) fn peek_back(&self, offset: u8) -> u8 {
-        let stack_addr = (STACK_BASE + self.reg.s as u16).wrapping_add(offset as u16);
-        self.memory[stack_addr.wrapping_add(1)]
-    }
-    */
-
     #[cfg(test)]
     #[must_use]
     pub(crate) fn peek_word(&self) -> u16 {
@@ -57,17 +44,19 @@ impl VmState {
     #[must_use]
     pub(crate) fn peek_back_word(&self, offset: u8) -> u16 {
         let stack_addr = (STACK_BASE + self.reg.sp as u16).wrapping_add(offset as u16);
-        let hi = self.memory[stack_addr.wrapping_add(2)];
-        let lo = self.memory[stack_addr.wrapping_add(1)];
+        let hi = self.memory.load(stack_addr.wrapping_add(2));
+        let lo = self.memory.load(stack_addr.wrapping_add(1));
         make_word(hi, lo)
     }
 
     #[must_use]
     fn get_stack_value(&self) -> u8 {
-        self.memory[STACK_BASE + self.reg.sp as u16]
+        self.memory
+            .load(STACK_BASE.wrapping_add(self.reg.sp as u16))
     }
 
     fn set_stack_value(&mut self, value: u8) {
-        self.memory[STACK_BASE + self.reg.sp as u16] = value;
+        self.memory
+            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value)
     }
 }

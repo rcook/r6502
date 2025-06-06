@@ -41,41 +41,44 @@ pub(crate) fn plp(s: &mut VmState) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{Vm, VmBuilder, VmState, VmStateBuilder, _p, P, STACK_BASE};
+    use crate::{DummyMonitor, Memory, Reg, Vm, VmState, _p, P, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
     fn pha_basics() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x56;
-        s.memory[STACK_BASE + 0x00ff] = 0x34;
+        s.memory.store(STACK_BASE + 0x00ff, 0x34);
         assert_eq!(0xff, s.reg.sp);
         pha(&mut s);
         assert_eq!(0xfe, s.reg.sp);
         assert_eq!(0x56, s.reg.a);
         assert_eq!(P::default(), s.reg.p);
-        assert_eq!(0x56, s.memory[STACK_BASE + 0x00ff])
+        assert_eq!(0x56, s.memory.load(STACK_BASE + 0x00ff))
     }
 
     #[test]
     fn pha_wraparound() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
 
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
             s.reg.a = value;
-            s.memory[STACK_BASE + 0x00ff - value as u16] = 0x00;
+            s.memory.store(STACK_BASE + 0x00ff - value as u16, 0x00);
             assert_eq!(current_s, s.reg.sp);
             pha(&mut s);
             assert_eq!(current_s.wrapping_sub(1), s.reg.sp);
-            assert_eq!(value, s.memory[STACK_BASE + 0x00ff - value as u16])
+            assert_eq!(value, s.memory.load(STACK_BASE + 0x00ff - value as u16))
         }
     }
 
     #[test]
     fn php_basics() -> Result<()> {
-        let mut s = VmStateBuilder::default().build()?;
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
 
         s.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
         php(&mut s);
@@ -101,20 +104,22 @@ mod tests {
         #[case] expected_s: u8,
         #[case] expected_addr: u16,
         #[case] expected_value: u8,
-        #[case] s: u8,
+        #[case] sp: u8,
         #[case] p: u8,
     ) {
-        let mut vm_state = VmState::default();
-        vm_state.reg.sp = s;
-        vm_state.reg.p = _p!(p);
-        php(&mut vm_state);
-        assert_eq!(expected_s, vm_state.reg.sp);
-        assert_eq!(expected_value, vm_state.memory[expected_addr]);
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
+        s.reg.sp = sp;
+        s.reg.p = _p!(p);
+        php(&mut s);
+        assert_eq!(expected_s, s.reg.sp);
+        assert_eq!(expected_value, s.memory.load(expected_addr));
     }
 
     #[test]
     fn pla_basics() {
-        let mut s = VmState::default();
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
 
         s.reg.a = 0x00;
         pha(&mut s);
@@ -145,7 +150,7 @@ mod tests {
     #[test]
     fn p_flag_basics() -> Result<()> {
         fn do_test(expected_p: u8, vm: &mut Vm, start: u16, value: u8) {
-            vm.s.memory[start + 1] = value; // the test value
+            vm.s.memory.store(start + 1, value); // the test value
             vm.s.reg.p = _p!(0b00110000);
             vm.s.reg.pc = start;
             _ = vm.step(); // LDA #value
@@ -153,17 +158,21 @@ mod tests {
             assert_eq!(value, vm.s.reg.a);
             _ = vm.step(); // PHA
             assert_eq!(start + 3, vm.s.reg.pc);
-            assert_eq!(value, vm.s.memory[STACK_BASE + vm.s.reg.sp as u16 + 1]);
+            assert_eq!(value, vm.s.memory.load(STACK_BASE + vm.s.reg.sp as u16 + 1));
             _ = vm.step(); // PLP
             assert_eq!(_p!(expected_p), vm.s.reg.p);
         }
         const START: u16 = 0x1000;
 
-        let mut vm = VmBuilder::default().build()?;
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
 
-        vm.s.memory[START] = 0xa9; // LDA_IMM
-        vm.s.memory[START + 2] = 0x48; // PHA
-        vm.s.memory[START + 3] = 0x28; // PLP
+        memory.store(START, 0xa9); // LDA_IMM
+        memory.store(START + 2, 0x48); // PHA
+        memory.store(START + 3, 0x28); // PLP
 
         do_test(0b11111111, &mut vm, START, 0b11111111);
         do_test(0b00110000, &mut vm, START, 0b00000000);

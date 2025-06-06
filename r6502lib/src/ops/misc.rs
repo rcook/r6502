@@ -1,3 +1,4 @@
+use crate::util::make_word;
 use crate::{p_set, VmState, IRQ, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BRK
@@ -12,7 +13,7 @@ use crate::{p_set, VmState, IRQ, P};
 pub(crate) fn brk(s: &mut VmState) {
     s.push_word(s.reg.pc + 1);
     s.push((s.reg.p | P::B).bits());
-    s.reg.pc = s.memory.fetch_word(IRQ);
+    s.reg.pc = make_word(s.memory.load(IRQ.wrapping_add(1)), s.memory.load(IRQ));
     p_set!(s.reg, I, true);
 }
 
@@ -23,7 +24,8 @@ pub(crate) fn nop(_s: &mut VmState) {}
 #[cfg(test)]
 mod tests {
     use crate::ops::brk;
-    use crate::{VmState, _p, IRQ, STACK_BASE};
+    use crate::util::split_word;
+    use crate::{Memory, Reg, VmState, _p, IRQ, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -36,22 +38,26 @@ mod tests {
         #[case] expected_s: u8,
         #[case] expected_p: u8,
         #[case] pc: u16,
-        #[case] s: u8,
+        #[case] sp: u8,
         #[case] p: u8,
         #[case] irq_addr: u16,
     ) -> Result<()> {
-        let mut vm_state = VmState::default();
-        vm_state.reg.p = _p!(p);
-        vm_state.reg.pc = pc + 1;
-        vm_state.reg.sp = s;
-        vm_state.memory.store_word(IRQ, irq_addr);
-        brk(&mut vm_state);
-        assert_eq!(_p!(expected_p), vm_state.reg.p);
-        assert_eq!(expected_pc, vm_state.reg.pc);
-        assert_eq!(expected_s, vm_state.reg.sp);
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
+        s.reg.p = _p!(p);
+        s.reg.pc = pc + 1;
+        s.reg.sp = sp;
+        let (hi, lo) = split_word(irq_addr);
+        s.memory.store(IRQ, lo);
+        s.memory.store(IRQ.wrapping_add(1), hi);
+        brk(&mut s);
+        assert_eq!(_p!(expected_p), s.reg.p);
+        assert_eq!(expected_pc, s.reg.pc);
+        assert_eq!(expected_s, s.reg.sp);
         assert_eq!(
             p | 0b00010000,
-            vm_state.memory[STACK_BASE + expected_s as u16 + 1]
+            s.memory
+                .load(STACK_BASE.wrapping_add(expected_s as u16).wrapping_add(1))
         ); // P with B flag set
         Ok(())
     }

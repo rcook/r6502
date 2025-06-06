@@ -28,12 +28,14 @@ fn compare_helper(s: &mut VmState, register: u8, operand: u8) {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ops::cmp, VmStateBuilder, _p};
+    use crate::ops::cmp;
+    use crate::{Memory, Reg, VmState, _p};
     use anyhow::Result;
 
     #[test]
     fn basics() -> Result<()> {
-        let mut s = VmStateBuilder::default().build()?;
+        let memory = Memory::new();
+        let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x10;
         s.reg.p = _p!(0b10101111);
         cmp(&mut s, 0xbb);

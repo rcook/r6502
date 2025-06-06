@@ -1,36 +1,19 @@
-use crate::{p_get, DummyMonitor, Instruction, InstructionInfo, Monitor, TotalCycles, VmState};
-use derive_builder::Builder;
-use std::result::Result as StdResult;
+use crate::{p_get, Instruction, InstructionInfo, Monitor, TotalCycles, VmState};
 
-#[derive(Builder)]
-#[builder(pattern = "owned")]
-pub struct Vm {
-    #[builder(default = "self.default_monitor()?")]
+pub struct Vm<'a> {
     pub monitor: Box<dyn Monitor>,
-
-    #[builder(default)]
-    pub s: VmState,
-
-    #[builder(default = "0")]
+    pub s: VmState<'a>,
     pub total_cycles: TotalCycles,
 }
 
-impl Default for Vm {
-    fn default() -> Self {
-        VmBuilder::default().build().expect("Must succeed")
-    }
-}
-
-impl Vm {
-    /*
-    pub(crate) fn new(monitor: Box<dyn Monitor>, s: VmState, total_cycles: TotalCycles) -> Self {
+impl<'a> Vm<'a> {
+    pub fn new(monitor: Box<dyn Monitor>, s: VmState<'a>) -> Self {
         Self {
             monitor,
             s,
-            total_cycles,
+            total_cycles: 0,
         }
     }
-    */
 
     #[must_use]
     pub fn step(&mut self) -> bool {
@@ -57,100 +40,132 @@ impl Vm {
     }
 }
 
-impl VmBuilder {
-    fn default_monitor(&self) -> StdResult<Box<dyn Monitor>, VmBuilderError> {
-        Ok(Box::new(DummyMonitor))
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, DummyMonitor, Image, Monitor, Opcode, OsBuilder, TracingMonitor, Vm,
-        VmBuilder, IRQ, MOS_6502, OSWRCH, P,
+        p, p_get, p_set, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder, Reg,
+        TracingMonitor, Vm, VmState, IRQ, MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
-    fn no_operand() {
-        let mut vm = Vm::default();
+    fn no_operand() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.a = 0x12;
-        vm.s.memory[0x0000] = Opcode::Nop as u8;
+        memory.store(0x0000, Opcode::Nop as u8);
         assert!(vm.step());
         assert_eq!(2, vm.total_cycles);
         assert_eq!(0x12, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0001, vm.s.reg.pc)
+        assert_eq!(0x0001, vm.s.reg.pc);
+        Ok(())
     }
 
     #[test]
-    fn byte0() {
-        let mut vm = Vm::default();
+    fn byte0() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.a = 0x12;
-        vm.s.memory[0x0000] = Opcode::AdcImm as u8;
-        vm.s.memory[0x0001] = 0x34;
+        memory.store(0x0000, Opcode::AdcImm as u8);
+        memory.store(0x0001, 0x34);
         assert!(vm.step());
         assert_eq!(2, vm.total_cycles);
         assert_eq!(0x46, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0002, vm.s.reg.pc)
+        assert_eq!(0x0002, vm.s.reg.pc);
+        Ok(())
     }
 
     #[test]
-    fn byte1() {
-        let mut vm = Vm::default();
+    fn byte1() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.a = 0x12;
-        vm.s.memory[0x0000] = Opcode::AdcZp as u8;
-        vm.s.memory[0x0001] = 0x34;
-        vm.s.memory[0x0034] = 0x56;
+        memory.store(0x0000, Opcode::AdcZp as u8);
+        memory.store(0x0001, 0x34);
+        memory.store(0x0034, 0x56);
         assert!(vm.step());
         assert_eq!(3, vm.total_cycles);
         assert_eq!(0x68, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0002, vm.s.reg.pc)
+        assert_eq!(0x0002, vm.s.reg.pc);
+        Ok(())
     }
 
     #[test]
-    fn word0() {
-        let mut vm = Vm::default();
+    fn word0() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.a = 0x12;
-        vm.s.memory[0x0000] = Opcode::JmpAbs as u8;
-        vm.s.memory[0x0001] = 0x00;
-        vm.s.memory[0x0002] = 0x10;
+        memory.store(0x0000, Opcode::JmpAbs as u8);
+        memory.store(0x0001, 0x00);
+        memory.store(0x0002, 0x10);
         assert!(vm.step());
         assert_eq!(3, vm.total_cycles);
         assert_eq!(0x12, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x1000, vm.s.reg.pc)
+        assert_eq!(0x1000, vm.s.reg.pc);
+        Ok(())
     }
 
     #[test]
-    fn word1() {
-        let mut vm = Vm::default();
+    fn word1() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.a = 0x25;
-        vm.s.memory[0x0000] = Opcode::AdcAbs as u8;
-        vm.s.memory[0x0001] = 0x12;
-        vm.s.memory[0x0002] = 0x34;
-        vm.s.memory[0x3412] = 0x13;
+        memory.store(0x0000, Opcode::AdcAbs as u8);
+        memory.store(0x0001, 0x12);
+        memory.store(0x0002, 0x34);
+        memory.store(0x3412, 0x13);
         assert!(vm.step());
         assert_eq!(4, vm.total_cycles);
         assert_eq!(0x38, vm.s.reg.a);
         assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0003, vm.s.reg.pc)
+        assert_eq!(0x0003, vm.s.reg.pc);
+        Ok(())
     }
 
     #[test]
-    fn brk() {
-        let mut vm = Vm::default();
+    fn brk() -> Result<()> {
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         vm.s.reg.pc = 0x1000;
-        vm.s.memory[0x1000] = Opcode::Brk as u8;
-        vm.s.memory.store_word(IRQ, 0x9876);
+        memory.store(0x1000, Opcode::Brk as u8);
+        memory.store(IRQ, 0x76);
+        memory.store(IRQ + 1, 0x98);
         p_set!(vm.s.reg, B, false);
         assert!(!vm.step());
         assert_eq!(7, vm.total_cycles);
         assert!(!p_get!(vm.s.reg, B));
         assert_eq!(0x9876, vm.s.reg.pc);
+        Ok(())
     }
 
     #[test]
@@ -159,15 +174,21 @@ mod tests {
         const START: u16 = 0x1000;
         let p_test = P::D | P::ALWAYS_ONE;
 
-        let mut vm = Vm::default();
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
         let os = OsBuilder::default()
             .irq_addr(IRQ_ADDR)
             .os_vectors(vec![OSWRCH])
             .build()?;
         os.load_into_vm(&mut vm);
 
-        vm.s.memory[START] = Opcode::Jsr as u8;
-        vm.s.memory.store_word(START + 1, OSWRCH);
+        memory.store(START, Opcode::Jsr as u8);
+        memory.store(START + 1, OSWRCH as u8);
+        memory.store(START + 2, (OSWRCH >> 8) as u8);
 
         vm.s.reg.pc = START;
         vm.s.reg.p = p_test;
@@ -203,21 +224,39 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let mut vm = load_into_vm(include_str!("../../examples/add8.r6502.txt"))?;
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
+        let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
+        assert_eq!(0x0e00, image.load);
+        memory.store_image(&image)?;
         vm.s.reg.pc = 0x0e01;
         while vm.step() {}
         assert_eq!(21, vm.total_cycles);
-        assert_eq!(0x46, vm.s.memory[0x0e00]);
+        assert_eq!(0x46, memory.load(0x0e00));
         Ok(())
     }
 
     #[test]
     fn add16() -> Result<()> {
-        let mut vm = load_into_vm(include_str!("../../examples/add16.r6502.txt"))?;
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
+        let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
+        assert_eq!(0x0e00, image.load);
+        memory.store_image(&image)?;
         vm.s.reg.pc = 0x0e02;
         while vm.step() {}
         assert_eq!(33, vm.total_cycles);
-        assert_eq!(0xac68, vm.s.memory.fetch_word(0x0e00));
+        let lo = memory.load(0x0e00);
+        let hi = memory.load(0x0e01);
+        assert_eq!(0xac68, make_word(hi, lo));
         Ok(())
     }
 
@@ -226,12 +265,24 @@ mod tests {
         const NUM1: u16 = 0x0e33;
         const REM: u16 = 0x0e37;
 
-        let mut vm = load_into_vm(include_str!("../../examples/div16.r6502.txt"))?;
+        let memory = Memory::new();
+        let mut vm = Vm::new(
+            Box::new(DummyMonitor),
+            VmState::new(Reg::default(), memory.view()),
+        );
+
+        let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
+        assert_eq!(0x0e00, image.load);
+        memory.store_image(&image)?;
         vm.s.reg.pc = 0x0e02;
         while vm.step() {}
         assert_eq!(893, vm.total_cycles);
-        let quotient = vm.s.memory.fetch_word(NUM1);
-        let remainder = vm.s.memory.fetch_word(REM);
+        let lo = memory.load(NUM1);
+        let hi = memory.load(NUM1 + 1);
+        let quotient = make_word(hi, lo);
+        let lo = memory.load(REM);
+        let hi = memory.load(REM + 1);
+        let remainder = make_word(hi, lo);
         assert_eq!(0x01d2, quotient);
         assert_eq!(0x0000, remainder);
         Ok(())
@@ -246,9 +297,10 @@ mod tests {
             Box::new(DummyMonitor)
         };
 
-        let mut vm = VmBuilder::default().monitor(monitor).build()?;
+        let memory = Memory::new();
+        let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.view()));
         let image = input.parse::<Image>()?;
-        vm.s.memory.load(&image)?;
+        memory.store_image(&image)?;
         vm.s.reg.pc = image.start;
 
         let os = OsBuilder::default()
@@ -288,13 +340,5 @@ mod tests {
         }
 
         Ok(result)
-    }
-
-    fn load_into_vm(input: &str) -> Result<Vm> {
-        let image = input.parse::<Image>()?;
-        assert_eq!(0x0e00, image.load);
-        let mut vm = Vm::default();
-        vm.s.memory.load(&image)?;
-        Ok(vm)
     }
 }
