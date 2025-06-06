@@ -29,7 +29,7 @@ mod vm_state;
 mod word_op;
 
 pub use byte_op::ByteOp;
-pub use constants::{IRQ, IRQ_ADDR, OSHALT, OSWRCH, STACK_BASE};
+pub use constants::{IRQ, IRQ_ADDR, OSHALT, OSWRCH, RESET, STACK_BASE};
 pub use image::Image;
 pub use image_format::ImageFormat;
 pub use instruction_info::InstructionInfo;

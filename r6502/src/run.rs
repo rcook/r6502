@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use r6502lib::{
     DummyMonitor, Image, Monitor, Opcode, OsBuilder, SymbolInfo, TracingMonitor, VmBuilder,
-    MOS_6502, OSHALT, OSWRCH,
+    MOS_6502, OSHALT, OSWRCH, RESET,
 };
 use std::path::Path;
 use std::process::exit;
@@ -19,7 +19,9 @@ pub(crate) fn run() -> Result<()> {
             start,
             trace,
             cycles,
-        } => run_cli_host(&path, load, start, trace, cycles)?,
+            reset,
+            fake_os,
+        } => run_cli_host(&path, load, start, trace, cycles, reset, fake_os)?,
         Command::Debug { path, load, start } => run_ui_host(&path, load, start)?,
     }
     Ok(())
@@ -47,6 +49,8 @@ fn run_cli_host(
     start: Option<u16>,
     trace: bool,
     cycles: bool,
+    reset: bool,
+    fake_os: bool,
 ) -> Result<()> {
     let monitor: Box<dyn Monitor> = if trace {
         Box::new(TracingMonitor::default())
@@ -55,38 +59,61 @@ fn run_cli_host(
     };
 
     let mut vm = VmBuilder::default().monitor(monitor).build()?;
-    let image = Image::load(path, load, start, None)?;
-    vm.s.memory.load(&image);
-    vm.s.reg.pc = image.start;
-
-    let os = OsBuilder::default().build()?;
-    os.load_into_vm(&mut vm);
-
     let rti = MOS_6502
         .get_op_info(&Opcode::Rti)
         .ok_or_else(|| anyhow!("RTI must exist"))?
         .clone();
 
-    loop {
-        while vm.step() {}
-
-        match os.is_os_vector(&vm) {
-            Some(OSHALT) => {
-                break;
-            }
-            Some(OSWRCH) => {
-                print!("{}", vm.s.reg.a as char);
-                rti.execute_no_operand(&mut vm.s);
-            }
-            _ => {
-                // Program hit BRK: return contents of A as exit code
-                if cycles {
-                    println!("Total cycles: {}", vm.total_cycles);
-                }
-                exit(vm.s.reg.a as i32);
-            }
-        }
+    let image = Image::load(path, load, start, None)?;
+    if trace {
+        println!("Image: {}", path.display());
+        println!("  Format:                {:?}", image.format);
+        println!("  Load address:          ${:04X}", image.load);
+        println!("  Start address:         ${:04X}", image.start);
+        println!("  Initial stack pointer: ${:02X}", image.sp);
+        println!(
+            "  Start from RESET     : {}",
+            if reset { "yes" } else { "no" }
+        );
     }
 
-    Ok(())
+    vm.s.memory.load(&image);
+    let os = if fake_os {
+        let os = OsBuilder::default().build()?;
+        os.load_into_vm(&mut vm);
+        Some(os)
+    } else {
+        None
+    };
+
+    if reset {
+        vm.s.reg.pc = vm.s.memory.fetch_word(RESET);
+    } else {
+        vm.s.reg.pc = image.start;
+    }
+
+    if let Some(os) = &os {
+        loop {
+            while vm.step() {}
+
+            match os.is_os_vector(&vm) {
+                Some(OSHALT) => {
+                    break;
+                }
+                Some(OSWRCH) => {
+                    print!("{}", vm.s.reg.a as char);
+                    rti.execute_no_operand(&mut vm.s);
+                }
+                _ => break,
+            }
+        }
+    } else {
+        while vm.step() {}
+    }
+
+    // Program hit BRK: return contents of A as exit code
+    if cycles {
+        println!("Total cycles: {}", vm.total_cycles);
+    }
+    exit(vm.s.reg.a as i32);
 }

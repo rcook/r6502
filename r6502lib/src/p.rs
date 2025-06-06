@@ -30,14 +30,16 @@ impl Display for P {
     fn fmt(&self, f: &mut Formatter<'_>) -> StdResult {
         let mut mask = 0b10000000;
         let value = self.bits();
+        write!(f, "[")?;
         for c in P_STR.chars() {
             if (value & mask) == 0 {
-                write!(f, "{c}", c = c.to_lowercase())?
+                write!(f, "-")?
             } else {
-                write!(f, "{c}")?
+                write!(f, "{c}", c = c.to_uppercase())?
             }
             mask >>= 1;
         }
+        write!(f, "]")?;
         Ok(())
     }
 }

@@ -41,14 +41,15 @@ impl Monitor for TracingMonitor {
         instruction_info: InstructionInfo,
     ) {
         println!(
-            "A({:02X}) X({:02X}) Y({:02X}) P({})  {}",
-            reg.a,
-            reg.x,
-            reg.y,
-            reg.p,
-            instruction_info
+            "{disassembly:<50}  A={a:02X} X={x:02X} Y={y:02X} P={p} SP={sp:02X}",
+            disassembly = instruction_info
                 .disassembly(&self.symbols)
-                .expect("Must succeed")
+                .expect("Must succeed"),
+            a = reg.a,
+            x = reg.x,
+            y = reg.y,
+            p = reg.p,
+            sp = reg.sp
         )
     }
 }

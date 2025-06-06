@@ -25,6 +25,20 @@ pub(crate) enum Command {
 
         #[arg(help = "Report cycles", long = "cycles", default_value_t = false)]
         cycles: bool,
+
+        #[arg(
+            help = "Start execution from RESET vector",
+            long = "reset",
+            default_value_t = false
+        )]
+        reset: bool,
+
+        #[arg(
+            help = "Load my fake OS into memory",
+            long = "fake-os",
+            default_value_t = false
+        )]
+        fake_os: bool,
     },
 
     #[command(name = "debug", about = "Debug program")]

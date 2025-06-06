@@ -27,7 +27,7 @@ impl Memory {
         self.0[begin..end].to_vec()
     }
 
-    pub(crate) fn fetch_word(&self, addr: u16) -> u16 {
+    pub fn fetch_word(&self, addr: u16) -> u16 {
         let lo = self[addr];
         let hi = self[addr + 1];
         make_word(hi, lo)
