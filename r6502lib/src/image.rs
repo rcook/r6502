@@ -1,5 +1,7 @@
 use crate::util::make_word;
-use crate::{DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER};
+use crate::{
+    ImageFormat, DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
+};
 use anyhow::{bail, Error, Result};
 use std::fs::File;
 use std::io::{ErrorKind, Read, Seek};
@@ -7,12 +9,14 @@ use std::path::Path;
 use std::str::FromStr;
 
 struct Header {
+    format: ImageFormat,
     load: u16,
     start: u16,
     sp: u8,
 }
 
 pub struct Image {
+    pub format: ImageFormat,
     pub load: u16,
     pub start: u16,
     pub sp: u8,
@@ -50,6 +54,7 @@ impl Image {
         let mut values = Vec::new();
         reader.read_to_end(&mut values)?;
         Ok(Self {
+            format: header.format,
             load: header.load,
             start: header.start,
             sp: header.sp,
@@ -74,6 +79,7 @@ impl Image {
         }
 
         Ok(Header {
+            format: ImageFormat::Raw,
             load: default_load.unwrap_or(DEFAULT_LOAD),
             start: default_start.unwrap_or(DEFAULT_START),
             sp: default_sp.unwrap_or(DEFAULT_SP),
@@ -100,6 +106,7 @@ impl Image {
         let load = make_word(header[3], header[2]);
         let start = make_word(header[5], header[4]);
         Ok(Some(Header {
+            format: ImageFormat::R6502,
             load,
             start,
             sp: DEFAULT_SP,
@@ -145,7 +152,12 @@ impl Image {
         // Start address
         let start = make_word(header[11], header[10]);
 
-        Ok(Some(Header { load, start, sp }))
+        Ok(Some(Header {
+            format: ImageFormat::Sim65,
+            load,
+            start,
+            sp,
+        }))
     }
 }
 
@@ -189,6 +201,7 @@ impl FromStr for Image {
         let mut i = s.lines();
         let Some(line) = i.next() else {
             return Ok(Self {
+                format: ImageFormat::Listing,
                 load: DEFAULT_LOAD,
                 start: DEFAULT_START,
                 sp: DEFAULT_SP,
@@ -223,6 +236,7 @@ impl FromStr for Image {
 
         let start = load;
         Ok(Self {
+            format: ImageFormat::Listing,
             load,
             start,
             sp: DEFAULT_SP,
