@@ -1,3 +1,5 @@
+.segment "MONITOR"
+
 ;  The WOZ Monitor for the Apple 1
 ;  Written by Steve Wozniak in 1976
 

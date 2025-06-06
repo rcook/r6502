@@ -245,7 +245,7 @@ mod tests {
 
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
         let image = input.parse::<Image>()?;
-        vm.s.memory.load(&image);
+        vm.s.memory.load(&image)?;
         vm.s.reg.pc = image.start;
 
         let os = OsBuilder::default()
@@ -290,7 +290,7 @@ mod tests {
         let image = input.parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let mut vm = Vm::default();
-        vm.s.memory.load(&image);
+        vm.s.memory.load(&image)?;
         Ok(vm)
     }
 }

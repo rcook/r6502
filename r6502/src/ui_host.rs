@@ -31,7 +31,7 @@ impl UiHost {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
 
         let mut vm = VmBuilder::default().monitor(monitor).build()?;
-        vm.s.memory.load(&image);
+        vm.s.memory.load(&image)?;
         vm.s.reg.pc = image.start;
 
         let os = OsBuilder::default().build()?;

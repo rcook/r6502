@@ -1,8 +1,9 @@
 use crate::util::{make_word, split_word};
-use crate::Image;
+use crate::{Image, MEMORY_SIZE};
+use anyhow::{bail, Result};
 use std::ops::{Index, IndexMut};
 
-pub struct Memory([u8; 0x10000]);
+pub struct Memory([u8; MEMORY_SIZE]);
 
 impl Default for Memory {
     fn default() -> Self {
@@ -11,16 +12,22 @@ impl Default for Memory {
 }
 
 impl Memory {
-    /*
-    pub(crate) fn new() -> Self {
-        Self::default()
-    }
-    */
-
-    pub fn load(&mut self, image: &Image) {
+    pub fn load(&mut self, image: &Image) -> Result<()> {
         let load = image.load as usize;
+        if load > self.0.len() {
+            bail!("Load address ${load:04X} out of range");
+        }
+
         let limit = load + image.values.len();
+        if limit > self.0.len() {
+            bail!(
+                "Image size ${size:04X} starting at load address ${load:04X} is too big",
+                size = image.values.len()
+            );
+        }
+
         self.0[load..limit].copy_from_slice(&image.values);
+        Ok(())
     }
 
     pub fn snapshot(&self, begin: usize, end: usize) -> Vec<u8> {

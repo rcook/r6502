@@ -9,6 +9,7 @@ clap = { version = "4.5.38", features = ["derive"] }
 clap-num = "1.2.0"
 cursive = "0.21.1"
 iter_mod = "0.1.0"
+path-absolutize = "3.1.1"
 r6502lib = { path = "../r6502lib" }
 
 [dev-dependencies]

@@ -8,7 +8,7 @@ fn div16_benchmark(c: &mut Criterion) {
     fn load_into_vm(bytes: &[u8]) -> Result<(Vm, Image)> {
         let image = Image::from_bytes(bytes, None, None, None)?;
         let mut vm = Vm::default();
-        vm.s.memory.load(&image);
+        vm.s.memory.load(&image)?;
         Ok((vm, image))
     }
 

@@ -1,4 +1,4 @@
-use crate::args::Command;
+use crate::args::{Command, RunOptions};
 use crate::{Args, Ui, UiHost};
 use anyhow::{anyhow, Result};
 use clap::Parser;
@@ -13,15 +13,7 @@ use std::thread::spawn;
 
 pub(crate) fn run() -> Result<()> {
     match Args::parse().command {
-        Command::Run {
-            path,
-            load,
-            start,
-            trace,
-            cycles,
-            reset,
-            fake_os,
-        } => run_cli_host(&path, load, start, trace, cycles, reset, fake_os)?,
+        Command::Run(opts) => run_cli_host(&opts)?,
         Command::Debug { path, load, start } => run_ui_host(&path, load, start)?,
     }
     Ok(())
@@ -43,16 +35,8 @@ fn run_ui_host(path: &Path, load: Option<u16>, start: Option<u16>) -> Result<()>
     Ok(())
 }
 
-fn run_cli_host(
-    path: &Path,
-    load: Option<u16>,
-    start: Option<u16>,
-    trace: bool,
-    cycles: bool,
-    reset: bool,
-    fake_os: bool,
-) -> Result<()> {
-    let monitor: Box<dyn Monitor> = if trace {
+fn run_cli_host(opts: &RunOptions) -> Result<()> {
+    let monitor: Box<dyn Monitor> = if opts.trace {
         Box::new(TracingMonitor::default())
     } else {
         Box::new(DummyMonitor)
@@ -64,21 +48,10 @@ fn run_cli_host(
         .ok_or_else(|| anyhow!("RTI must exist"))?
         .clone();
 
-    let image = Image::load(path, load, start, None)?;
-    if trace {
-        println!("Image: {}", path.display());
-        println!("  Format:                {:?}", image.format);
-        println!("  Load address:          ${:04X}", image.load);
-        println!("  Start address:         ${:04X}", image.start);
-        println!("  Initial stack pointer: ${:02X}", image.sp);
-        println!(
-            "  Start from RESET     : {}",
-            if reset { "yes" } else { "no" }
-        );
-    }
+    let image = Image::load(&opts.path, opts.load, opts.start, None)?;
 
-    vm.s.memory.load(&image);
-    let os = if fake_os {
+    vm.s.memory.load(&image)?;
+    let os = if opts.fake_os {
         let os = OsBuilder::default().build()?;
         os.load_into_vm(&mut vm);
         Some(os)
@@ -86,15 +59,70 @@ fn run_cli_host(
         None
     };
 
-    if reset {
-        vm.s.reg.pc = vm.s.memory.fetch_word(RESET);
+    let start = if opts.reset {
+        vm.s.memory.fetch_word(RESET)
     } else {
-        vm.s.reg.pc = image.start;
+        image.start
+    };
+
+    if opts.trace {
+        println!("Image: {}", opts.path.display());
+
+        println!(
+            "  {label:<25}: {s} (${s:04X}) bytes",
+            label = "Image size",
+            s = image.values.len()
+        );
+
+        println!(
+            "  {label:<25}: {format:?}",
+            label = "Format",
+            format = image.format
+        );
+
+        println!(
+            "  {label:<25}: ${load:04X}",
+            label = "Load address",
+            load = image.load
+        );
+
+        if opts.reset {
+            println!(
+                "  {label:<25}: ${start:04X} (RESET, overriding ${original_start:04X})",
+                label = "Start address",
+                start = start,
+                original_start = image.start
+            );
+        } else {
+            println!(
+                "  {label:<25}: ${start:04X}",
+                label = "Start address",
+                start = image.start
+            );
+        }
+
+        println!(
+            "  {label:<25}: ${sp:02X}",
+            label = "Initial stack pointer",
+            sp = image.sp
+        );
+
+        if let Some(stop_after) = opts.stop_after {
+            println!("  {label:<25}: {stop_after} cycles", label = "Stop after")
+        }
     }
 
+    vm.s.reg.pc = start;
+
     if let Some(os) = &os {
-        loop {
-            while vm.step() {}
+        'outer: loop {
+            while vm.step() {
+                if let Some(stop_after) = opts.stop_after {
+                    if vm.total_cycles >= stop_after {
+                        break 'outer;
+                    }
+                }
+            }
 
             match os.is_os_vector(&vm) {
                 Some(OSHALT) => {
@@ -108,11 +136,17 @@ fn run_cli_host(
             }
         }
     } else {
-        while vm.step() {}
+        while vm.step() {
+            if let Some(stop_after) = opts.stop_after {
+                if vm.total_cycles >= stop_after {
+                    break;
+                }
+            }
+        }
     }
 
     // Program hit BRK: return contents of A as exit code
-    if cycles {
+    if opts.cycles {
         println!("Total cycles: {}", vm.total_cycles);
     }
     exit(vm.s.reg.a as i32);

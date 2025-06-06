@@ -5,10 +5,11 @@ __EXEHDR__:
         .byte   2	; simulator version: 2 = current
         .byte   0	; CPU version: 0 = 6502, 1 = 65c02
         .byte   $FF	; initial SP
-        .addr   _main   ; load address
+        .addr   $0000   ; load address
         .addr   _main   ; start address (these are the same if _main is first in STARTUP)
 
         .segment "STARTUP"
         .export _main
-.org $1000
 _main:
+        LDA #$23
+        BRK
