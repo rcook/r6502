@@ -73,12 +73,12 @@ impl Memory {
         MemoryView::new(self)
     }
 
-    #[cfg(not(feature = "wozmon"))]
+    #[cfg(not(feature = "apple1"))]
     pub fn load(&self, addr: u16) -> u8 {
         self.0[addr as usize].load(Ordering::Relaxed)
     }
 
-    #[cfg(feature = "wozmon")]
+    #[cfg(feature = "apple1")]
     pub fn load(&self, addr: u16) -> u8 {
         // Ugly hack!
         if addr == 0xd010 {

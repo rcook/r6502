@@ -17,4 +17,4 @@ r6502lib = { path = "../r6502lib" }
 rstest = "0.25.0"
 
 [features]
-wozmon = ["dep:getch-rs", "r6502lib/wozmon"]
+apple1 = ["dep:getch-rs", "r6502lib/apple1"]

@@ -20,8 +20,8 @@ criterion = "0.6.0"
 rstest = "0.25.0"
 
 [features]
+apple1 = []
 not-implemented = []
-wozmon = []
 
 [[bench]]
 name = "vm_benchmark"

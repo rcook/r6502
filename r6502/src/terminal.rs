@@ -102,7 +102,7 @@ fn run_vm(memory: MemoryView, start: u16, opts: &RunOptions) -> Result<i32> {
     let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.clone()));
     vm.s.reg.pc = start;
 
-    #[cfg(feature = "wozmon")]
+    #[cfg(feature = "apple1")]
     memory.store(DSP, 0x00);
 
     let mut stopped_after_requested_cycles = false;

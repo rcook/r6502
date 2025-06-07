@@ -1,9 +1,9 @@
-#[cfg(feature = "wozmon")]
+#[cfg(feature = "apple1")]
 use getch_rs::{Getch, Key};
 use r6502lib::MemoryView;
-#[cfg(feature = "wozmon")]
+#[cfg(feature = "apple1")]
 use std::io::{stdout, Write};
-#[cfg(feature = "wozmon")]
+#[cfg(feature = "apple1")]
 use std::thread::scope;
 
 // Apple I PIA addresses etc.
@@ -15,10 +15,10 @@ pub(crate) const DSP: u16 = 0xD012; // PIA.B display output register
 #[allow(unused)]
 pub(crate) const DSPCR: u16 = 0xD013; //  PIA.B display control register
 
-#[cfg(not(feature = "wozmon"))]
+#[cfg(not(feature = "apple1"))]
 pub(crate) fn run_pia(_memory: MemoryView) {}
 
-#[cfg(feature = "wozmon")]
+#[cfg(feature = "apple1")]
 pub(crate) fn run_pia(memory: MemoryView) {
     fn set_kbd(m: &MemoryView, c: char) {
         let c = c.to_ascii_uppercase();
