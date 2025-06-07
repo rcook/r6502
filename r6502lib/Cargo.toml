@@ -21,6 +21,7 @@ rstest = "0.25.0"
 
 [features]
 not-implemented = []
+wozmon = []
 
 [[bench]]
 name = "vm_benchmark"

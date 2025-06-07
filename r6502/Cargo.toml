@@ -8,9 +8,13 @@ anyhow = "1.0.98"
 clap = { version = "4.5.38", features = ["derive"] }
 clap-num = "1.2.0"
 cursive = "0.21.1"
+getch-rs = { version = "0.2.0", optional = true }
 iter_mod = "0.1.0"
 path-absolutize = "3.1.1"
 r6502lib = { path = "../r6502lib" }
 
 [dev-dependencies]
 rstest = "0.25.0"
+
+[features]
+wozmon = ["dep:getch-rs", "r6502lib/wozmon"]

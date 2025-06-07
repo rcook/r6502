@@ -16,4 +16,4 @@ clean:
 
 run: $(PROGRAM)
 	#sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
-	cargo run -p r6502 run $(PROGRAM) --reset --cycles --emu apple1
+	cargo run --features wozmon -p r6502 run $(PROGRAM) --reset --cycles --emu apple1

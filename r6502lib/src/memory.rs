@@ -73,8 +73,21 @@ impl Memory {
         MemoryView::new(self)
     }
 
+    #[cfg(not(feature = "wozmon"))]
     pub fn load(&self, addr: u16) -> u8 {
         self.0[addr as usize].load(Ordering::Relaxed)
+    }
+
+    #[cfg(feature = "wozmon")]
+    pub fn load(&self, addr: u16) -> u8 {
+        // Ugly hack!
+        if addr == 0xd010 {
+            let temp = self.0[addr as usize].swap(0x00, Ordering::Relaxed);
+            self.0[0xd011].store(0x00, Ordering::Relaxed);
+            temp
+        } else {
+            self.0[addr as usize].load(Ordering::Relaxed)
+        }
     }
 
     pub fn store(&self, addr: u16, value: u8) {

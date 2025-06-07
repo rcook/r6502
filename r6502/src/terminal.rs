@@ -1,5 +1,6 @@
 use crate::args::RunOptions;
-use crate::run_pia;
+#[allow(unused)]
+use crate::{run_pia, DSP};
 use anyhow::{anyhow, Result};
 use r6502lib::{
     DummyMonitor, Image, Memory, MemoryView, Monitor, Opcode, Os, Reg, TracingMonitor, Vm, VmState,
@@ -100,6 +101,9 @@ fn run_vm(memory: MemoryView, start: u16, opts: &RunOptions) -> Result<i32> {
 
     let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.clone()));
     vm.s.reg.pc = start;
+
+    #[cfg(feature = "wozmon")]
+    memory.store(DSP, 0x00);
 
     let mut stopped_after_requested_cycles = false;
     'outer: loop {
