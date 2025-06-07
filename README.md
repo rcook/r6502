@@ -9,7 +9,7 @@ not emulate the 6502's timing and currently runs "at full speed" - i.e. it will 
 instructions as quickly as the host operating system handle it. I have, however,
 verified the (reasonably) correct functioning of the all implemented opcodes using
 the [SingleStepTests/65x02][single-step-tests] test suite. It's also able to run
-[wozmon](cc65/apple1/README.md). I plan to get it to run Integer BASIC and
+[wozmon](cc65/apple1/README.md) and Apple 1 Integer BASIC. I plan to get it to run
 Microsoft Basic eventually.
 
 # r6502

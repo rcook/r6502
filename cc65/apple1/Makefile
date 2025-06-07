@@ -1,4 +1,4 @@
-SOURCES = main.s wozmon.s
+SOURCES = main.s wozmon.s a1basic.s
 PROGRAM = apple1.sim65
 
 .SUFFIXES:
