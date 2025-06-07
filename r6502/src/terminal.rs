@@ -9,12 +9,9 @@ use std::process::exit;
 use std::thread::scope;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
-    let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-
     let memory = Memory::new();
+    let image = Image::load(&opts.path, opts.load, opts.start, None)?;
     memory.store_image(&image)?;
-
-    let os = Os::emulate(opts.emulation.into())?;
 
     let start = if opts.reset {
         memory.load_reset_unsafe()
@@ -73,11 +70,11 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     let p = &mut code;
 
     scope(|scope| {
-        let mut m = memory.view();
-        _ = scope.spawn(move || run_pia(&mut m));
+        let m = memory.view();
+        _ = scope.spawn(move || run_pia(m));
 
         let m = memory.view();
-        _ = scope.spawn(move || *p = Some(run_vm(m, &os, start, opts).expect("Must succeed")));
+        _ = scope.spawn(move || *p = Some(run_vm(m, start, opts).expect("Must succeed")));
     });
 
     // If program hit BRK: return contents of A as exit code
@@ -87,28 +84,29 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     }
 }
 
-fn run_vm(memory: MemoryView, os: &Os, start: u16, opts: &RunOptions) -> Result<i32> {
+fn run_vm(memory: MemoryView, start: u16, opts: &RunOptions) -> Result<i32> {
+    let rti = MOS_6502
+        .get_op_info(&Opcode::Rti)
+        .ok_or_else(|| anyhow!("RTI must exist"))?
+        .clone();
+
+    let os = Os::emulate(opts.emulation.into())?;
+
     let monitor: Box<dyn Monitor> = if opts.trace {
         Box::new(TracingMonitor::default())
     } else {
         Box::new(DummyMonitor)
     };
 
-    let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory));
+    let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.clone()));
     vm.s.reg.pc = start;
 
-    let rti = MOS_6502
-        .get_op_info(&Opcode::Rti)
-        .ok_or_else(|| anyhow!("RTI must exist"))?
-        .clone();
-
-    let mut stopped_after = false;
-
+    let mut stopped_after_requested_cycles = false;
     'outer: loop {
         while vm.step() {
             if let Some(stop_after) = opts.stop_after {
                 if vm.total_cycles >= stop_after {
-                    stopped_after = true;
+                    stopped_after_requested_cycles = true;
                     break 'outer;
                 }
             }
@@ -127,12 +125,16 @@ fn run_vm(memory: MemoryView, os: &Os, start: u16, opts: &RunOptions) -> Result<
     }
 
     if opts.cycles {
-        if stopped_after {
+        if stopped_after_requested_cycles {
             println!("Stopped after {} cycles", vm.total_cycles)
         } else {
             println!("Completed after {} total cycles", vm.total_cycles);
         }
     }
 
-    Ok(if stopped_after { 0 } else { vm.s.reg.a as i32 })
+    Ok(if stopped_after_requested_cycles {
+        0
+    } else {
+        vm.s.reg.a as i32
+    })
 }

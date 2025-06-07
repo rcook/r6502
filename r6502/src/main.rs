@@ -20,7 +20,8 @@ pub(crate) use debug_message::DebugMessage;
 pub(crate) use gui::run_gui;
 pub(crate) use io_message::IoMessage;
 pub(crate) use monitor_message::MonitorMessage;
-pub(crate) use pia::run_pia;
+#[allow(unused)]
+pub(crate) use pia::{run_pia, DSP, DSPCR, KBD, KBDCR};
 pub(crate) use state::State;
 pub(crate) use terminal::run_terminal;
 pub(crate) use ui::Ui;

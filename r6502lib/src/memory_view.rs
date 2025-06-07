@@ -1,5 +1,6 @@
 use crate::Memory;
 
+#[derive(Clone)]
 pub struct MemoryView<'a> {
     memory: &'a Memory,
 }
