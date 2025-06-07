@@ -3,7 +3,6 @@
 Programs assembled using the [cc65][cc65] family of tools:
 
 * [GNU Make for Windows][gnuwin32]
-* [Source of wozmon.s][jefftranter-6502] 
 
 Sources of information on how to use cc65 to target new platforms:
 
@@ -12,4 +11,3 @@ Sources of information on how to use cc65 to target new platforms:
 
 [cc65]: https://cc65.github.io/
 [gnuwin32]: https://sourceforge.net/projects/gnuwin32/
-[jefftranter-6502]: https://github.com/jefftranter/6502
