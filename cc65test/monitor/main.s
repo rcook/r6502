@@ -1,3 +1,6 @@
+DSP             = $D012         ;  PIA.B display output register
+DSPCR           = $D013         ;  PIA.B display control register
+
         .segment "EXEHDR"
         .export __EXEHDR__
 __EXEHDR__:
@@ -11,5 +14,22 @@ __EXEHDR__:
         .segment "STARTUP"
         .export _main
 _main:
-        LDA #$23
-        BRK
+        ldx #$00
+loop:
+        lda message, x
+        beq done
+        clc
+        adc #$80
+        jsr echo
+        inx
+        bne loop
+done:
+        jmp $ff1f       ; https://www.sbprojects.net/projects/apple1/wozmon.php
+echo:
+        bit DSP         ; DA bit (B7) cleared yet?
+        bmi echo        ; No, wait for display.
+        sta DSP         ; Output character. Sets DA.
+        rts             ; Return.
+message:
+        .byte "Hello World"
+        .byte $00
