@@ -39,5 +39,10 @@ https://github.com/C-Chads/MyLittle6502
 https://github.com/andymccall/neo6502-development
 https://github.com/PeteGollan/Neo6502-programs/tree/main/HelloNeo6502-CC65
 https://github.com/paulscottrobson/neo6502-firmware/releases
+https://www.steckschwein.de/post/wozmon-a-memory-monitor-in-256-bytes/
+https://www.sbprojects.net/projects/apple1/wozmon.php
+https://www.applefritter.com/replica/chapter7
+http://www.brouhaha.com/~eric/retrocomputing/apple/apple1/basic/
+https://jefftranter.blogspot.com/2012/05/source-code-for-apple-1-basic.html
 
 [single-step-tests]: https://github.com/SingleStepTests/65x02
