@@ -36,7 +36,7 @@ mod tests {
     // LDA #$255
     #[case(p!(N), 0xff)]
     fn lda_basics(#[case] expected_p: P, #[case] operand: u8) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0xff;
         lda(&mut s, operand);
@@ -52,7 +52,7 @@ mod tests {
     // LDX #$255
     #[case(p!(N), 0xff)]
     fn ldx_basics(#[case] expected_p: P, #[case] operand: u8) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.x = 0xff;
         ldx(&mut s, operand);
@@ -68,7 +68,7 @@ mod tests {
     // LDY #$255
     #[case(p!(N), 0xff)]
     fn ldy_basics(#[case] expected_p: P, #[case] operand: u8) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.y = 0xff;
         ldy(&mut s, operand);

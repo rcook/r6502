@@ -87,7 +87,7 @@ mod tests {
 
     #[test]
     fn tax_basics() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x22;
         s.reg.x = 0x00;
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn tay_basics() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x22;
         s.reg.y = 0x00;
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn txa_basics() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x00;
         s.reg.x = 0x22;
@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn tya_basics() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x00;
         s.reg.y = 0x22;

@@ -117,7 +117,7 @@ impl Scenario {
     }
 
     fn run_inner(&self) -> (bool, State) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),

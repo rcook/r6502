@@ -10,7 +10,7 @@ use std::process::exit;
 use std::thread::scope;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
-    let memory = Memory::new();
+    let memory = Memory::default();
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
     memory.store_image(&image)?;
 

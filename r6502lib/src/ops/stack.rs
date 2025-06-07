@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn pha_basics() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x56;
         s.memory.store(STACK_BASE + 0x00ff, 0x34);
@@ -61,7 +61,7 @@ mod tests {
 
     #[test]
     fn pha_wraparound() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
 
         for value in 0x00..=0xff {
@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn php_basics() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
 
         s.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
@@ -107,7 +107,7 @@ mod tests {
         #[case] sp: u8,
         #[case] p: u8,
     ) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.sp = sp;
         s.reg.p = _p!(p);
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn pla_basics() {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
 
         s.reg.a = 0x00;
@@ -164,7 +164,7 @@ mod tests {
         }
         const START: u16 = 0x1000;
 
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),

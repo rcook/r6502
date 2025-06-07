@@ -42,7 +42,7 @@ mod tests {
         #[case] p: u8,
         #[case] irq_addr: u16,
     ) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.p = _p!(p);
         s.reg.pc = pc + 1;

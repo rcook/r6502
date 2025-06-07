@@ -1,20 +1,36 @@
 use crate::constants::NMI;
 use crate::util::make_word;
-use crate::{Image, MemoryView, IRQ, MEMORY_SIZE, RESET};
+use crate::{Image, MemoryMappedDevice, MemoryView, Ram, IRQ, MEMORY_SIZE, RESET};
 use anyhow::{bail, Result};
-use std::sync::atomic::{AtomicU8, Ordering};
 
-pub struct Memory([AtomicU8; MEMORY_SIZE]);
+// Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
+pub struct Memory {
+    devices: Vec<DeviceInfo>,
+}
+
+pub struct DeviceInfo {
+    start: u16,
+    end: u16,
+    device: Box<dyn MemoryMappedDevice>,
+    offset: u16,
+}
 
 impl Default for Memory {
     fn default() -> Self {
-        Self::new()
+        let devices = vec![DeviceInfo {
+            start: 0x0000,
+            end: 0xffff,
+            device: Box::new(Ram::<MEMORY_SIZE>::default()),
+            offset: 0x0000,
+        }];
+        Self::new(devices)
     }
 }
 
 impl Memory {
-    pub fn new() -> Self {
-        Self([const { AtomicU8::new(0x00) }; MEMORY_SIZE])
+    pub fn new(mut devices: Vec<DeviceInfo>) -> Self {
+        devices.sort_by(|a, b| a.start.cmp(&b.start));
+        Self { devices }
     }
 
     // Don't call this when more than one thread is concurrently accessing memory
@@ -39,33 +55,31 @@ impl Memory {
     }
 
     pub fn store_image(&self, image: &Image) -> Result<()> {
-        let load = image.load as usize;
-        if load > self.0.len() {
-            bail!("Load address ${load:04X} out of range");
-        }
-
-        let limit = load + image.values.len();
-        if limit > self.0.len() {
+        let load = image.load;
+        let limit = load as usize + image.values.len();
+        if limit > MEMORY_SIZE {
             bail!(
                 "Image size ${size:04X} starting at load address ${load:04X} is too big",
                 size = image.values.len()
             );
         }
 
-        // Cannot do this unfortunately!
-        // self.0[load..limit].copy_from_slice(&image.values);
+        // Also incredibly inefficient
         for (i, value) in image.values.iter().enumerate() {
-            self.0[i + load].store(*value, Ordering::Relaxed)
+            self.store(i as u16 + load, *value)
         }
 
         Ok(())
     }
 
-    pub fn snapshot(&self, begin: usize, end: usize) -> Vec<u8> {
-        let mut result = Vec::with_capacity(end - begin);
-        for value in self.0[begin..end].iter() {
-            result.push(value.load(Ordering::Relaxed));
+    pub fn snapshot(&self, begin: u16, end: u16) -> Vec<u8> {
+        let mut result = Vec::with_capacity(end as usize - begin as usize + 1);
+
+        // Incredibly inefficient!
+        for addr in begin..=end {
+            result.push(self.load(addr));
         }
+
         result
     }
 
@@ -75,22 +89,34 @@ impl Memory {
 
     #[cfg(not(feature = "apple1"))]
     pub fn load(&self, addr: u16) -> u8 {
-        self.0[addr as usize].load(Ordering::Relaxed)
+        let Some(device) = self.find_device(addr) else {
+            todo!()
+        };
+        device.device.load(addr - device.offset)
     }
 
     #[cfg(feature = "apple1")]
     pub fn load(&self, addr: u16) -> u8 {
         // Ugly hack!
         if addr == 0xd010 {
-            let temp = self.0[addr as usize].swap(0x00, Ordering::Relaxed);
-            self.0[0xd011].store(0x00, Ordering::Relaxed);
+            let temp = self.bytes[addr as usize].swap(0x00, Ordering::Relaxed);
+            self.bytes[0xd011].store(0x00, Ordering::Relaxed);
             temp
         } else {
-            self.0[addr as usize].load(Ordering::Relaxed)
+            self.bytes[addr as usize].load(Ordering::Relaxed)
         }
     }
 
     pub fn store(&self, addr: u16, value: u8) {
-        self.0[addr as usize].store(value, Ordering::Relaxed)
+        let Some(device) = self.find_device(addr) else {
+            todo!()
+        };
+        device.device.store(addr - device.offset, value)
+    }
+
+    fn find_device(&self, addr: u16) -> Option<&DeviceInfo> {
+        self.devices
+            .iter()
+            .find(|&device| addr >= device.start && addr <= device.end)
     }
 }

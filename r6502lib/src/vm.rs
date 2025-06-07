@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn no_operand() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn byte0() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn byte1() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn word0() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn word1() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn brk() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -174,7 +174,7 @@ mod tests {
         const START: u16 = 0x1000;
         let p_test = P::D | P::ALWAYS_ONE;
 
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn add16() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -265,7 +265,7 @@ mod tests {
         const NUM1: u16 = 0x0e33;
         const REM: u16 = 0x0e37;
 
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -297,7 +297,7 @@ mod tests {
             Box::new(DummyMonitor)
         };
 
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.view()));
         let image = input.parse::<Image>()?;
         memory.store_image(&image)?;

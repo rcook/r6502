@@ -59,7 +59,7 @@ mod tests {
     #[rstest]
     #[case(reg!(0x12, 0x1000), reg!(0x12, 0x0000), 0x1000)]
     fn jmp_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u16) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(reg, memory.view());
         jmp(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
@@ -70,7 +70,7 @@ mod tests {
     fn jsr_basics() {
         const TARGET_ADDR: u16 = 0x1234;
 
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
         memory.store(0x1000, 0x20);
@@ -93,7 +93,7 @@ mod tests {
     // stack will have bizarre behaviour
     #[test]
     fn jsr_smashing_stack() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut vm = Vm::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
@@ -128,7 +128,7 @@ mod tests {
     fn rti_scenario() -> Result<()> {
         const INITIAL_SP: u8 = 0x6e;
         let reg = RegBuilder::default().p(_p!(0x63)).sp(INITIAL_SP).build()?;
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(reg, memory.view());
         memory.store(0x0100 + INITIAL_SP as u16, 0x98);
         memory.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P

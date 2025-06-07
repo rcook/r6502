@@ -103,7 +103,7 @@ mod tests {
         #[case] p: u8,
         #[case] a: u8,
     ) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.p = _p!(p);
         s.reg.a = a;

@@ -22,7 +22,7 @@ impl UiHost {
         io_tx: Sender<IoMessage>,
     ) -> Self {
         Self {
-            memory: Memory::new(),
+            memory: Memory::default(),
             debug_rx,
             monitor_tx,
             io_tx,
@@ -157,11 +157,8 @@ impl UiHost {
     }
 
     fn fetch_memory(&self, address_range: AddressRange) {
-        let begin_temp = address_range.begin as usize;
-        let end_temp = address_range.end as usize;
-        assert!(end_temp >= begin_temp && end_temp <= 0x10000);
-        let count = end_temp - begin_temp + 1;
-        let snapshot = self.memory.snapshot(begin_temp, begin_temp + count);
+        assert!(address_range.end >= address_range.begin);
+        let snapshot = self.memory.snapshot(address_range.begin, address_range.end);
         _ = self.monitor_tx.send(MonitorMessage::FetchMemoryResponse {
             address_range,
             snapshot,

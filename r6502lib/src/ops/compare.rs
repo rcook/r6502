@@ -34,7 +34,7 @@ mod tests {
 
     #[test]
     fn basics() -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = 0x10;
         s.reg.p = _p!(0b10101111);

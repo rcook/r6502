@@ -4,7 +4,7 @@ use r6502lib::{DummyMonitor, Image, Memory, Reg, Vm, VmState, _p};
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
 fn div16_benchmark(c: &mut Criterion) {
-    let memory = Memory::new();
+    let memory = Memory::default();
     let mut vm = Vm::new(
         Box::new(DummyMonitor),
         VmState::new(Reg::default(), memory.view()),

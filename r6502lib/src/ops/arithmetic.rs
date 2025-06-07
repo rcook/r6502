@@ -160,7 +160,7 @@ mod tests {
     // LDA #1; PHP; LDA #$12; PLP; CLC; ADC #$34
     #[case(reg!(0x46, 0x0000), reg!(0x12, 0x0000), 0x34)]
     fn adc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(reg, memory.view());
         adc(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
@@ -187,7 +187,7 @@ mod tests {
         #[case] a: u8,
         #[case] value: u8,
     ) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(RegBuilder::default().a(a).p(_p!(p)).build()?, memory.view());
         adc(&mut s, value);
         assert_eq!(expected_a, s.reg.a);
@@ -198,7 +198,7 @@ mod tests {
     #[rstest]
     #[case(reg!(0xfe, 0x0000, N, C), reg!(0xff, 0x0000, C), 0x01)]
     fn sbc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(reg, memory.view());
         sbc(&mut s, operand);
         assert_eq!(expected_reg, s.reg);
@@ -214,7 +214,7 @@ mod tests {
         #[case] p: u8,
         #[case] operand: u8,
     ) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = a;
         s.reg.p = _p!(p);
@@ -234,7 +234,7 @@ mod tests {
         #[case] p: u8,
         #[case] operand: u8,
     ) -> Result<()> {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         s.reg.a = a;
         s.reg.p = _p!(p);

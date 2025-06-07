@@ -68,7 +68,7 @@ mod tests {
         #[case] pc: u16,
         #[case] offset: u8,
     ) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(crate::Reg::default(), memory.view());
         p_set!(s.reg, Z, flag_value);
         s.reg.pc = pc;
@@ -85,7 +85,7 @@ mod tests {
         #[case] offset: u8,
         #[case] carry: bool,
     ) {
-        let memory = Memory::new();
+        let memory = Memory::default();
         let mut s = VmState::new(Reg::default(), memory.view());
         p_set!(s.reg, C, carry);
         s.reg.pc = pc.wrapping_add(2);
