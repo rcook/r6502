@@ -1,6 +1,7 @@
-# cc65test
+# cc65
 
-Programs assembled using the [cc65][cc65] family of tools:
+Programs assembled using the [cc65][cc65] family of tools. You'll also need
+a working version of GNU Make:
 
 * [GNU Make for Windows][gnuwin32]
 
