@@ -1,4 +1,5 @@
 use crate::{p_get, Instruction, InstructionInfo, Monitor, TotalCycles, VmState};
+use log::{debug, log_enabled, Level};
 
 pub struct Vm<'a> {
     pub monitor: Box<dyn Monitor>,
@@ -25,6 +26,9 @@ impl<'a> Vm<'a> {
             instruction_info.clone(),
         );
         //let before = Instant::now();
+        if log_enabled!(Level::Debug) {
+            debug!("{:?}", instruction_info);
+        }
         let instruction_cycles = instruction.execute(&mut self.s);
         //let after = Instant::now();
         //let d0 = after - before;

@@ -7,7 +7,9 @@ edition = "2021"
 anyhow = "1.0.98"
 bitflags = "2.9.1"
 derive_builder = "0.20.2"
+getch-rs = "0.2.0"
 iter_mod = "0.1.0"
+log = "0.4.27"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
 serde = { version = "1.0.219", features = ["derive"] }
@@ -20,7 +22,6 @@ criterion = "0.6.0"
 rstest = "0.25.0"
 
 [features]
-apple1 = []
 not-implemented = []
 
 [[bench]]

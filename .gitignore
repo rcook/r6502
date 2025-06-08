@@ -3,3 +3,4 @@
 __pycache__/
 error.log
 failures.log
+r6502.log

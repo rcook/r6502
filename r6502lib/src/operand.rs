@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum Operand {
     None,
     Byte(u8),

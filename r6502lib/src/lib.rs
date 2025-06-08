@@ -23,6 +23,7 @@ mod ops;
 mod os;
 mod os_emulation;
 mod p;
+mod pia;
 mod ram;
 mod reg;
 mod symbol_info;
@@ -65,6 +66,7 @@ pub(crate) use instruction::Instruction;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;
+pub(crate) use pia::Pia;
 
 #[cfg(test)]
 pub(crate) use p::p;

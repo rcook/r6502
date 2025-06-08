@@ -5,7 +5,6 @@ mod debug_message;
 mod gui;
 mod io_message;
 mod monitor_message;
-mod pia;
 mod run;
 mod state;
 mod terminal;
@@ -20,8 +19,6 @@ pub(crate) use debug_message::DebugMessage;
 pub(crate) use gui::run_gui;
 pub(crate) use io_message::IoMessage;
 pub(crate) use monitor_message::MonitorMessage;
-#[allow(unused)]
-pub(crate) use pia::{run_pia, DSP, DSPCR, KBD, KBDCR};
 pub(crate) use state::State;
 pub(crate) use terminal::run_terminal;
 pub(crate) use ui::Ui;

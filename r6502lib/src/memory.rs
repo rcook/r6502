@@ -1,6 +1,8 @@
 use crate::constants::NMI;
 use crate::util::make_word;
-use crate::{Image, MemoryMappedDevice, MemoryView, Ram, IRQ, MEMORY_SIZE, RESET};
+use crate::{
+    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, IRQ, MEMORY_SIZE, RESET,
+};
 use anyhow::{bail, Result};
 
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
@@ -28,9 +30,43 @@ impl Default for Memory {
 }
 
 impl Memory {
+    pub fn emulate(emulation: OsEmulation) -> Self {
+        match emulation {
+            OsEmulation::Apple1Style => {
+                let devices = vec![
+                    DeviceInfo {
+                        start: 0x0000,
+                        end: Pia::START_ADDR - 1,
+                        device: Box::new(Ram::<{ Pia::START_ADDR as usize }>::default()),
+                        offset: 0x0000,
+                    },
+                    DeviceInfo {
+                        start: Pia::START_ADDR,
+                        end: Pia::END_ADDR,
+                        device: Box::new(Pia::default()),
+                        offset: 0x0000,
+                    },
+                    DeviceInfo {
+                        start: Pia::END_ADDR + 1,
+                        end: 0xffff,
+                        device: Box::new(Ram::<{ 0xffff - Pia::END_ADDR as usize }>::default()),
+                        offset: Pia::END_ADDR + 1,
+                    },
+                ];
+                Self::new(devices)
+            }
+            _ => Self::default(),
+        }
+    }
     pub fn new(mut devices: Vec<DeviceInfo>) -> Self {
         devices.sort_by(|a, b| a.start.cmp(&b.start));
         Self { devices }
+    }
+
+    pub fn start(&self) {
+        for device in &self.devices {
+            device.device.start();
+        }
     }
 
     // Don't call this when more than one thread is concurrently accessing memory
@@ -87,24 +123,11 @@ impl Memory {
         MemoryView::new(self)
     }
 
-    #[cfg(not(feature = "apple1"))]
     pub fn load(&self, addr: u16) -> u8 {
         let Some(device) = self.find_device(addr) else {
             todo!()
         };
         device.device.load(addr - device.offset)
-    }
-
-    #[cfg(feature = "apple1")]
-    pub fn load(&self, addr: u16) -> u8 {
-        // Ugly hack!
-        if addr == 0xd010 {
-            let temp = self.bytes[addr as usize].swap(0x00, Ordering::Relaxed);
-            self.bytes[0xd011].store(0x00, Ordering::Relaxed);
-            temp
-        } else {
-            self.bytes[addr as usize].load(Ordering::Relaxed)
-        }
     }
 
     pub fn store(&self, addr: u16, value: u8) {

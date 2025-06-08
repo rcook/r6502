@@ -1,18 +1,16 @@
 use crate::args::RunOptions;
-#[allow(unused)]
-use crate::{run_pia, DSP};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    DummyMonitor, Image, Memory, MemoryView, Monitor, Opcode, Os, Reg, TracingMonitor, Vm, VmState,
-    MOS_6502, OSHALT, OSWRCH,
+    DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, Vm, VmState, MOS_6502,
+    OSHALT, OSWRCH,
 };
 use std::process::exit;
-use std::thread::scope;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
-    let memory = Memory::default();
+    let memory = Memory::emulate(opts.emulation.into());
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
     memory.store_image(&image)?;
+    memory.start();
 
     let start = if opts.reset {
         memory.load_reset_unsafe()
@@ -67,25 +65,6 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         }
     }
 
-    let mut code = None;
-    let p = &mut code;
-
-    scope(|scope| {
-        let m = memory.view();
-        _ = scope.spawn(move || run_pia(m));
-
-        let m = memory.view();
-        _ = scope.spawn(move || *p = Some(run_vm(m, start, opts).expect("Must succeed")));
-    });
-
-    // If program hit BRK: return contents of A as exit code
-    match code {
-        Some(code) => exit(code),
-        None => exit(0),
-    }
-}
-
-fn run_vm(memory: MemoryView, start: u16, opts: &RunOptions) -> Result<i32> {
     let rti = MOS_6502
         .get_op_info(&Opcode::Rti)
         .ok_or_else(|| anyhow!("RTI must exist"))?
@@ -99,11 +78,8 @@ fn run_vm(memory: MemoryView, start: u16, opts: &RunOptions) -> Result<i32> {
         Box::new(DummyMonitor)
     };
 
-    let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.clone()));
+    let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.view()));
     vm.s.reg.pc = start;
-
-    #[cfg(feature = "apple1")]
-    memory.store(DSP, 0x00);
 
     let mut stopped_after_requested_cycles = false;
     'outer: loop {
@@ -136,7 +112,8 @@ fn run_vm(memory: MemoryView, start: u16, opts: &RunOptions) -> Result<i32> {
         }
     }
 
-    Ok(if stopped_after_requested_cycles {
+    // If program hits BRK return contents of A as exit code, otherwise 0.
+    exit(if stopped_after_requested_cycles {
         0
     } else {
         vm.s.reg.a as i32
