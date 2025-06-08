@@ -1,9 +1,8 @@
 use crate::MemoryMappedDevice;
 use getch_rs::{Getch, Key};
 use std::io::{stdout, Write};
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::mpsc::{channel, Sender};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
 
 #[derive(Debug)]
@@ -16,41 +15,37 @@ enum Message {
 }
 
 struct PiaState {
-    started: AtomicBool,
-    kbd: AtomicU8,
-    kbdcr: AtomicU8,
-    dsp: AtomicU8,
-    dspcr: AtomicU8,
+    started: bool,
+    kbd: u8,
+    kbdcr: u8,
+    dsp: u8,
+    dspcr: u8,
 }
 
 impl PiaState {
     fn new() -> Self {
         Self {
-            started: AtomicBool::new(false),
-            kbd: AtomicU8::new(0),
-            kbdcr: AtomicU8::new(0),
-            dsp: AtomicU8::new(0),
-            dspcr: AtomicU8::new(0),
+            started: false,
+            kbd: 0,
+            kbdcr: 0,
+            dsp: 0,
+            dspcr: 0,
         }
     }
 
-    fn set_key(&self, c: char) {
+    fn set_key(&mut self, c: char) {
         let c = c.to_ascii_uppercase();
         if c as u8 == 0 {
             todo!();
         }
-        self.kbd.store((c as u8) | 0x80, Ordering::SeqCst);
-        _ = self
-            .kbdcr
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |value| {
-                Some(value | 0x80)
-            });
+        self.kbd = (c as u8) | 0x80;
+        self.kbdcr |= 0x80;
     }
 }
 
 pub(crate) struct Pia {
     tx: Sender<Message>,
-    state: Arc<PiaState>,
+    state: Arc<Mutex<PiaState>>,
     _stdin_handle: JoinHandle<()>,
     _event_handle: JoinHandle<()>,
 }
@@ -79,7 +74,7 @@ impl Default for Pia {
 impl Pia {
     fn new() -> Self {
         let (tx, rx) = channel();
-        let state = Arc::new(PiaState::new());
+        let state = Arc::new(Mutex::new(PiaState::new()));
 
         let tx_clone = tx.clone();
         let stdin_handle = spawn(move || {
@@ -99,15 +94,32 @@ impl Pia {
             loop {
                 match rx.recv().expect("Must succeed") {
                     Message::Key(key) => match key {
-                        Key::Char(c) => state_clone.set_key(c),
-                        Key::Delete => state_clone.set_key('_'),
-                        Key::Esc => state_clone.set_key(0x1b as char),
+                        Key::Char(c) => {
+                            let mut state = state_clone.lock().expect("Must succeed");
+                            state.set_key(c)
+                        }
+                        Key::Delete => {
+                            let mut state = state_clone.lock().expect("Must succeed");
+                            state.set_key('_')
+                        }
+                        Key::Esc => {
+                            let mut state = state_clone.lock().expect("Must succeed");
+                            state.set_key(0x1b as char)
+                        }
                         Key::Ctrl('c') => break,
                         _ => todo!(),
                     },
-                    Message::KbdcrUpdated => state_clone.kbdcr.store(0x00, Ordering::SeqCst),
+                    Message::KbdcrUpdated => {
+                        let mut state = state_clone.lock().expect("Must succeed");
+                        state.kbdcr = 0x00
+                    }
                     Message::DspUpdated => {
-                        let value = state_clone.dsp.swap(0x00, Ordering::SeqCst);
+                        let value = {
+                            let mut state = state_clone.lock().expect("Must succeed");
+                            let value = state.dsp;
+                            state.dsp = 0x00;
+                            value
+                        };
                         let char_value = value & 0x7f;
                         let ch = char_value as char;
                         match char_value {
@@ -139,53 +151,66 @@ impl Pia {
 
 impl MemoryMappedDevice for Pia {
     fn start(&self) {
-        self.state.started.store(true, Ordering::SeqCst)
+        let mut state = self.state.lock().expect("Must succeed");
+        state.started = true
     }
 
     fn load(&self, addr: u16) -> u8 {
         match addr {
             Self::KBD => {
-                let value = self.state.kbd.load(Ordering::SeqCst);
-                _ = self
-                    .state
-                    .kbdcr
-                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |value| {
-                        Some(value & 0x7f)
-                    })
-                    .expect("Must succeed");
+                let mut state = self.state.lock().expect("Must succeed");
+                let value = state.kbd;
+                state.kbdcr = value & 0x7f;
                 value
             }
-            Self::KBDCR => self.state.kbdcr.load(Ordering::SeqCst),
-            Self::DSP => self.state.dsp.load(Ordering::SeqCst),
-            Self::DSPCR => self.state.dspcr.load(Ordering::SeqCst),
+            Self::KBDCR => {
+                let state = self.state.lock().expect("Must succeed");
+                state.kbdcr
+            }
+            Self::DSP => {
+                let state = self.state.lock().expect("Must succeed");
+                state.dsp
+            }
+            Self::DSPCR => {
+                let state = self.state.lock().expect("Must succeed");
+                state.dspcr
+            }
             _ => panic!("Invalid PIA address ${addr:04X}"),
         }
     }
 
     fn store(&self, addr: u16, value: u8) {
-        if self.state.started.load(Ordering::SeqCst) {
-            let m = match addr {
-                Self::KBD => {
-                    self.state.kbd.store(value, Ordering::SeqCst);
-                    Message::KbdUpdated
-                }
-                Self::KBDCR => {
-                    self.state.kbdcr.store(value, Ordering::SeqCst);
-                    Message::KbdcrUpdated
-                }
-                Self::DSP => {
-                    self.state.dsp.store(value, Ordering::SeqCst);
-                    Message::DspUpdated
-                }
-                Self::DSPCR => {
-                    self.state.dspcr.store(value, Ordering::SeqCst);
-                    Message::DspcrUpdated
-                }
-                _ => panic!("Invalid PIA address ${addr:04X}"),
-            };
-            _ = self.tx.send(m)
-        } else {
-            // Ignore: device has not started yet
+        let started = {
+            let state = self.state.lock().expect("Must succeed");
+            state.started
+        };
+        if !started {
+            return;
         }
+
+        let m = match addr {
+            Self::KBD => {
+                let mut state = self.state.lock().expect("Must succeed");
+                state.kbd = value;
+                Message::KbdUpdated
+            }
+            Self::KBDCR => {
+                let mut state = self.state.lock().expect("Must succeed");
+                state.kbdcr = value;
+                Message::KbdcrUpdated
+            }
+            Self::DSP => {
+                let mut state = self.state.lock().expect("Must succeed");
+                state.dsp = value;
+                Message::DspUpdated
+            }
+            Self::DSPCR => {
+                let mut state = self.state.lock().expect("Must succeed");
+                state.dspcr = value;
+                Message::DspcrUpdated
+            }
+            _ => panic!("Invalid PIA address ${addr:04X}"),
+        };
+        _ = self.tx.send(m)
     }
 }
