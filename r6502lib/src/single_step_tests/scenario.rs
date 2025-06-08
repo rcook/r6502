@@ -1,5 +1,5 @@
 use crate::single_step_tests::{AddressValue, Cycle, ScenarioConfig, State};
-use crate::{DummyMonitor, Memory, Opcode, Reg, Vm, VmState};
+use crate::{Cpu, DummyMonitor, Memory, Opcode, Reg, VmState};
 use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
 use std::ffi::OsStr;
@@ -118,37 +118,38 @@ impl Scenario {
 
     fn run_inner(&self) -> (bool, State) {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
-        vm.s.reg.pc = self.initial.pc;
-        vm.s.reg.sp = self.initial.sp;
-        vm.s.reg.a = self.initial.a;
-        vm.s.reg.x = self.initial.x;
-        vm.s.reg.y = self.initial.y;
-        vm.s.reg.p = self.initial.p;
+        cpu.s.reg.pc = self.initial.pc;
+        cpu.s.reg.sp = self.initial.sp;
+        cpu.s.reg.a = self.initial.a;
+        cpu.s.reg.x = self.initial.x;
+        cpu.s.reg.y = self.initial.y;
+        cpu.s.reg.p = self.initial.p;
         for address_value in &self.initial.ram {
-            vm.s.memory
+            cpu.s
+                .memory
                 .store(address_value.address, address_value.value);
         }
 
-        _ = vm.step();
+        _ = cpu.step();
 
         let final_state = State {
-            pc: vm.s.reg.pc,
-            sp: vm.s.reg.sp,
-            a: vm.s.reg.a,
-            x: vm.s.reg.x,
-            y: vm.s.reg.y,
-            p: vm.s.reg.p,
+            pc: cpu.s.reg.pc,
+            sp: cpu.s.reg.sp,
+            a: cpu.s.reg.a,
+            x: cpu.s.reg.x,
+            y: cpu.s.reg.y,
+            p: cpu.s.reg.p,
             ram: self
                 .r#final
                 .ram
                 .iter()
                 .map(|address_value| AddressValue {
                     address: address_value.address,
-                    value: vm.s.memory.load(address_value.address),
+                    value: cpu.s.memory.load(address_value.address),
                 })
                 .collect(),
         };
@@ -156,7 +157,7 @@ impl Scenario {
         macro_rules! check {
             ($reg: ident) => {
                 let expected = self.r#final.$reg;
-                let actual = vm.s.reg.$reg;
+                let actual = cpu.s.reg.$reg;
                 if actual != expected {
                     println!(
                         "Scenario \"{name}\": actual value ${actual:02X} ({actual}) for register {reg} does not match expected value ${expected:02X} ({expected}) ({file}:{line})",
@@ -207,7 +208,7 @@ impl Scenario {
         check!(p);
 
         for p in &self.r#final.ram {
-            check!(p.address, p.value, vm.s.memory.load(p.address));
+            check!(p.address, p.value, cpu.s.memory.load(p.address));
         }
 
         (true, final_state)

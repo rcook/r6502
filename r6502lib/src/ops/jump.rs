@@ -52,7 +52,7 @@ pub(crate) fn rts(s: &mut VmState) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, DummyMonitor, Memory, Reg, RegBuilder, Vm, VmState, _p};
+    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, RegBuilder, VmState, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -94,28 +94,28 @@ mod tests {
     #[test]
     fn jsr_smashing_stack() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.pc = 0x017b;
-        vm.s.reg.sp = 0x7d;
-        vm.s.reg.a = 0x9e; // Probably irrelevant
-        vm.s.reg.x = 0x89; // Probably irrelevant
-        vm.s.reg.y = 0x34; // Probably irrelevant
-        vm.s.reg.p = _p!(0b11100110); // Probably irrelevant
+        cpu.s.reg.pc = 0x017b;
+        cpu.s.reg.sp = 0x7d;
+        cpu.s.reg.a = 0x9e; // Probably irrelevant
+        cpu.s.reg.x = 0x89; // Probably irrelevant
+        cpu.s.reg.y = 0x34; // Probably irrelevant
+        cpu.s.reg.p = _p!(0b11100110); // Probably irrelevant
         memory.store(0x0155, 0xad);
         memory.store(0x017b, 0x20); // JSR abs
         memory.store(0x017c, 0x55);
         memory.store(0x017d, 0x13);
-        _ = vm.step();
-        assert_eq!(0x0155, vm.s.reg.pc);
-        assert_eq!(0x7b, vm.s.reg.sp);
-        assert_eq!(0x9e, vm.s.reg.a);
-        assert_eq!(0x89, vm.s.reg.x);
-        assert_eq!(0x34, vm.s.reg.y);
-        assert_eq!(_p!(0b11100110), vm.s.reg.p);
+        _ = cpu.step();
+        assert_eq!(0x0155, cpu.s.reg.pc);
+        assert_eq!(0x7b, cpu.s.reg.sp);
+        assert_eq!(0x9e, cpu.s.reg.a);
+        assert_eq!(0x89, cpu.s.reg.x);
+        assert_eq!(0x34, cpu.s.reg.y);
+        assert_eq!(_p!(0b11100110), cpu.s.reg.p);
         assert_eq!(0xad, memory.load(0x0155));
         assert_eq!(0x20, memory.load(0x017b));
         assert_eq!(0x7d, memory.load(0x017c));

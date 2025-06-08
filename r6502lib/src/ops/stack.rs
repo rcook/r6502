@@ -41,7 +41,7 @@ pub(crate) fn plp(s: &mut VmState) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{DummyMonitor, Memory, Reg, Vm, VmState, _p, P, STACK_BASE};
+    use crate::{Cpu, DummyMonitor, Memory, Reg, VmState, _p, P, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn p_flag_basics() -> Result<()> {
-        fn do_test(expected_p: u8, vm: &mut Vm, start: u16, value: u8) {
+        fn do_test(expected_p: u8, vm: &mut Cpu, start: u16, value: u8) {
             vm.s.memory.store(start + 1, value); // the test value
             vm.s.reg.p = _p!(0b00110000);
             vm.s.reg.pc = start;
@@ -165,7 +165,7 @@ mod tests {
         const START: u16 = 0x1000;
 
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
@@ -174,11 +174,11 @@ mod tests {
         memory.store(START + 2, 0x48); // PHA
         memory.store(START + 3, 0x28); // PLP
 
-        do_test(0b11111111, &mut vm, START, 0b11111111);
-        do_test(0b00110000, &mut vm, START, 0b00000000);
-        do_test(0b00110000, &mut vm, START, 0b00110000);
-        do_test(0b00110001, &mut vm, START, 0b00110001);
-        do_test(0b10110001, &mut vm, START, 0b10110001);
+        do_test(0b11111111, &mut cpu, START, 0b11111111);
+        do_test(0b00110000, &mut cpu, START, 0b00000000);
+        do_test(0b00110000, &mut cpu, START, 0b00110000);
+        do_test(0b00110001, &mut cpu, START, 0b00110001);
+        do_test(0b10110001, &mut cpu, START, 0b10110001);
 
         Ok(())
     }

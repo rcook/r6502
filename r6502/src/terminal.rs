@@ -1,7 +1,7 @@
 use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, Vm, VmState, MOS_6502,
+    Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, VmState, MOS_6502,
     OSHALT, OSWRCH,
 };
 use std::process::exit;
@@ -78,27 +78,27 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         Box::new(DummyMonitor)
     };
 
-    let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.view()));
-    vm.s.reg.pc = start;
+    let mut cpu = Cpu::new(monitor, VmState::new(Reg::default(), memory.view()));
+    cpu.s.reg.pc = start;
 
     let mut stopped_after_requested_cycles = false;
     'outer: loop {
-        while vm.step() {
+        while cpu.step() {
             if let Some(stop_after) = opts.stop_after {
-                if vm.total_cycles >= stop_after {
+                if cpu.total_cycles >= stop_after {
                     stopped_after_requested_cycles = true;
                     break 'outer;
                 }
             }
         }
 
-        match os.is_os_vector(&vm) {
+        match os.is_os_vector(&cpu) {
             Some(OSHALT) => {
                 break;
             }
             Some(OSWRCH) => {
-                print!("{}", vm.s.reg.a as char);
-                rti.execute_no_operand(&mut vm.s);
+                print!("{}", cpu.s.reg.a as char);
+                rti.execute_no_operand(&mut cpu.s);
             }
             _ => break,
         }
@@ -106,9 +106,9 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
 
     if opts.cycles {
         if stopped_after_requested_cycles {
-            println!("Stopped after {} cycles", vm.total_cycles)
+            println!("Stopped after {} cycles", cpu.total_cycles)
         } else {
-            println!("Completed after {} total cycles", vm.total_cycles);
+            println!("Completed after {} total cycles", cpu.total_cycles);
         }
     }
 
@@ -116,6 +116,6 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     exit(if stopped_after_requested_cycles {
         0
     } else {
-        vm.s.reg.a as i32
+        cpu.s.reg.a as i32
     })
 }

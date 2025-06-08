@@ -1,6 +1,5 @@
-use crate::{
-    constants::NMI, util::split_word, Opcode, OsEmulation, Vm, IRQ, OSHALT, OSWRCH, RESET,
-};
+use crate::util::split_word;
+use crate::{constants::NMI, Cpu, Opcode, OsEmulation, IRQ, OSHALT, OSWRCH, RESET};
 use anyhow::Result;
 use derive_builder::Builder;
 
@@ -37,7 +36,7 @@ impl Os {
         })
     }
 
-    pub fn load_into_vm(&self, vm: &mut Vm) {
+    pub fn load_into_vm(&self, vm: &mut Cpu) {
         if let Some(nmi_addr) = self.nmi_addr {
             let (hi, lo) = split_word(nmi_addr);
             vm.s.memory.store(NMI, lo);
@@ -67,7 +66,7 @@ impl Os {
         }
     }
 
-    pub fn is_os_vector(&self, vm: &Vm) -> Option<u16> {
+    pub fn is_os_vector(&self, vm: &Cpu) -> Option<u16> {
         match self.irq_addr {
             Some(irq) if vm.s.reg.pc == irq => {
                 let addr = vm.s.peek_back_word(1).wrapping_sub(2);

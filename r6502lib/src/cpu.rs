@@ -1,13 +1,13 @@
 use crate::{p_get, Instruction, InstructionInfo, Monitor, TotalCycles, VmState};
 use log::{debug, log_enabled, Level};
 
-pub struct Vm<'a> {
+pub struct Cpu<'a> {
     pub monitor: Box<dyn Monitor>,
     pub s: VmState<'a>,
     pub total_cycles: TotalCycles,
 }
 
-impl<'a> Vm<'a> {
+impl<'a> Cpu<'a> {
     pub fn new(monitor: Box<dyn Monitor>, s: VmState<'a>) -> Self {
         Self {
             monitor,
@@ -48,8 +48,8 @@ impl<'a> Vm<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder, Reg,
-        TracingMonitor, Vm, VmState, IRQ, MOS_6502, OSWRCH, P,
+        p, p_get, p_set, Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder, Reg,
+        TracingMonitor, VmState, IRQ, MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -57,118 +57,118 @@ mod tests {
     #[test]
     fn no_operand() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.a = 0x12;
+        cpu.s.reg.a = 0x12;
         memory.store(0x0000, Opcode::Nop as u8);
-        assert!(vm.step());
-        assert_eq!(2, vm.total_cycles);
-        assert_eq!(0x12, vm.s.reg.a);
-        assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0001, vm.s.reg.pc);
+        assert!(cpu.step());
+        assert_eq!(2, cpu.total_cycles);
+        assert_eq!(0x12, cpu.s.reg.a);
+        assert_eq!(p!(), cpu.s.reg.p);
+        assert_eq!(0x0001, cpu.s.reg.pc);
         Ok(())
     }
 
     #[test]
     fn byte0() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.a = 0x12;
+        cpu.s.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcImm as u8);
         memory.store(0x0001, 0x34);
-        assert!(vm.step());
-        assert_eq!(2, vm.total_cycles);
-        assert_eq!(0x46, vm.s.reg.a);
-        assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0002, vm.s.reg.pc);
+        assert!(cpu.step());
+        assert_eq!(2, cpu.total_cycles);
+        assert_eq!(0x46, cpu.s.reg.a);
+        assert_eq!(p!(), cpu.s.reg.p);
+        assert_eq!(0x0002, cpu.s.reg.pc);
         Ok(())
     }
 
     #[test]
     fn byte1() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.a = 0x12;
+        cpu.s.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcZp as u8);
         memory.store(0x0001, 0x34);
         memory.store(0x0034, 0x56);
-        assert!(vm.step());
-        assert_eq!(3, vm.total_cycles);
-        assert_eq!(0x68, vm.s.reg.a);
-        assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0002, vm.s.reg.pc);
+        assert!(cpu.step());
+        assert_eq!(3, cpu.total_cycles);
+        assert_eq!(0x68, cpu.s.reg.a);
+        assert_eq!(p!(), cpu.s.reg.p);
+        assert_eq!(0x0002, cpu.s.reg.pc);
         Ok(())
     }
 
     #[test]
     fn word0() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.a = 0x12;
+        cpu.s.reg.a = 0x12;
         memory.store(0x0000, Opcode::JmpAbs as u8);
         memory.store(0x0001, 0x00);
         memory.store(0x0002, 0x10);
-        assert!(vm.step());
-        assert_eq!(3, vm.total_cycles);
-        assert_eq!(0x12, vm.s.reg.a);
-        assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x1000, vm.s.reg.pc);
+        assert!(cpu.step());
+        assert_eq!(3, cpu.total_cycles);
+        assert_eq!(0x12, cpu.s.reg.a);
+        assert_eq!(p!(), cpu.s.reg.p);
+        assert_eq!(0x1000, cpu.s.reg.pc);
         Ok(())
     }
 
     #[test]
     fn word1() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.a = 0x25;
+        cpu.s.reg.a = 0x25;
         memory.store(0x0000, Opcode::AdcAbs as u8);
         memory.store(0x0001, 0x12);
         memory.store(0x0002, 0x34);
         memory.store(0x3412, 0x13);
-        assert!(vm.step());
-        assert_eq!(4, vm.total_cycles);
-        assert_eq!(0x38, vm.s.reg.a);
-        assert_eq!(p!(), vm.s.reg.p);
-        assert_eq!(0x0003, vm.s.reg.pc);
+        assert!(cpu.step());
+        assert_eq!(4, cpu.total_cycles);
+        assert_eq!(0x38, cpu.s.reg.a);
+        assert_eq!(p!(), cpu.s.reg.p);
+        assert_eq!(0x0003, cpu.s.reg.pc);
         Ok(())
     }
 
     #[test]
     fn brk() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
 
-        vm.s.reg.pc = 0x1000;
+        cpu.s.reg.pc = 0x1000;
         memory.store(0x1000, Opcode::Brk as u8);
         memory.store(IRQ, 0x76);
         memory.store(IRQ + 1, 0x98);
-        p_set!(vm.s.reg, B, false);
-        assert!(!vm.step());
-        assert_eq!(7, vm.total_cycles);
-        assert!(!p_get!(vm.s.reg, B));
-        assert_eq!(0x9876, vm.s.reg.pc);
+        p_set!(cpu.s.reg, B, false);
+        assert!(!cpu.step());
+        assert_eq!(7, cpu.total_cycles);
+        assert!(!p_get!(cpu.s.reg, B));
+        assert_eq!(0x9876, cpu.s.reg.pc);
         Ok(())
     }
 
@@ -179,7 +179,7 @@ mod tests {
         let p_test = P::D | P::ALWAYS_ONE;
 
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
@@ -188,26 +188,26 @@ mod tests {
             .irq_addr(IRQ_ADDR)
             .os_vectors(vec![OSWRCH])
             .build()?;
-        os.load_into_vm(&mut vm);
+        os.load_into_vm(&mut cpu);
 
         memory.store(START, Opcode::Jsr as u8);
         memory.store(START + 1, OSWRCH as u8);
         memory.store(START + 2, (OSWRCH >> 8) as u8);
 
-        vm.s.reg.pc = START;
-        vm.s.reg.p = p_test;
-        p_set!(vm.s.reg, B, false);
+        cpu.s.reg.pc = START;
+        cpu.s.reg.p = p_test;
+        p_set!(cpu.s.reg, B, false);
 
-        assert!(vm.step());
-        assert_eq!(6, vm.total_cycles);
-        assert!(!p_get!(vm.s.reg, B));
-        assert_eq!(OSWRCH, vm.s.reg.pc);
+        assert!(cpu.step());
+        assert_eq!(6, cpu.total_cycles);
+        assert!(!p_get!(cpu.s.reg, B));
+        assert_eq!(OSWRCH, cpu.s.reg.pc);
 
-        assert!(!vm.step());
-        assert_eq!(13, vm.total_cycles);
-        assert!(!p_get!(vm.s.reg, B));
-        assert_eq!(IRQ_ADDR, vm.s.reg.pc);
-        assert_eq!(Some(OSWRCH), os.is_os_vector(&vm));
+        assert!(!cpu.step());
+        assert_eq!(13, cpu.total_cycles);
+        assert!(!p_get!(cpu.s.reg, B));
+        assert_eq!(IRQ_ADDR, cpu.s.reg.pc);
+        assert_eq!(Some(OSWRCH), os.is_os_vector(&cpu));
 
         Ok(())
     }
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn add8() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
@@ -237,9 +237,9 @@ mod tests {
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         memory.store_image(&image)?;
-        vm.s.reg.pc = 0x0e01;
-        while vm.step() {}
-        assert_eq!(21, vm.total_cycles);
+        cpu.s.reg.pc = 0x0e01;
+        while cpu.step() {}
+        assert_eq!(21, cpu.total_cycles);
         assert_eq!(0x46, memory.load(0x0e00));
         Ok(())
     }
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn add16() -> Result<()> {
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
@@ -255,9 +255,9 @@ mod tests {
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         memory.store_image(&image)?;
-        vm.s.reg.pc = 0x0e02;
-        while vm.step() {}
-        assert_eq!(33, vm.total_cycles);
+        cpu.s.reg.pc = 0x0e02;
+        while cpu.step() {}
+        assert_eq!(33, cpu.total_cycles);
         let lo = memory.load(0x0e00);
         let hi = memory.load(0x0e01);
         assert_eq!(0xac68, make_word(hi, lo));
@@ -270,7 +270,7 @@ mod tests {
         const REM: u16 = 0x0e37;
 
         let memory = Memory::default();
-        let mut vm = Vm::new(
+        let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
             VmState::new(Reg::default(), memory.view()),
         );
@@ -278,9 +278,9 @@ mod tests {
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         memory.store_image(&image)?;
-        vm.s.reg.pc = 0x0e02;
-        while vm.step() {}
-        assert_eq!(893, vm.total_cycles);
+        cpu.s.reg.pc = 0x0e02;
+        while cpu.step() {}
+        assert_eq!(893, cpu.total_cycles);
         let lo = memory.load(NUM1);
         let hi = memory.load(NUM1 + 1);
         let quotient = make_word(hi, lo);
@@ -302,42 +302,42 @@ mod tests {
         };
 
         let memory = Memory::default();
-        let mut vm = Vm::new(monitor, VmState::new(Reg::default(), memory.view()));
+        let mut cpu = Cpu::new(monitor, VmState::new(Reg::default(), memory.view()));
         let image = input.parse::<Image>()?;
         memory.store_image(&image)?;
-        vm.s.reg.pc = image.start;
+        cpu.s.reg.pc = image.start;
 
         let os = OsBuilder::default()
             .irq_addr(0x8000)
             .os_vectors(vec![RETURN_ADDR, OSWRCH])
             .build()?;
-        os.load_into_vm(&mut vm);
+        os.load_into_vm(&mut cpu);
 
         let rts = MOS_6502
             .get_op_info(&Opcode::Rts)
             .expect("RTS must exist")
             .clone();
 
-        vm.s.push_word(RETURN_ADDR - 1);
-        p_set!(vm.s.reg, B, false);
+        cpu.s.push_word(RETURN_ADDR - 1);
+        p_set!(cpu.s.reg, B, false);
 
         let mut result = String::new();
         loop {
-            while vm.step() {}
+            while cpu.step() {}
 
-            match os.is_os_vector(&vm) {
+            match os.is_os_vector(&cpu) {
                 Some(RETURN_ADDR) => break,
                 Some(OSWRCH) => {
-                    result.push(vm.s.reg.a as char);
+                    result.push(cpu.s.reg.a as char);
                     if trace {
                         println!("stdout={result}");
                     }
 
                     // Is this equivalent to RTI?
-                    _ = vm.s.pull();
-                    _ = vm.s.pull_word();
-                    p_set!(vm.s.reg, I, false);
-                    rts.execute_no_operand(&mut vm.s);
+                    _ = cpu.s.pull();
+                    _ = cpu.s.pull_word();
+                    p_set!(cpu.s.reg, I, false);
+                    rts.execute_no_operand(&mut cpu.s);
                 }
                 _ => panic!("expectation failed"),
             }
