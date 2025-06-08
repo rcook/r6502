@@ -19,13 +19,12 @@ pub struct DeviceInfo {
 
 impl Default for Memory {
     fn default() -> Self {
-        let devices = vec![DeviceInfo {
+        Self::new(vec![DeviceInfo {
             start: 0x0000,
             end: 0xffff,
             device: Box::new(Ram::<MEMORY_SIZE>::default()),
             offset: 0x0000,
-        }];
-        Self::new(devices)
+        }])
     }
 }
 
@@ -58,6 +57,7 @@ impl Memory {
             _ => Self::default(),
         }
     }
+
     pub fn new(mut devices: Vec<DeviceInfo>) -> Self {
         devices.sort_by(|a, b| a.start.cmp(&b.start));
         Self { devices }
