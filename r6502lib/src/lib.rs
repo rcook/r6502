@@ -60,7 +60,7 @@ pub use word_op::WordOp;
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
 pub(crate) use constants::{
-    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
+    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
 };
 pub(crate) use instruction::Instruction;
 pub(crate) use op::Op;

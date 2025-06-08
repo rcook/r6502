@@ -1,7 +1,6 @@
-use crate::constants::NMI;
 use crate::util::make_word;
 use crate::{
-    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, IRQ, MEMORY_SIZE, RESET,
+    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, IRQ, MEMORY_SIZE, NMI, RESET,
 };
 use anyhow::{bail, Result};
 
