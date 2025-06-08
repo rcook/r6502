@@ -41,7 +41,7 @@ pub use image::Image;
 pub use image_format::ImageFormat;
 pub use instruction_info::InstructionInfo;
 pub use instruction_set::{InstructionSet, MOS_6502};
-pub use memory::Memory;
+pub use memory::{DeviceInfo, Memory};
 pub use memory_mapped_device::MemoryMappedDevice;
 pub use memory_view::MemoryView;
 pub use monitor::{DummyMonitor, Monitor, TracingMonitor};

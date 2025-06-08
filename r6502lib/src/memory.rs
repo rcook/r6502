@@ -4,6 +4,8 @@ use crate::{
 };
 use anyhow::{bail, Result};
 
+const UNMAPPED_VALUE: u8 = 0xff;
+
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
 pub struct Memory {
     devices: Vec<DeviceInfo>,
@@ -123,22 +125,67 @@ impl Memory {
     }
 
     pub fn load(&self, addr: u16) -> u8 {
-        let Some(device) = self.find_device(addr) else {
-            todo!()
-        };
-        device.device.load(addr - device.offset)
+        match self.find_device(addr) {
+            Some(device) => device.device.load(addr - device.offset),
+            None => UNMAPPED_VALUE,
+        }
     }
 
     pub fn store(&self, addr: u16, value: u8) {
-        let Some(device) = self.find_device(addr) else {
-            todo!()
-        };
-        device.device.store(addr - device.offset, value)
+        if let Some(device) = self.find_device(addr) {
+            device.device.store(addr - device.offset, value)
+        }
     }
 
     fn find_device(&self, addr: u16) -> Option<&DeviceInfo> {
         self.devices
             .iter()
             .find(|&device| addr >= device.start && addr <= device.end)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::memory::UNMAPPED_VALUE;
+    use crate::{DeviceInfo, Image, Memory, Ram};
+    use anyhow::Result;
+
+    #[test]
+    fn load_no_device() {
+        let memory = Memory::new(Vec::new());
+        assert_eq!(UNMAPPED_VALUE, memory.load(0x0000));
+    }
+
+    #[test]
+    fn store_no_device() {
+        let memory = Memory::new(Vec::new());
+        memory.store(0x0000, 0x00)
+    }
+
+    #[test]
+    fn store_image() -> Result<()> {
+        let devices = vec![DeviceInfo {
+            start: 5,
+            end: 7,
+            device: Box::new(Ram::<3>::default()),
+            offset: 5,
+        }];
+        let memory = Memory::new(devices);
+        let bytes = (0..=255).cycle().skip(10).take(100).collect::<Vec<_>>();
+        let image = Image::from_bytes(&bytes, None, None, None)?;
+        assert_eq!(0x0000, image.load);
+
+        memory.store_image(&image)?;
+
+        for addr in 0..5 {
+            assert_eq!(UNMAPPED_VALUE, memory.load(addr));
+        }
+        assert_eq!(15, memory.load(5));
+        assert_eq!(16, memory.load(6));
+        assert_eq!(17, memory.load(7));
+        for addr in 8..200 {
+            assert_eq!(UNMAPPED_VALUE, memory.load(addr));
+        }
+        Ok(())
     }
 }

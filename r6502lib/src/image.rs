@@ -4,7 +4,7 @@ use crate::{
 };
 use anyhow::{bail, Error, Result};
 use std::fs::File;
-use std::io::{ErrorKind, Read, Seek};
+use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
 use std::str::FromStr;
 
@@ -39,8 +39,6 @@ impl Image {
         default_start: Option<u16>,
         default_sp: Option<u8>,
     ) -> Result<Self> {
-        use std::io::Cursor;
-
         Self::read(Cursor::new(bytes), default_load, default_start, default_sp)
     }
 
@@ -129,16 +127,19 @@ impl Image {
 
         // "sim65" header
         if *bytes != header[0..bytes.len()] {
+            reader.rewind()?;
             return Ok(None);
         }
 
         // Version number
         if header[5] != 2 {
+            reader.rewind()?;
             return Ok(None);
         }
 
         // CPU version
         if header[6] != 0 {
+            reader.rewind()?;
             return Ok(None);
         }
 
