@@ -1,12 +1,12 @@
 use crate::util::{make_word, split_word};
 use crate::{MemoryView, Reg, STACK_BASE};
 
-pub struct VmState<'a> {
+pub struct CpuState<'a> {
     pub reg: Reg,
     pub memory: MemoryView<'a>,
 }
 
-impl<'a> VmState<'a> {
+impl<'a> CpuState<'a> {
     pub fn new(reg: Reg, memory: MemoryView<'a>) -> Self {
         Self { reg, memory }
     }

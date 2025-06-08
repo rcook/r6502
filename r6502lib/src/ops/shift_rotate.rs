@@ -1,96 +1,96 @@
 use crate::ops::helper::{set_flags_on_value, sign};
-use crate::{p_get, p_set, VmState};
+use crate::{p_get, p_set, CpuState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl_acc(s: &mut VmState) {
-    s.reg.a = asl_helper(s, s.reg.a);
+pub(crate) fn asl_acc(state: &mut CpuState) {
+    state.reg.a = asl_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl(s: &mut VmState, addr: u16) {
-    let value = s.memory.load(addr);
-    let value = asl_helper(s, value);
-    s.memory.store(addr, value)
+pub(crate) fn asl(state: &mut CpuState, addr: u16) {
+    let value = state.memory.load(addr);
+    let value = asl_helper(state, value);
+    state.memory.store(addr, value)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr_acc(s: &mut VmState) {
-    s.reg.a = lsr_helper(s, s.reg.a);
+pub(crate) fn lsr_acc(state: &mut CpuState) {
+    state.reg.a = lsr_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr(s: &mut VmState, addr: u16) {
-    let value = s.memory.load(addr);
-    let value = lsr_helper(s, value);
-    s.memory.store(addr, value)
+pub(crate) fn lsr(state: &mut CpuState, addr: u16) {
+    let value = state.memory.load(addr);
+    let value = lsr_helper(state, value);
+    state.memory.store(addr, value)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol_acc(s: &mut VmState) {
-    s.reg.a = rol_helper(s, s.reg.a);
+pub(crate) fn rol_acc(state: &mut CpuState) {
+    state.reg.a = rol_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol(s: &mut VmState, addr: u16) {
-    let value = s.memory.load(addr);
-    let value = rol_helper(s, value);
-    s.memory.store(addr, value)
+pub(crate) fn rol(state: &mut CpuState, addr: u16) {
+    let value = state.memory.load(addr);
+    let value = rol_helper(state, value);
+    state.memory.store(addr, value)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror_acc(s: &mut VmState) {
-    s.reg.a = ror_helper(s, s.reg.a);
+pub(crate) fn ror_acc(state: &mut CpuState) {
+    state.reg.a = ror_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror(s: &mut VmState, addr: u16) {
-    let value = s.memory.load(addr);
-    let value = ror_helper(s, value);
-    s.memory.store(addr, value)
+pub(crate) fn ror(state: &mut CpuState, addr: u16) {
+    let value = state.memory.load(addr);
+    let value = ror_helper(state, value);
+    state.memory.store(addr, value)
 }
 
-fn asl_helper(s: &mut VmState, operand: u8) -> u8 {
-    p_set!(s.reg, C, sign(operand));
+fn asl_helper(state: &mut CpuState, operand: u8) -> u8 {
+    p_set!(state.reg, C, sign(operand));
     let new_value = operand << 1;
-    set_flags_on_value(s, new_value);
+    set_flags_on_value(state, new_value);
     new_value
 }
 
-fn lsr_helper(s: &mut VmState, operand: u8) -> u8 {
-    p_set!(s.reg, C, (operand & 0x01) != 0);
+fn lsr_helper(state: &mut CpuState, operand: u8) -> u8 {
+    p_set!(state.reg, C, (operand & 0x01) != 0);
     let new_value = operand >> 1;
-    set_flags_on_value(s, new_value);
+    set_flags_on_value(state, new_value);
     new_value
 }
 
-fn rol_helper(s: &mut VmState, operand: u8) -> u8 {
-    let old_carry = p_get!(s.reg, C);
-    p_set!(s.reg, C, sign(operand));
+fn rol_helper(state: &mut CpuState, operand: u8) -> u8 {
+    let old_carry = p_get!(state.reg, C);
+    p_set!(state.reg, C, sign(operand));
     let new_value = (operand << 1) | (if old_carry { 0x01 } else { 0x00 });
-    set_flags_on_value(s, new_value);
+    set_flags_on_value(state, new_value);
     new_value
 }
 
-fn ror_helper(s: &mut VmState, operand: u8) -> u8 {
-    let old_carry = p_get!(s.reg, C);
-    p_set!(s.reg, C, (operand & 0x01) != 0);
+fn ror_helper(state: &mut CpuState, operand: u8) -> u8 {
+    let old_carry = p_get!(state.reg, C);
+    p_set!(state.reg, C, (operand & 0x01) != 0);
     let new_value = (operand >> 1) | (if old_carry { 0x80 } else { 0x00 });
-    set_flags_on_value(s, new_value);
+    set_flags_on_value(state, new_value);
     new_value
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ops::rol_acc;
-    use crate::{Memory, Reg, VmState, _p};
+    use crate::{CpuState, Memory, Reg, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -104,12 +104,12 @@ mod tests {
         #[case] a: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(Reg::default(), memory.view());
-        s.reg.p = _p!(p);
-        s.reg.a = a;
-        rol_acc(&mut s);
-        assert_eq!(_p!(expected_p), s.reg.p);
-        assert_eq!(expected_a, s.reg.a);
+        let mut state = CpuState::new(Reg::default(), memory.view());
+        state.reg.p = _p!(p);
+        state.reg.a = a;
+        rol_acc(&mut state);
+        assert_eq!(_p!(expected_p), state.reg.p);
+        assert_eq!(expected_a, state.reg.a);
         Ok(())
     }
 }

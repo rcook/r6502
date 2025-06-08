@@ -1,6 +1,6 @@
-use crate::{OpCycles, VmState};
+use crate::{CpuState, OpCycles};
 
-pub(crate) type NoOperandFn = fn(&mut VmState) -> OpCycles;
+pub(crate) type NoOperandFn = fn(&mut CpuState) -> OpCycles;
 
 #[derive(Clone)]
 pub struct NoOperandOp(NoOperandFn);
@@ -10,7 +10,7 @@ impl NoOperandOp {
         Self(f)
     }
 
-    pub(crate) fn execute(&self, s: &mut VmState) -> OpCycles {
-        self.0(s)
+    pub(crate) fn execute(&self, state: &mut CpuState) -> OpCycles {
+        self.0(state)
     }
 }

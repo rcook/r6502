@@ -1,59 +1,59 @@
 use crate::ops::BranchResult;
-use crate::{VmState, P};
+use crate::{CpuState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCC
 // http://www.6502.org/users/obelisk/6502/reference.html#BCC
-pub(crate) fn bcc(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::C, false)
+pub(crate) fn bcc(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::C, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCS
 // http://www.6502.org/users/obelisk/6502/reference.html#BCS
-pub(crate) fn bcs(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::C, true)
+pub(crate) fn bcs(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::C, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BEQ
 // http://www.6502.org/users/obelisk/6502/reference.html#BEQ
-pub(crate) fn beq(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::Z, true)
+pub(crate) fn beq(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::Z, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BMI
 // http://www.6502.org/users/obelisk/6502/reference.html#BMI
-pub(crate) fn bmi(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::N, true)
+pub(crate) fn bmi(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::N, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BNE
 // http://www.6502.org/users/obelisk/6502/reference.html#BNE
-pub(crate) fn bne(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::Z, false)
+pub(crate) fn bne(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::Z, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BPL
 // http://www.6502.org/users/obelisk/6502/reference.html#BPL
-pub(crate) fn bpl(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::N, false)
+pub(crate) fn bpl(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::N, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVC
 // http://www.6502.org/users/obelisk/6502/reference.html#BVC
-pub(crate) fn bvc(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::V, false)
+pub(crate) fn bvc(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::V, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVS
 // http://www.6502.org/users/obelisk/6502/reference.html#BVS
-pub(crate) fn bvs(s: &mut VmState, offset: u8) -> BranchResult {
-    BranchResult::compute(s, offset, P::V, true)
+pub(crate) fn bvs(state: &mut CpuState, offset: u8) -> BranchResult {
+    BranchResult::compute(state, offset, P::V, true)
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ops::branch::{bcs, beq};
     use crate::ops::BranchResult;
-    use crate::{p_set, Memory, Reg, VmState};
+    use crate::{p_set, CpuState, Memory, Reg};
     use rstest::rstest;
 
     #[rstest]
@@ -69,12 +69,12 @@ mod tests {
         #[case] offset: u8,
     ) {
         let memory = Memory::default();
-        let mut s = VmState::new(crate::Reg::default(), memory.view());
-        p_set!(s.reg, Z, flag_value);
-        s.reg.pc = pc;
-        let branch_result = beq(&mut s, offset);
+        let mut state = CpuState::new(crate::Reg::default(), memory.view());
+        p_set!(state.reg, Z, flag_value);
+        state.reg.pc = pc;
+        let branch_result = beq(&mut state, offset);
         assert_eq!(expected_branch_result, branch_result);
-        assert_eq!(expected_pc, s.reg.pc);
+        assert_eq!(expected_pc, state.reg.pc);
     }
 
     #[rstest]
@@ -86,10 +86,10 @@ mod tests {
         #[case] carry: bool,
     ) {
         let memory = Memory::default();
-        let mut s = VmState::new(Reg::default(), memory.view());
-        p_set!(s.reg, C, carry);
-        s.reg.pc = pc.wrapping_add(2);
-        bcs(&mut s, offset);
-        assert_eq!(expected_pc, s.reg.pc);
+        let mut state = CpuState::new(Reg::default(), memory.view());
+        p_set!(state.reg, C, carry);
+        state.reg.pc = pc.wrapping_add(2);
+        bcs(&mut state, offset);
+        assert_eq!(expected_pc, state.reg.pc);
     }
 }

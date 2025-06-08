@@ -1,4 +1,4 @@
-use crate::VmState;
+use crate::CpuState;
 
 pub(crate) fn crosses_page_boundary(addr: u16) -> bool {
     (addr & 0x00ff) == 0x00ff
@@ -15,20 +15,20 @@ pub(crate) fn split_word(value: u16) -> (u8, u8) {
 }
 
 // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502
-pub(crate) fn compute_effective_addr_indirect_indexed_y(s: &mut VmState, addr: u8) -> u16 {
-    let (lo, carry) = s.memory.load(addr as u16).overflowing_add(s.reg.y);
+pub(crate) fn compute_effective_addr_indirect_indexed_y(state: &mut CpuState, addr: u8) -> u16 {
+    let (lo, carry) = state.memory.load(addr as u16).overflowing_add(state.reg.y);
     let next_addr = addr.wrapping_add(1);
-    let hi = s
+    let hi = state
         .memory
         .load(next_addr as u16)
         .wrapping_add(if carry { 1 } else { 0 });
     make_word(hi, lo)
 }
 
-pub(crate) fn compute_effective_addr_indexed_indirect_x(s: &mut VmState, addr: u8) -> u16 {
-    let addr_with_index = addr.wrapping_add(s.reg.x);
-    let lo = s.memory.load(addr_with_index as u16);
-    let hi = s.memory.load(addr_with_index.wrapping_add(1) as u16);
+pub(crate) fn compute_effective_addr_indexed_indirect_x(state: &mut CpuState, addr: u8) -> u16 {
+    let addr_with_index = addr.wrapping_add(state.reg.x);
+    let lo = state.memory.load(addr_with_index as u16);
+    let hi = state.memory.load(addr_with_index.wrapping_add(1) as u16);
     make_word(hi, lo)
 }
 

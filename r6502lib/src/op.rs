@@ -1,4 +1,4 @@
-use crate::{ByteOp, NoOperandOp, OpCycles, VmState, WordOp};
+use crate::{ByteOp, CpuState, NoOperandOp, OpCycles, WordOp};
 
 #[derive(Clone)]
 pub(crate) enum Op {
@@ -8,9 +8,9 @@ pub(crate) enum Op {
 }
 
 impl Op {
-    pub(crate) fn execute_no_operand(&self, s: &mut VmState) -> OpCycles {
+    pub(crate) fn execute_no_operand(&self, state: &mut CpuState) -> OpCycles {
         match self {
-            Self::NoOperand(op) => op.execute(s),
+            Self::NoOperand(op) => op.execute(state),
             _ => unimplemented!("Cannot execute with no operand"),
         }
     }

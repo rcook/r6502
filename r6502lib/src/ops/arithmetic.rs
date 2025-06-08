@@ -1,18 +1,18 @@
 use crate::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
-use crate::{p_get, p_set, p_value, VmState};
+use crate::{p_get, p_set, p_value, CpuState};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-pub(crate) fn adc(s: &mut VmState, operand: u8) {
-    if p_get!(s.reg, D) {
-        let a = s.reg.a as i32;
+pub(crate) fn adc(state: &mut CpuState, operand: u8) {
+    if p_get!(state.reg, D) {
+        let a = state.reg.a as i32;
         let value = operand as i32;
-        let carry = p_value!(s.reg, C);
+        let carry = p_value!(state.reg, C);
 
         let mut ah = 0;
         let tempb = (a + value + carry) & 0xff;
-        p_set!(s.reg, Z, tempb == 0);
+        p_set!(state.reg, Z, tempb == 0);
         let mut al = (a & 0xf) + (value & 0xf) + carry;
         if al > 9 {
             al -= 10;
@@ -20,31 +20,31 @@ pub(crate) fn adc(s: &mut VmState, operand: u8) {
             ah = 1;
         }
         ah += (a >> 4) + (value >> 4);
-        p_set!(s.reg, N, (ah & 8) != 0);
+        p_set!(state.reg, N, (ah & 8) != 0);
         p_set!(
-            s.reg,
+            state.reg,
             V,
             ((a ^ value) & 0x80) == 0 && (((a ^ (ah << 4)) & 0x80) != 0)
         );
-        p_set!(s.reg, C, false);
+        p_set!(state.reg, C, false);
         if ah > 9 {
-            p_set!(s.reg, C, true);
+            p_set!(state.reg, C, true);
             ah -= 10;
             ah &= 0xf;
         }
-        s.reg.a = ((al as u8) & 0xf) | ((ah as u8) << 4);
+        state.reg.a = ((al as u8) & 0xf) | ((ah as u8) << 4);
     } else {
-        let lhs = s.reg.a;
+        let lhs = state.reg.a;
         let rhs = operand;
 
-        let result_word = lhs as u16 + rhs as u16 + p_value!(s.reg, C);
+        let result_word = lhs as u16 + rhs as u16 + p_value!(state.reg, C);
         let result = result_word as u8;
 
-        s.reg.a = result;
-        p_set!(s.reg, N, is_neg(result));
-        p_set!(s.reg, V, is_overflow(lhs, rhs, result));
-        p_set!(s.reg, Z, is_zero(result));
-        p_set!(s.reg, C, is_carry(result_word));
+        state.reg.a = result;
+        p_set!(state.reg, N, is_neg(result));
+        p_set!(state.reg, V, is_overflow(lhs, rhs, result));
+        p_set!(state.reg, Z, is_zero(result));
+        p_set!(state.reg, C, is_carry(result_word));
     }
 }
 
@@ -113,11 +113,11 @@ Final:
 // http://www.visual6502.org/JSSim/expert.html?graphics=false&a=0&d=a900f8e988eaeaea&steps=18
 // http://vice-emu.sourceforge.net/plain/64doc.txt
 // https://github.com/mattgodbolt/jsbeeb/blob/main/src/6502.js
-pub(crate) fn sbc(s: &mut VmState, operand: u8) {
-    if p_get!(s.reg, D) {
-        let carry = if p_get!(s.reg, C) { 0 } else { 1 };
+pub(crate) fn sbc(state: &mut CpuState, operand: u8) {
+    if p_get!(state.reg, D) {
+        let carry = if p_get!(state.reg, C) { 0 } else { 1 };
 
-        let a = s.reg.a as i32;
+        let a = state.reg.a as i32;
         let value = operand as i32;
 
         let mut al = (a & 0xf) - (value & 0xf) - carry;
@@ -131,20 +131,20 @@ pub(crate) fn sbc(s: &mut VmState, operand: u8) {
         }
 
         let result = a - value - carry;
-        p_set!(s.reg, N, (result & 0x80) != 0);
-        p_set!(s.reg, Z, (result & 0xff) == 0);
-        p_set!(s.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
-        p_set!(s.reg, C, (result & 0x100) == 0);
-        s.reg.a = (al as u8) | ((ah as u8) << 4);
+        p_set!(state.reg, N, (result & 0x80) != 0);
+        p_set!(state.reg, Z, (result & 0xff) == 0);
+        p_set!(state.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
+        p_set!(state.reg, C, (result & 0x100) == 0);
+        state.reg.a = (al as u8) | ((ah as u8) << 4);
     } else {
-        adc(s, !operand);
+        adc(state, !operand);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{reg, Memory, Reg, RegBuilder, VmState, _p};
+    use crate::{reg, CpuState, Memory, Reg, RegBuilder, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -161,9 +161,9 @@ mod tests {
     #[case(reg!(0x46, 0x0000), reg!(0x12, 0x0000), 0x34)]
     fn adc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(reg, memory.view());
-        adc(&mut s, operand);
-        assert_eq!(expected_reg, s.reg);
+        let mut state = CpuState::new(reg, memory.view());
+        adc(&mut state, operand);
+        assert_eq!(expected_reg, state.reg);
         Ok(())
     }
 
@@ -188,10 +188,10 @@ mod tests {
         #[case] value: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(RegBuilder::default().a(a).p(_p!(p)).build()?, memory.view());
-        adc(&mut s, value);
-        assert_eq!(expected_a, s.reg.a);
-        assert_eq!(_p!(expected_p), s.reg.p);
+        let mut state = CpuState::new(RegBuilder::default().a(a).p(_p!(p)).build()?, memory.view());
+        adc(&mut state, value);
+        assert_eq!(expected_a, state.reg.a);
+        assert_eq!(_p!(expected_p), state.reg.p);
         Ok(())
     }
 
@@ -199,9 +199,9 @@ mod tests {
     #[case(reg!(0xfe, 0x0000, N, C), reg!(0xff, 0x0000, C), 0x01)]
     fn sbc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(reg, memory.view());
-        sbc(&mut s, operand);
-        assert_eq!(expected_reg, s.reg);
+        let mut state = CpuState::new(reg, memory.view());
+        sbc(&mut state, operand);
+        assert_eq!(expected_reg, state.reg);
         Ok(())
     }
 
@@ -215,12 +215,12 @@ mod tests {
         #[case] operand: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(Reg::default(), memory.view());
-        s.reg.a = a;
-        s.reg.p = _p!(p);
-        adc(&mut s, operand);
-        assert_eq!(expected_a, s.reg.a);
-        assert_eq!(_p!(expected_p), s.reg.p);
+        let mut state = CpuState::new(Reg::default(), memory.view());
+        state.reg.a = a;
+        state.reg.p = _p!(p);
+        adc(&mut state, operand);
+        assert_eq!(expected_a, state.reg.a);
+        assert_eq!(_p!(expected_p), state.reg.p);
         Ok(())
     }
 
@@ -235,12 +235,12 @@ mod tests {
         #[case] operand: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(Reg::default(), memory.view());
-        s.reg.a = a;
-        s.reg.p = _p!(p);
-        sbc(&mut s, operand);
-        assert_eq!(expected_a, s.reg.a);
-        assert_eq!(_p!(expected_p), s.reg.p);
+        let mut state = CpuState::new(Reg::default(), memory.view());
+        state.reg.a = a;
+        state.reg.p = _p!(p);
+        sbc(&mut state, operand);
+        assert_eq!(expected_a, state.reg.a);
+        assert_eq!(_p!(expected_p), state.reg.p);
         Ok(())
     }
 }

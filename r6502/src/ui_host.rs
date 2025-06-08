@@ -2,7 +2,7 @@ use crate::State::*;
 use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, Cpu, Image, InstructionInfo, Memory, OpInfo, Opcode, Os, OsEmulation, Reg, VmState,
+    p_set, Cpu, CpuState, Image, InstructionInfo, Memory, OpInfo, Opcode, Os, OsEmulation, Reg,
     MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
@@ -34,7 +34,7 @@ impl UiHost {
 
         self.memory.store_image(&image)?;
 
-        let mut cpu = Cpu::new(monitor, VmState::new(Reg::default(), self.memory.view()));
+        let mut cpu = Cpu::new(monitor, CpuState::new(Reg::default(), self.memory.view()));
         cpu.s.reg.pc = image.start;
 
         let os = Os::emulate(OsEmulation::AcornStyle)?;

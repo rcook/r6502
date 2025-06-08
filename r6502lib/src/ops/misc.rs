@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{p_set, VmState, IRQ, P};
+use crate::{p_set, CpuState, IRQ, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BRK
 // http://www.6502.org/users/obelisk/6502/reference.html#BRK
@@ -10,22 +10,25 @@ use crate::{p_set, VmState, IRQ, P};
 // https://retrocomputing.stackexchange.com/questions/29923/why-does-the-brk-instruction-set-the-b-flag
 // https://forums.nesdev.org/viewtopic.php?p=64224#p64224
 // https://www.pagetable.com/?p=410
-pub(crate) fn brk(s: &mut VmState) {
-    s.push_word(s.reg.pc + 1);
-    s.push((s.reg.p | P::B).bits());
-    s.reg.pc = make_word(s.memory.load(IRQ.wrapping_add(1)), s.memory.load(IRQ));
-    p_set!(s.reg, I, true);
+pub(crate) fn brk(state: &mut CpuState) {
+    state.push_word(state.reg.pc + 1);
+    state.push((state.reg.p | P::B).bits());
+    state.reg.pc = make_word(
+        state.memory.load(IRQ.wrapping_add(1)),
+        state.memory.load(IRQ),
+    );
+    p_set!(state.reg, I, true);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#NOP
 // http://www.6502.org/users/obelisk/6502/reference.html#NOP
-pub(crate) fn nop(_s: &mut VmState) {}
+pub(crate) fn nop(_state: &mut CpuState) {}
 
 #[cfg(test)]
 mod tests {
     use crate::ops::brk;
     use crate::util::split_word;
-    use crate::{Memory, Reg, VmState, _p, IRQ, STACK_BASE};
+    use crate::{CpuState, Memory, Reg, _p, IRQ, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -43,20 +46,21 @@ mod tests {
         #[case] irq_addr: u16,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(Reg::default(), memory.view());
-        s.reg.p = _p!(p);
-        s.reg.pc = pc + 1;
-        s.reg.sp = sp;
+        let mut state = CpuState::new(Reg::default(), memory.view());
+        state.reg.p = _p!(p);
+        state.reg.pc = pc + 1;
+        state.reg.sp = sp;
         let (hi, lo) = split_word(irq_addr);
-        s.memory.store(IRQ, lo);
-        s.memory.store(IRQ.wrapping_add(1), hi);
-        brk(&mut s);
-        assert_eq!(_p!(expected_p), s.reg.p);
-        assert_eq!(expected_pc, s.reg.pc);
-        assert_eq!(expected_s, s.reg.sp);
+        state.memory.store(IRQ, lo);
+        state.memory.store(IRQ.wrapping_add(1), hi);
+        brk(&mut state);
+        assert_eq!(_p!(expected_p), state.reg.p);
+        assert_eq!(expected_pc, state.reg.pc);
+        assert_eq!(expected_s, state.reg.sp);
         assert_eq!(
             p | 0b00010000,
-            s.memory
+            state
+                .memory
                 .load(STACK_BASE.wrapping_add(expected_s as u16).wrapping_add(1))
         ); // P with B flag set
         Ok(())

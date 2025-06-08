@@ -1,6 +1,6 @@
-use crate::{OpCycles, VmState};
+use crate::{CpuState, OpCycles};
 
-pub(crate) type ByteOpFn = fn(&mut VmState, u8) -> OpCycles;
+pub(crate) type ByteOpFn = fn(&mut CpuState, u8) -> OpCycles;
 
 #[derive(Clone)]
 pub struct ByteOp(ByteOpFn);
@@ -10,7 +10,7 @@ impl ByteOp {
         Self(f)
     }
 
-    pub(crate) fn execute(&self, s: &mut VmState, value: &u8) -> OpCycles {
-        self.0(s, *value)
+    pub(crate) fn execute(&self, state: &mut CpuState, value: &u8) -> OpCycles {
+        self.0(state, *value)
     }
 }

@@ -1,21 +1,21 @@
 use crate::util::{make_word, split_word};
-use crate::{p_set, VmState, P};
+use crate::{p_set, CpuState, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
-pub(crate) fn jmp(s: &mut VmState, operand: u16) {
-    s.reg.pc = operand;
+pub(crate) fn jmp(state: &mut CpuState, operand: u16) {
+    state.reg.pc = operand;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#JSR
 // http://www.6502.org/users/obelisk/6502/reference.html#JSR
-pub(crate) fn jsr(s: &mut VmState, addr: u16) {
+pub(crate) fn jsr(state: &mut CpuState, addr: u16) {
     // We can look back at the bytes immediately before PC and the
     // target address should be exactly the same as the argument
     // to this function.
-    let hi_addr = s.reg.pc.wrapping_sub(1);
-    let lo_addr = s.reg.pc.wrapping_sub(2);
-    let effective_addr = make_word(s.memory.load(hi_addr), s.memory.load(lo_addr));
+    let hi_addr = state.reg.pc.wrapping_sub(1);
+    let lo_addr = state.reg.pc.wrapping_sub(2);
+    let effective_addr = make_word(state.memory.load(hi_addr), state.memory.load(lo_addr));
     assert_eq!(addr, effective_addr);
 
     // The real JSR instruction starts to push the return address onto
@@ -24,35 +24,35 @@ pub(crate) fn jsr(s: &mut VmState, addr: u16) {
     // will result in it fetching a combination of the return address
     // and the operand. To fully emulate JSR, we must use this address
     // even if it's garbage.
-    let (return_hi, return_lo) = split_word(s.reg.pc.wrapping_sub(1));
-    s.push(return_hi);
-    let effective_addr = make_word(s.memory.load(hi_addr), s.memory.load(lo_addr));
-    s.push(return_lo);
-    s.reg.pc = effective_addr;
+    let (return_hi, return_lo) = split_word(state.reg.pc.wrapping_sub(1));
+    state.push(return_hi);
+    let effective_addr = make_word(state.memory.load(hi_addr), state.memory.load(lo_addr));
+    state.push(return_lo);
+    state.reg.pc = effective_addr;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTI
 // http://www.6502.org/users/obelisk/6502/reference.html#RTI
-pub(crate) fn rti(s: &mut VmState) {
-    s.reg.p = P::from_bits(s.pull()).expect("Must succeed");
-    p_set!(s.reg, ALWAYS_ONE, true);
-    p_set!(s.reg, B, false);
-    let return_addr = s.pull_word();
-    s.reg.pc = return_addr;
+pub(crate) fn rti(state: &mut CpuState) {
+    state.reg.p = P::from_bits(state.pull()).expect("Must succeed");
+    p_set!(state.reg, ALWAYS_ONE, true);
+    p_set!(state.reg, B, false);
+    let return_addr = state.pull_word();
+    state.reg.pc = return_addr;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTS
 // http://www.6502.org/users/obelisk/6502/reference.html#RTS
-pub(crate) fn rts(s: &mut VmState) {
-    let return_addr = s.pull_word().wrapping_add(1);
-    s.reg.pc = return_addr;
+pub(crate) fn rts(state: &mut CpuState) {
+    let return_addr = state.pull_word().wrapping_add(1);
+    state.reg.pc = return_addr;
 }
 
 #[cfg(test)]
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, RegBuilder, VmState, _p};
+    use crate::{reg, Cpu, CpuState, DummyMonitor, Memory, Reg, RegBuilder, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -60,9 +60,9 @@ mod tests {
     #[case(reg!(0x12, 0x1000), reg!(0x12, 0x0000), 0x1000)]
     fn jmp_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u16) -> Result<()> {
         let memory = Memory::default();
-        let mut s = VmState::new(reg, memory.view());
-        jmp(&mut s, operand);
-        assert_eq!(expected_reg, s.reg);
+        let mut state = CpuState::new(reg, memory.view());
+        jmp(&mut state, operand);
+        assert_eq!(expected_reg, state.reg);
         Ok(())
     }
 
@@ -71,7 +71,7 @@ mod tests {
         const TARGET_ADDR: u16 = 0x1234;
 
         let memory = Memory::default();
-        let mut s = VmState::new(Reg::default(), memory.view());
+        let mut state = CpuState::new(Reg::default(), memory.view());
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
         memory.store(0x1000, 0x20);
         memory.store(0x1001, target_lo);
@@ -80,10 +80,10 @@ mod tests {
         // TBD: Restructure VM so that instruction and operand decoding
         // is taken account of properly. For now, we'll work around this
         // behaviour in the implementation of JSR above.
-        s.reg.pc = 0x1003; // Opcode and operand have been decoded
-        jsr(&mut s, TARGET_ADDR);
-        assert_eq!(0x1002, s.peek_word());
-        assert_eq!(TARGET_ADDR, s.reg.pc)
+        state.reg.pc = 0x1003; // Opcode and operand have been decoded
+        jsr(&mut state, TARGET_ADDR);
+        assert_eq!(0x1002, state.peek_word());
+        assert_eq!(TARGET_ADDR, state.reg.pc)
     }
 
     // Scenario: 20 55 13
@@ -96,7 +96,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.pc = 0x017b;
@@ -129,16 +129,16 @@ mod tests {
         const INITIAL_SP: u8 = 0x6e;
         let reg = RegBuilder::default().p(_p!(0x63)).sp(INITIAL_SP).build()?;
         let memory = Memory::default();
-        let mut s = VmState::new(reg, memory.view());
+        let mut state = CpuState::new(reg, memory.view());
         memory.store(0x0100 + INITIAL_SP as u16, 0x98);
         memory.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
         memory.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)
         memory.store(0x0100 + INITIAL_SP as u16 + 3, 0x65); // hi(return_attr)
-        s.reg.pc = 0x8771 + 1;
-        rti(&mut s);
-        assert_eq!(0x65aa, s.reg.pc);
-        assert_eq!(_p!(0xac), s.reg.p); // P & 0b11101111
-        assert_eq!(INITIAL_SP + 3, s.reg.sp);
+        state.reg.pc = 0x8771 + 1;
+        rti(&mut state);
+        assert_eq!(0x65aa, state.reg.pc);
+        assert_eq!(_p!(0xac), state.reg.p); // P & 0b11101111
+        assert_eq!(INITIAL_SP + 3, state.reg.sp);
         Ok(())
     }
 }

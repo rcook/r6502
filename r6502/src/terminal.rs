@@ -1,7 +1,7 @@
 use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, VmState, MOS_6502,
+    Cpu, CpuState, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, MOS_6502,
     OSHALT, OSWRCH,
 };
 use std::process::exit;
@@ -78,7 +78,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         Box::new(DummyMonitor)
     };
 
-    let mut cpu = Cpu::new(monitor, VmState::new(Reg::default(), memory.view()));
+    let mut cpu = Cpu::new(monitor, CpuState::new(Reg::default(), memory.view()));
     cpu.s.reg.pc = start;
 
     let mut stopped_after_requested_cycles = false;

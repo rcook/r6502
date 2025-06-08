@@ -1,5 +1,5 @@
 use crate::single_step_tests::{AddressValue, Cycle, ScenarioConfig, State};
-use crate::{Cpu, DummyMonitor, Memory, Opcode, Reg, VmState};
+use crate::{Cpu, CpuState, DummyMonitor, Memory, Opcode, Reg};
 use anyhow::{anyhow, bail, Result};
 use serde::Deserialize;
 use std::ffi::OsStr;
@@ -120,7 +120,7 @@ impl Scenario {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
         cpu.s.reg.pc = self.initial.pc;
         cpu.s.reg.sp = self.initial.sp;

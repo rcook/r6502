@@ -1,14 +1,14 @@
-use crate::{p_get, Instruction, InstructionInfo, Monitor, TotalCycles, VmState};
+use crate::{p_get, CpuState, Instruction, InstructionInfo, Monitor, TotalCycles};
 use log::{debug, log_enabled, Level};
 
 pub struct Cpu<'a> {
     pub monitor: Box<dyn Monitor>,
-    pub s: VmState<'a>,
+    pub s: CpuState<'a>,
     pub total_cycles: TotalCycles,
 }
 
 impl<'a> Cpu<'a> {
-    pub fn new(monitor: Box<dyn Monitor>, s: VmState<'a>) -> Self {
+    pub fn new(monitor: Box<dyn Monitor>, s: CpuState<'a>) -> Self {
         Self {
             monitor,
             s,
@@ -48,8 +48,8 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder, Reg,
-        TracingMonitor, VmState, IRQ, MOS_6502, OSWRCH, P,
+        p, p_get, p_set, Cpu, CpuState, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder,
+        Reg, TracingMonitor, IRQ, MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -59,7 +59,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.a = 0x12;
@@ -77,7 +77,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.a = 0x12;
@@ -96,7 +96,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.a = 0x12;
@@ -116,7 +116,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.a = 0x12;
@@ -136,7 +136,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.a = 0x25;
@@ -157,7 +157,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         cpu.s.reg.pc = 0x1000;
@@ -181,7 +181,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         let os = OsBuilder::default()
@@ -231,7 +231,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
@@ -249,7 +249,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
@@ -272,7 +272,7 @@ mod tests {
         let memory = Memory::default();
         let mut cpu = Cpu::new(
             Box::new(DummyMonitor),
-            VmState::new(Reg::default(), memory.view()),
+            CpuState::new(Reg::default(), memory.view()),
         );
 
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
@@ -302,7 +302,7 @@ mod tests {
         };
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(monitor, VmState::new(Reg::default(), memory.view()));
+        let mut cpu = Cpu::new(monitor, CpuState::new(Reg::default(), memory.view()));
         let image = input.parse::<Image>()?;
         memory.store_image(&image)?;
         cpu.s.reg.pc = image.start;
