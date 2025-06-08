@@ -1,12 +1,16 @@
 use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
+use log::LevelFilter;
 use r6502lib::{
     Cpu, CpuState, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, MOS_6502,
     OSHALT, OSWRCH,
 };
+use simple_logging::log_to_file;
 use std::process::exit;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
+    log_to_file("r6502.log", LevelFilter::Info)?;
+
     let memory = Memory::emulate(opts.emulation.into());
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
     memory.store_image(&image)?;
