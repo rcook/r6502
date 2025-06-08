@@ -94,25 +94,16 @@ impl Pia {
             loop {
                 match rx.recv().expect("Must succeed") {
                     Message::Key(key) => match key {
-                        Key::Char(c) => {
-                            let mut state = state_clone.lock().expect("Must succeed");
-                            state.set_key(c)
-                        }
-                        Key::Delete => {
-                            let mut state = state_clone.lock().expect("Must succeed");
-                            state.set_key('_')
-                        }
-                        Key::Esc => {
-                            let mut state = state_clone.lock().expect("Must succeed");
-                            state.set_key(0x1b as char)
-                        }
+                        Key::Char(c) => state_clone.lock().expect("Must succeed").set_key(c),
+                        Key::Delete => state_clone.lock().expect("Must succeed").set_key('_'),
+                        Key::Esc => state_clone
+                            .lock()
+                            .expect("Must succeed")
+                            .set_key(0x1b as char),
                         Key::Ctrl('c') => break,
                         _ => todo!(),
                     },
-                    Message::KbdcrUpdated => {
-                        let mut state = state_clone.lock().expect("Must succeed");
-                        state.kbdcr = 0x00
-                    }
+                    Message::KbdcrUpdated => state_clone.lock().expect("Must succeed").kbdcr = 0x00,
                     Message::DspUpdated => {
                         let value = {
                             let mut state = state_clone.lock().expect("Must succeed");
@@ -151,8 +142,7 @@ impl Pia {
 
 impl MemoryMappedDevice for Pia {
     fn start(&self) {
-        let mut state = self.state.lock().expect("Must succeed");
-        state.started = true
+        self.state.lock().expect("Must succeed").started = true
     }
 
     fn load(&self, addr: u16) -> u8 {
@@ -163,50 +153,33 @@ impl MemoryMappedDevice for Pia {
                 state.kbdcr = value & 0x7f;
                 value
             }
-            Self::KBDCR => {
-                let state = self.state.lock().expect("Must succeed");
-                state.kbdcr
-            }
-            Self::DSP => {
-                let state = self.state.lock().expect("Must succeed");
-                state.dsp
-            }
-            Self::DSPCR => {
-                let state = self.state.lock().expect("Must succeed");
-                state.dspcr
-            }
+            Self::KBDCR => self.state.lock().expect("Must succeed").kbdcr,
+            Self::DSP => self.state.lock().expect("Must succeed").dsp,
+            Self::DSPCR => self.state.lock().expect("Must succeed").dspcr,
             _ => panic!("Invalid PIA address ${addr:04X}"),
         }
     }
 
     fn store(&self, addr: u16, value: u8) {
-        let started = {
-            let state = self.state.lock().expect("Must succeed");
-            state.started
-        };
-        if !started {
+        if !self.state.lock().expect("Must succeed").started {
             return;
         }
 
         let m = match addr {
             Self::KBD => {
-                let mut state = self.state.lock().expect("Must succeed");
-                state.kbd = value;
+                self.state.lock().expect("Must succeed").kbd = value;
                 Message::KbdUpdated
             }
             Self::KBDCR => {
-                let mut state = self.state.lock().expect("Must succeed");
-                state.kbdcr = value;
+                self.state.lock().expect("Must succeed").kbdcr = value;
                 Message::KbdcrUpdated
             }
             Self::DSP => {
-                let mut state = self.state.lock().expect("Must succeed");
-                state.dsp = value;
+                self.state.lock().expect("Must succeed").dsp = value;
                 Message::DspUpdated
             }
             Self::DSPCR => {
-                let mut state = self.state.lock().expect("Must succeed");
-                state.dspcr = value;
+                self.state.lock().expect("Must succeed").dspcr = value;
                 Message::DspcrUpdated
             }
             _ => panic!("Invalid PIA address ${addr:04X}"),
