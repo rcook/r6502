@@ -2,7 +2,7 @@ use crate::AddressValueVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct AddressValue {
     pub address: u16,
     pub value: u8,

@@ -7,3 +7,5 @@ edition = "2021"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 anyhow = "1.0.98"
+rkyv = "0.8.10"
+rancor = "0.1.0"

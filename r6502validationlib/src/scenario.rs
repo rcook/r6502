@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct Scenario {
     #[serde(rename = "name")]
     pub name: String,

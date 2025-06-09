@@ -2,7 +2,7 @@ use crate::AddressValue;
 use serde::Deserialize;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct State {
     #[serde(rename = "pc")]
     pub pc: u16,

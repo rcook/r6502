@@ -2,8 +2,7 @@ use crate::CycleVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 
-#[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
 pub struct Cycle {
     pub address: u16,
     pub value: u8,
