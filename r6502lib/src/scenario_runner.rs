@@ -1,18 +1,15 @@
 use crate::{Cpu, CpuState, DummyMonitor, Memory, Opcode, Reg, _p};
 use anyhow::{anyhow, bail, Result};
-use r6502validationlib::{AddressValue, Scenario, ScenarioConfig, ScenarioFormat, State};
+use r6502validationlib::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use std::ffi::OsStr;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{ErrorKind, Write};
 use std::panic::catch_unwind;
 use std::path::Path;
 
-pub fn run_scenarios_with_filter(
-    format: ScenarioFormat,
-    report_path: &Path,
-    filter: &Option<String>,
-) -> Result<()> {
-    let config = ScenarioConfig::new(format, filter)?;
+pub fn run_scenarios_with_filter(report_path: &Path, filter_str: &Option<String>) -> Result<()> {
+    let loader = ScenarioLoader::new()?;
+    let filter = ScenarioFilter::new(&loader, filter_str)?;
 
     let mut all_total_count = 0;
     let mut all_failure_count = 0;
@@ -22,7 +19,7 @@ pub fn run_scenarios_with_filter(
 
     init_messages(report_path)?;
 
-    for path in &config.paths {
+    for path in &filter.paths {
         let opcode_value = u8::from_str_radix(
             path.file_stem()
                 .and_then(OsStr::to_str)
@@ -38,12 +35,11 @@ pub fn run_scenarios_with_filter(
                 skipped_opcode_count += 1;
             }
             Some(opcode) => {
-                let scenarios = config.read_scenarios(path)?;
-                println!(
-                    "Running {} scenarios defined in {}",
-                    scenarios.len(),
-                    path.display()
-                );
+                println!("Reading scenarios for {opcode}");
+                let scenarios = loader.read_scenarios(path)?;
+
+                let scenarios = filter.filter(scenarios);
+                println!("Running {} scenarios for {opcode}", scenarios.len(),);
 
                 let mut total_count = 0;
                 let mut failure_count = 0;
