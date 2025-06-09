@@ -2,7 +2,7 @@ use crate::Scenario;
 use anyhow::{anyhow, Result};
 use dirs::config_dir;
 use std::env::current_dir;
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
@@ -65,6 +65,11 @@ impl ScenarioLoader {
     }
 
     fn write_archive(archive_path: &Path, scenarios: &Vec<Scenario>) -> Result<()> {
+        create_dir_all(
+            archive_path
+                .parent()
+                .ok_or_else(|| anyhow!("Cannot get directory"))?,
+        )?;
         let bytes = rkyv::to_bytes::<rancor::Error>(scenarios)?;
         let mut file = File::create(archive_path)?;
         file.write_all(&bytes)?;
