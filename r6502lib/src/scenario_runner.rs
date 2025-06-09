@@ -1,14 +1,18 @@
 use crate::{Cpu, CpuState, DummyMonitor, Memory, Opcode, Reg, _p};
 use anyhow::{anyhow, bail, Result};
-use r6502validationlib::{AddressValue, Scenario, ScenarioConfig, State};
+use r6502validationlib::{AddressValue, Scenario, ScenarioConfig, ScenarioFormat, State};
 use std::ffi::OsStr;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{ErrorKind, Write};
 use std::panic::catch_unwind;
 use std::path::Path;
 
-pub fn run_scenarios_with_filter(report_path: &Path, filter: &Option<String>) -> Result<()> {
-    let config = ScenarioConfig::new(filter)?;
+pub fn run_scenarios_with_filter(
+    format: ScenarioFormat,
+    report_path: &Path,
+    filter: &Option<String>,
+) -> Result<()> {
+    let config = ScenarioConfig::new(format, filter)?;
 
     let mut all_total_count = 0;
     let mut all_failure_count = 0;

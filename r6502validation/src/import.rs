@@ -15,7 +15,7 @@ pub(crate) fn import(input_dir: &Path, output_dir: &Path) -> Result<()> {
                 .ok_or_else(|| anyhow!("Could not extract file name"))?;
             let mut rkyv_path = output_dir.join(file_name);
             rkyv_path.set_extension("rkyv");
-            let scenarios = Scenario::from_json_file(&json_path)?;
+            let scenarios = Scenario::read_all(&json_path)?;
             Scenario::write_rkyv(&rkyv_path, &scenarios)?;
             println!("Written {}", rkyv_path.display())
         }

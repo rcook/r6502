@@ -6,7 +6,7 @@ fn main() -> anyhow::Result<()> {
     use args::{Args, Command};
     use clap::Parser;
     use r6502lib::{run_scenario, run_scenarios_with_filter};
-    use r6502validationlib::Scenario;
+    use r6502validationlib::{Scenario, ScenarioFormat};
 
     match Args::parse().command {
         Command::Import {
@@ -16,7 +16,7 @@ fn main() -> anyhow::Result<()> {
         Command::Run {
             report_path,
             filter,
-        } => run_scenarios_with_filter(&report_path, &filter)?,
+        } => run_scenarios_with_filter(ScenarioFormat::Json, &report_path, &filter)?,
         Command::RunJson { json } => {
             let scenario = Scenario::from_json(&json)?;
             println!("{scenario}");
