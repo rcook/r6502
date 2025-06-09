@@ -10,6 +10,15 @@ pub(crate) struct Args {
 
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
+    #[command(name = "import", about = "Import JSON scenarios")]
+    Import {
+        #[arg(required = true, value_parser = parse_absolute_path)]
+        input_dir: PathBuf,
+
+        #[arg(required = true, value_parser = parse_absolute_path)]
+        output_dir: PathBuf,
+    },
+
     #[command(name = "run", about = "Run validation suite")]
     Run {
         #[arg(required = true, value_parser = parse_absolute_path)]

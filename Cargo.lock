@@ -1094,8 +1094,6 @@ dependencies = [
  "path-absolutize",
  "r6502lib",
  "r6502validationlib",
- "serde",
- "serde_json",
 ]
 
 [[package]]
