@@ -1,8 +1,10 @@
 #![cfg(test)]
 
-use crate::single_step_tests::Scenario;
 use anyhow::Result;
+use r6502validationlib::Scenario;
 use rstest::rstest;
+
+use crate::run_scenario;
 
 #[rstest]
 #[case(r#"{ "name": "61 1e 49", "initial": { "pc": 26086, "s": 108, "a": 250, "x": 117, "y": 104, "p": 173, "ram": [ [26086, 97], [26087, 30], [26088, 73], [30, 225], [147, 188], [148, 211], [54204, 79]]}, "final": { "pc": 26088, "s": 108, "a": 160, "x": 117, "y": 104, "p": 45, "ram": [ [30, 225], [147, 188], [148, 211], [26086, 97], [26087, 30], [26088, 73], [54204, 79]]}, "cycles": [ [26086, 97, "read"], [26087, 30, "read"], [30, 225, "read"], [147, 188, "read"], [148, 211, "read"], [54204, 79, "read"]] }"#)]
@@ -23,7 +25,7 @@ use rstest::rstest;
 #[case(r#"{ "name": "20 55 13", "initial": { "pc": 379, "s": 125, "a": 158, "x": 137, "y": 52, "p": 230, "ram": [ [379, 32], [380, 85], [381, 19], [341, 173]]}, "final": { "pc": 341, "s": 123, "a": 158, "x": 137, "y": 52, "p": 230, "ram": [ [341, 173], [379, 32], [380, 125], [381, 1]]}, "cycles": [ [379, 32, "read"], [380, 85, "read"], [381, 19, "read"], [381, 1, "write"], [380, 125, "write"], [381, 1, "read"]] }"#)]
 fn basics(#[case] json: &str) -> Result<()> {
     let scenario = Scenario::from_json(json)?;
-    let (result, final_state) = scenario.run();
+    let (result, final_state) = run_scenario(&scenario);
     if !result {
         println!("{scenario}");
         if let Some(final_state) = final_state {

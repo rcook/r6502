@@ -1,13 +1,13 @@
-use crate::single_step_tests::CycleVisitor;
+use crate::CycleVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 
 #[allow(unused)]
 #[derive(Debug)]
-pub(crate) struct Cycle {
-    pub(crate) address: u16,
-    pub(crate) value: u8,
-    pub(crate) operation: String,
+pub struct Cycle {
+    pub address: u16,
+    pub value: u8,
+    pub operation: String,
 }
 
 impl<'de> Deserialize<'de> for Cycle {

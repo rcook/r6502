@@ -1,11 +1,11 @@
-use crate::single_step_tests::AddressValueVisitor;
+use crate::AddressValueVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 
 #[derive(Clone, Debug)]
-pub(crate) struct AddressValue {
-    pub(crate) address: u16,
-    pub(crate) value: u8,
+pub struct AddressValue {
+    pub address: u16,
+    pub value: u8,
 }
 
 impl<'de> Deserialize<'de> for AddressValue {

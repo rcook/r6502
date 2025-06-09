@@ -1008,6 +1008,7 @@ dependencies = [
  "log",
  "num-derive",
  "num-traits",
+ "r6502validationlib",
  "rstest",
  "serde",
  "serde_json",
@@ -1023,6 +1024,16 @@ dependencies = [
  "clap",
  "path-absolutize",
  "r6502lib",
+ "r6502validationlib",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "r6502validationlib"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
  "serde",
  "serde_json",
 ]

@@ -1,32 +1,29 @@
-use crate::single_step_tests::AddressValue;
-use crate::P;
-use serde::de::Error as SerdeError;
-use serde::{Deserialize, Deserializer};
+use crate::AddressValue;
+use serde::Deserialize;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::result::Result as StdResult;
 
 #[derive(Debug, Deserialize)]
 pub struct State {
     #[serde(rename = "pc")]
-    pub(crate) pc: u16,
+    pub pc: u16,
 
     #[serde(rename = "s")]
-    pub(crate) sp: u8,
+    pub sp: u8,
 
     #[serde(rename = "a")]
-    pub(crate) a: u8,
+    pub a: u8,
 
     #[serde(rename = "x")]
-    pub(crate) x: u8,
+    pub x: u8,
 
     #[serde(rename = "y")]
-    pub(crate) y: u8,
+    pub y: u8,
 
-    #[serde(rename = "p", deserialize_with = "deserialize_p")]
-    pub(crate) p: P,
+    #[serde(rename = "p")]
+    pub p: u8,
 
     #[serde(rename = "ram")]
-    pub(crate) ram: Vec<AddressValue>,
+    pub ram: Vec<AddressValue>,
 }
 
 impl Display for State {
@@ -40,7 +37,7 @@ impl Display for State {
             f,
             "  p : {p} (0b{p_value:08b}) (${p_value:02X}) ({p_value})",
             p = self.p,
-            p_value = self.p.bits()
+            p_value = self.p
         )?;
 
         let mut ram = self.ram.clone();
@@ -57,6 +54,7 @@ impl Display for State {
     }
 }
 
+/*
 fn deserialize_p<'de, D>(deserializer: D) -> StdResult<P, D::Error>
 where
     D: Deserializer<'de>,
@@ -68,3 +66,4 @@ where
         ))
     })
 }
+*/

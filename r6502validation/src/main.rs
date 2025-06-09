@@ -3,17 +3,18 @@ mod args;
 fn main() -> anyhow::Result<()> {
     use args::{Args, Command};
     use clap::Parser;
-    use r6502lib::single_step_tests::Scenario;
+    use r6502lib::{run_scenario, run_scenarios_with_filter};
+    use r6502validationlib::Scenario;
 
     match Args::parse().command {
         Command::Run {
             report_path,
             filter,
-        } => Scenario::run_scenarios_with_filter(&report_path, &filter)?,
+        } => run_scenarios_with_filter(&report_path, &filter)?,
         Command::RunJson { json } => {
             let scenario = Scenario::from_json(&json)?;
             println!("{scenario}");
-            let (result, final_state) = scenario.run();
+            let (result, final_state) = run_scenario(&scenario);
             if result {
                 println!("Scenario passed")
             } else {

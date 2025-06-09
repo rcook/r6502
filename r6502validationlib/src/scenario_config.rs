@@ -1,4 +1,4 @@
-use crate::single_step_tests::Scenario;
+use crate::Scenario;
 use anyhow::{anyhow, Result};
 use std::env::current_dir;
 use std::ffi::OsStr;
@@ -7,14 +7,14 @@ use std::path::{Path, PathBuf};
 
 const SKIPPED_SCENARIO_NAMES: [&str; 1] = ["a9 f0 33"];
 
-pub(crate) struct ScenarioConfig {
-    pub(crate) paths: Vec<PathBuf>,
-    pub(crate) scenario_name: Option<String>,
-    pub(crate) skipped_scenario_names: Vec<String>,
+pub struct ScenarioConfig {
+    pub paths: Vec<PathBuf>,
+    pub scenario_name: Option<String>,
+    pub skipped_scenario_names: Vec<String>,
 }
 
 impl ScenarioConfig {
-    pub(crate) fn new(filter: &Option<String>) -> Result<Self> {
+    pub fn new(filter: &Option<String>) -> Result<Self> {
         let scenario_dir = Self::scenario_dir()?;
 
         let Some(s) = filter else {
@@ -58,7 +58,7 @@ impl ScenarioConfig {
         })
     }
 
-    pub(crate) fn read_scenarios(&self, path: &Path) -> Result<Vec<Scenario>> {
+    pub fn read_scenarios(&self, path: &Path) -> Result<Vec<Scenario>> {
         println!("Reading scenarios from {}", path.display());
         let file = File::open(path)?;
         let scenarios = serde_json::from_reader::<_, Vec<Scenario>>(file)?;
@@ -96,7 +96,7 @@ impl ScenarioConfig {
     }
 
     fn scenario_dir() -> Result<PathBuf> {
-        Ok(Self::strip_parents(&Self::current_source_path()?, 4)?
+        Ok(Self::strip_parents(&Self::current_source_path()?, 3)?
             .join("SingleStepTests-65x02")
             .join("6502")
             .join("v1"))

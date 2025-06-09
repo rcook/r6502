@@ -9,5 +9,6 @@ members = [
   "r6502",
   "r6502lib",
   "r6502validation",
+  "r6502validationlib",
 ]
 resolver = "2"
