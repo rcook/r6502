@@ -4,7 +4,7 @@ use std::ffi::OsStr;
 use std::fs::read_dir;
 use std::path::{Path, PathBuf};
 
-const SKIPPED_SCENARIO_NAMES: [&str; 1] = ["a9 f0 33"];
+const SKIPPED_SCENARIO_NAMES: [&str; 0] = [];
 
 pub struct ScenarioFilter {
     pub paths: Vec<PathBuf>,
