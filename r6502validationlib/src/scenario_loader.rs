@@ -1,6 +1,6 @@
 use crate::Scenario;
 use anyhow::{anyhow, Result};
-use dirs::home_dir;
+use dirs::config_dir;
 use std::env::current_dir;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -18,10 +18,10 @@ impl ScenarioLoader {
             .join("6502")
             .join("v1");
 
-        let archive_dir = home_dir()
+        let archive_dir = config_dir()
             .ok_or_else(|| anyhow!("Could not get home directory"))?
-            .join(".config")
-            .join("r6502validation");
+            .join("r6502")
+            .join("scenarios");
 
         Ok(Self {
             json_dir,
