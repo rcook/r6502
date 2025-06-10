@@ -47,5 +47,6 @@ This runs the 6502 validation suite.
 * https://www.applefritter.com/replica/chapter7
 * http://www.brouhaha.com/~eric/retrocomputing/apple/apple1/basic/
 * https://jefftranter.blogspot.com/2012/05/source-code-for-apple-1-basic.html
+* https://electronics.stackexchange.com/questions/678427/mc6820-pia-operation-on-the-apple-1
 
 [single-step-tests]: https://github.com/SingleStepTests/65x02
