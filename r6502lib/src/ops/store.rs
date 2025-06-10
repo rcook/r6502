@@ -3,34 +3,34 @@ use crate::Cpu;
 
 // http://www.6502.org/tutorials/6502opcodes.html#DEC
 // http://www.6502.org/users/obelisk/6502/reference.html#DEC
-pub(crate) fn dec(state: &mut Cpu, addr: u16) {
-    let result = state.memory.load(addr).wrapping_sub(1);
-    state.memory.store(addr, result);
-    set_flags_on_value(state, result);
+pub(crate) fn dec(cpu: &mut Cpu, addr: u16) {
+    let result = cpu.memory.load(addr).wrapping_sub(1);
+    cpu.memory.store(addr, result);
+    set_flags_on_value(cpu, result);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#INC
 // http://www.6502.org/users/obelisk/6502/reference.html#INC
-pub(crate) fn inc(state: &mut Cpu, addr: u16) {
-    let result = state.memory.load(addr).wrapping_add(1);
-    state.memory.store(addr, result);
-    set_flags_on_value(state, result);
+pub(crate) fn inc(cpu: &mut Cpu, addr: u16) {
+    let result = cpu.memory.load(addr).wrapping_add(1);
+    cpu.memory.store(addr, result);
+    set_flags_on_value(cpu, result);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#STA
 // http://www.6502.org/users/obelisk/6502/reference.html#STA
-pub(crate) fn sta(state: &mut Cpu, addr: u16) {
-    state.memory.store(addr, state.reg.a);
+pub(crate) fn sta(cpu: &mut Cpu, addr: u16) {
+    cpu.memory.store(addr, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#STX
 // http://www.6502.org/users/obelisk/6502/reference.html#STX
-pub(crate) fn stx(state: &mut Cpu, addr: u16) {
-    state.memory.store(addr, state.reg.x);
+pub(crate) fn stx(cpu: &mut Cpu, addr: u16) {
+    cpu.memory.store(addr, cpu.reg.x);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#STY
 // http://www.6502.org/users/obelisk/6502/reference.html#STY
-pub(crate) fn sty(state: &mut Cpu, addr: u16) {
-    state.memory.store(addr, state.reg.y);
+pub(crate) fn sty(cpu: &mut Cpu, addr: u16) {
+    cpu.memory.store(addr, cpu.reg.y);
 }

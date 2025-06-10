@@ -3,81 +3,81 @@ use crate::Cpu;
 
 // http://www.6502.org/tutorials/6502opcodes.html#DEX
 // http://www.6502.org/users/obelisk/6502/reference.html#DEX
-pub(crate) fn dex(state: &mut Cpu) {
-    let value = state.reg.x.wrapping_sub(1);
-    state.reg.x = value;
-    set_flags_on_value(state, value);
+pub(crate) fn dex(cpu: &mut Cpu) {
+    let value = cpu.reg.x.wrapping_sub(1);
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#DEY
 // http://www.6502.org/users/obelisk/6502/reference.html#DEY
-pub(crate) fn dey(state: &mut Cpu) {
-    let value = state.reg.y.wrapping_sub(1);
-    state.reg.y = value;
-    set_flags_on_value(state, value);
+pub(crate) fn dey(cpu: &mut Cpu) {
+    let value = cpu.reg.y.wrapping_sub(1);
+    cpu.reg.y = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#INX
 // http://www.6502.org/users/obelisk/6502/reference.html#INX
-pub(crate) fn inx(state: &mut Cpu) {
-    let value = state.reg.x.wrapping_add(1);
-    state.reg.x = value;
-    set_flags_on_value(state, value);
+pub(crate) fn inx(cpu: &mut Cpu) {
+    let value = cpu.reg.x.wrapping_add(1);
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#INY
 // http://www.6502.org/users/obelisk/6502/reference.html#INY
-pub(crate) fn iny(state: &mut Cpu) {
-    let value = state.reg.y.wrapping_add(1);
-    state.reg.y = value;
-    set_flags_on_value(state, value);
+pub(crate) fn iny(cpu: &mut Cpu) {
+    let value = cpu.reg.y.wrapping_add(1);
+    cpu.reg.y = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TAX
 // http://www.6502.org/users/obelisk/6502/reference.html#TAX
-pub(crate) fn tax(state: &mut Cpu) {
-    let value = state.reg.a;
-    state.reg.x = value;
-    set_flags_on_value(state, value);
+pub(crate) fn tax(cpu: &mut Cpu) {
+    let value = cpu.reg.a;
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TAY
 // http://www.6502.org/users/obelisk/6502/reference.html#TAY
-pub(crate) fn tay(state: &mut Cpu) {
-    let value = state.reg.a;
-    state.reg.y = value;
-    set_flags_on_value(state, value);
+pub(crate) fn tay(cpu: &mut Cpu) {
+    let value = cpu.reg.a;
+    cpu.reg.y = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TSX
 // http://www.6502.org/users/obelisk/6502/reference.html#TSX
-pub(crate) fn tsx(state: &mut Cpu) {
-    let value = state.reg.sp;
-    state.reg.x = value;
-    set_flags_on_value(state, value);
+pub(crate) fn tsx(cpu: &mut Cpu) {
+    let value = cpu.reg.sp;
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TXA
 // http://www.6502.org/users/obelisk/6502/reference.html#TXA
-pub(crate) fn txa(state: &mut Cpu) {
-    let value = state.reg.x;
-    state.reg.a = value;
-    set_flags_on_value(state, value);
+pub(crate) fn txa(cpu: &mut Cpu) {
+    let value = cpu.reg.x;
+    cpu.reg.a = value;
+    set_flags_on_value(cpu, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TXS
 // http://www.6502.org/users/obelisk/6502/reference.html#TXS
-pub(crate) fn txs(state: &mut Cpu) {
-    let value = state.reg.x;
-    state.reg.sp = value;
+pub(crate) fn txs(cpu: &mut Cpu) {
+    let value = cpu.reg.x;
+    cpu.reg.sp = value;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#TYA
 // http://www.6502.org/users/obelisk/6502/reference.html#TYA
-pub(crate) fn tya(state: &mut Cpu) {
-    let value = state.reg.y;
-    state.reg.a = value;
-    set_flags_on_value(state, value);
+pub(crate) fn tya(cpu: &mut Cpu) {
+    let value = cpu.reg.y;
+    cpu.reg.a = value;
+    set_flags_on_value(cpu, value);
 }
 
 #[cfg(test)]

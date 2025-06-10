@@ -8,9 +8,9 @@ pub(crate) enum Op {
 }
 
 impl Op {
-    pub(crate) fn execute_no_operand(&self, state: &mut Cpu) -> OpCycles {
+    pub(crate) fn execute_no_operand(&self, cpu: &mut Cpu) -> OpCycles {
         match self {
-            Self::NoOperand(op) => op.execute(state),
+            Self::NoOperand(op) => op.execute(cpu),
             _ => unimplemented!("Cannot execute with no operand"),
         }
     }

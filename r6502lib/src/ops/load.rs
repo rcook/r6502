@@ -3,23 +3,23 @@ use crate::Cpu;
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDA
 // http://www.6502.org/users/obelisk/6502/reference.html#LDA
-pub(crate) fn lda(state: &mut Cpu, operand: u8) {
-    state.reg.a = operand;
-    set_flags_on_value(state, operand);
+pub(crate) fn lda(cpu: &mut Cpu, operand: u8) {
+    cpu.reg.a = operand;
+    set_flags_on_value(cpu, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDX
 // http://www.6502.org/users/obelisk/6502/reference.html#LDX
-pub(crate) fn ldx(state: &mut Cpu, operand: u8) {
-    state.reg.x = operand;
-    set_flags_on_value(state, operand);
+pub(crate) fn ldx(cpu: &mut Cpu, operand: u8) {
+    cpu.reg.x = operand;
+    set_flags_on_value(cpu, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDY
 // http://www.6502.org/users/obelisk/6502/reference.html#LDY
-pub(crate) fn ldy(state: &mut Cpu, operand: u8) {
-    state.reg.y = operand;
-    set_flags_on_value(state, operand);
+pub(crate) fn ldy(cpu: &mut Cpu, operand: u8) {
+    cpu.reg.y = operand;
+    set_flags_on_value(cpu, operand);
 }
 
 #[cfg(test)]

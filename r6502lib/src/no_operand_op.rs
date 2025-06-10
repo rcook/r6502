@@ -10,7 +10,7 @@ impl NoOperandOp {
         Self(f)
     }
 
-    pub(crate) fn execute(&self, state: &mut Cpu) -> OpCycles {
-        self.0(state)
+    pub(crate) fn execute(&self, cpu: &mut Cpu) -> OpCycles {
+        self.0(cpu)
     }
 }

@@ -4,15 +4,15 @@ use crate::{p_get, p_set, p_value, Cpu};
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-pub(crate) fn adc(state: &mut Cpu, operand: u8) {
-    if p_get!(state.reg, D) {
-        let a = state.reg.a as i32;
+pub(crate) fn adc(cpu: &mut Cpu, operand: u8) {
+    if p_get!(cpu.reg, D) {
+        let a = cpu.reg.a as i32;
         let value = operand as i32;
-        let carry = p_value!(state.reg, C);
+        let carry = p_value!(cpu.reg, C);
 
         let mut ah = 0;
         let tempb = (a + value + carry) & 0xff;
-        p_set!(state.reg, Z, tempb == 0);
+        p_set!(cpu.reg, Z, tempb == 0);
         let mut al = (a & 0xf) + (value & 0xf) + carry;
         if al > 9 {
             al -= 10;
@@ -20,31 +20,31 @@ pub(crate) fn adc(state: &mut Cpu, operand: u8) {
             ah = 1;
         }
         ah += (a >> 4) + (value >> 4);
-        p_set!(state.reg, N, (ah & 8) != 0);
+        p_set!(cpu.reg, N, (ah & 8) != 0);
         p_set!(
-            state.reg,
+            cpu.reg,
             V,
             ((a ^ value) & 0x80) == 0 && (((a ^ (ah << 4)) & 0x80) != 0)
         );
-        p_set!(state.reg, C, false);
+        p_set!(cpu.reg, C, false);
         if ah > 9 {
-            p_set!(state.reg, C, true);
+            p_set!(cpu.reg, C, true);
             ah -= 10;
             ah &= 0xf;
         }
-        state.reg.a = ((al as u8) & 0xf) | ((ah as u8) << 4);
+        cpu.reg.a = ((al as u8) & 0xf) | ((ah as u8) << 4);
     } else {
-        let lhs = state.reg.a;
+        let lhs = cpu.reg.a;
         let rhs = operand;
 
-        let result_word = lhs as u16 + rhs as u16 + p_value!(state.reg, C);
+        let result_word = lhs as u16 + rhs as u16 + p_value!(cpu.reg, C);
         let result = result_word as u8;
 
-        state.reg.a = result;
-        p_set!(state.reg, N, is_neg(result));
-        p_set!(state.reg, V, is_overflow(lhs, rhs, result));
-        p_set!(state.reg, Z, is_zero(result));
-        p_set!(state.reg, C, is_carry(result_word));
+        cpu.reg.a = result;
+        p_set!(cpu.reg, N, is_neg(result));
+        p_set!(cpu.reg, V, is_overflow(lhs, rhs, result));
+        p_set!(cpu.reg, Z, is_zero(result));
+        p_set!(cpu.reg, C, is_carry(result_word));
     }
 }
 
@@ -113,11 +113,11 @@ Final:
 // http://www.visual6502.org/JSSim/expert.html?graphics=false&a=0&d=a900f8e988eaeaea&steps=18
 // http://vice-emu.sourceforge.net/plain/64doc.txt
 // https://github.com/mattgodbolt/jsbeeb/blob/main/src/6502.js
-pub(crate) fn sbc(state: &mut Cpu, operand: u8) {
-    if p_get!(state.reg, D) {
-        let carry = if p_get!(state.reg, C) { 0 } else { 1 };
+pub(crate) fn sbc(cpu: &mut Cpu, operand: u8) {
+    if p_get!(cpu.reg, D) {
+        let carry = if p_get!(cpu.reg, C) { 0 } else { 1 };
 
-        let a = state.reg.a as i32;
+        let a = cpu.reg.a as i32;
         let value = operand as i32;
 
         let mut al = (a & 0xf) - (value & 0xf) - carry;
@@ -131,13 +131,13 @@ pub(crate) fn sbc(state: &mut Cpu, operand: u8) {
         }
 
         let result = a - value - carry;
-        p_set!(state.reg, N, (result & 0x80) != 0);
-        p_set!(state.reg, Z, (result & 0xff) == 0);
-        p_set!(state.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
-        p_set!(state.reg, C, (result & 0x100) == 0);
-        state.reg.a = (al as u8) | ((ah as u8) << 4);
+        p_set!(cpu.reg, N, (result & 0x80) != 0);
+        p_set!(cpu.reg, Z, (result & 0xff) == 0);
+        p_set!(cpu.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
+        p_set!(cpu.reg, C, (result & 0x100) == 0);
+        cpu.reg.a = (al as u8) | ((ah as u8) << 4);
     } else {
-        adc(state, !operand);
+        adc(cpu, !operand);
     }
 }
 

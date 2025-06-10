@@ -3,87 +3,87 @@ use crate::{p_get, p_set, Cpu};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl_acc(state: &mut Cpu) {
-    state.reg.a = asl_helper(state, state.reg.a);
+pub(crate) fn asl_acc(cpu: &mut Cpu) {
+    cpu.reg.a = asl_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl(state: &mut Cpu, addr: u16) {
-    let value = state.memory.load(addr);
-    let value = asl_helper(state, value);
-    state.memory.store(addr, value);
+pub(crate) fn asl(cpu: &mut Cpu, addr: u16) {
+    let value = cpu.memory.load(addr);
+    let value = asl_helper(cpu, value);
+    cpu.memory.store(addr, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr_acc(state: &mut Cpu) {
-    state.reg.a = lsr_helper(state, state.reg.a);
+pub(crate) fn lsr_acc(cpu: &mut Cpu) {
+    cpu.reg.a = lsr_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr(state: &mut Cpu, addr: u16) {
-    let value = state.memory.load(addr);
-    let value = lsr_helper(state, value);
-    state.memory.store(addr, value);
+pub(crate) fn lsr(cpu: &mut Cpu, addr: u16) {
+    let value = cpu.memory.load(addr);
+    let value = lsr_helper(cpu, value);
+    cpu.memory.store(addr, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol_acc(state: &mut Cpu) {
-    state.reg.a = rol_helper(state, state.reg.a);
+pub(crate) fn rol_acc(cpu: &mut Cpu) {
+    cpu.reg.a = rol_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol(state: &mut Cpu, addr: u16) {
-    let value = state.memory.load(addr);
-    let value = rol_helper(state, value);
-    state.memory.store(addr, value);
+pub(crate) fn rol(cpu: &mut Cpu, addr: u16) {
+    let value = cpu.memory.load(addr);
+    let value = rol_helper(cpu, value);
+    cpu.memory.store(addr, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror_acc(state: &mut Cpu) {
-    state.reg.a = ror_helper(state, state.reg.a);
+pub(crate) fn ror_acc(cpu: &mut Cpu) {
+    cpu.reg.a = ror_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror(state: &mut Cpu, addr: u16) {
-    let value = state.memory.load(addr);
-    let value = ror_helper(state, value);
-    state.memory.store(addr, value);
+pub(crate) fn ror(cpu: &mut Cpu, addr: u16) {
+    let value = cpu.memory.load(addr);
+    let value = ror_helper(cpu, value);
+    cpu.memory.store(addr, value);
 }
 
-fn asl_helper(state: &mut Cpu, operand: u8) -> u8 {
-    p_set!(state.reg, C, sign(operand));
+fn asl_helper(cpu: &mut Cpu, operand: u8) -> u8 {
+    p_set!(cpu.reg, C, sign(operand));
     let new_value = operand << 1;
-    set_flags_on_value(state, new_value);
+    set_flags_on_value(cpu, new_value);
     new_value
 }
 
-fn lsr_helper(state: &mut Cpu, operand: u8) -> u8 {
-    p_set!(state.reg, C, (operand & 0x01) != 0);
+fn lsr_helper(cpu: &mut Cpu, operand: u8) -> u8 {
+    p_set!(cpu.reg, C, (operand & 0x01) != 0);
     let new_value = operand >> 1;
-    set_flags_on_value(state, new_value);
+    set_flags_on_value(cpu, new_value);
     new_value
 }
 
-fn rol_helper(state: &mut Cpu, operand: u8) -> u8 {
-    let old_carry = p_get!(state.reg, C);
-    p_set!(state.reg, C, sign(operand));
+fn rol_helper(cpu: &mut Cpu, operand: u8) -> u8 {
+    let old_carry = p_get!(cpu.reg, C);
+    p_set!(cpu.reg, C, sign(operand));
     let new_value = (operand << 1) | (if old_carry { 0x01 } else { 0x00 });
-    set_flags_on_value(state, new_value);
+    set_flags_on_value(cpu, new_value);
     new_value
 }
 
-fn ror_helper(state: &mut Cpu, operand: u8) -> u8 {
-    let old_carry = p_get!(state.reg, C);
-    p_set!(state.reg, C, (operand & 0x01) != 0);
+fn ror_helper(cpu: &mut Cpu, operand: u8) -> u8 {
+    let old_carry = p_get!(cpu.reg, C);
+    p_set!(cpu.reg, C, (operand & 0x01) != 0);
     let new_value = (operand >> 1) | (if old_carry { 0x80 } else { 0x00 });
-    set_flags_on_value(state, new_value);
+    set_flags_on_value(cpu, new_value);
     new_value
 }
 

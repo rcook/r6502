@@ -3,19 +3,19 @@ use crate::{p_set, Cpu, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
-pub(crate) fn jmp(state: &mut Cpu, operand: u16) {
-    state.reg.pc = operand;
+pub(crate) fn jmp(cpu: &mut Cpu, operand: u16) {
+    cpu.reg.pc = operand;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#JSR
 // http://www.6502.org/users/obelisk/6502/reference.html#JSR
-pub(crate) fn jsr(state: &mut Cpu, addr: u16) {
+pub(crate) fn jsr(cpu: &mut Cpu, addr: u16) {
     // We can look back at the bytes immediately before PC and the
     // target address should be exactly the same as the argument
     // to this function.
-    let hi_addr = state.reg.pc.wrapping_sub(1);
-    let lo_addr = state.reg.pc.wrapping_sub(2);
-    let effective_addr = make_word(state.memory.load(hi_addr), state.memory.load(lo_addr));
+    let hi_addr = cpu.reg.pc.wrapping_sub(1);
+    let lo_addr = cpu.reg.pc.wrapping_sub(2);
+    let effective_addr = make_word(cpu.memory.load(hi_addr), cpu.memory.load(lo_addr));
     assert_eq!(addr, effective_addr);
 
     // The real JSR instruction starts to push the return address onto
@@ -24,28 +24,28 @@ pub(crate) fn jsr(state: &mut Cpu, addr: u16) {
     // will result in it fetching a combination of the return address
     // and the operand. To fully emulate JSR, we must use this address
     // even if it's garbage.
-    let (return_hi, return_lo) = split_word(state.reg.pc.wrapping_sub(1));
-    state.push(return_hi);
-    let effective_addr = make_word(state.memory.load(hi_addr), state.memory.load(lo_addr));
-    state.push(return_lo);
-    state.reg.pc = effective_addr;
+    let (return_hi, return_lo) = split_word(cpu.reg.pc.wrapping_sub(1));
+    cpu.push(return_hi);
+    let effective_addr = make_word(cpu.memory.load(hi_addr), cpu.memory.load(lo_addr));
+    cpu.push(return_lo);
+    cpu.reg.pc = effective_addr;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTI
 // http://www.6502.org/users/obelisk/6502/reference.html#RTI
-pub(crate) fn rti(state: &mut Cpu) {
-    state.reg.p = P::from_bits(state.pull()).expect("Must succeed");
-    p_set!(state.reg, ALWAYS_ONE, true);
-    p_set!(state.reg, B, false);
-    let return_addr = state.pull_word();
-    state.reg.pc = return_addr;
+pub(crate) fn rti(cpu: &mut Cpu) {
+    cpu.reg.p = P::from_bits(cpu.pull()).expect("Must succeed");
+    p_set!(cpu.reg, ALWAYS_ONE, true);
+    p_set!(cpu.reg, B, false);
+    let return_addr = cpu.pull_word();
+    cpu.reg.pc = return_addr;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTS
 // http://www.6502.org/users/obelisk/6502/reference.html#RTS
-pub(crate) fn rts(state: &mut Cpu) {
-    let return_addr = state.pull_word().wrapping_add(1);
-    state.reg.pc = return_addr;
+pub(crate) fn rts(cpu: &mut Cpu) {
+    let return_addr = cpu.pull_word().wrapping_add(1);
+    cpu.reg.pc = return_addr;
 }
 
 #[cfg(test)]

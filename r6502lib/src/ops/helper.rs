@@ -23,7 +23,7 @@ pub(crate) fn is_carry(value: u16) -> bool {
     (value & 0x0100) != 0
 }
 
-pub(crate) fn set_flags_on_value(state: &mut Cpu, operand: u8) {
-    p_set!(state.reg, N, is_neg(operand));
-    p_set!(state.reg, Z, is_zero(operand));
+pub(crate) fn set_flags_on_value(cpu: &mut Cpu, operand: u8) {
+    p_set!(cpu.reg, N, is_neg(operand));
+    p_set!(cpu.reg, Z, is_zero(operand));
 }
