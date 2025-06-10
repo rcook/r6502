@@ -74,7 +74,7 @@ impl Pia {
             let g = Getch::new();
             loop {
                 let key = g.getch().expect("Must succeed");
-                info!("keypress: {key:?}");
+                //info!("keypress: {key:?}");
                 _ = tx_clone.send(Message::Key(key.clone()));
                 if matches!(key, Key::Ctrl('c')) {
                     break;
@@ -153,31 +153,31 @@ impl MemoryMappedDevice for Pia {
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
 
-        if log_enabled!(Level::Info) {
-            let name = match addr {
-                Self::PA_OFFSET => "PA (KBD)",
-                Self::PA_CR_OFFSET => "PA_CR (KBDCR)",
-                Self::PB_OFFSET => "PB (DSP)",
-                Self::PB_CR_OFFSET => "PB_CR (DSPCR)",
-                _ => panic!("Invalid PIA address ${addr:04X}"),
-            };
-            info!("PIA load: addr=${addr:04X} value=${value:02X} (0b{value:08b}) [({name})]");
-        }
+        // if log_enabled!(Level::Info) {
+        //     let name = match addr {
+        //         Self::PA_OFFSET => "PA (KBD)",
+        //         Self::PA_CR_OFFSET => "PA_CR (KBDCR)",
+        //         Self::PB_OFFSET => "PB (DSP)",
+        //         Self::PB_CR_OFFSET => "PB_CR (DSPCR)",
+        //         _ => panic!("Invalid PIA address ${addr:04X}"),
+        //     };
+        //     info!("PIA load: addr=${addr:04X} value=${value:02X} (0b{value:08b}) [({name})]");
+        // }
 
         value
     }
 
     fn store(&self, addr: u16, value: u8) {
-        if log_enabled!(Level::Info) {
-            let name = match addr {
-                Self::PA_OFFSET => "PA (KBD)",
-                Self::PA_CR_OFFSET => "PA_CR (KBDCR)",
-                Self::PB_OFFSET => "PB (DSP)",
-                Self::PB_CR_OFFSET => "PB_CR (DSPCR)",
-                _ => panic!("Invalid PIA address ${addr:04X}"),
-            };
-            info!("PIA store: addr=${addr:04X} value=${value:02X} (0b{value:08b}) [({name})]");
-        }
+        // if log_enabled!(Level::Info) {
+        //     let name = match addr {
+        //         Self::PA_OFFSET => "PA (KBD)",
+        //         Self::PA_CR_OFFSET => "PA_CR (KBDCR)",
+        //         Self::PB_OFFSET => "PB (DSP)",
+        //         Self::PB_CR_OFFSET => "PB_CR (DSPCR)",
+        //         _ => panic!("Invalid PIA address ${addr:04X}"),
+        //     };
+        //     info!("PIA store: addr=${addr:04X} value=${value:02X} (0b{value:08b}) [({name})]");
+        // }
 
         if !self.state.lock().expect("Must succeed").started {
             return;
