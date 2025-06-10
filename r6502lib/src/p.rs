@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 use std::fmt::{Display, Formatter, Result as StdResult};
 
-const P_STR: &str = "NVXBDIZC";
+const P_STR: &str = "NV-BDIZC";
 
 // TBD: Consider using bitvec (https://docs.rs/bitvec/0.22.3/bitvec/) for this
 // Reference: https://www.nesdev.org/wiki/Status_flags
@@ -32,8 +32,10 @@ impl Display for P {
         let value = self.bits();
         write!(f, "[")?;
         for c in P_STR.chars() {
-            if (value & mask) == 0 {
+            if c == '-' {
                 write!(f, "-")?
+            } else if (value & mask) == 0 {
+                write!(f, ".")?
             } else {
                 write!(f, "{c}", c = c.to_uppercase())?
             }
@@ -98,10 +100,10 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case("[--------]", _p!(0b00000000))]
-    #[case("[NVXBDIZC]", _p!(0b11111111))]
+    #[case("[..-.....]", _p!(0b00000000))]
+    #[case("[NV-BDIZC]", _p!(0b11111111))]
     #[case("[NV-BDIZC]", _p!(0b11011111))]
-    #[case("[NV-BD--C]", _p!(0b11011001))]
+    #[case("[NV-BD..C]", _p!(0b11011001))]
     fn display(#[case] expected: &str, #[case] input: P) {
         assert_eq!(expected, input.to_string());
     }

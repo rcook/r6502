@@ -30,13 +30,13 @@ impl Display for Reg {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(
             f,
-            "{p} pc={pc:04X} a={a:02X} x={x:02X} y={y:02X} sp={sp:02X}",
-            p = self.p,
+            "PC:{pc:04X} A:{a:02X} X:{x:02X} Y:{y:02X} S:{sp:02X} {p}",
             pc = self.pc,
             a = self.a,
             x = self.x,
             y = self.y,
             sp = self.sp,
+            p = self.p,
         )
     }
 }
