@@ -144,7 +144,7 @@ pub(crate) fn sbc(cpu: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{Cpu, Memory, _p, p, P};
+    use crate::{Bus, Cpu, _p, p, P};
     use rstest::rstest;
 
     #[rstest]
@@ -167,8 +167,8 @@ mod tests {
         #[case] p: P,
         #[case] operand: u8,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = a;
         cpu.reg.pc = pc;
         cpu.reg.p = p;
@@ -198,8 +198,8 @@ mod tests {
         #[case] a: u8,
         #[case] value: u8,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         adc(&mut cpu, value);
@@ -218,8 +218,8 @@ mod tests {
         #[case] p: P,
         #[case] operand: u8,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = a;
         cpu.reg.pc = pc;
         cpu.reg.p = p;
@@ -238,8 +238,8 @@ mod tests {
         #[case] p: u8,
         #[case] operand: u8,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         adc(&mut cpu, operand);
@@ -257,8 +257,8 @@ mod tests {
         #[case] p: u8,
         #[case] operand: u8,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         sbc(&mut cpu, operand);

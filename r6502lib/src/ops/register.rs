@@ -83,12 +83,12 @@ pub(crate) fn tya(cpu: &mut Cpu) {
 #[cfg(test)]
 mod tests {
     use crate::ops::register::{tax, tay, txa, tya};
-    use crate::{Cpu, Memory};
+    use crate::{Bus, Cpu};
 
     #[test]
     fn tax_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x22;
         cpu.reg.x = 0x00;
         tax(&mut cpu);
@@ -97,8 +97,8 @@ mod tests {
 
     #[test]
     fn tay_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x22;
         cpu.reg.y = 0x00;
         tay(&mut cpu);
@@ -107,8 +107,8 @@ mod tests {
 
     #[test]
     fn txa_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x00;
         cpu.reg.x = 0x22;
         txa(&mut cpu);
@@ -117,8 +117,8 @@ mod tests {
 
     #[test]
     fn tya_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x00;
         cpu.reg.y = 0x22;
         tya(&mut cpu);

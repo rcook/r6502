@@ -2,7 +2,7 @@ pub(crate) mod absolute {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u16) -> $crate::OpCycles {
-                $crate::ops::$f(cpu, cpu.memory.load(addr));
+                $crate::ops::$f(cpu, cpu.bus.load(addr));
                 $cycles
             }
         };
@@ -56,7 +56,7 @@ pub(crate) mod absolute_x {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u16) -> $crate::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.x as u16);
-                $crate::ops::$f(cpu, cpu.memory.load(effective_addr));
+                $crate::ops::$f(cpu, cpu.bus.load(effective_addr));
                 if $crate::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
@@ -102,7 +102,7 @@ pub(crate) mod absolute_y {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u16) -> $crate::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.y as u16);
-                $crate::ops::$f(cpu, cpu.memory.load(effective_addr));
+                $crate::ops::$f(cpu, cpu.bus.load(effective_addr));
                 if $crate::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
@@ -219,7 +219,7 @@ pub(crate) mod indexed_indirect_x {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u8) -> $crate::OpCycles {
                 let effective_addr =
                     $crate::util::compute_effective_addr_indexed_indirect_x(cpu, addr);
-                $crate::ops::$f(cpu, cpu.memory.load(effective_addr));
+                $crate::ops::$f(cpu, cpu.bus.load(effective_addr));
                 $cycles
             }
         };
@@ -252,9 +252,9 @@ pub(crate) mod indirect {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u16) -> $crate::OpCycles {
                 // http://www.6502.org/tutorials/6502opcodes.html
                 // "AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON THE LAST BYTE OF A PAGE"
-                let lo_addr = cpu.memory.load(addr);
+                let lo_addr = cpu.bus.load(addr);
                 let hi_addr = cpu
-                    .memory
+                    .bus
                     .load((addr & 0xff00) + ((addr & 0x00ff).wrapping_add(1) & 0x00ff));
                 let effective_addr = ((hi_addr as u16) << 8) + lo_addr as u16;
                 $crate::ops::$f(cpu, effective_addr);
@@ -272,7 +272,7 @@ pub(crate) mod indirect_indexed_y {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u8) -> $crate::OpCycles {
                 let effective_addr =
                     $crate::util::compute_effective_addr_indirect_indexed_y(cpu, addr);
-                $crate::ops::$f(cpu, cpu.memory.load(effective_addr));
+                $crate::ops::$f(cpu, cpu.bus.load(effective_addr));
                 if $crate::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
@@ -334,7 +334,7 @@ pub(crate) mod zero_page {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u8) -> $crate::OpCycles {
-                $crate::ops::$f(cpu, cpu.memory.load(addr as u16));
+                $crate::ops::$f(cpu, cpu.bus.load(addr as u16));
                 $cycles
             }
         };
@@ -377,7 +377,7 @@ pub(crate) mod zero_page_x {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u8) -> $crate::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.x);
-                $crate::ops::$f(cpu, cpu.memory.load(effective_addr as u16));
+                $crate::ops::$f(cpu, cpu.bus.load(effective_addr as u16));
                 $cycles
             }
         };
@@ -416,7 +416,7 @@ pub(crate) mod zero_page_y {
         ($f: ident, $cycles: expr) => {
             pub(crate) fn $f(cpu: &mut $crate::Cpu, addr: u8) -> $crate::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.y);
-                $crate::ops::$f(cpu, cpu.memory.load(effective_addr as u16));
+                $crate::ops::$f(cpu, cpu.bus.load(effective_addr as u16));
                 $cycles
             }
         };

@@ -2,14 +2,14 @@ use crate::State::{Halted, Running, Stepping, Stopped};
 use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, Cpu, Image, InstructionInfo, Memory, OpInfo, Opcode, Os, OsEmulation, MOS_6502, OSHALT,
+    p_set, Bus, Cpu, Image, InstructionInfo, MachineType, OpInfo, Opcode, Os, MOS_6502, OSHALT,
     OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
 pub(crate) struct UiHost {
-    memory: Memory,
+    bus: Bus,
     debug_rx: Receiver<DebugMessage>,
     monitor_tx: Sender<MonitorMessage>,
     io_tx: Sender<IoMessage>,
@@ -22,7 +22,7 @@ impl UiHost {
         io_tx: Sender<IoMessage>,
     ) -> Self {
         Self {
-            memory: Memory::default(),
+            bus: Bus::default(),
             debug_rx,
             monitor_tx,
             io_tx,
@@ -32,12 +32,12 @@ impl UiHost {
     pub(crate) fn run(&self, image: &Image) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
 
-        self.memory.store_image(image)?;
+        self.bus.store_image(image)?;
 
-        let mut cpu = Cpu::new(self.memory.view(), Some(monitor));
+        let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
         cpu.reg.pc = image.start;
 
-        let os = Os::emulate(OsEmulation::AcornStyle)?;
+        let os = Os::emulate(MachineType::Acorn)?;
         os.load_into_vm(&mut cpu);
 
         let rti = MOS_6502
@@ -154,7 +154,7 @@ impl UiHost {
 
     fn fetch_memory(&self, address_range: AddressRange) {
         assert!(address_range.end >= address_range.begin);
-        let snapshot = self.memory.snapshot(address_range.begin, address_range.end);
+        let snapshot = self.bus.snapshot(address_range.begin, address_range.end);
         _ = self.monitor_tx.send(MonitorMessage::FetchMemoryResponse {
             address_range,
             snapshot,

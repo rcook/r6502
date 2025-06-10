@@ -1,5 +1,5 @@
 use crate::util::split_word;
-use crate::{constants::NMI, Cpu, Opcode, OsEmulation, IRQ, OSHALT, OSWRCH, RESET};
+use crate::{constants::NMI, Cpu, MachineType, Opcode, IRQ, OSHALT, OSWRCH, RESET};
 use anyhow::Result;
 use derive_builder::Builder;
 
@@ -23,42 +23,40 @@ pub struct Os {
 }
 
 impl Os {
-    pub fn emulate(emulation: OsEmulation) -> Result<Self> {
+    pub fn emulate(emulation: MachineType) -> Result<Self> {
         Ok(match emulation {
-            OsEmulation::None => OsBuilder::default().build()?,
-            OsEmulation::Sim6502 => todo!(),
-            OsEmulation::AcornStyle => OsBuilder::default()
+            MachineType::None => OsBuilder::default().build()?,
+            MachineType::Sim6502 => todo!(),
+            MachineType::Acorn => OsBuilder::default()
                 .irq_addr(0x8000)
                 .return_addr(OSHALT)
                 .os_vectors(vec![OSHALT, OSWRCH])
                 .build()?,
-            OsEmulation::Apple1Style => OsBuilder::default().build()?,
+            MachineType::Apple1 => OsBuilder::default().build()?,
         })
     }
 
     pub fn load_into_vm(&self, cpu: &mut Cpu) {
         if let Some(nmi_addr) = self.nmi_addr {
             let (hi, lo) = split_word(nmi_addr);
-            cpu.memory.store(NMI, lo);
-            cpu.memory.store(NMI.wrapping_add(1), hi);
+            cpu.bus.store(NMI, lo);
+            cpu.bus.store(NMI.wrapping_add(1), hi);
         }
         if let Some(reset_addr) = self.reset_addr {
             let (hi, lo) = split_word(reset_addr);
-            cpu.memory.store(RESET, lo);
-            cpu.memory.store(RESET.wrapping_add(1), hi);
+            cpu.bus.store(RESET, lo);
+            cpu.bus.store(RESET.wrapping_add(1), hi);
         }
         if let Some(irq_addr) = self.irq_addr {
             let (hi, lo) = split_word(irq_addr);
-            cpu.memory.store(IRQ, lo);
-            cpu.memory.store(IRQ.wrapping_add(1), hi);
+            cpu.bus.store(IRQ, lo);
+            cpu.bus.store(IRQ.wrapping_add(1), hi);
         }
 
         for os_vector in self.os_vectors.iter().copied() {
-            cpu.memory.store(os_vector, Opcode::Brk as u8);
-            cpu.memory
-                .store(os_vector.wrapping_add(1), Opcode::Nop as u8);
-            cpu.memory
-                .store(os_vector.wrapping_add(2), Opcode::Rts as u8);
+            cpu.bus.store(os_vector, Opcode::Brk as u8);
+            cpu.bus.store(os_vector.wrapping_add(1), Opcode::Nop as u8);
+            cpu.bus.store(os_vector.wrapping_add(2), Opcode::Rts as u8);
         }
 
         if let Some(return_addr) = self.return_addr {

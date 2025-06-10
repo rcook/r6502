@@ -13,7 +13,7 @@ use crate::{p_set, Cpu, IRQ, P};
 pub(crate) fn brk(cpu: &mut Cpu) {
     cpu.push_word(cpu.reg.pc + 1);
     cpu.push((cpu.reg.p | P::B).bits());
-    cpu.reg.pc = make_word(cpu.memory.load(IRQ.wrapping_add(1)), cpu.memory.load(IRQ));
+    cpu.reg.pc = make_word(cpu.bus.load(IRQ.wrapping_add(1)), cpu.bus.load(IRQ));
     p_set!(cpu.reg, I, true);
 }
 
@@ -25,7 +25,7 @@ pub(crate) fn nop(_cpu: &mut Cpu) {}
 mod tests {
     use crate::ops::brk;
     use crate::util::split_word;
-    use crate::{Cpu, Memory, _p, IRQ, STACK_BASE};
+    use crate::{Bus, Cpu, _p, IRQ, STACK_BASE};
     use rstest::rstest;
 
     #[rstest]
@@ -41,21 +41,21 @@ mod tests {
         #[case] p: u8,
         #[case] irq_addr: u16,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.p = _p!(p);
         cpu.reg.pc = pc + 1;
         cpu.reg.sp = sp;
         let (hi, lo) = split_word(irq_addr);
-        cpu.memory.store(IRQ, lo);
-        cpu.memory.store(IRQ.wrapping_add(1), hi);
+        cpu.bus.store(IRQ, lo);
+        cpu.bus.store(IRQ.wrapping_add(1), hi);
         brk(&mut cpu);
         assert_eq!(_p!(expected_p), cpu.reg.p);
         assert_eq!(expected_pc, cpu.reg.pc);
         assert_eq!(expected_s, cpu.reg.sp);
         assert_eq!(
             p | 0b00010000,
-            cpu.memory
+            cpu.bus
                 .load(STACK_BASE.wrapping_add(expected_s as u16).wrapping_add(1))
         ); // P with B flag set
     }

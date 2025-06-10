@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use clap_num::maybe_hex;
 use path_absolutize::Absolutize;
-use r6502lib::OsEmulation;
+use r6502lib::MachineType;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -78,13 +78,13 @@ pub(crate) enum Emulation {
     Apple1Style,
 }
 
-impl From<Emulation> for OsEmulation {
+impl From<Emulation> for MachineType {
     fn from(value: Emulation) -> Self {
         match value {
-            Emulation::None => OsEmulation::None,
-            Emulation::Sim6502 => OsEmulation::Sim6502,
-            Emulation::AcornStyle => OsEmulation::AcornStyle,
-            Emulation::Apple1Style => OsEmulation::Apple1Style,
+            Emulation::None => MachineType::None,
+            Emulation::Sim6502 => MachineType::Sim6502,
+            Emulation::AcornStyle => MachineType::Acorn,
+            Emulation::Apple1Style => MachineType::Apple1,
         }
     }
 }

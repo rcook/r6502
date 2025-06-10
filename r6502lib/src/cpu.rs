@@ -1,6 +1,6 @@
 use crate::util::{make_word, split_word};
 use crate::{
-    p_get, DummyMonitor, Frequency, Instruction, InstructionInfo, MemoryView, Monitor, Reg,
+    p_get, BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, Monitor, Reg,
     TotalCycles, STACK_BASE,
 };
 use log::{debug, log_enabled, Level};
@@ -12,17 +12,17 @@ static CPU_TICK: LazyLock<Duration> = LazyLock::new(|| CPU_FREQUENCY.get_tick())
 
 pub struct Cpu<'a> {
     pub reg: Reg,
-    pub memory: MemoryView<'a>,
+    pub bus: BusView<'a>,
     pub total_cycles: TotalCycles,
     monitor: Box<dyn Monitor>,
 }
 
 impl<'a> Cpu<'a> {
     #[must_use]
-    pub fn new(memory: MemoryView<'a>, monitor: Option<Box<dyn Monitor>>) -> Self {
+    pub fn new(bus: BusView<'a>, monitor: Option<Box<dyn Monitor>>) -> Self {
         Self {
             reg: Reg::default(),
-            memory,
+            bus,
             total_cycles: 0,
             monitor: monitor.unwrap_or_else(|| Box::new(DummyMonitor)),
         }
@@ -98,19 +98,18 @@ impl<'a> Cpu<'a> {
     #[must_use]
     pub(crate) fn peek_back_word(&self, offset: u8) -> u16 {
         let stack_addr = (STACK_BASE + self.reg.sp as u16).wrapping_add(offset as u16);
-        let hi = self.memory.load(stack_addr.wrapping_add(2));
-        let lo = self.memory.load(stack_addr.wrapping_add(1));
+        let hi = self.bus.load(stack_addr.wrapping_add(2));
+        let lo = self.bus.load(stack_addr.wrapping_add(1));
         make_word(hi, lo)
     }
 
     #[must_use]
     fn get_stack_value(&self) -> u8 {
-        self.memory
-            .load(STACK_BASE.wrapping_add(self.reg.sp as u16))
+        self.bus.load(STACK_BASE.wrapping_add(self.reg.sp as u16))
     }
 
     fn set_stack_value(&mut self, value: u8) {
-        self.memory
+        self.bus
             .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value);
     }
 }
@@ -119,7 +118,7 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, Cpu, Image, Memory, Monitor, Opcode, OsBuilder, TracingMonitor, IRQ,
+        p, p_get, p_set, Bus, Cpu, Image, Monitor, Opcode, OsBuilder, TracingMonitor, IRQ,
         MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
@@ -127,10 +126,10 @@ mod tests {
 
     #[test]
     fn no_operand() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x12;
-        memory.store(0x0000, Opcode::Nop as u8);
+        bus.store(0x0000, Opcode::Nop as u8);
         assert!(cpu.step());
         assert_eq!(2, cpu.total_cycles);
         assert_eq!(0x12, cpu.reg.a);
@@ -140,11 +139,11 @@ mod tests {
 
     #[test]
     fn byte0() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x12;
-        memory.store(0x0000, Opcode::AdcImm as u8);
-        memory.store(0x0001, 0x34);
+        bus.store(0x0000, Opcode::AdcImm as u8);
+        bus.store(0x0001, 0x34);
         assert!(cpu.step());
         assert_eq!(2, cpu.total_cycles);
         assert_eq!(0x46, cpu.reg.a);
@@ -154,13 +153,12 @@ mod tests {
 
     #[test]
     fn byte1() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x12;
-        memory.store(0x0000, Opcode::AdcZp as u8);
-        memory.store(0x0001, 0x34);
-        memory.store(0x0034, 0x56);
+        bus.store(0x0000, Opcode::AdcZp as u8);
+        bus.store(0x0001, 0x34);
+        bus.store(0x0034, 0x56);
         assert!(cpu.step());
         assert_eq!(3, cpu.total_cycles);
         assert_eq!(0x68, cpu.reg.a);
@@ -170,13 +168,12 @@ mod tests {
 
     #[test]
     fn word0() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x12;
-        memory.store(0x0000, Opcode::JmpAbs as u8);
-        memory.store(0x0001, 0x00);
-        memory.store(0x0002, 0x10);
+        bus.store(0x0000, Opcode::JmpAbs as u8);
+        bus.store(0x0001, 0x00);
+        bus.store(0x0002, 0x10);
         assert!(cpu.step());
         assert_eq!(3, cpu.total_cycles);
         assert_eq!(0x12, cpu.reg.a);
@@ -186,14 +183,13 @@ mod tests {
 
     #[test]
     fn word1() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x25;
-        memory.store(0x0000, Opcode::AdcAbs as u8);
-        memory.store(0x0001, 0x12);
-        memory.store(0x0002, 0x34);
-        memory.store(0x3412, 0x13);
+        bus.store(0x0000, Opcode::AdcAbs as u8);
+        bus.store(0x0001, 0x12);
+        bus.store(0x0002, 0x34);
+        bus.store(0x3412, 0x13);
         assert!(cpu.step());
         assert_eq!(4, cpu.total_cycles);
         assert_eq!(0x38, cpu.reg.a);
@@ -203,13 +199,12 @@ mod tests {
 
     #[test]
     fn brk() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.pc = 0x1000;
-        memory.store(0x1000, Opcode::Brk as u8);
-        memory.store(IRQ, 0x76);
-        memory.store(IRQ + 1, 0x98);
+        bus.store(0x1000, Opcode::Brk as u8);
+        bus.store(IRQ, 0x76);
+        bus.store(IRQ + 1, 0x98);
         p_set!(cpu.reg, B, false);
         assert!(!cpu.step());
         assert_eq!(7, cpu.total_cycles);
@@ -223,8 +218,8 @@ mod tests {
         const START: u16 = 0x1000;
         let p_test = P::D | P::ALWAYS_ONE;
 
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
         let os = OsBuilder::default()
             .irq_addr(IRQ_ADDR)
@@ -232,9 +227,9 @@ mod tests {
             .build()?;
         os.load_into_vm(&mut cpu);
 
-        memory.store(START, Opcode::Jsr as u8);
-        memory.store(START + 1, OSWRCH as u8);
-        memory.store(START + 2, (OSWRCH >> 8) as u8);
+        bus.store(START, Opcode::Jsr as u8);
+        bus.store(START + 1, OSWRCH as u8);
+        bus.store(START + 2, (OSWRCH >> 8) as u8);
 
         cpu.reg.pc = START;
         cpu.reg.p = p_test;
@@ -270,32 +265,30 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        memory.store_image(&image)?;
+        bus.store_image(&image)?;
         cpu.reg.pc = 0x0e01;
         while cpu.step() {}
         assert_eq!(21, cpu.total_cycles);
-        assert_eq!(0x46, memory.load(0x0e00));
+        assert_eq!(0x46, bus.load(0x0e00));
         Ok(())
     }
 
     #[test]
     fn add16() -> Result<()> {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        memory.store_image(&image)?;
+        bus.store_image(&image)?;
         cpu.reg.pc = 0x0e02;
         while cpu.step() {}
         assert_eq!(33, cpu.total_cycles);
-        let lo = memory.load(0x0e00);
-        let hi = memory.load(0x0e01);
+        let lo = bus.load(0x0e00);
+        let hi = bus.load(0x0e01);
         assert_eq!(0xac68, make_word(hi, lo));
         Ok(())
     }
@@ -305,20 +298,19 @@ mod tests {
         const NUM1: u16 = 0x0e33;
         const REM: u16 = 0x0e37;
 
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
-
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        memory.store_image(&image)?;
+        bus.store_image(&image)?;
         cpu.reg.pc = 0x0e02;
         while cpu.step() {}
         assert_eq!(893, cpu.total_cycles);
-        let lo = memory.load(NUM1);
-        let hi = memory.load(NUM1 + 1);
+        let lo = bus.load(NUM1);
+        let hi = bus.load(NUM1 + 1);
         let quotient = make_word(hi, lo);
-        let lo = memory.load(REM);
-        let hi = memory.load(REM + 1);
+        let lo = bus.load(REM);
+        let hi = bus.load(REM + 1);
         let remainder = make_word(hi, lo);
         assert_eq!(0x01d2, quotient);
         assert_eq!(0x0000, remainder);
@@ -334,10 +326,10 @@ mod tests {
             None
         };
 
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), monitor);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), monitor);
         let image = input.parse::<Image>()?;
-        memory.store_image(&image)?;
+        bus.store_image(&image)?;
         cpu.reg.pc = image.start;
 
         let os = OsBuilder::default()

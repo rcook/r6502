@@ -41,43 +41,43 @@ pub(crate) fn plp(cpu: &mut Cpu) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{Cpu, Memory, _p, P, STACK_BASE};
+    use crate::{Bus, Cpu, _p, P, STACK_BASE};
     use rstest::rstest;
 
     #[test]
     fn pha_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x56;
-        cpu.memory.store(STACK_BASE + 0x00ff, 0x34);
+        cpu.bus.store(STACK_BASE + 0x00ff, 0x34);
         assert_eq!(0xff, cpu.reg.sp);
         pha(&mut cpu);
         assert_eq!(0xfe, cpu.reg.sp);
         assert_eq!(0x56, cpu.reg.a);
         assert_eq!(P::default(), cpu.reg.p);
-        assert_eq!(0x56, cpu.memory.load(STACK_BASE + 0x00ff));
+        assert_eq!(0x56, cpu.bus.load(STACK_BASE + 0x00ff));
     }
 
     #[test]
     fn pha_wraparound() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
             cpu.reg.a = value;
-            cpu.memory.store(STACK_BASE + 0x00ff - value as u16, 0x00);
+            cpu.bus.store(STACK_BASE + 0x00ff - value as u16, 0x00);
             assert_eq!(current_s, cpu.reg.sp);
             pha(&mut cpu);
             assert_eq!(current_s.wrapping_sub(1), cpu.reg.sp);
-            assert_eq!(value, cpu.memory.load(STACK_BASE + 0x00ff - value as u16));
+            assert_eq!(value, cpu.bus.load(STACK_BASE + 0x00ff - value as u16));
         }
     }
 
     #[test]
     fn php_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
         php(&mut cpu);
@@ -104,20 +104,20 @@ mod tests {
         #[case] sp: u8,
         #[case] p: u8,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.sp = sp;
         cpu.reg.p = _p!(p);
         php(&mut cpu);
         assert_eq!(expected_s, cpu.reg.sp);
-        assert_eq!(expected_value, cpu.memory.load(expected_addr));
+        assert_eq!(expected_value, cpu.bus.load(expected_addr));
     }
 
     #[test]
     fn pla_basics() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.a = 0x00;
         pha(&mut cpu);
@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn p_flag_basics() {
         fn do_test(expected_p: u8, cpu: &mut Cpu, start: u16, value: u8) {
-            cpu.memory.store(start + 1, value); // the test value
+            cpu.bus.store(start + 1, value); // the test value
             cpu.reg.p = _p!(0b00110000);
             cpu.reg.pc = start;
             _ = cpu.step(); // LDA #value
@@ -156,18 +156,18 @@ mod tests {
             assert_eq!(value, cpu.reg.a);
             _ = cpu.step(); // PHA
             assert_eq!(start + 3, cpu.reg.pc);
-            assert_eq!(value, cpu.memory.load(STACK_BASE + cpu.reg.sp as u16 + 1));
+            assert_eq!(value, cpu.bus.load(STACK_BASE + cpu.reg.sp as u16 + 1));
             _ = cpu.step(); // PLP
             assert_eq!(_p!(expected_p), cpu.reg.p);
         }
         const START: u16 = 0x1000;
 
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
-        memory.store(START, 0xa9); // LDA_IMM
-        memory.store(START + 2, 0x48); // PHA
-        memory.store(START + 3, 0x28); // PLP
+        bus.store(START, 0xa9); // LDA_IMM
+        bus.store(START + 2, 0x48); // PHA
+        bus.store(START + 3, 0x28); // PLP
 
         do_test(0b11111111, &mut cpu, START, 0b11111111);
         do_test(0b00110000, &mut cpu, START, 0b00000000);

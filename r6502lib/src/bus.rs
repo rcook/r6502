@@ -1,25 +1,18 @@
 use crate::util::make_word;
 use crate::{
-    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI,
-    PIA_END_ADDR, PIA_START_ADDR, RESET,
+    BusView, DeviceInfo, Image, MachineType, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI, PIA_END_ADDR,
+    PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
 
 const UNMAPPED_VALUE: u8 = 0xff;
 
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
-pub struct Memory {
+pub struct Bus {
     devices: Vec<DeviceInfo>,
 }
 
-pub struct DeviceInfo {
-    start: u16,
-    end: u16,
-    device: Box<dyn MemoryMappedDevice>,
-    offset: u16,
-}
-
-impl Default for Memory {
+impl Default for Bus {
     fn default() -> Self {
         Self::new(vec![DeviceInfo {
             start: 0x0000,
@@ -30,11 +23,11 @@ impl Default for Memory {
     }
 }
 
-impl Memory {
+impl Bus {
     #[must_use]
-    pub fn emulate(emulation: OsEmulation) -> Self {
-        match emulation {
-            OsEmulation::AcornStyle => Self::new(vec![
+    pub fn configure_for(machine_type: MachineType) -> Self {
+        match machine_type {
+            MachineType::Acorn => Self::new(vec![
                 DeviceInfo {
                     start: 0x0000,
                     end: 0x7fff,
@@ -48,7 +41,7 @@ impl Memory {
                     offset: 0x0000,
                 },
             ]),
-            OsEmulation::Apple1Style => Self::new(vec![
+            MachineType::Apple1 => Self::new(vec![
                 DeviceInfo {
                     start: 0x0000,
                     end: PIA_START_ADDR - 1,
@@ -73,7 +66,7 @@ impl Memory {
     }
 
     #[must_use]
-    pub fn new(mut devices: Vec<DeviceInfo>) -> Self {
+    fn new(mut devices: Vec<DeviceInfo>) -> Self {
         devices.sort_by(|a, b| a.start.cmp(&b.start));
         Self { devices }
     }
@@ -139,8 +132,8 @@ impl Memory {
     }
 
     #[must_use]
-    pub fn view(&self) -> MemoryView {
-        MemoryView::new(self)
+    pub fn view(&self) -> BusView {
+        BusView::new(self)
     }
 
     #[must_use]
@@ -166,20 +159,20 @@ impl Memory {
 
 #[cfg(test)]
 mod tests {
-    use crate::memory::UNMAPPED_VALUE;
-    use crate::{DeviceInfo, Image, Memory, Ram};
+    use crate::bus::UNMAPPED_VALUE;
+    use crate::{Bus, DeviceInfo, Image, Ram};
     use anyhow::Result;
 
     #[test]
     fn load_no_device() {
-        let memory = Memory::new(Vec::new());
-        assert_eq!(UNMAPPED_VALUE, memory.load(0x0000));
+        let bus = Bus::new(Vec::new());
+        assert_eq!(UNMAPPED_VALUE, bus.load(0x0000));
     }
 
     #[test]
     fn store_no_device() {
-        let memory = Memory::new(Vec::new());
-        memory.store(0x0000, 0x00);
+        let bus = Bus::new(Vec::new());
+        bus.store(0x0000, 0x00);
     }
 
     #[test]
@@ -190,21 +183,21 @@ mod tests {
             device: Box::new(Ram::<3>::default()),
             offset: 5,
         }];
-        let memory = Memory::new(devices);
+        let bus = Bus::new(devices);
         let bytes = (0..=255).cycle().skip(10).take(100).collect::<Vec<_>>();
         let image = Image::from_bytes(&bytes, None, None, None)?;
         assert_eq!(0x0000, image.load);
 
-        memory.store_image(&image)?;
+        bus.store_image(&image)?;
 
         for addr in 0..5 {
-            assert_eq!(UNMAPPED_VALUE, memory.load(addr));
+            assert_eq!(UNMAPPED_VALUE, bus.load(addr));
         }
-        assert_eq!(15, memory.load(5));
-        assert_eq!(16, memory.load(6));
-        assert_eq!(17, memory.load(7));
+        assert_eq!(15, bus.load(5));
+        assert_eq!(16, bus.load(6));
+        assert_eq!(17, bus.load(7));
         for addr in 8..200 {
-            assert_eq!(UNMAPPED_VALUE, memory.load(addr));
+            assert_eq!(UNMAPPED_VALUE, bus.load(addr));
         }
         Ok(())
     }

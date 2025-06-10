@@ -15,7 +15,7 @@ pub(crate) fn jsr(cpu: &mut Cpu, addr: u16) {
     // to this function.
     let hi_addr = cpu.reg.pc.wrapping_sub(1);
     let lo_addr = cpu.reg.pc.wrapping_sub(2);
-    let effective_addr = make_word(cpu.memory.load(hi_addr), cpu.memory.load(lo_addr));
+    let effective_addr = make_word(cpu.bus.load(hi_addr), cpu.bus.load(lo_addr));
     assert_eq!(addr, effective_addr);
 
     // The real JSR instruction starts to push the return address onto
@@ -26,7 +26,7 @@ pub(crate) fn jsr(cpu: &mut Cpu, addr: u16) {
     // even if it's garbage.
     let (return_hi, return_lo) = split_word(cpu.reg.pc.wrapping_sub(1));
     cpu.push(return_hi);
-    let effective_addr = make_word(cpu.memory.load(hi_addr), cpu.memory.load(lo_addr));
+    let effective_addr = make_word(cpu.bus.load(hi_addr), cpu.bus.load(lo_addr));
     cpu.push(return_lo);
     cpu.reg.pc = effective_addr;
 }
@@ -52,7 +52,7 @@ pub(crate) fn rts(cpu: &mut Cpu) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{Cpu, Memory, _p};
+    use crate::{Bus, Cpu, _p};
     use rstest::rstest;
 
     #[rstest]
@@ -64,8 +64,8 @@ mod tests {
         #[case] pc: u16,
         #[case] operand: u16,
     ) {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = a;
         cpu.reg.pc = pc;
         jmp(&mut cpu, operand);
@@ -77,12 +77,12 @@ mod tests {
     fn jsr_basics() {
         const TARGET_ADDR: u16 = 0x1234;
 
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
-        memory.store(0x1000, 0x20);
-        memory.store(0x1001, target_lo);
-        memory.store(0x1002, target_hi);
+        bus.store(0x1000, 0x20);
+        bus.store(0x1001, target_lo);
+        bus.store(0x1002, target_hi);
 
         // TBD: Restructure VM so that instruction and operand decoding
         // is taken account of properly. For now, we'll work around this
@@ -100,8 +100,8 @@ mod tests {
     // stack will have bizarre behaviour
     #[test]
     fn jsr_smashing_stack() {
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.pc = 0x017b;
         cpu.reg.sp = 0x7d;
@@ -109,10 +109,10 @@ mod tests {
         cpu.reg.x = 0x89; // Probably irrelevant
         cpu.reg.y = 0x34; // Probably irrelevant
         cpu.reg.p = _p!(0b11100110); // Probably irrelevant
-        memory.store(0x0155, 0xad);
-        memory.store(0x017b, 0x20); // JSR abs
-        memory.store(0x017c, 0x55);
-        memory.store(0x017d, 0x13);
+        bus.store(0x0155, 0xad);
+        bus.store(0x017b, 0x20); // JSR abs
+        bus.store(0x017c, 0x55);
+        bus.store(0x017d, 0x13);
         _ = cpu.step();
         assert_eq!(0x0155, cpu.reg.pc);
         assert_eq!(0x7b, cpu.reg.sp);
@@ -120,24 +120,25 @@ mod tests {
         assert_eq!(0x89, cpu.reg.x);
         assert_eq!(0x34, cpu.reg.y);
         assert_eq!(_p!(0b11100110), cpu.reg.p);
-        assert_eq!(0xad, memory.load(0x0155));
-        assert_eq!(0x20, memory.load(0x017b));
-        assert_eq!(0x7d, memory.load(0x017c));
-        assert_eq!(0x01, memory.load(0x017d));
+        assert_eq!(0xad, bus.load(0x0155));
+        assert_eq!(0x20, bus.load(0x017b));
+        assert_eq!(0x7d, bus.load(0x017c));
+        assert_eq!(0x01, bus.load(0x017d));
     }
 
     #[test]
     // cargo run -p r6502validation -- run-json '{ "name": "40 9c 2c", "initial": { "pc": 34673, "s": 110, "a": 162, "x": 129, "y": 126, "p": 99, "ram": [ [34673, 64], [34674, 156], [34675, 44], [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14]]}, "final": { "pc": 26026, "s": 113, "a": 162, "x": 129, "y": 126, "p": 172, "ram": [ [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14], [34673, 64], [34674, 156], [34675, 44]]}, "cycles": [ [34673, 64, "read"], [34674, 156, "read"], [366, 152, "read"], [367, 156, "read"], [368, 170, "read"], [369, 101, "read"]] }'
     fn rti_scenario() {
         const INITIAL_SP: u8 = 0x6e;
-        let memory = Memory::default();
-        let mut cpu = Cpu::new(memory.view(), None);
+
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.p = _p!(0x63);
         cpu.reg.sp = INITIAL_SP;
-        memory.store(0x0100 + INITIAL_SP as u16, 0x98);
-        memory.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
-        memory.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)
-        memory.store(0x0100 + INITIAL_SP as u16 + 3, 0x65); // hi(return_attr)
+        bus.store(0x0100 + INITIAL_SP as u16, 0x98);
+        bus.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
+        bus.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)
+        bus.store(0x0100 + INITIAL_SP as u16 + 3, 0x65); // hi(return_attr)
         cpu.reg.pc = 0x8771 + 1;
         rti(&mut cpu);
         assert_eq!(0x65aa, cpu.reg.pc);

@@ -1,4 +1,4 @@
-use crate::{Cpu, Memory, Opcode, _p};
+use crate::{Bus, Cpu, Opcode, _p};
 use anyhow::{anyhow, bail, Result};
 use r6502validationlib::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use std::ffi::OsStr;
@@ -95,8 +95,8 @@ pub fn run_scenario(scenario: &Scenario) -> (bool, Option<State>) {
 }
 
 fn run_inner(scenario: &Scenario) -> (bool, State) {
-    let memory = Memory::default();
-    let mut cpu = Cpu::new(memory.view(), None);
+    let bus = Bus::default();
+    let mut cpu = Cpu::new(bus.view(), None);
     cpu.reg.pc = scenario.initial.pc;
     cpu.reg.sp = scenario.initial.sp;
     cpu.reg.a = scenario.initial.a;
@@ -104,7 +104,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
     cpu.reg.y = scenario.initial.y;
     cpu.reg.p = _p!(scenario.initial.p);
     for address_value in &scenario.initial.ram {
-        cpu.memory.store(address_value.address, address_value.value);
+        cpu.bus.store(address_value.address, address_value.value);
     }
 
     _ = cpu.step();
@@ -122,7 +122,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
             .iter()
             .map(|address_value| AddressValue {
                 address: address_value.address,
-                value: cpu.memory.load(address_value.address),
+                value: cpu.bus.load(address_value.address),
             })
             .collect(),
     };
@@ -200,7 +200,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
     check_p!(p);
 
     for p in &scenario.r#final.ram {
-        check!(p.address, p.value, cpu.memory.load(p.address));
+        check!(p.address, p.value, cpu.bus.load(p.address));
     }
 
     (true, final_state)

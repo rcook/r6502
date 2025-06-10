@@ -1,20 +1,20 @@
 use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
 use log::LevelFilter;
-use r6502lib::{Cpu, Image, Memory, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH};
+use r6502lib::{Bus, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH};
 use simple_logging::log_to_file;
 use std::process::exit;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
-    let memory = Memory::emulate(opts.emulation.into());
+    let bus = Bus::configure_for(opts.emulation.into());
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    memory.store_image(&image)?;
-    memory.start();
+    bus.store_image(&image)?;
+    bus.start();
 
     let start = if opts.reset {
-        memory.load_reset_unsafe()
+        bus.load_reset_unsafe()
     } else {
         image.start
     };
@@ -79,7 +79,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         None
     };
 
-    let mut cpu = Cpu::new(memory.view(), monitor);
+    let mut cpu = Cpu::new(bus.view(), monitor);
     cpu.reg.pc = start;
 
     let mut stopped_after_requested_cycles = false;
