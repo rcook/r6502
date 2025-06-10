@@ -1,6 +1,7 @@
 use crate::util::make_word;
 use crate::{
-    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, IRQ, MEMORY_SIZE, NMI, RESET,
+    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, IRQ, MEMORY_SIZE, NMI,
+    PIA_END_ADDR, PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
 
@@ -36,21 +37,21 @@ impl Memory {
                 let devices = vec![
                     DeviceInfo {
                         start: 0x0000,
-                        end: Pia::START_ADDR - 1,
-                        device: Box::new(Ram::<{ Pia::START_ADDR as usize }>::default()),
+                        end: PIA_START_ADDR - 1,
+                        device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
                         offset: 0x0000,
                     },
                     DeviceInfo {
-                        start: Pia::START_ADDR,
-                        end: Pia::END_ADDR,
+                        start: PIA_START_ADDR,
+                        end: PIA_END_ADDR,
                         device: Box::new(Pia::default()),
-                        offset: 0x0000,
+                        offset: PIA_START_ADDR,
                     },
                     DeviceInfo {
-                        start: Pia::END_ADDR + 1,
+                        start: PIA_END_ADDR + 1,
                         end: 0xffff,
-                        device: Box::new(Ram::<{ 0xffff - Pia::END_ADDR as usize }>::default()),
-                        offset: Pia::END_ADDR + 1,
+                        device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
+                        offset: PIA_END_ADDR + 1,
                     },
                 ];
                 Self::new(devices)

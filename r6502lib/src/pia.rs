@@ -7,29 +7,29 @@ use std::thread::{spawn, JoinHandle};
 
 #[derive(Debug)]
 enum Message {
-    KbdUpdated,
-    KbdcrUpdated,
-    DspUpdated,
-    DspcrUpdated,
+    PaUpdated,
+    PacrUpdated,
+    PbUpdated,
+    PbcrUpdated,
     Key(Key),
 }
 
 struct PiaState {
     started: bool,
-    kbd: u8,
-    kbdcr: u8,
-    dsp: u8,
-    dspcr: u8,
+    pa: u8,    // PIA.A keyboard input on Apple 1
+    pa_cr: u8, // PIA.A keyboard control register on Apple 1
+    pb: u8,    // PIA.B display output register on Apple 1
+    pb_cr: u8, // PIA.B display control register on Apple 1
 }
 
 impl PiaState {
     fn new() -> Self {
         Self {
             started: false,
-            kbd: 0,
-            kbdcr: 0,
-            dsp: 0,
-            dspcr: 0,
+            pa: 0,
+            pa_cr: 0,
+            pb: 0,
+            pb_cr: 0,
         }
     }
 
@@ -38,8 +38,8 @@ impl PiaState {
         if c as u8 == 0 {
             todo!();
         }
-        self.kbd = (c as u8) | 0x80;
-        self.kbdcr |= 0x80;
+        self.pa = (c as u8) | 0x80;
+        self.pa_cr |= 0x80;
     }
 }
 
@@ -51,18 +51,10 @@ pub(crate) struct Pia {
 }
 
 impl Pia {
-    pub(crate) const START_ADDR: u16 = 0xd010;
-    pub(crate) const END_ADDR: u16 = 0xd013;
-
-    // Apple I PIA addresses etc.
-    #[allow(unused)]
-    pub(crate) const KBD: u16 = 0xD010; // PIA.A keyboard input
-    #[allow(unused)]
-    pub(crate) const KBDCR: u16 = 0xD011; // PIA.A keyboard control register
-    #[allow(unused)]
-    pub(crate) const DSP: u16 = 0xD012; // PIA.B display output register
-    #[allow(unused)]
-    pub(crate) const DSPCR: u16 = 0xD013; //  PIA.B display control register
+    const PA_OFFSET: u16 = 0x0000;
+    const PA_CR_OFFSET: u16 = 0x0001;
+    const PB_OFFSET: u16 = 0x0002;
+    const PB_CR_OFFSET: u16 = 0x0003;
 }
 
 impl Default for Pia {
@@ -103,12 +95,12 @@ impl Pia {
                         Key::Ctrl('c') => break,
                         _ => todo!(),
                     },
-                    Message::KbdcrUpdated => state_clone.lock().expect("Must succeed").kbdcr = 0x00,
-                    Message::DspUpdated => {
+                    Message::PacrUpdated => state_clone.lock().expect("Must succeed").pa_cr = 0x00,
+                    Message::PbUpdated => {
                         let value = {
                             let mut state = state_clone.lock().expect("Must succeed");
-                            let value = state.dsp;
-                            state.dsp = 0x00;
+                            let value = state.pb;
+                            state.pb = 0x00;
                             value
                         };
                         let char_value = value & 0x7f;
@@ -147,15 +139,15 @@ impl MemoryMappedDevice for Pia {
 
     fn load(&self, addr: u16) -> u8 {
         match addr {
-            Self::KBD => {
+            Self::PA_OFFSET => {
                 let mut state = self.state.lock().expect("Must succeed");
-                let value = state.kbd;
-                state.kbdcr = value & 0x7f;
+                let value = state.pa;
+                state.pa_cr = value & 0x7f;
                 value
             }
-            Self::KBDCR => self.state.lock().expect("Must succeed").kbdcr,
-            Self::DSP => self.state.lock().expect("Must succeed").dsp,
-            Self::DSPCR => self.state.lock().expect("Must succeed").dspcr,
+            Self::PA_CR_OFFSET => self.state.lock().expect("Must succeed").pa_cr,
+            Self::PB_OFFSET => self.state.lock().expect("Must succeed").pb,
+            Self::PB_CR_OFFSET => self.state.lock().expect("Must succeed").pb_cr,
             _ => panic!("Invalid PIA address ${addr:04X}"),
         }
     }
@@ -166,21 +158,21 @@ impl MemoryMappedDevice for Pia {
         }
 
         let m = match addr {
-            Self::KBD => {
-                self.state.lock().expect("Must succeed").kbd = value;
-                Message::KbdUpdated
+            Self::PA_OFFSET => {
+                self.state.lock().expect("Must succeed").pa = value;
+                Message::PaUpdated
             }
-            Self::KBDCR => {
-                self.state.lock().expect("Must succeed").kbdcr = value;
-                Message::KbdcrUpdated
+            Self::PA_CR_OFFSET => {
+                self.state.lock().expect("Must succeed").pa_cr = value;
+                Message::PacrUpdated
             }
-            Self::DSP => {
-                self.state.lock().expect("Must succeed").dsp = value;
-                Message::DspUpdated
+            Self::PB_OFFSET => {
+                self.state.lock().expect("Must succeed").pb = value;
+                Message::PbUpdated
             }
-            Self::DSPCR => {
-                self.state.lock().expect("Must succeed").dspcr = value;
-                Message::DspcrUpdated
+            Self::PB_CR_OFFSET => {
+                self.state.lock().expect("Must succeed").pb_cr = value;
+                Message::PbcrUpdated
             }
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
