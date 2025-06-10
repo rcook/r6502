@@ -25,7 +25,7 @@ impl Monitor for UiMonitor {
                 reg,
                 instruction_info,
             })
-            .expect("Must succeed")
+            .expect("Must succeed");
     }
 
     fn on_after_execute(
@@ -40,6 +40,6 @@ impl Monitor for UiMonitor {
                 reg,
                 instruction_info,
             })
-            .expect("Must succeed")
+            .expect("Must succeed");
     }
 }

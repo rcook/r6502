@@ -20,17 +20,17 @@ pub(crate) fn inc(state: &mut Cpu, addr: u16) {
 // http://www.6502.org/tutorials/6502opcodes.html#STA
 // http://www.6502.org/users/obelisk/6502/reference.html#STA
 pub(crate) fn sta(state: &mut Cpu, addr: u16) {
-    state.memory.store(addr, state.reg.a)
+    state.memory.store(addr, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#STX
 // http://www.6502.org/users/obelisk/6502/reference.html#STX
 pub(crate) fn stx(state: &mut Cpu, addr: u16) {
-    state.memory.store(addr, state.reg.x)
+    state.memory.store(addr, state.reg.x);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#STY
 // http://www.6502.org/users/obelisk/6502/reference.html#STY
 pub(crate) fn sty(state: &mut Cpu, addr: u16) {
-    state.memory.store(addr, state.reg.y)
+    state.memory.store(addr, state.reg.y);
 }

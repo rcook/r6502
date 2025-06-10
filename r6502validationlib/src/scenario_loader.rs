@@ -47,7 +47,7 @@ impl ScenarioLoader {
     fn strip_parents(path: &Path, n: i32) -> Result<&Path> {
         let mut temp = path;
         for _ in 0..n {
-            temp = temp.parent().ok_or_else(|| anyhow!("Parent must exist"))?
+            temp = temp.parent().ok_or_else(|| anyhow!("Parent must exist"))?;
         }
         Ok(temp)
     }

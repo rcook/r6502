@@ -2,7 +2,12 @@ pub(crate) use items::*;
 
 #[iter_mod::make_items]
 mod items {
-    use crate::op_info::macros::*;
+    use crate::op_info::macros::{
+        absolute_wrapped, absolute_x_wrapped, absolute_y_wrapped, accumulator_wrapped,
+        immediate_wrapped, implied_wrapped, indexed_indirect_x_wrapped, indirect_indexed_y_wrapped,
+        indirect_wrapped, relative_wrapped, zero_page_wrapped, zero_page_x_wrapped,
+        zero_page_y_wrapped,
+    };
     use crate::OpInfo;
 
     pub(crate) const ADC_ABS: OpInfo = absolute_wrapped!(AdcAbs, adc);

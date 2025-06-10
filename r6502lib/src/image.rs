@@ -253,7 +253,7 @@ mod tests {
 
     #[test]
     fn basics() -> Result<()> {
-        let input = r#" 0E00  A2 00     LDX  #$00
+        let input = r" 0E00  A2 00     LDX  #$00
  0E02  BD 0E 0E  LDA  $0E0E, X
  0E05  F0 06     BEQ  $0E0D
  0E07  20 EE FF  JSR  $FFEE
@@ -261,7 +261,7 @@ mod tests {
  0E0B  D0 F5     BNE  $0E02
  0E0D  60        RTS
  0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
-"#;
+";
         let image = input.parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         assert_eq!(28, image.values.len());

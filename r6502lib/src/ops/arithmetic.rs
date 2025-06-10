@@ -145,7 +145,6 @@ pub(crate) fn sbc(state: &mut Cpu, operand: u8) {
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
     use crate::{Cpu, Memory, _p, p, P};
-    use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
@@ -167,7 +166,7 @@ mod tests {
         #[case] pc: u16,
         #[case] p: P,
         #[case] operand: u8,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
@@ -177,7 +176,6 @@ mod tests {
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(expected_pc, cpu.reg.pc);
         assert_eq!(expected_p, cpu.reg.p);
-        Ok(())
     }
 
     #[rstest]
@@ -199,7 +197,7 @@ mod tests {
         #[case] p: u8,
         #[case] a: u8,
         #[case] value: u8,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
@@ -207,7 +205,6 @@ mod tests {
         adc(&mut cpu, value);
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(_p!(expected_p), cpu.reg.p);
-        Ok(())
     }
 
     #[rstest]
@@ -220,7 +217,7 @@ mod tests {
         #[case] pc: u16,
         #[case] p: P,
         #[case] operand: u8,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
@@ -230,7 +227,6 @@ mod tests {
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(expected_pc, cpu.reg.pc);
         assert_eq!(expected_p, cpu.reg.p);
-        Ok(())
     }
 
     #[rstest]
@@ -241,7 +237,7 @@ mod tests {
         #[case] a: u8,
         #[case] p: u8,
         #[case] operand: u8,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
@@ -249,7 +245,6 @@ mod tests {
         adc(&mut cpu, operand);
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(_p!(expected_p), cpu.reg.p);
-        Ok(())
     }
 
     #[rstest]
@@ -261,7 +256,7 @@ mod tests {
         #[case] a: u8,
         #[case] p: u8,
         #[case] operand: u8,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
@@ -269,6 +264,5 @@ mod tests {
         sbc(&mut cpu, operand);
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(_p!(expected_p), cpu.reg.p);
-        Ok(())
     }
 }

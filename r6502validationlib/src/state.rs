@@ -48,7 +48,7 @@ impl Display for State {
                 "    {addr:04X} {value:02X} ({value})",
                 addr = address_value.address,
                 value = address_value.value
-            )?
+            )?;
         }
         Ok(())
     }

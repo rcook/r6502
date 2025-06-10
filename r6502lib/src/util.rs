@@ -40,7 +40,7 @@ mod tests {
     #[rstest]
     #[case(0x1234, 0x12, 0x34)]
     fn make_word_basics(#[case] expected: u16, #[case] hi: u8, #[case] lo: u8) {
-        assert_eq!(expected, make_word(hi, lo))
+        assert_eq!(expected, make_word(hi, lo));
     }
 
     #[rstest]
@@ -49,6 +49,6 @@ mod tests {
     #[case(false, 0x0100)]
     #[case(true, 0x01ff)]
     fn crosses_page_boundary_basics(#[case] expected_result: bool, #[case] input: u16) {
-        assert_eq!(expected_result, crosses_page_boundary(input))
+        assert_eq!(expected_result, crosses_page_boundary(input));
     }
 }

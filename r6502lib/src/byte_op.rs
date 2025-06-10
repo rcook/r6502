@@ -10,7 +10,7 @@ impl ByteOp {
         Self(f)
     }
 
-    pub(crate) fn execute(&self, state: &mut Cpu, value: &u8) -> OpCycles {
-        self.0(state, *value)
+    pub(crate) fn execute(&self, state: &mut Cpu, value: u8) -> OpCycles {
+        self.0(state, value)
     }
 }

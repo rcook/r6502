@@ -1,3 +1,16 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::bool_to_int_with_if)]
+#![allow(clippy::cast_lossless)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_panics_doc)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::unreadable_literal)]
+#![allow(clippy::verbose_bit_mask)]
+#![allow(missing_docs)]
+
 mod args;
 
 fn main() -> anyhow::Result<()> {
@@ -16,7 +29,7 @@ fn main() -> anyhow::Result<()> {
             println!("{scenario}");
             let (result, final_state) = run_scenario(&scenario);
             if result {
-                println!("Scenario passed")
+                println!("Scenario passed");
             } else {
                 println!("Scenario failed");
                 if let Some(final_state) = final_state {

@@ -30,7 +30,7 @@ pub fn run_scenarios_with_filter(report_path: &Path, filter_str: &Option<String>
             None => {
                 record_message(
                     report_path,
-                    &format!("Unsupported opcode ${:02X}", opcode_value),
+                    &format!("Unsupported opcode ${opcode_value:02X}"),
                 )?;
                 skipped_opcode_count += 1;
             }
@@ -77,7 +77,7 @@ pub fn run_scenarios_with_filter(report_path: &Path, filter_str: &Option<String>
     if all_failure_count > 0 {
         panic!("Out of {all_total_count} scenarios, {all_failure_count} failed")
     } else {
-        println!("All {all_total_count} scenarios passed")
+        println!("All {all_total_count} scenarios passed");
     }
     if skipped_opcode_count > 0 {
         println!("Skipped {skipped_opcode_count} unsupported opcodes");
@@ -86,6 +86,7 @@ pub fn run_scenarios_with_filter(report_path: &Path, filter_str: &Option<String>
     Ok(())
 }
 
+#[must_use]
 pub fn run_scenario(scenario: &Scenario) -> (bool, Option<State>) {
     match catch_unwind(|| run_inner(scenario)) {
         Ok((result, state)) => (result, Some(state)),

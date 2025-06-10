@@ -28,6 +28,7 @@ pub struct TracingMonitor {
 }
 
 impl TracingMonitor {
+    #[must_use]
     pub fn new(symbols: Vec<SymbolInfo>) -> Self {
         Self { symbols }
     }
@@ -50,6 +51,6 @@ impl Monitor for TracingMonitor {
             y = reg.y,
             p = reg.p,
             sp = reg.sp
-        )
+        );
     }
 }

@@ -29,7 +29,7 @@ impl AddressingMode {
                 Operand::Word(value) => Ok(format!(
                     "{} {}",
                     instruction_info.opcode.mnemonic(),
-                    self.format_addr(symbols, value)
+                    Self::format_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -37,7 +37,7 @@ impl AddressingMode {
                 Operand::Word(value) => Ok(format!(
                     "{} {},X",
                     instruction_info.opcode.mnemonic(),
-                    self.format_addr(symbols, value)
+                    Self::format_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -45,7 +45,7 @@ impl AddressingMode {
                 Operand::Word(value) => Ok(format!(
                     "{} {},Y",
                     instruction_info.opcode.mnemonic(),
-                    self.format_addr(symbols, value)
+                    Self::format_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -69,7 +69,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} ({},X)",
                     instruction_info.opcode.mnemonic(),
-                    self.format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -77,7 +77,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} ({})",
                     instruction_info.opcode.mnemonic(),
-                    self.format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -85,7 +85,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} ({}),Y",
                     instruction_info.opcode.mnemonic(),
-                    self.format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -93,7 +93,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {}",
                     instruction_info.opcode.mnemonic(),
-                    self.format_branch(symbols, value, instruction_info.pc)
+                    Self::format_branch(symbols, value, instruction_info.pc)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -101,7 +101,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {}",
                     instruction_info.opcode.mnemonic(),
-                    self.format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -109,7 +109,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {},X",
                     instruction_info.opcode.mnemonic(),
-                    self.format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -117,7 +117,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {},Y",
                     instruction_info.opcode.mnemonic(),
-                    self.format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(symbols, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -140,20 +140,20 @@ impl AddressingMode {
     }
 
     fn format_byte(value: u8) -> String {
-        format!("${:02X}", value)
+        format!("${value:02X}")
     }
 
-    fn format_branch(&self, symbols: &[SymbolInfo], value: u8, pc: u16) -> String {
+    fn format_addr(symbols: &[SymbolInfo], value: u16) -> String {
+        Self::find_name(symbols, value).unwrap_or_else(|| format!("${value:04X}"))
+    }
+
+    fn format_branch(symbols: &[SymbolInfo], value: u8, pc: u16) -> String {
         let effective_value = Self::compute_branch(pc + 2, value);
         Self::find_name(symbols, effective_value)
             .unwrap_or_else(|| format!("${effective_value:04X}"))
     }
 
-    fn format_zero_page_addr(&self, symbols: &[SymbolInfo], value: u8) -> String {
-        Self::find_name(symbols, value as u16).unwrap_or_else(|| format!("${:02X}", value))
-    }
-
-    fn format_addr(&self, symbols: &[SymbolInfo], value: u16) -> String {
-        Self::find_name(symbols, value).unwrap_or_else(|| format!("${:04X}", value))
+    fn format_zero_page_addr(symbols: &[SymbolInfo], value: u8) -> String {
+        Self::find_name(symbols, value as u16).unwrap_or_else(|| format!("${value:02X}"))
     }
 }

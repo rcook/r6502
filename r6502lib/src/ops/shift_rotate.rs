@@ -12,7 +12,7 @@ pub(crate) fn asl_acc(state: &mut Cpu) {
 pub(crate) fn asl(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = asl_helper(state, value);
-    state.memory.store(addr, value)
+    state.memory.store(addr, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
@@ -26,7 +26,7 @@ pub(crate) fn lsr_acc(state: &mut Cpu) {
 pub(crate) fn lsr(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = lsr_helper(state, value);
-    state.memory.store(addr, value)
+    state.memory.store(addr, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
@@ -40,7 +40,7 @@ pub(crate) fn rol_acc(state: &mut Cpu) {
 pub(crate) fn rol(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = rol_helper(state, value);
-    state.memory.store(addr, value)
+    state.memory.store(addr, value);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
@@ -54,7 +54,7 @@ pub(crate) fn ror_acc(state: &mut Cpu) {
 pub(crate) fn ror(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = ror_helper(state, value);
-    state.memory.store(addr, value)
+    state.memory.store(addr, value);
 }
 
 fn asl_helper(state: &mut Cpu, operand: u8) -> u8 {
@@ -91,18 +91,12 @@ fn ror_helper(state: &mut Cpu, operand: u8) -> u8 {
 mod tests {
     use crate::ops::rol_acc;
     use crate::{Cpu, Memory, _p};
-    use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
     // cargo run -p r6502validation -- run-json '{ "name": "2a d4 c3", "initial": { "pc": 21085, "s": 186, "a": 175, "x": 190, "y": 239, "p": 174, "ram": [ [21085, 42], [21086, 212], [21087, 195]]}, "final": { "pc": 21086, "s": 186, "a": 94, "x": 190, "y": 239, "p": 45, "ram": [ [21085, 42], [21086, 212], [21087, 195]]}, "cycles": [ [21085, 42, "read"], [21086, 212, "read"]] }'
     #[case(45, 94, 174, 175)]
-    fn rol_basics(
-        #[case] expected_p: u8,
-        #[case] expected_a: u8,
-        #[case] p: u8,
-        #[case] a: u8,
-    ) -> Result<()> {
+    fn rol_basics(#[case] expected_p: u8, #[case] expected_a: u8, #[case] p: u8, #[case] a: u8) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.p = _p!(p);
@@ -110,6 +104,5 @@ mod tests {
         rol_acc(&mut cpu);
         assert_eq!(_p!(expected_p), cpu.reg.p);
         assert_eq!(expected_a, cpu.reg.a);
-        Ok(())
     }
 }

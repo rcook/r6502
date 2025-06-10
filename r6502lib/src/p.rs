@@ -33,11 +33,11 @@ impl Display for P {
         write!(f, "[")?;
         for c in P_STR.chars() {
             if c == '-' {
-                write!(f, "-")?
+                write!(f, "-")?;
             } else if (value & mask) == 0 {
-                write!(f, ".")?
+                write!(f, ".")?;
             } else {
-                write!(f, "{c}", c = c.to_uppercase())?
+                write!(f, "{c}", c = c.to_uppercase())?;
             }
             mask >>= 1;
         }
@@ -121,6 +121,6 @@ mod tests {
         assert_eq!(
             Some(P::N | P::V | P::ALWAYS_ONE | P::D | P::I | P::C),
             P::from_bits(0b11101101)
-        )
+        );
     }
 }

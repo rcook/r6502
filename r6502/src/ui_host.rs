@@ -1,4 +1,4 @@
-use crate::State::*;
+use crate::State::{Halted, Running, Stepping, Stopped};
 use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
@@ -29,10 +29,10 @@ impl UiHost {
         }
     }
 
-    pub(crate) fn run(&self, image: Image) -> Result<()> {
+    pub(crate) fn run(&self, image: &Image) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
 
-        self.memory.store_image(&image)?;
+        self.memory.store_image(image)?;
 
         let mut cpu = Cpu::new(self.memory.view(), Some(monitor));
         cpu.reg.pc = image.start;
@@ -61,7 +61,7 @@ impl UiHost {
     }
 
     fn send_state(&self, state: State) {
-        _ = self.monitor_tx.send(MonitorMessage::NotifyState(state))
+        _ = self.monitor_tx.send(MonitorMessage::NotifyState(state));
     }
 
     fn fetch_instruction(&self, cpu: &Cpu) {
@@ -95,8 +95,7 @@ impl UiHost {
             self.fetch_instruction(cpu);
             match self.debug_rx.try_recv() {
                 Err(TryRecvError::Disconnected) => return Stopped,
-                Err(TryRecvError::Empty) => {}
-                Ok(_) => {}
+                Err(TryRecvError::Empty) | Ok(_) => {}
             }
 
             if !cpu.step() {
@@ -114,9 +113,8 @@ impl UiHost {
             match self.debug_rx.recv() {
                 Err(_) => return Stopped,
                 Ok(m) => match m {
-                    DebugMessage::Step => {}
+                    DebugMessage::Step | DebugMessage::Break => {}
                     DebugMessage::Run => return Running,
-                    DebugMessage::Break => {}
                     DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
                     DebugMessage::SetPc(addr) => self.set_pc(cpu, addr),
                     DebugMessage::Go(addr) => {
@@ -141,9 +139,7 @@ impl UiHost {
             match self.debug_rx.recv() {
                 Err(_) => return Stopped,
                 Ok(m) => match m {
-                    DebugMessage::Step => {}
-                    DebugMessage::Run => {}
-                    DebugMessage::Break => {}
+                    DebugMessage::Step | DebugMessage::Run | DebugMessage::Break => {}
                     DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
                     DebugMessage::SetPc(addr) => self.set_pc(cpu, addr),
                     DebugMessage::Go(addr) => {

@@ -30,16 +30,14 @@ fn compare_helper(state: &mut Cpu, register: u8, operand: u8) {
 mod tests {
     use crate::ops::cmp;
     use crate::{Cpu, Memory, _p};
-    use anyhow::Result;
 
     #[test]
-    fn basics() -> Result<()> {
+    fn basics() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = 0x10;
         cpu.reg.p = _p!(0b10101111);
         cmp(&mut cpu, 0xbb);
         assert_eq!(_p!(0b00101100), cpu.reg.p);
-        Ok(())
     }
 }

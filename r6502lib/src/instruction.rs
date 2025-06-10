@@ -52,11 +52,11 @@ impl Instruction {
             }
             Binding::Byte(f, value) => {
                 state.reg.pc = state.reg.pc.wrapping_add(2);
-                f.execute(state, value)
+                f.execute(state, *value)
             }
             Binding::Word(f, value) => {
                 state.reg.pc = state.reg.pc.wrapping_add(3);
-                f.execute(state, value)
+                f.execute(state, *value)
             }
         }
     }

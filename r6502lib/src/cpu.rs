@@ -18,6 +18,7 @@ pub struct Cpu<'a> {
 }
 
 impl<'a> Cpu<'a> {
+    #[must_use]
     pub fn new(memory: MemoryView<'a>, monitor: Option<Box<dyn Monitor>>) -> Self {
         Self {
             reg: Reg::default(),
@@ -110,7 +111,7 @@ impl<'a> Cpu<'a> {
 
     fn set_stack_value(&mut self, value: u8) {
         self.memory
-            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value)
+            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value);
     }
 }
 
@@ -125,10 +126,9 @@ mod tests {
     use rstest::rstest;
 
     #[test]
-    fn no_operand() -> Result<()> {
+    fn no_operand() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
-
         cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::Nop as u8);
         assert!(cpu.step());
@@ -136,14 +136,12 @@ mod tests {
         assert_eq!(0x12, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
         assert_eq!(0x0001, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]
-    fn byte0() -> Result<()> {
+    fn byte0() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
-
         cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcImm as u8);
         memory.store(0x0001, 0x34);
@@ -152,11 +150,10 @@ mod tests {
         assert_eq!(0x46, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
         assert_eq!(0x0002, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]
-    fn byte1() -> Result<()> {
+    fn byte1() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
 
@@ -169,11 +166,10 @@ mod tests {
         assert_eq!(0x68, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
         assert_eq!(0x0002, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]
-    fn word0() -> Result<()> {
+    fn word0() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
 
@@ -186,11 +182,10 @@ mod tests {
         assert_eq!(0x12, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
         assert_eq!(0x1000, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]
-    fn word1() -> Result<()> {
+    fn word1() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
 
@@ -204,11 +199,10 @@ mod tests {
         assert_eq!(0x38, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
         assert_eq!(0x0003, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]
-    fn brk() -> Result<()> {
+    fn brk() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
 
@@ -221,7 +215,6 @@ mod tests {
         assert_eq!(7, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(0x9876, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]

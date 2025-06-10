@@ -47,6 +47,7 @@ impl ScenarioFilter {
         })
     }
 
+    #[must_use]
     pub fn filter(&self, scenarios: Vec<Scenario>) -> Vec<Scenario> {
         scenarios
             .into_iter()

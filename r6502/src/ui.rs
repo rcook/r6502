@@ -1,5 +1,4 @@
 use crate::{Command, DebugMessage, IoMessage, MonitorMessage, State};
-use anyhow::Result;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
 use cursive::event::Key;
@@ -31,28 +30,29 @@ impl Ui {
     pub(crate) fn new(
         monitor_rx: Receiver<MonitorMessage>,
         io_rx: Receiver<IoMessage>,
-        debug_tx: Sender<DebugMessage>,
+        debug_tx: &Sender<DebugMessage>,
         symbols: Vec<SymbolInfo>,
-    ) -> Result<Self> {
+    ) -> Self {
         cursive::logger::init();
         let cursive = Self::make_ui(&symbols, debug_tx);
-        Ok(Self {
+        Self {
             cursive,
             monitor_rx,
             io_rx,
             symbols,
-        })
+        }
     }
 
     pub(crate) fn run(&mut self) {
         while self.step() {}
     }
 
+    #[allow(clippy::too_many_lines)]
     fn make_ui(
         symbols: &[SymbolInfo],
-        debug_tx: Sender<DebugMessage>,
+        debug_tx: &Sender<DebugMessage>,
     ) -> CursiveRunner<CursiveRunnable> {
-        use crate::DebugMessage::*;
+        use crate::DebugMessage::{Break, FetchMemory, Go, Run, SetPc, Step};
 
         fn panel<V>(view: V, label: &str) -> Panel<V> {
             Panel::new(view).title(label).title_position(HAlign::Left)
@@ -128,7 +128,7 @@ impl Ui {
                         }
                     }
                 }
-                nasty_hack(s, text, &d)
+                nasty_hack(s, text, &d);
             })
             .with_name(COMMAND_NAME)
             .fixed_height(1);
@@ -189,9 +189,12 @@ impl Ui {
         cursive
     }
 
+    #[allow(clippy::too_many_lines)]
     fn step(&mut self) -> bool {
-        use crate::IoMessage::*;
-        use crate::MonitorMessage::*;
+        use crate::IoMessage::WriteChar;
+        use crate::MonitorMessage::{
+            AfterExecute, BeforeExecute, FetchMemoryResponse, NotifyInvalidBrk, NotifyState,
+        };
 
         if !self.cursive.is_running() {
             return false;
@@ -288,7 +291,7 @@ impl Ui {
                             s.push_str(&format!(" {b:02X}"));
                             let c: char = *b as char;
                             if c.is_ascii() && !c.is_ascii_control() {
-                                chars.push(c)
+                                chars.push(c);
                             } else {
                                 chars.push('.');
                             }
@@ -300,7 +303,7 @@ impl Ui {
                     self.cursive
                         .find_name::<TextView>(COMMAND_RESPONSE_NAME)
                         .expect("Must exist")
-                        .append(s)
+                        .append(s);
                 }
             }
         }

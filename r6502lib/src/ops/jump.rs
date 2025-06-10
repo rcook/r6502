@@ -53,7 +53,6 @@ mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
     use crate::{Cpu, Memory, _p};
-    use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
@@ -64,7 +63,7 @@ mod tests {
         #[case] a: u8,
         #[case] pc: u16,
         #[case] operand: u16,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
@@ -72,7 +71,6 @@ mod tests {
         jmp(&mut cpu, operand);
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(expected_pc, cpu.reg.pc);
-        Ok(())
     }
 
     #[test]
@@ -92,7 +90,7 @@ mod tests {
         cpu.reg.pc = 0x1003; // Opcode and operand have been decoded
         jsr(&mut cpu, TARGET_ADDR);
         assert_eq!(0x1002, cpu.peek_word());
-        assert_eq!(TARGET_ADDR, cpu.reg.pc)
+        assert_eq!(TARGET_ADDR, cpu.reg.pc);
     }
 
     // Scenario: 20 55 13
@@ -101,7 +99,7 @@ mod tests {
     // operands are fetched, so that JSR to address at the top of the
     // stack will have bizarre behaviour
     #[test]
-    fn jsr_smashing_stack() -> Result<()> {
+    fn jsr_smashing_stack() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
 
@@ -126,12 +124,11 @@ mod tests {
         assert_eq!(0x20, memory.load(0x017b));
         assert_eq!(0x7d, memory.load(0x017c));
         assert_eq!(0x01, memory.load(0x017d));
-        Ok(())
     }
 
     #[test]
     // cargo run -p r6502validation -- run-json '{ "name": "40 9c 2c", "initial": { "pc": 34673, "s": 110, "a": 162, "x": 129, "y": 126, "p": 99, "ram": [ [34673, 64], [34674, 156], [34675, 44], [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14]]}, "final": { "pc": 26026, "s": 113, "a": 162, "x": 129, "y": 126, "p": 172, "ram": [ [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14], [34673, 64], [34674, 156], [34675, 44]]}, "cycles": [ [34673, 64, "read"], [34674, 156, "read"], [366, 152, "read"], [367, 156, "read"], [368, 170, "read"], [369, 101, "read"]] }'
-    fn rti_scenario() -> Result<()> {
+    fn rti_scenario() {
         const INITIAL_SP: u8 = 0x6e;
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
@@ -146,6 +143,5 @@ mod tests {
         assert_eq!(0x65aa, cpu.reg.pc);
         assert_eq!(_p!(0xac), cpu.reg.p); // P & 0b11101111
         assert_eq!(INITIAL_SP + 3, cpu.reg.sp);
-        Ok(())
     }
 }

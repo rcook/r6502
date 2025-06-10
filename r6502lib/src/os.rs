@@ -40,20 +40,20 @@ impl Os {
         if let Some(nmi_addr) = self.nmi_addr {
             let (hi, lo) = split_word(nmi_addr);
             cpu.memory.store(NMI, lo);
-            cpu.memory.store(NMI.wrapping_add(1), hi)
+            cpu.memory.store(NMI.wrapping_add(1), hi);
         }
         if let Some(reset_addr) = self.reset_addr {
             let (hi, lo) = split_word(reset_addr);
             cpu.memory.store(RESET, lo);
-            cpu.memory.store(RESET.wrapping_add(1), hi)
+            cpu.memory.store(RESET.wrapping_add(1), hi);
         }
         if let Some(irq_addr) = self.irq_addr {
             let (hi, lo) = split_word(irq_addr);
             cpu.memory.store(IRQ, lo);
-            cpu.memory.store(IRQ.wrapping_add(1), hi)
+            cpu.memory.store(IRQ.wrapping_add(1), hi);
         }
 
-        for os_vector in self.os_vectors.iter().cloned() {
+        for os_vector in self.os_vectors.iter().copied() {
             cpu.memory.store(os_vector, Opcode::Brk as u8);
             cpu.memory
                 .store(os_vector.wrapping_add(1), Opcode::Nop as u8);
@@ -66,6 +66,7 @@ impl Os {
         }
     }
 
+    #[must_use]
     pub fn is_os_vector(&self, cpu: &Cpu) -> Option<u16> {
         match self.irq_addr {
             Some(irq) if cpu.reg.pc == irq => {

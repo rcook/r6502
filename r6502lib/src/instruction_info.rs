@@ -10,6 +10,7 @@ pub struct InstructionInfo {
 }
 
 impl InstructionInfo {
+    #[must_use]
     pub fn fetch(cpu: &Cpu) -> Self {
         let instruction = Instruction::fetch(cpu);
         InstructionInfo::from_instruction(&instruction)

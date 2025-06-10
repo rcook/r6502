@@ -111,7 +111,7 @@ impl Pia {
                             13 => _ = stdout.write(&[10]),
                             _ => {
                                 if !ch.is_control() {
-                                    _ = stdout.write(&[char_value])
+                                    _ = stdout.write(&[char_value]);
                                 }
                             }
                         }
@@ -135,7 +135,7 @@ impl Pia {
 
 impl MemoryMappedDevice for Pia {
     fn start(&self) {
-        self.state.lock().expect("Must succeed").started = true
+        self.state.lock().expect("Must succeed").started = true;
     }
 
     fn load(&self, addr: u16) -> u8 {
@@ -201,6 +201,6 @@ impl MemoryMappedDevice for Pia {
             }
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
-        _ = self.tx.send(m)
+        _ = self.tx.send(m);
     }
 }

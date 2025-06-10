@@ -11,11 +11,11 @@ pub(crate) fn run_gui(path: &Path, load: Option<u16>, start: Option<u16>) -> Res
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
-    let mut ui = Ui::new(monitor_channel.1, io_channel.1, debug_channel.0, symbols)?;
+    let mut ui = Ui::new(monitor_channel.1, io_channel.1, &debug_channel.0, symbols);
     spawn(move || {
         UiHost::new(debug_channel.1, monitor_channel.0, io_channel.0)
-            .run(image)
-            .expect("Must succeed")
+            .run(&image)
+            .expect("Must succeed");
     });
     ui.run();
     Ok(())

@@ -29,7 +29,6 @@ mod tests {
     use crate::ops::brk;
     use crate::util::split_word;
     use crate::{Cpu, Memory, _p, IRQ, STACK_BASE};
-    use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
@@ -44,7 +43,7 @@ mod tests {
         #[case] sp: u8,
         #[case] p: u8,
         #[case] irq_addr: u16,
-    ) -> Result<()> {
+    ) {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.p = _p!(p);
@@ -62,6 +61,5 @@ mod tests {
             cpu.memory
                 .load(STACK_BASE.wrapping_add(expected_s as u16).wrapping_add(1))
         ); // P with B flag set
-        Ok(())
     }
 }

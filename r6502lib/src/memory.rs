@@ -31,6 +31,7 @@ impl Default for Memory {
 }
 
 impl Memory {
+    #[must_use]
     pub fn emulate(emulation: OsEmulation) -> Self {
         match emulation {
             OsEmulation::Apple1Style => {
@@ -60,6 +61,7 @@ impl Memory {
         }
     }
 
+    #[must_use]
     pub fn new(mut devices: Vec<DeviceInfo>) -> Self {
         devices.sort_by(|a, b| a.start.cmp(&b.start));
         Self { devices }
@@ -72,6 +74,7 @@ impl Memory {
     }
 
     // Don't call this when more than one thread is concurrently accessing memory
+    #[must_use]
     pub fn load_nmi_unsafe(&self) -> u16 {
         let lo = self.load(NMI);
         let hi = self.load(NMI + 1);
@@ -79,6 +82,7 @@ impl Memory {
     }
 
     // Don't call this when more than one thread is concurrently accessing memory
+    #[must_use]
     pub fn load_reset_unsafe(&self) -> u16 {
         let lo = self.load(RESET);
         let hi = self.load(RESET + 1);
@@ -86,6 +90,7 @@ impl Memory {
     }
 
     // Don't call this when more than one thread is concurrently accessing memory
+    #[must_use]
     pub fn load_irq_unsafe(&self) -> u16 {
         let lo = self.load(IRQ);
         let hi = self.load(IRQ + 1);
@@ -104,12 +109,13 @@ impl Memory {
 
         // Also incredibly inefficient
         for (i, value) in image.values.iter().enumerate() {
-            self.store(i as u16 + load, *value)
+            self.store(i as u16 + load, *value);
         }
 
         Ok(())
     }
 
+    #[must_use]
     pub fn snapshot(&self, begin: u16, end: u16) -> Vec<u8> {
         let mut result = Vec::with_capacity(end as usize - begin as usize + 1);
 
@@ -121,10 +127,12 @@ impl Memory {
         result
     }
 
+    #[must_use]
     pub fn view(&self) -> MemoryView {
         MemoryView::new(self)
     }
 
+    #[must_use]
     pub fn load(&self, addr: u16) -> u8 {
         match self.find_device(addr) {
             Some(device) => device.device.load(addr - device.offset),
@@ -134,7 +142,7 @@ impl Memory {
 
     pub fn store(&self, addr: u16, value: u8) {
         if let Some(device) = self.find_device(addr) {
-            device.device.store(addr - device.offset, value)
+            device.device.store(addr - device.offset, value);
         }
     }
 
@@ -160,7 +168,7 @@ mod tests {
     #[test]
     fn store_no_device() {
         let memory = Memory::new(Vec::new());
-        memory.store(0x0000, 0x00)
+        memory.store(0x0000, 0x00);
     }
 
     #[test]

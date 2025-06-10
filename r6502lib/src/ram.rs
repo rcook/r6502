@@ -12,6 +12,7 @@ impl<const N: usize> Default for Ram<N> {
 }
 
 impl<const N: usize> Ram<N> {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             bytes: [const { AtomicU8::new(0x00) }; N],
@@ -27,6 +28,6 @@ impl<const N: usize> MemoryMappedDevice for Ram<N> {
     }
 
     fn store(&self, addr: u16, value: u8) {
-        self.bytes[addr as usize].store(value, Ordering::SeqCst)
+        self.bytes[addr as usize].store(value, Ordering::SeqCst);
     }
 }

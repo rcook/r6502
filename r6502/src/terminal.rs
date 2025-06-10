@@ -62,7 +62,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         );
 
         if let Some(stop_after) = opts.stop_after {
-            println!("  {label:<25}: {stop_after} cycles", label = "Stop after")
+            println!("  {label:<25}: {stop_after} cycles", label = "Stop after");
         }
     }
 
@@ -107,7 +107,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
 
     if opts.cycles {
         if stopped_after_requested_cycles {
-            println!("Stopped after {} cycles", cpu.total_cycles)
+            println!("Stopped after {} cycles", cpu.total_cycles);
         } else {
             println!("Completed after {} total cycles", cpu.total_cycles);
         }

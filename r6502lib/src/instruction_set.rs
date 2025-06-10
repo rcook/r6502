@@ -12,6 +12,7 @@ pub static MOS_6502: LazyLock<InstructionSet> = LazyLock::new(|| {
 pub struct InstructionSet(HashMap<Opcode, OpInfo>);
 
 impl InstructionSet {
+    #[must_use]
     pub fn get_op_info(&self, opcode: &Opcode) -> Option<&OpInfo> {
         self.0.get(opcode)
     }

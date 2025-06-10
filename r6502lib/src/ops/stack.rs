@@ -42,7 +42,6 @@ pub(crate) fn plp(state: &mut Cpu) {
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
     use crate::{Cpu, Memory, _p, P, STACK_BASE};
-    use anyhow::Result;
     use rstest::rstest;
 
     #[test]
@@ -56,7 +55,7 @@ mod tests {
         assert_eq!(0xfe, cpu.reg.sp);
         assert_eq!(0x56, cpu.reg.a);
         assert_eq!(P::default(), cpu.reg.p);
-        assert_eq!(0x56, cpu.memory.load(STACK_BASE + 0x00ff))
+        assert_eq!(0x56, cpu.memory.load(STACK_BASE + 0x00ff));
     }
 
     #[test]
@@ -71,12 +70,12 @@ mod tests {
             assert_eq!(current_s, cpu.reg.sp);
             pha(&mut cpu);
             assert_eq!(current_s.wrapping_sub(1), cpu.reg.sp);
-            assert_eq!(value, cpu.memory.load(STACK_BASE + 0x00ff - value as u16))
+            assert_eq!(value, cpu.memory.load(STACK_BASE + 0x00ff - value as u16));
         }
     }
 
     #[test]
-    fn php_basics() -> Result<()> {
+    fn php_basics() {
         let memory = Memory::default();
         let mut cpu = Cpu::new(memory.view(), None);
 
@@ -93,8 +92,6 @@ mod tests {
 
         plp(&mut cpu);
         assert_eq!(P::N | P::ALWAYS_ONE | P::D | P::Z, cpu.reg.p);
-
-        Ok(())
     }
 
     #[rstest]
@@ -149,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn p_flag_basics() -> Result<()> {
+    fn p_flag_basics() {
         fn do_test(expected_p: u8, cpu: &mut Cpu, start: u16, value: u8) {
             cpu.memory.store(start + 1, value); // the test value
             cpu.reg.p = _p!(0b00110000);
@@ -177,7 +174,5 @@ mod tests {
         do_test(0b00110000, &mut cpu, START, 0b00110000);
         do_test(0b00110001, &mut cpu, START, 0b00110001);
         do_test(0b10110001, &mut cpu, START, 0b10110001);
-
-        Ok(())
     }
 }
