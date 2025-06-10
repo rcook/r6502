@@ -41,14 +41,14 @@ pub(crate) fn plp(state: &mut Cpu) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{Cpu, DummyMonitor, Memory, Reg, _p, P, STACK_BASE};
+    use crate::{Cpu, Memory, _p, P, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
     fn pha_basics() {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = 0x56;
         cpu.memory.store(STACK_BASE + 0x00ff, 0x34);
         assert_eq!(0xff, cpu.reg.sp);
@@ -62,7 +62,7 @@ mod tests {
     #[test]
     fn pha_wraparound() {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn php_basics() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
         php(&mut cpu);
@@ -108,7 +108,7 @@ mod tests {
         #[case] p: u8,
     ) {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.sp = sp;
         cpu.reg.p = _p!(p);
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn pla_basics() {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.a = 0x00;
         pha(&mut cpu);
@@ -166,7 +166,7 @@ mod tests {
         const START: u16 = 0x1000;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         memory.store(START, 0xa9); // LDA_IMM
         memory.store(START + 2, 0x48); // PHA

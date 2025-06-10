@@ -1,4 +1,4 @@
-use crate::{Cpu, DummyMonitor, Memory, Opcode, Reg, _p};
+use crate::{Cpu, Memory, Opcode, _p};
 use anyhow::{anyhow, bail, Result};
 use r6502validationlib::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use std::ffi::OsStr;
@@ -95,7 +95,7 @@ pub fn run_scenario(scenario: &Scenario) -> (bool, Option<State>) {
 
 fn run_inner(scenario: &Scenario) -> (bool, State) {
     let memory = Memory::default();
-    let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+    let mut cpu = Cpu::new(memory.view(), None);
     cpu.reg.pc = scenario.initial.pc;
     cpu.reg.sp = scenario.initial.sp;
     cpu.reg.a = scenario.initial.a;

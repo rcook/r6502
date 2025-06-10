@@ -28,7 +28,7 @@ pub(crate) fn nop(_state: &mut Cpu) {}
 mod tests {
     use crate::ops::brk;
     use crate::util::split_word;
-    use crate::{Cpu, DummyMonitor, Memory, _p, IRQ, STACK_BASE};
+    use crate::{Cpu, Memory, _p, IRQ, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -46,7 +46,7 @@ mod tests {
         #[case] irq_addr: u16,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.p = _p!(p);
         cpu.reg.pc = pc + 1;
         cpu.reg.sp = sp;

@@ -52,17 +52,26 @@ pub(crate) fn rts(state: &mut Cpu) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, _p};
+    use crate::{Cpu, Memory, _p};
     use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
-    #[case(reg!(0x12, 0x1000), reg!(0x12, 0x0000), 0x1000)]
-    fn jmp_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u16) -> Result<()> {
+    #[case(0x12, 0x1000, 0x12, 0x0000, 0x1000)]
+    fn jmp_basics(
+        #[case] expected_a: u8,
+        #[case] expected_pc: u16,
+        #[case] a: u8,
+        #[case] pc: u16,
+        #[case] operand: u16,
+    ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
+        cpu.reg.a = a;
+        cpu.reg.pc = pc;
         jmp(&mut cpu, operand);
-        assert_eq!(expected_reg, cpu.reg);
+        assert_eq!(expected_a, cpu.reg.a);
+        assert_eq!(expected_pc, cpu.reg.pc);
         Ok(())
     }
 
@@ -71,7 +80,7 @@ mod tests {
         const TARGET_ADDR: u16 = 0x1234;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
         memory.store(0x1000, 0x20);
         memory.store(0x1001, target_lo);
@@ -94,7 +103,7 @@ mod tests {
     #[test]
     fn jsr_smashing_stack() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.pc = 0x017b;
         cpu.reg.sp = 0x7d;
@@ -125,7 +134,7 @@ mod tests {
     fn rti_scenario() -> Result<()> {
         const INITIAL_SP: u8 = 0x6e;
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.p = _p!(0x63);
         cpu.reg.sp = INITIAL_SP;
         memory.store(0x0100 + INITIAL_SP as u16, 0x98);

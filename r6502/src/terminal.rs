@@ -1,10 +1,7 @@
 use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
 use log::LevelFilter;
-use r6502lib::{
-    Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, MOS_6502, OSHALT,
-    OSWRCH,
-};
+use r6502lib::{Cpu, Image, Memory, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH};
 use simple_logging::log_to_file;
 use std::process::exit;
 
@@ -76,13 +73,13 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
 
     let os = Os::emulate(opts.emulation.into())?;
 
-    let monitor: Box<dyn Monitor> = if opts.trace {
-        Box::new(TracingMonitor::default())
+    let monitor: Option<Box<dyn Monitor>> = if opts.trace {
+        Some(Box::new(TracingMonitor::default()))
     } else {
-        Box::new(DummyMonitor)
+        None
     };
 
-    let mut cpu = Cpu::new(Reg::default(), memory.view(), monitor);
+    let mut cpu = Cpu::new(memory.view(), monitor);
     cpu.reg.pc = start;
 
     let mut stopped_after_requested_cycles = false;

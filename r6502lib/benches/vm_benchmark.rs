@@ -1,11 +1,11 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use r6502lib::{Cpu, DummyMonitor, Image, Memory, Reg, _p};
+use r6502lib::{Cpu, Image, Memory, _p};
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
 fn div16_benchmark(c: &mut Criterion) {
     let memory = Memory::default();
-    let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+    let mut cpu = Cpu::new(memory.view(), None);
 
     let bytes = include_bytes!("../../examples/div16.bin");
     let image = Image::from_bytes(bytes, None, None, None).expect("Must succeed");

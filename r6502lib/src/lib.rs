@@ -70,6 +70,3 @@ pub(crate) use pia::Pia;
 
 #[cfg(test)]
 pub(crate) use p::p;
-
-#[cfg(test)]
-pub(crate) use reg::reg;

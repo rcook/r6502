@@ -1,6 +1,7 @@
 use crate::util::{make_word, split_word};
 use crate::{
-    p_get, Instruction, InstructionInfo, MemoryView, Monitor, Reg, TotalCycles, STACK_BASE,
+    p_get, DummyMonitor, Instruction, InstructionInfo, MemoryView, Monitor, Reg, TotalCycles,
+    STACK_BASE,
 };
 use log::{debug, log_enabled, Level};
 
@@ -12,12 +13,12 @@ pub struct Cpu<'a> {
 }
 
 impl<'a> Cpu<'a> {
-    pub fn new(reg: Reg, memory: MemoryView<'a>, monitor: Box<dyn Monitor>) -> Self {
+    pub fn new(memory: MemoryView<'a>, monitor: Option<Box<dyn Monitor>>) -> Self {
         Self {
-            reg,
+            reg: Reg::default(),
             memory,
             total_cycles: 0,
-            monitor,
+            monitor: monitor.unwrap_or_else(|| Box::new(DummyMonitor)),
         }
     }
 
@@ -102,8 +103,8 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder, Reg,
-        TracingMonitor, IRQ, MOS_6502, OSWRCH, P,
+        p, p_get, p_set, Cpu, Image, Memory, Monitor, Opcode, OsBuilder, TracingMonitor, IRQ,
+        MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -111,7 +112,7 @@ mod tests {
     #[test]
     fn no_operand() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::Nop as u8);
@@ -126,7 +127,7 @@ mod tests {
     #[test]
     fn byte0() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcImm as u8);
@@ -142,7 +143,7 @@ mod tests {
     #[test]
     fn byte1() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcZp as u8);
@@ -159,7 +160,7 @@ mod tests {
     #[test]
     fn word0() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::JmpAbs as u8);
@@ -176,7 +177,7 @@ mod tests {
     #[test]
     fn word1() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.a = 0x25;
         memory.store(0x0000, Opcode::AdcAbs as u8);
@@ -194,7 +195,7 @@ mod tests {
     #[test]
     fn brk() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         cpu.reg.pc = 0x1000;
         memory.store(0x1000, Opcode::Brk as u8);
@@ -215,7 +216,7 @@ mod tests {
         let p_test = P::D | P::ALWAYS_ONE;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         let os = OsBuilder::default()
             .irq_addr(IRQ_ADDR)
@@ -262,7 +263,7 @@ mod tests {
     #[test]
     fn add8() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
@@ -277,7 +278,7 @@ mod tests {
     #[test]
     fn add16() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
@@ -297,7 +298,7 @@ mod tests {
         const REM: u16 = 0x0e37;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
 
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
@@ -319,14 +320,14 @@ mod tests {
     fn capture_stdout(input: &str, trace: bool) -> Result<String> {
         const RETURN_ADDR: u16 = 0x1234;
 
-        let monitor: Box<dyn Monitor> = if trace {
-            Box::new(TracingMonitor::default())
+        let monitor: Option<Box<dyn Monitor>> = if trace {
+            Some(Box::new(TracingMonitor::default()))
         } else {
-            Box::new(DummyMonitor)
+            None
         };
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), monitor);
+        let mut cpu = Cpu::new(memory.view(), monitor);
         let image = input.parse::<Image>()?;
         memory.store_image(&image)?;
         cpu.reg.pc = image.start;

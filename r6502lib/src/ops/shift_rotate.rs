@@ -90,7 +90,7 @@ fn ror_helper(state: &mut Cpu, operand: u8) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::ops::rol_acc;
-    use crate::{Cpu, DummyMonitor, Memory, _p};
+    use crate::{Cpu, Memory, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -104,7 +104,7 @@ mod tests {
         #[case] a: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.p = _p!(p);
         cpu.reg.a = a;
         rol_acc(&mut cpu);

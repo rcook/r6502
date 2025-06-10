@@ -29,13 +29,13 @@ fn compare_helper(state: &mut Cpu, register: u8, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::cmp;
-    use crate::{Cpu, DummyMonitor, Memory, _p};
+    use crate::{Cpu, Memory, _p};
     use anyhow::Result;
 
     #[test]
     fn basics() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = 0x10;
         cpu.reg.p = _p!(0b10101111);
         cmp(&mut cpu, 0xbb);

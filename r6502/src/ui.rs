@@ -236,7 +236,7 @@ impl Ui {
                     self.cursive
                         .find_name::<TextView>(REGISTERS_NAME)
                         .expect("Must exist")
-                        .set_content(reg.display());
+                        .set_content(reg.to_string());
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
@@ -258,7 +258,7 @@ impl Ui {
                     self.cursive
                         .find_name::<TextView>(REGISTERS_NAME)
                         .expect("Must exist")
-                        .set_content(reg.display());
+                        .set_content(reg.to_string());
                     self.cursive
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")

@@ -144,26 +144,39 @@ pub(crate) fn sbc(state: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, _p};
+    use crate::{Cpu, Memory, _p, p, P};
     use anyhow::Result;
     use rstest::rstest;
 
     #[rstest]
     // LDA #1; PHP; LDA #255; PLP; CLC; ADC #0
-    #[case(reg!(0xff, 0x0000, N), reg!(0xff, 0x0000), 0x00)]
+    #[case(0xff, 0x0000, p!(N), 0xff, 0x0000, p!(), 0x00)]
     // LDA #1; PHP; LDA #255; PLP; CLC; ADC #1
-    #[case(reg!(0x00, 0x0000, Z, C), reg!(0xff, 0x0000), 0x01)]
+    #[case(0x00, 0x0000, p!(Z, C), 0xff, 0x0000, p!(), 0x01)]
     // LDA #1; PHP; LDA #255; PLP; SEC; ADC #0
-    #[case(reg!(0x00, 0x0000, Z, C), reg!(0xff, 0x0000, C), 0x00)]
+    #[case(0x00, 0x0000, p!(Z, C), 0xff, 0x0000, p!(C), 0x00)]
     // LDA #1; PHP; LDA #255; PLP; SEC; ADC #1
-    #[case(reg!(0x01, 0x0000, C), reg!(0xff, 0x0000, C), 0x01)]
+    #[case(0x01, 0x0000, p!(C), 0xff, 0x0000, p!(C), 0x01)]
     // LDA #1; PHP; LDA #$12; PLP; CLC; ADC #$34
-    #[case(reg!(0x46, 0x0000), reg!(0x12, 0x0000), 0x34)]
-    fn adc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
+    #[case(0x46, 0x0000, p!(), 0x12, 0x0000, p!(), 0x34)]
+    fn adc_basics(
+        #[case] expected_a: u8,
+        #[case] expected_pc: u16,
+        #[case] expected_p: P,
+        #[case] a: u8,
+        #[case] pc: u16,
+        #[case] p: P,
+        #[case] operand: u8,
+    ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
+        cpu.reg.a = a;
+        cpu.reg.pc = pc;
+        cpu.reg.p = p;
         adc(&mut cpu, operand);
-        assert_eq!(expected_reg, cpu.reg);
+        assert_eq!(expected_a, cpu.reg.a);
+        assert_eq!(expected_pc, cpu.reg.pc);
+        assert_eq!(expected_p, cpu.reg.p);
         Ok(())
     }
 
@@ -188,7 +201,7 @@ mod tests {
         #[case] value: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         adc(&mut cpu, value);
@@ -198,12 +211,25 @@ mod tests {
     }
 
     #[rstest]
-    #[case(reg!(0xfe, 0x0000, N, C), reg!(0xff, 0x0000, C), 0x01)]
-    fn sbc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
+    #[case(0xfe, 0x0000, p!(N, C), 0xff, 0x0000, p!(C), 0x01)]
+    fn sbc_basics(
+        #[case] expected_a: u8,
+        #[case] expected_pc: u16,
+        #[case] expected_p: P,
+        #[case] a: u8,
+        #[case] pc: u16,
+        #[case] p: P,
+        #[case] operand: u8,
+    ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
+        cpu.reg.a = a;
+        cpu.reg.pc = pc;
+        cpu.reg.p = p;
         sbc(&mut cpu, operand);
-        assert_eq!(expected_reg, cpu.reg);
+        assert_eq!(expected_a, cpu.reg.a);
+        assert_eq!(expected_pc, cpu.reg.pc);
+        assert_eq!(expected_p, cpu.reg.p);
         Ok(())
     }
 
@@ -217,7 +243,7 @@ mod tests {
         #[case] operand: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         adc(&mut cpu, operand);
@@ -237,7 +263,7 @@ mod tests {
         #[case] operand: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(memory.view(), None);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         sbc(&mut cpu, operand);
