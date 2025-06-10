@@ -1,26 +1,25 @@
-use crate::{_p, P};
-use derive_builder::Builder;
+use crate::P;
 
 const DEFAULT_S: u8 = 0xff;
 
-#[derive(Builder, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Reg {
-    #[builder(default = 0x00)]
+    //#[builder(default = 0x00)]
     pub a: u8,
 
-    #[builder(default = 0x00)]
+    //#[builder(default = 0x00)]
     pub x: u8,
 
-    #[builder(default = 0x00)]
+    //#[builder(default = 0x00)]
     pub y: u8,
 
-    #[builder(default = _p!(0b00110000))]
+    //#[builder(default = _p!(0b00110000))]
     pub p: P,
 
-    #[builder(default = 0x0000)]
+    //#[builder(default = 0x0000)]
     pub pc: u16,
 
-    #[builder(default = 0xff)]
+    //#[builder(default = 0xff)]
     pub sp: u8,
 }
 

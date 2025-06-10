@@ -144,7 +144,7 @@ pub(crate) fn sbc(state: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, RegBuilder, _p};
+    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -188,11 +188,9 @@ mod tests {
         #[case] value: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            RegBuilder::default().a(a).p(_p!(p)).build()?,
-            memory.view(),
-            Box::new(DummyMonitor),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.a = a;
+        cpu.reg.p = _p!(p);
         adc(&mut cpu, value);
         assert_eq!(expected_a, cpu.reg.a);
         assert_eq!(_p!(expected_p), cpu.reg.p);

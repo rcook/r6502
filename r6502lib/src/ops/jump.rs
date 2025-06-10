@@ -52,7 +52,7 @@ pub(crate) fn rts(state: &mut Cpu) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, RegBuilder, _p};
+    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -124,9 +124,10 @@ mod tests {
     // cargo run -p r6502validation -- run-json '{ "name": "40 9c 2c", "initial": { "pc": 34673, "s": 110, "a": 162, "x": 129, "y": 126, "p": 99, "ram": [ [34673, 64], [34674, 156], [34675, 44], [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14]]}, "final": { "pc": 26026, "s": 113, "a": 162, "x": 129, "y": 126, "p": 172, "ram": [ [366, 152], [367, 156], [368, 170], [369, 101], [26026, 14], [34673, 64], [34674, 156], [34675, 44]]}, "cycles": [ [34673, 64, "read"], [34674, 156, "read"], [366, 152, "read"], [367, 156, "read"], [368, 170, "read"], [369, 101, "read"]] }'
     fn rti_scenario() -> Result<()> {
         const INITIAL_SP: u8 = 0x6e;
-        let reg = RegBuilder::default().p(_p!(0x63)).sp(INITIAL_SP).build()?;
         let memory = Memory::default();
-        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.p = _p!(0x63);
+        cpu.reg.sp = INITIAL_SP;
         memory.store(0x0100 + INITIAL_SP as u16, 0x98);
         memory.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
         memory.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)

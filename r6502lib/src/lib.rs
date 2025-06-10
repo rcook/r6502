@@ -50,7 +50,7 @@ pub use os::{Os, OsBuilder, OsBuilderError};
 pub use os_emulation::OsEmulation;
 pub use p::P;
 pub use ram::Ram;
-pub use reg::{Reg, RegBuilder, RegBuilderError};
+pub use reg::Reg;
 pub use scenario_runner::{run_scenario, run_scenarios_with_filter};
 pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;
