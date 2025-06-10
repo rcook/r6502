@@ -1,6 +1,6 @@
 use crate::util::make_word;
 use crate::{
-    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, IRQ, MEMORY_SIZE, NMI,
+    Image, MemoryMappedDevice, MemoryView, OsEmulation, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI,
     PIA_END_ADDR, PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
@@ -34,29 +34,40 @@ impl Memory {
     #[must_use]
     pub fn emulate(emulation: OsEmulation) -> Self {
         match emulation {
-            OsEmulation::Apple1Style => {
-                let devices = vec![
-                    DeviceInfo {
-                        start: 0x0000,
-                        end: PIA_START_ADDR - 1,
-                        device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
-                        offset: 0x0000,
-                    },
-                    DeviceInfo {
-                        start: PIA_START_ADDR,
-                        end: PIA_END_ADDR,
-                        device: Box::new(Pia::default()),
-                        offset: PIA_START_ADDR,
-                    },
-                    DeviceInfo {
-                        start: PIA_END_ADDR + 1,
-                        end: 0xffff,
-                        device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
-                        offset: PIA_END_ADDR + 1,
-                    },
-                ];
-                Self::new(devices)
-            }
+            OsEmulation::AcornStyle => Self::new(vec![
+                DeviceInfo {
+                    start: 0x0000,
+                    end: 0x7fff,
+                    device: Box::new(Ram::<0x8000>::default()),
+                    offset: 0x0000,
+                },
+                DeviceInfo {
+                    start: 0x8000,
+                    end: 0xffff,
+                    device: Box::new(Rom::<0x8000>::default()),
+                    offset: 0x0000,
+                },
+            ]),
+            OsEmulation::Apple1Style => Self::new(vec![
+                DeviceInfo {
+                    start: 0x0000,
+                    end: PIA_START_ADDR - 1,
+                    device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
+                    offset: 0x0000,
+                },
+                DeviceInfo {
+                    start: PIA_START_ADDR,
+                    end: PIA_END_ADDR,
+                    device: Box::new(Pia::default()),
+                    offset: PIA_START_ADDR,
+                },
+                DeviceInfo {
+                    start: PIA_END_ADDR + 1,
+                    end: 0xffff,
+                    device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
+                    offset: PIA_END_ADDR + 1,
+                },
+            ]),
             _ => Self::default(),
         }
     }
