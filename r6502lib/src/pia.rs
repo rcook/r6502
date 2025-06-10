@@ -1,6 +1,5 @@
 use crate::MemoryMappedDevice;
 use getch_rs::{Getch, Key};
-use log::{info, log_enabled, Level};
 use std::io::{stdout, Write};
 use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex};
