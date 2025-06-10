@@ -26,5 +26,5 @@ rstest = "0.25.0"
 not-implemented = []
 
 [[bench]]
-name = "vm_benchmark"
+name = "cpu_benchmark"
 harness = false

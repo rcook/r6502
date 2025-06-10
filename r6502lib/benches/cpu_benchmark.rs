@@ -14,7 +14,7 @@ fn div16_benchmark(c: &mut Criterion) {
     assert_eq!(0x35, memory.load(0x106c));
     assert_eq!(0x12, memory.load(0x106d));
 
-    c.bench_function("vm.step", |b| {
+    c.bench_function("cpu.step", |b| {
         b.iter(|| {
             // Reset state so that full 938 cycles is executed in every iteration
             memory.store(0x106c, 0x35);

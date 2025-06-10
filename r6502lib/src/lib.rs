@@ -3,6 +3,7 @@ mod binding;
 mod byte_op;
 mod constants;
 mod cpu;
+mod frequency;
 mod image;
 mod image_format;
 mod instruction;
@@ -62,6 +63,7 @@ pub(crate) use constants::{
     DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, PIA_END_ADDR, PIA_START_ADDR, R6502_MAGIC_NUMBER,
     SIM6502_MAGIC_NUMBER,
 };
+pub(crate) use frequency::Frequency;
 pub(crate) use instruction::Instruction;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;

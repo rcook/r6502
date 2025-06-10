@@ -1,9 +1,14 @@
 use crate::util::{make_word, split_word};
 use crate::{
-    p_get, DummyMonitor, Instruction, InstructionInfo, MemoryView, Monitor, Reg, TotalCycles,
-    STACK_BASE,
+    p_get, DummyMonitor, Frequency, Instruction, InstructionInfo, MemoryView, Monitor, Reg,
+    TotalCycles, STACK_BASE,
 };
 use log::{debug, log_enabled, Level};
+use std::sync::LazyLock;
+use std::time::{Duration, Instant};
+
+const CPU_FREQUENCY: Frequency = Frequency::MHz(1_000_000);
+static CPU_TICK: LazyLock<Duration> = LazyLock::new(|| CPU_FREQUENCY.get_tick());
 
 pub struct Cpu<'a> {
     pub reg: Reg,
@@ -31,15 +36,25 @@ impl<'a> Cpu<'a> {
             self.reg.clone(),
             instruction_info.clone(),
         );
-        //let before = Instant::now();
+
         if log_enabled!(Level::Debug) {
             debug!("{:?}", instruction_info);
         }
+
+        let before = Instant::now();
         let instruction_cycles = instruction.execute(self);
-        //let after = Instant::now();
-        //let d0 = after - before;
-        //let d1 = Duration::from_micros(instruction_cycles as u64).saturating_sub(d0);
-        //sleep(d1);
+
+        let d = *CPU_TICK * instruction_cycles as u32;
+
+        // Is there a better way to do this?
+        loop {
+            let now = Instant::now();
+            let elapsed = now - before;
+            if elapsed >= d {
+                break;
+            }
+        }
+
         self.monitor.on_after_execute(
             self.total_cycles,
             self.reg.clone(),
