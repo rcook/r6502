@@ -2,8 +2,8 @@ use crate::State::*;
 use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, Cpu, CpuState, Image, InstructionInfo, Memory, OpInfo, Opcode, Os, OsEmulation, Reg,
-    MOS_6502, OSHALT, OSWRCH,
+    p_set, Cpu, Image, InstructionInfo, Memory, OpInfo, Opcode, Os, OsEmulation, Reg, MOS_6502,
+    OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -34,8 +34,8 @@ impl UiHost {
 
         self.memory.store_image(&image)?;
 
-        let mut cpu = Cpu::new(monitor, CpuState::new(Reg::default(), self.memory.view()));
-        cpu.s.reg.pc = image.start;
+        let mut cpu = Cpu::new(Reg::default(), self.memory.view(), monitor);
+        cpu.reg.pc = image.start;
 
         let os = Os::emulate(OsEmulation::AcornStyle)?;
         os.load_into_vm(&mut cpu);
@@ -64,23 +64,23 @@ impl UiHost {
         _ = self.monitor_tx.send(MonitorMessage::NotifyState(state))
     }
 
-    fn fetch_instruction(&self, vm: &Cpu) {
-        let instruction_info = InstructionInfo::fetch(vm);
+    fn fetch_instruction(&self, cpu: &Cpu) {
+        let instruction_info = InstructionInfo::fetch(cpu);
         _ = self.monitor_tx.send(MonitorMessage::BeforeExecute {
-            total_cycles: vm.total_cycles,
-            reg: vm.s.reg.clone(),
+            total_cycles: cpu.total_cycles,
+            reg: cpu.reg.clone(),
             instruction_info,
         });
     }
 
-    fn handle_brk(&self, vm: &mut Cpu, os: &Os, rti: &OpInfo, state: State) -> State {
-        match os.is_os_vector(vm) {
+    fn handle_brk(&self, cpu: &mut Cpu, os: &Os, rti: &OpInfo, state: State) -> State {
+        match os.is_os_vector(cpu) {
             Some(OSHALT) => Halted,
             Some(OSWRCH) => {
                 self.io_tx
-                    .send(IoMessage::WriteChar(vm.s.reg.a as char))
+                    .send(IoMessage::WriteChar(cpu.reg.a as char))
                     .expect("Must succeed");
-                rti.execute_no_operand(&mut vm.s);
+                rti.execute_no_operand(cpu);
                 state
             }
             _ => {
@@ -90,17 +90,17 @@ impl UiHost {
         }
     }
 
-    fn handle_running(&self, vm: &mut Cpu, os: &Os, rti: &OpInfo) -> State {
+    fn handle_running(&self, cpu: &mut Cpu, os: &Os, rti: &OpInfo) -> State {
         loop {
-            self.fetch_instruction(vm);
+            self.fetch_instruction(cpu);
             match self.debug_rx.try_recv() {
                 Err(TryRecvError::Disconnected) => return Stopped,
                 Err(TryRecvError::Empty) => {}
                 Ok(_) => {}
             }
 
-            if !vm.step() {
-                let new_state = self.handle_brk(vm, os, rti, Running);
+            if !cpu.step() {
+                let new_state = self.handle_brk(cpu, os, rti, Running);
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }
@@ -108,9 +108,9 @@ impl UiHost {
         }
     }
 
-    fn handle_stepping(&self, vm: &mut Cpu, os: &Os, rti: &OpInfo) -> State {
+    fn handle_stepping(&self, cpu: &mut Cpu, os: &Os, rti: &OpInfo) -> State {
         loop {
-            self.fetch_instruction(vm);
+            self.fetch_instruction(cpu);
             match self.debug_rx.recv() {
                 Err(_) => return Stopped,
                 Ok(m) => match m {
@@ -118,16 +118,16 @@ impl UiHost {
                     DebugMessage::Run => return Running,
                     DebugMessage::Break => {}
                     DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
-                    DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
+                    DebugMessage::SetPc(addr) => self.set_pc(cpu, addr),
                     DebugMessage::Go(addr) => {
-                        p_set!(vm.s.reg, B, false);
-                        self.set_pc(vm, addr);
+                        p_set!(cpu.reg, B, false);
+                        self.set_pc(cpu, addr);
                     }
                 },
             }
 
-            if !vm.step() {
-                let new_state = self.handle_brk(vm, os, rti, Stepping);
+            if !cpu.step() {
+                let new_state = self.handle_brk(cpu, os, rti, Stepping);
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }
@@ -135,8 +135,8 @@ impl UiHost {
         }
     }
 
-    fn handle_halted(&self, vm: &mut Cpu) -> State {
-        self.fetch_instruction(vm);
+    fn handle_halted(&self, cpu: &mut Cpu) -> State {
+        self.fetch_instruction(cpu);
         loop {
             match self.debug_rx.recv() {
                 Err(_) => return Stopped,
@@ -145,10 +145,10 @@ impl UiHost {
                     DebugMessage::Run => {}
                     DebugMessage::Break => {}
                     DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
-                    DebugMessage::SetPc(addr) => self.set_pc(vm, addr),
+                    DebugMessage::SetPc(addr) => self.set_pc(cpu, addr),
                     DebugMessage::Go(addr) => {
-                        p_set!(vm.s.reg, B, false);
-                        self.set_pc(vm, addr);
+                        p_set!(cpu.reg, B, false);
+                        self.set_pc(cpu, addr);
                         return Stepping;
                     }
                 },
@@ -165,8 +165,8 @@ impl UiHost {
         });
     }
 
-    fn set_pc(&self, vm: &mut Cpu, addr: u16) {
-        vm.s.reg.pc = addr;
-        self.fetch_instruction(vm);
+    fn set_pc(&self, cpu: &mut Cpu, addr: u16) {
+        cpu.reg.pc = addr;
+        self.fetch_instruction(cpu);
     }
 }

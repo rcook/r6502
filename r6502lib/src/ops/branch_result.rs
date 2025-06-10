@@ -1,4 +1,4 @@
-use crate::{CpuState, P};
+use crate::{Cpu, P};
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum BranchResult {
@@ -8,7 +8,7 @@ pub(crate) enum BranchResult {
 }
 
 impl BranchResult {
-    pub(crate) fn compute(state: &mut CpuState, offset: u8, p: P, flag_value: bool) -> Self {
+    pub(crate) fn compute(state: &mut Cpu, offset: u8, p: P, flag_value: bool) -> Self {
         if state.reg.p.contains(p) == flag_value {
             // Sign-extend the offset before adding it
             let new_pc = state.reg.pc.wrapping_add((offset as i8) as u16);

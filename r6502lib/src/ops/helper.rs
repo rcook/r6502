@@ -1,4 +1,4 @@
-use crate::{p_set, CpuState};
+use crate::{p_set, Cpu};
 
 pub(crate) fn sign(value: u8) -> bool {
     (value & 0b10000000) != 0
@@ -23,7 +23,7 @@ pub(crate) fn is_carry(value: u16) -> bool {
     (value & 0x0100) != 0
 }
 
-pub(crate) fn set_flags_on_value(state: &mut CpuState, operand: u8) {
+pub(crate) fn set_flags_on_value(state: &mut Cpu, operand: u8) {
     p_set!(state.reg, N, is_neg(operand));
     p_set!(state.reg, Z, is_zero(operand));
 }

@@ -1,46 +1,100 @@
-use crate::{p_get, CpuState, Instruction, InstructionInfo, Monitor, TotalCycles};
+use crate::util::{make_word, split_word};
+use crate::{
+    p_get, Instruction, InstructionInfo, MemoryView, Monitor, Reg, TotalCycles, STACK_BASE,
+};
 use log::{debug, log_enabled, Level};
 
 pub struct Cpu<'a> {
-    pub monitor: Box<dyn Monitor>,
-    pub s: CpuState<'a>,
+    pub reg: Reg,
+    pub memory: MemoryView<'a>,
     pub total_cycles: TotalCycles,
+    monitor: Box<dyn Monitor>,
 }
 
 impl<'a> Cpu<'a> {
-    pub fn new(monitor: Box<dyn Monitor>, s: CpuState<'a>) -> Self {
+    pub fn new(reg: Reg, memory: MemoryView<'a>, monitor: Box<dyn Monitor>) -> Self {
         Self {
-            monitor,
-            s,
+            reg,
+            memory,
             total_cycles: 0,
+            monitor,
         }
     }
 
     #[must_use]
     pub fn step(&mut self) -> bool {
-        let instruction = Instruction::fetch(&self.s);
+        let instruction = Instruction::fetch(self);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
         self.monitor.on_before_execute(
             self.total_cycles,
-            self.s.reg.clone(),
+            self.reg.clone(),
             instruction_info.clone(),
         );
         //let before = Instant::now();
         if log_enabled!(Level::Debug) {
             debug!("{:?}", instruction_info);
         }
-        let instruction_cycles = instruction.execute(&mut self.s);
+        let instruction_cycles = instruction.execute(self);
         //let after = Instant::now();
         //let d0 = after - before;
         //let d1 = Duration::from_micros(instruction_cycles as u64).saturating_sub(d0);
         //sleep(d1);
         self.monitor.on_after_execute(
             self.total_cycles,
-            self.s.reg.clone(),
+            self.reg.clone(),
             instruction_info.clone(),
         );
         self.total_cycles += instruction_cycles as TotalCycles;
-        !p_get!(self.s.reg, I)
+        !p_get!(self.reg, I)
+    }
+
+    pub fn push(&mut self, value: u8) {
+        self.set_stack_value(value);
+        self.reg.sp = self.reg.sp.wrapping_sub(1);
+    }
+
+    #[must_use]
+    pub fn pull(&mut self) -> u8 {
+        self.reg.sp = self.reg.sp.wrapping_add(1);
+        self.get_stack_value()
+    }
+
+    pub fn push_word(&mut self, value: u16) {
+        let (hi, lo) = split_word(value);
+        self.push(hi);
+        self.push(lo);
+    }
+
+    #[must_use]
+    pub fn pull_word(&mut self) -> u16 {
+        let lo = self.pull();
+        let hi = self.pull();
+        make_word(hi, lo)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn peek_word(&self) -> u16 {
+        self.peek_back_word(0x00)
+    }
+
+    #[must_use]
+    pub(crate) fn peek_back_word(&self, offset: u8) -> u16 {
+        let stack_addr = (STACK_BASE + self.reg.sp as u16).wrapping_add(offset as u16);
+        let hi = self.memory.load(stack_addr.wrapping_add(2));
+        let lo = self.memory.load(stack_addr.wrapping_add(1));
+        make_word(hi, lo)
+    }
+
+    #[must_use]
+    fn get_stack_value(&self) -> u8 {
+        self.memory
+            .load(STACK_BASE.wrapping_add(self.reg.sp as u16))
+    }
+
+    fn set_stack_value(&mut self, value: u8) {
+        self.memory
+            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value)
     }
 }
 
@@ -48,8 +102,8 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, Cpu, CpuState, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder,
-        Reg, TracingMonitor, IRQ, MOS_6502, OSWRCH, P,
+        p, p_get, p_set, Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, OsBuilder, Reg,
+        TracingMonitor, IRQ, MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -57,118 +111,100 @@ mod tests {
     #[test]
     fn no_operand() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.a = 0x12;
+        cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::Nop as u8);
         assert!(cpu.step());
         assert_eq!(2, cpu.total_cycles);
-        assert_eq!(0x12, cpu.s.reg.a);
-        assert_eq!(p!(), cpu.s.reg.p);
-        assert_eq!(0x0001, cpu.s.reg.pc);
+        assert_eq!(0x12, cpu.reg.a);
+        assert_eq!(p!(), cpu.reg.p);
+        assert_eq!(0x0001, cpu.reg.pc);
         Ok(())
     }
 
     #[test]
     fn byte0() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.a = 0x12;
+        cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcImm as u8);
         memory.store(0x0001, 0x34);
         assert!(cpu.step());
         assert_eq!(2, cpu.total_cycles);
-        assert_eq!(0x46, cpu.s.reg.a);
-        assert_eq!(p!(), cpu.s.reg.p);
-        assert_eq!(0x0002, cpu.s.reg.pc);
+        assert_eq!(0x46, cpu.reg.a);
+        assert_eq!(p!(), cpu.reg.p);
+        assert_eq!(0x0002, cpu.reg.pc);
         Ok(())
     }
 
     #[test]
     fn byte1() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.a = 0x12;
+        cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::AdcZp as u8);
         memory.store(0x0001, 0x34);
         memory.store(0x0034, 0x56);
         assert!(cpu.step());
         assert_eq!(3, cpu.total_cycles);
-        assert_eq!(0x68, cpu.s.reg.a);
-        assert_eq!(p!(), cpu.s.reg.p);
-        assert_eq!(0x0002, cpu.s.reg.pc);
+        assert_eq!(0x68, cpu.reg.a);
+        assert_eq!(p!(), cpu.reg.p);
+        assert_eq!(0x0002, cpu.reg.pc);
         Ok(())
     }
 
     #[test]
     fn word0() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.a = 0x12;
+        cpu.reg.a = 0x12;
         memory.store(0x0000, Opcode::JmpAbs as u8);
         memory.store(0x0001, 0x00);
         memory.store(0x0002, 0x10);
         assert!(cpu.step());
         assert_eq!(3, cpu.total_cycles);
-        assert_eq!(0x12, cpu.s.reg.a);
-        assert_eq!(p!(), cpu.s.reg.p);
-        assert_eq!(0x1000, cpu.s.reg.pc);
+        assert_eq!(0x12, cpu.reg.a);
+        assert_eq!(p!(), cpu.reg.p);
+        assert_eq!(0x1000, cpu.reg.pc);
         Ok(())
     }
 
     #[test]
     fn word1() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.a = 0x25;
+        cpu.reg.a = 0x25;
         memory.store(0x0000, Opcode::AdcAbs as u8);
         memory.store(0x0001, 0x12);
         memory.store(0x0002, 0x34);
         memory.store(0x3412, 0x13);
         assert!(cpu.step());
         assert_eq!(4, cpu.total_cycles);
-        assert_eq!(0x38, cpu.s.reg.a);
-        assert_eq!(p!(), cpu.s.reg.p);
-        assert_eq!(0x0003, cpu.s.reg.pc);
+        assert_eq!(0x38, cpu.reg.a);
+        assert_eq!(p!(), cpu.reg.p);
+        assert_eq!(0x0003, cpu.reg.pc);
         Ok(())
     }
 
     #[test]
     fn brk() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.pc = 0x1000;
+        cpu.reg.pc = 0x1000;
         memory.store(0x1000, Opcode::Brk as u8);
         memory.store(IRQ, 0x76);
         memory.store(IRQ + 1, 0x98);
-        p_set!(cpu.s.reg, B, false);
+        p_set!(cpu.reg, B, false);
         assert!(!cpu.step());
         assert_eq!(7, cpu.total_cycles);
-        assert!(!p_get!(cpu.s.reg, B));
-        assert_eq!(0x9876, cpu.s.reg.pc);
+        assert!(!p_get!(cpu.reg, B));
+        assert_eq!(0x9876, cpu.reg.pc);
         Ok(())
     }
 
@@ -179,10 +215,7 @@ mod tests {
         let p_test = P::D | P::ALWAYS_ONE;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
         let os = OsBuilder::default()
             .irq_addr(IRQ_ADDR)
@@ -194,19 +227,19 @@ mod tests {
         memory.store(START + 1, OSWRCH as u8);
         memory.store(START + 2, (OSWRCH >> 8) as u8);
 
-        cpu.s.reg.pc = START;
-        cpu.s.reg.p = p_test;
-        p_set!(cpu.s.reg, B, false);
+        cpu.reg.pc = START;
+        cpu.reg.p = p_test;
+        p_set!(cpu.reg, B, false);
 
         assert!(cpu.step());
         assert_eq!(6, cpu.total_cycles);
-        assert!(!p_get!(cpu.s.reg, B));
-        assert_eq!(OSWRCH, cpu.s.reg.pc);
+        assert!(!p_get!(cpu.reg, B));
+        assert_eq!(OSWRCH, cpu.reg.pc);
 
         assert!(!cpu.step());
         assert_eq!(13, cpu.total_cycles);
-        assert!(!p_get!(cpu.s.reg, B));
-        assert_eq!(IRQ_ADDR, cpu.s.reg.pc);
+        assert!(!p_get!(cpu.reg, B));
+        assert_eq!(IRQ_ADDR, cpu.reg.pc);
         assert_eq!(Some(OSWRCH), os.is_os_vector(&cpu));
 
         Ok(())
@@ -229,15 +262,12 @@ mod tests {
     #[test]
     fn add8() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         memory.store_image(&image)?;
-        cpu.s.reg.pc = 0x0e01;
+        cpu.reg.pc = 0x0e01;
         while cpu.step() {}
         assert_eq!(21, cpu.total_cycles);
         assert_eq!(0x46, memory.load(0x0e00));
@@ -247,15 +277,12 @@ mod tests {
     #[test]
     fn add16() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         memory.store_image(&image)?;
-        cpu.s.reg.pc = 0x0e02;
+        cpu.reg.pc = 0x0e02;
         while cpu.step() {}
         assert_eq!(33, cpu.total_cycles);
         let lo = memory.load(0x0e00);
@@ -270,15 +297,12 @@ mod tests {
         const REM: u16 = 0x0e37;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         memory.store_image(&image)?;
-        cpu.s.reg.pc = 0x0e02;
+        cpu.reg.pc = 0x0e02;
         while cpu.step() {}
         assert_eq!(893, cpu.total_cycles);
         let lo = memory.load(NUM1);
@@ -302,10 +326,10 @@ mod tests {
         };
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(monitor, CpuState::new(Reg::default(), memory.view()));
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), monitor);
         let image = input.parse::<Image>()?;
         memory.store_image(&image)?;
-        cpu.s.reg.pc = image.start;
+        cpu.reg.pc = image.start;
 
         let os = OsBuilder::default()
             .irq_addr(0x8000)
@@ -318,8 +342,8 @@ mod tests {
             .expect("RTS must exist")
             .clone();
 
-        cpu.s.push_word(RETURN_ADDR - 1);
-        p_set!(cpu.s.reg, B, false);
+        cpu.push_word(RETURN_ADDR - 1);
+        p_set!(cpu.reg, B, false);
 
         let mut result = String::new();
         loop {
@@ -328,16 +352,16 @@ mod tests {
             match os.is_os_vector(&cpu) {
                 Some(RETURN_ADDR) => break,
                 Some(OSWRCH) => {
-                    result.push(cpu.s.reg.a as char);
+                    result.push(cpu.reg.a as char);
                     if trace {
                         println!("stdout={result}");
                     }
 
                     // Is this equivalent to RTI?
-                    _ = cpu.s.pull();
-                    _ = cpu.s.pull_word();
-                    p_set!(cpu.s.reg, I, false);
-                    rts.execute_no_operand(&mut cpu.s);
+                    _ = cpu.pull();
+                    _ = cpu.pull_word();
+                    p_set!(cpu.reg, I, false);
+                    rts.execute_no_operand(&mut cpu);
                 }
                 _ => panic!("expectation failed"),
             }

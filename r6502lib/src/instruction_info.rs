@@ -10,8 +10,8 @@ pub struct InstructionInfo {
 }
 
 impl InstructionInfo {
-    pub fn fetch(vm: &Cpu) -> Self {
-        let instruction = Instruction::fetch(&vm.s);
+    pub fn fetch(cpu: &Cpu) -> Self {
+        let instruction = Instruction::fetch(cpu);
         InstructionInfo::from_instruction(&instruction)
     }
 

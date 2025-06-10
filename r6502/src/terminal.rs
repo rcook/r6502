@@ -2,8 +2,8 @@ use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
 use log::LevelFilter;
 use r6502lib::{
-    Cpu, CpuState, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, MOS_6502,
-    OSHALT, OSWRCH,
+    Cpu, DummyMonitor, Image, Memory, Monitor, Opcode, Os, Reg, TracingMonitor, MOS_6502, OSHALT,
+    OSWRCH,
 };
 use simple_logging::log_to_file;
 use std::process::exit;
@@ -82,8 +82,8 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         Box::new(DummyMonitor)
     };
 
-    let mut cpu = Cpu::new(monitor, CpuState::new(Reg::default(), memory.view()));
-    cpu.s.reg.pc = start;
+    let mut cpu = Cpu::new(Reg::default(), memory.view(), monitor);
+    cpu.reg.pc = start;
 
     let mut stopped_after_requested_cycles = false;
     'outer: loop {
@@ -101,8 +101,8 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
                 break;
             }
             Some(OSWRCH) => {
-                print!("{}", cpu.s.reg.a as char);
-                rti.execute_no_operand(&mut cpu.s);
+                print!("{}", cpu.reg.a as char);
+                rti.execute_no_operand(&mut cpu);
             }
             _ => break,
         }
@@ -120,6 +120,6 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     exit(if stopped_after_requested_cycles {
         0
     } else {
-        cpu.s.reg.a as i32
+        cpu.reg.a as i32
     })
 }

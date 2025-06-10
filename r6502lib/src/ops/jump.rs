@@ -1,15 +1,15 @@
 use crate::util::{make_word, split_word};
-use crate::{p_set, CpuState, P};
+use crate::{p_set, Cpu, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
-pub(crate) fn jmp(state: &mut CpuState, operand: u16) {
+pub(crate) fn jmp(state: &mut Cpu, operand: u16) {
     state.reg.pc = operand;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#JSR
 // http://www.6502.org/users/obelisk/6502/reference.html#JSR
-pub(crate) fn jsr(state: &mut CpuState, addr: u16) {
+pub(crate) fn jsr(state: &mut Cpu, addr: u16) {
     // We can look back at the bytes immediately before PC and the
     // target address should be exactly the same as the argument
     // to this function.
@@ -33,7 +33,7 @@ pub(crate) fn jsr(state: &mut CpuState, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTI
 // http://www.6502.org/users/obelisk/6502/reference.html#RTI
-pub(crate) fn rti(state: &mut CpuState) {
+pub(crate) fn rti(state: &mut Cpu) {
     state.reg.p = P::from_bits(state.pull()).expect("Must succeed");
     p_set!(state.reg, ALWAYS_ONE, true);
     p_set!(state.reg, B, false);
@@ -43,7 +43,7 @@ pub(crate) fn rti(state: &mut CpuState) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTS
 // http://www.6502.org/users/obelisk/6502/reference.html#RTS
-pub(crate) fn rts(state: &mut CpuState) {
+pub(crate) fn rts(state: &mut Cpu) {
     let return_addr = state.pull_word().wrapping_add(1);
     state.reg.pc = return_addr;
 }
@@ -52,7 +52,7 @@ pub(crate) fn rts(state: &mut CpuState) {
 mod tests {
     use crate::ops::{jmp, jsr, rti};
     use crate::util::split_word;
-    use crate::{reg, Cpu, CpuState, DummyMonitor, Memory, Reg, RegBuilder, _p};
+    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, RegBuilder, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -60,9 +60,9 @@ mod tests {
     #[case(reg!(0x12, 0x1000), reg!(0x12, 0x0000), 0x1000)]
     fn jmp_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u16) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(reg, memory.view());
-        jmp(&mut state, operand);
-        assert_eq!(expected_reg, state.reg);
+        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        jmp(&mut cpu, operand);
+        assert_eq!(expected_reg, cpu.reg);
         Ok(())
     }
 
@@ -71,7 +71,7 @@ mod tests {
         const TARGET_ADDR: u16 = 0x1234;
 
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
         memory.store(0x1000, 0x20);
         memory.store(0x1001, target_lo);
@@ -80,10 +80,10 @@ mod tests {
         // TBD: Restructure VM so that instruction and operand decoding
         // is taken account of properly. For now, we'll work around this
         // behaviour in the implementation of JSR above.
-        state.reg.pc = 0x1003; // Opcode and operand have been decoded
-        jsr(&mut state, TARGET_ADDR);
-        assert_eq!(0x1002, state.peek_word());
-        assert_eq!(TARGET_ADDR, state.reg.pc)
+        cpu.reg.pc = 0x1003; // Opcode and operand have been decoded
+        jsr(&mut cpu, TARGET_ADDR);
+        assert_eq!(0x1002, cpu.peek_word());
+        assert_eq!(TARGET_ADDR, cpu.reg.pc)
     }
 
     // Scenario: 20 55 13
@@ -94,28 +94,25 @@ mod tests {
     #[test]
     fn jsr_smashing_stack() -> Result<()> {
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        cpu.s.reg.pc = 0x017b;
-        cpu.s.reg.sp = 0x7d;
-        cpu.s.reg.a = 0x9e; // Probably irrelevant
-        cpu.s.reg.x = 0x89; // Probably irrelevant
-        cpu.s.reg.y = 0x34; // Probably irrelevant
-        cpu.s.reg.p = _p!(0b11100110); // Probably irrelevant
+        cpu.reg.pc = 0x017b;
+        cpu.reg.sp = 0x7d;
+        cpu.reg.a = 0x9e; // Probably irrelevant
+        cpu.reg.x = 0x89; // Probably irrelevant
+        cpu.reg.y = 0x34; // Probably irrelevant
+        cpu.reg.p = _p!(0b11100110); // Probably irrelevant
         memory.store(0x0155, 0xad);
         memory.store(0x017b, 0x20); // JSR abs
         memory.store(0x017c, 0x55);
         memory.store(0x017d, 0x13);
         _ = cpu.step();
-        assert_eq!(0x0155, cpu.s.reg.pc);
-        assert_eq!(0x7b, cpu.s.reg.sp);
-        assert_eq!(0x9e, cpu.s.reg.a);
-        assert_eq!(0x89, cpu.s.reg.x);
-        assert_eq!(0x34, cpu.s.reg.y);
-        assert_eq!(_p!(0b11100110), cpu.s.reg.p);
+        assert_eq!(0x0155, cpu.reg.pc);
+        assert_eq!(0x7b, cpu.reg.sp);
+        assert_eq!(0x9e, cpu.reg.a);
+        assert_eq!(0x89, cpu.reg.x);
+        assert_eq!(0x34, cpu.reg.y);
+        assert_eq!(_p!(0b11100110), cpu.reg.p);
         assert_eq!(0xad, memory.load(0x0155));
         assert_eq!(0x20, memory.load(0x017b));
         assert_eq!(0x7d, memory.load(0x017c));
@@ -129,16 +126,16 @@ mod tests {
         const INITIAL_SP: u8 = 0x6e;
         let reg = RegBuilder::default().p(_p!(0x63)).sp(INITIAL_SP).build()?;
         let memory = Memory::default();
-        let mut state = CpuState::new(reg, memory.view());
+        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
         memory.store(0x0100 + INITIAL_SP as u16, 0x98);
         memory.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
         memory.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)
         memory.store(0x0100 + INITIAL_SP as u16 + 3, 0x65); // hi(return_attr)
-        state.reg.pc = 0x8771 + 1;
-        rti(&mut state);
-        assert_eq!(0x65aa, state.reg.pc);
-        assert_eq!(_p!(0xac), state.reg.p); // P & 0b11101111
-        assert_eq!(INITIAL_SP + 3, state.reg.sp);
+        cpu.reg.pc = 0x8771 + 1;
+        rti(&mut cpu);
+        assert_eq!(0x65aa, cpu.reg.pc);
+        assert_eq!(_p!(0xac), cpu.reg.p); // P & 0b11101111
+        assert_eq!(INITIAL_SP + 3, cpu.reg.sp);
         Ok(())
     }
 }

@@ -1,4 +1,4 @@
-use crate::{Cpu, CpuState, DummyMonitor, Memory, Opcode, Reg, _p};
+use crate::{Cpu, DummyMonitor, Memory, Opcode, Reg, _p};
 use anyhow::{anyhow, bail, Result};
 use r6502validationlib::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use std::ffi::OsStr;
@@ -95,38 +95,33 @@ pub fn run_scenario(scenario: &Scenario) -> (bool, Option<State>) {
 
 fn run_inner(scenario: &Scenario) -> (bool, State) {
     let memory = Memory::default();
-    let mut cpu = Cpu::new(
-        Box::new(DummyMonitor),
-        CpuState::new(Reg::default(), memory.view()),
-    );
-    cpu.s.reg.pc = scenario.initial.pc;
-    cpu.s.reg.sp = scenario.initial.sp;
-    cpu.s.reg.a = scenario.initial.a;
-    cpu.s.reg.x = scenario.initial.x;
-    cpu.s.reg.y = scenario.initial.y;
-    cpu.s.reg.p = _p!(scenario.initial.p);
+    let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+    cpu.reg.pc = scenario.initial.pc;
+    cpu.reg.sp = scenario.initial.sp;
+    cpu.reg.a = scenario.initial.a;
+    cpu.reg.x = scenario.initial.x;
+    cpu.reg.y = scenario.initial.y;
+    cpu.reg.p = _p!(scenario.initial.p);
     for address_value in &scenario.initial.ram {
-        cpu.s
-            .memory
-            .store(address_value.address, address_value.value);
+        cpu.memory.store(address_value.address, address_value.value);
     }
 
     _ = cpu.step();
 
     let final_state = State {
-        pc: cpu.s.reg.pc,
-        sp: cpu.s.reg.sp,
-        a: cpu.s.reg.a,
-        x: cpu.s.reg.x,
-        y: cpu.s.reg.y,
-        p: cpu.s.reg.p.bits(),
+        pc: cpu.reg.pc,
+        sp: cpu.reg.sp,
+        a: cpu.reg.a,
+        x: cpu.reg.x,
+        y: cpu.reg.y,
+        p: cpu.reg.p.bits(),
         ram: scenario
             .r#final
             .ram
             .iter()
             .map(|address_value| AddressValue {
                 address: address_value.address,
-                value: cpu.s.memory.load(address_value.address),
+                value: cpu.memory.load(address_value.address),
             })
             .collect(),
     };
@@ -134,7 +129,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
     macro_rules! check {
             ($reg: ident) => {
                 let expected = scenario.r#final.$reg;
-                let actual = cpu.s.reg.$reg;
+                let actual = cpu.reg.$reg;
                 if actual != expected {
                     println!(
                         "Scenario \"{name}\": actual value ${actual:02X} ({actual}) for register {reg} does not match expected value ${expected:02X} ({expected}) ({file}:{line})",
@@ -169,7 +164,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
     macro_rules! check_p {
         ($reg: ident) => {
             let expected = scenario.r#final.$reg;
-            let actual = cpu.s.reg.$reg;
+            let actual = cpu.reg.$reg;
             if actual.bits() != expected {
                 println!(
                     "Scenario \"{name}\": actual value ${actual:02X} ({actual}) for register {reg} does not match expected value ${expected:02X} ({expected}) ({file}:{line})",
@@ -204,7 +199,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
     check_p!(p);
 
     for p in &scenario.r#final.ram {
-        check!(p.address, p.value, cpu.s.memory.load(p.address));
+        check!(p.address, p.value, cpu.memory.load(p.address));
     }
 
     (true, final_state)

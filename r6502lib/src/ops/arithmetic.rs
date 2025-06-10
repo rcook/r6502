@@ -1,10 +1,10 @@
 use crate::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
-use crate::{p_get, p_set, p_value, CpuState};
+use crate::{p_get, p_set, p_value, Cpu};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-pub(crate) fn adc(state: &mut CpuState, operand: u8) {
+pub(crate) fn adc(state: &mut Cpu, operand: u8) {
     if p_get!(state.reg, D) {
         let a = state.reg.a as i32;
         let value = operand as i32;
@@ -113,7 +113,7 @@ Final:
 // http://www.visual6502.org/JSSim/expert.html?graphics=false&a=0&d=a900f8e988eaeaea&steps=18
 // http://vice-emu.sourceforge.net/plain/64doc.txt
 // https://github.com/mattgodbolt/jsbeeb/blob/main/src/6502.js
-pub(crate) fn sbc(state: &mut CpuState, operand: u8) {
+pub(crate) fn sbc(state: &mut Cpu, operand: u8) {
     if p_get!(state.reg, D) {
         let carry = if p_get!(state.reg, C) { 0 } else { 1 };
 
@@ -144,7 +144,7 @@ pub(crate) fn sbc(state: &mut CpuState, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::arithmetic::{adc, sbc};
-    use crate::{reg, CpuState, Memory, Reg, RegBuilder, _p};
+    use crate::{reg, Cpu, DummyMonitor, Memory, Reg, RegBuilder, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -161,9 +161,9 @@ mod tests {
     #[case(reg!(0x46, 0x0000), reg!(0x12, 0x0000), 0x34)]
     fn adc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(reg, memory.view());
-        adc(&mut state, operand);
-        assert_eq!(expected_reg, state.reg);
+        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        adc(&mut cpu, operand);
+        assert_eq!(expected_reg, cpu.reg);
         Ok(())
     }
 
@@ -188,10 +188,14 @@ mod tests {
         #[case] value: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(RegBuilder::default().a(a).p(_p!(p)).build()?, memory.view());
-        adc(&mut state, value);
-        assert_eq!(expected_a, state.reg.a);
-        assert_eq!(_p!(expected_p), state.reg.p);
+        let mut cpu = Cpu::new(
+            RegBuilder::default().a(a).p(_p!(p)).build()?,
+            memory.view(),
+            Box::new(DummyMonitor),
+        );
+        adc(&mut cpu, value);
+        assert_eq!(expected_a, cpu.reg.a);
+        assert_eq!(_p!(expected_p), cpu.reg.p);
         Ok(())
     }
 
@@ -199,9 +203,9 @@ mod tests {
     #[case(reg!(0xfe, 0x0000, N, C), reg!(0xff, 0x0000, C), 0x01)]
     fn sbc_basics(#[case] expected_reg: Reg, #[case] reg: Reg, #[case] operand: u8) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(reg, memory.view());
-        sbc(&mut state, operand);
-        assert_eq!(expected_reg, state.reg);
+        let mut cpu = Cpu::new(reg, memory.view(), Box::new(DummyMonitor));
+        sbc(&mut cpu, operand);
+        assert_eq!(expected_reg, cpu.reg);
         Ok(())
     }
 
@@ -215,12 +219,12 @@ mod tests {
         #[case] operand: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.a = a;
-        state.reg.p = _p!(p);
-        adc(&mut state, operand);
-        assert_eq!(expected_a, state.reg.a);
-        assert_eq!(_p!(expected_p), state.reg.p);
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.a = a;
+        cpu.reg.p = _p!(p);
+        adc(&mut cpu, operand);
+        assert_eq!(expected_a, cpu.reg.a);
+        assert_eq!(_p!(expected_p), cpu.reg.p);
         Ok(())
     }
 
@@ -235,12 +239,12 @@ mod tests {
         #[case] operand: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.a = a;
-        state.reg.p = _p!(p);
-        sbc(&mut state, operand);
-        assert_eq!(expected_a, state.reg.a);
-        assert_eq!(_p!(expected_p), state.reg.p);
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.a = a;
+        cpu.reg.p = _p!(p);
+        sbc(&mut cpu, operand);
+        assert_eq!(expected_a, cpu.reg.a);
+        assert_eq!(_p!(expected_p), cpu.reg.p);
         Ok(())
     }
 }

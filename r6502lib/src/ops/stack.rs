@@ -1,15 +1,15 @@
 use crate::ops::helper::{is_neg, is_zero};
-use crate::{p_set, CpuState, _p, P};
+use crate::{p_set, Cpu, _p, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
-pub(crate) fn pha(state: &mut CpuState) {
+pub(crate) fn pha(state: &mut Cpu) {
     state.push(state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHP
 // http://www.6502.org/users/obelisk/6502/reference.html#PHP
-pub(crate) fn php(state: &mut CpuState) {
+pub(crate) fn php(state: &mut Cpu) {
     // https://www.nesdev.org/wiki/Status_flags
     // "B is 0 when pushed by interrupts (NMI and IRQ) and 1 when pushed by instructions (BRK and PHP)"
     state.push((state.reg.p | P::B).bits());
@@ -17,7 +17,7 @@ pub(crate) fn php(state: &mut CpuState) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLA
 // http://www.6502.org/users/obelisk/6502/reference.html#PLA
-pub(crate) fn pla(state: &mut CpuState) {
+pub(crate) fn pla(state: &mut Cpu) {
     let value = state.pull();
     state.reg.a = value;
     p_set!(state.reg, N, is_neg(value));
@@ -26,7 +26,7 @@ pub(crate) fn pla(state: &mut CpuState) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLP
 // http://www.6502.org/users/obelisk/6502/reference.html#PLP
-pub(crate) fn plp(state: &mut CpuState) {
+pub(crate) fn plp(state: &mut Cpu) {
     // Retain ALWAYS_ONE and B
     let current_p = state.reg.p.bits();
     assert!((current_p & 0b00100000) == 0b00100000);
@@ -41,58 +41,58 @@ pub(crate) fn plp(state: &mut CpuState) {
 #[cfg(test)]
 mod tests {
     use crate::ops::stack::{pha, php, pla, plp};
-    use crate::{Cpu, CpuState, DummyMonitor, Memory, Reg, _p, P, STACK_BASE};
+    use crate::{Cpu, DummyMonitor, Memory, Reg, _p, P, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
     #[test]
     fn pha_basics() {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.a = 0x56;
-        state.memory.store(STACK_BASE + 0x00ff, 0x34);
-        assert_eq!(0xff, state.reg.sp);
-        pha(&mut state);
-        assert_eq!(0xfe, state.reg.sp);
-        assert_eq!(0x56, state.reg.a);
-        assert_eq!(P::default(), state.reg.p);
-        assert_eq!(0x56, state.memory.load(STACK_BASE + 0x00ff))
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.a = 0x56;
+        cpu.memory.store(STACK_BASE + 0x00ff, 0x34);
+        assert_eq!(0xff, cpu.reg.sp);
+        pha(&mut cpu);
+        assert_eq!(0xfe, cpu.reg.sp);
+        assert_eq!(0x56, cpu.reg.a);
+        assert_eq!(P::default(), cpu.reg.p);
+        assert_eq!(0x56, cpu.memory.load(STACK_BASE + 0x00ff))
     }
 
     #[test]
     fn pha_wraparound() {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
-            state.reg.a = value;
-            state.memory.store(STACK_BASE + 0x00ff - value as u16, 0x00);
-            assert_eq!(current_s, state.reg.sp);
-            pha(&mut state);
-            assert_eq!(current_s.wrapping_sub(1), state.reg.sp);
-            assert_eq!(value, state.memory.load(STACK_BASE + 0x00ff - value as u16))
+            cpu.reg.a = value;
+            cpu.memory.store(STACK_BASE + 0x00ff - value as u16, 0x00);
+            assert_eq!(current_s, cpu.reg.sp);
+            pha(&mut cpu);
+            assert_eq!(current_s.wrapping_sub(1), cpu.reg.sp);
+            assert_eq!(value, cpu.memory.load(STACK_BASE + 0x00ff - value as u16))
         }
     }
 
     #[test]
     fn php_basics() -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        state.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
-        php(&mut state);
+        cpu.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
+        php(&mut cpu);
 
-        state.reg.p = P::V | P::ALWAYS_ONE | P::C;
-        php(&mut state);
+        cpu.reg.p = P::V | P::ALWAYS_ONE | P::C;
+        php(&mut cpu);
 
-        state.reg.p = P::ALWAYS_ONE;
+        cpu.reg.p = P::ALWAYS_ONE;
 
-        plp(&mut state);
-        assert_eq!(P::V | P::ALWAYS_ONE | P::C, state.reg.p);
+        plp(&mut cpu);
+        assert_eq!(P::V | P::ALWAYS_ONE | P::C, cpu.reg.p);
 
-        plp(&mut state);
-        assert_eq!(P::N | P::ALWAYS_ONE | P::D | P::Z, state.reg.p);
+        plp(&mut cpu);
+        assert_eq!(P::N | P::ALWAYS_ONE | P::D | P::Z, cpu.reg.p);
 
         Ok(())
     }
@@ -108,67 +108,65 @@ mod tests {
         #[case] p: u8,
     ) {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.sp = sp;
-        state.reg.p = _p!(p);
-        php(&mut state);
-        assert_eq!(expected_s, state.reg.sp);
-        assert_eq!(expected_value, state.memory.load(expected_addr));
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
+
+        cpu.reg.sp = sp;
+        cpu.reg.p = _p!(p);
+        php(&mut cpu);
+        assert_eq!(expected_s, cpu.reg.sp);
+        assert_eq!(expected_value, cpu.memory.load(expected_addr));
     }
 
     #[test]
     fn pla_basics() {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
-        state.reg.a = 0x00;
-        pha(&mut state);
+        cpu.reg.a = 0x00;
+        pha(&mut cpu);
 
-        state.reg.a = 0xf1;
-        pha(&mut state);
+        cpu.reg.a = 0xf1;
+        pha(&mut cpu);
 
-        state.reg.a = 0x45;
-        pha(&mut state);
+        cpu.reg.a = 0x45;
+        pha(&mut cpu);
 
-        state.reg.a = 0x11;
-        state.reg.p = P::empty();
-        assert_eq!(0x11, state.reg.a);
+        cpu.reg.a = 0x11;
+        cpu.reg.p = P::empty();
+        assert_eq!(0x11, cpu.reg.a);
 
-        pla(&mut state);
-        assert_eq!(0x45, state.reg.a);
-        assert_eq!(P::empty(), state.reg.p);
+        pla(&mut cpu);
+        assert_eq!(0x45, cpu.reg.a);
+        assert_eq!(P::empty(), cpu.reg.p);
 
-        pla(&mut state);
-        assert_eq!(0xf1, state.reg.a);
-        assert_eq!(P::N, state.reg.p);
+        pla(&mut cpu);
+        assert_eq!(0xf1, cpu.reg.a);
+        assert_eq!(P::N, cpu.reg.p);
 
-        pla(&mut state);
-        assert_eq!(0x00, state.reg.a);
-        assert_eq!(P::Z, state.reg.p);
+        pla(&mut cpu);
+        assert_eq!(0x00, cpu.reg.a);
+        assert_eq!(P::Z, cpu.reg.p);
     }
 
     #[test]
     fn p_flag_basics() -> Result<()> {
-        fn do_test(expected_p: u8, vm: &mut Cpu, start: u16, value: u8) {
-            vm.s.memory.store(start + 1, value); // the test value
-            vm.s.reg.p = _p!(0b00110000);
-            vm.s.reg.pc = start;
-            _ = vm.step(); // LDA #value
-            assert_eq!(start + 2, vm.s.reg.pc);
-            assert_eq!(value, vm.s.reg.a);
-            _ = vm.step(); // PHA
-            assert_eq!(start + 3, vm.s.reg.pc);
-            assert_eq!(value, vm.s.memory.load(STACK_BASE + vm.s.reg.sp as u16 + 1));
-            _ = vm.step(); // PLP
-            assert_eq!(_p!(expected_p), vm.s.reg.p);
+        fn do_test(expected_p: u8, cpu: &mut Cpu, start: u16, value: u8) {
+            cpu.memory.store(start + 1, value); // the test value
+            cpu.reg.p = _p!(0b00110000);
+            cpu.reg.pc = start;
+            _ = cpu.step(); // LDA #value
+            assert_eq!(start + 2, cpu.reg.pc);
+            assert_eq!(value, cpu.reg.a);
+            _ = cpu.step(); // PHA
+            assert_eq!(start + 3, cpu.reg.pc);
+            assert_eq!(value, cpu.memory.load(STACK_BASE + cpu.reg.sp as u16 + 1));
+            _ = cpu.step(); // PLP
+            assert_eq!(_p!(expected_p), cpu.reg.p);
         }
         const START: u16 = 0x1000;
 
         let memory = Memory::default();
-        let mut cpu = Cpu::new(
-            Box::new(DummyMonitor),
-            CpuState::new(Reg::default(), memory.view()),
-        );
+        let mut cpu = Cpu::new(Reg::default(), memory.view(), Box::new(DummyMonitor));
 
         memory.store(START, 0xa9); // LDA_IMM
         memory.store(START + 2, 0x48); // PHA

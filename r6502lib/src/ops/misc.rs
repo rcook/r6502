@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{p_set, CpuState, IRQ, P};
+use crate::{p_set, Cpu, IRQ, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BRK
 // http://www.6502.org/users/obelisk/6502/reference.html#BRK
@@ -10,7 +10,7 @@ use crate::{p_set, CpuState, IRQ, P};
 // https://retrocomputing.stackexchange.com/questions/29923/why-does-the-brk-instruction-set-the-b-flag
 // https://forums.nesdev.org/viewtopic.php?p=64224#p64224
 // https://www.pagetable.com/?p=410
-pub(crate) fn brk(state: &mut CpuState) {
+pub(crate) fn brk(state: &mut Cpu) {
     state.push_word(state.reg.pc + 1);
     state.push((state.reg.p | P::B).bits());
     state.reg.pc = make_word(
@@ -22,13 +22,13 @@ pub(crate) fn brk(state: &mut CpuState) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#NOP
 // http://www.6502.org/users/obelisk/6502/reference.html#NOP
-pub(crate) fn nop(_state: &mut CpuState) {}
+pub(crate) fn nop(_state: &mut Cpu) {}
 
 #[cfg(test)]
 mod tests {
     use crate::ops::brk;
     use crate::util::split_word;
-    use crate::{CpuState, Memory, Reg, _p, IRQ, STACK_BASE};
+    use crate::{Cpu, DummyMonitor, Memory, _p, IRQ, STACK_BASE};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -46,21 +46,20 @@ mod tests {
         #[case] irq_addr: u16,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.p = _p!(p);
-        state.reg.pc = pc + 1;
-        state.reg.sp = sp;
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.p = _p!(p);
+        cpu.reg.pc = pc + 1;
+        cpu.reg.sp = sp;
         let (hi, lo) = split_word(irq_addr);
-        state.memory.store(IRQ, lo);
-        state.memory.store(IRQ.wrapping_add(1), hi);
-        brk(&mut state);
-        assert_eq!(_p!(expected_p), state.reg.p);
-        assert_eq!(expected_pc, state.reg.pc);
-        assert_eq!(expected_s, state.reg.sp);
+        cpu.memory.store(IRQ, lo);
+        cpu.memory.store(IRQ.wrapping_add(1), hi);
+        brk(&mut cpu);
+        assert_eq!(_p!(expected_p), cpu.reg.p);
+        assert_eq!(expected_pc, cpu.reg.pc);
+        assert_eq!(expected_s, cpu.reg.sp);
         assert_eq!(
             p | 0b00010000,
-            state
-                .memory
+            cpu.memory
                 .load(STACK_BASE.wrapping_add(expected_s as u16).wrapping_add(1))
         ); // P with B flag set
         Ok(())

@@ -1,15 +1,15 @@
 use crate::ops::helper::{set_flags_on_value, sign};
-use crate::{p_get, p_set, CpuState};
+use crate::{p_get, p_set, Cpu};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl_acc(state: &mut CpuState) {
+pub(crate) fn asl_acc(state: &mut Cpu) {
     state.reg.a = asl_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl(state: &mut CpuState, addr: u16) {
+pub(crate) fn asl(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = asl_helper(state, value);
     state.memory.store(addr, value)
@@ -17,13 +17,13 @@ pub(crate) fn asl(state: &mut CpuState, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr_acc(state: &mut CpuState) {
+pub(crate) fn lsr_acc(state: &mut Cpu) {
     state.reg.a = lsr_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr(state: &mut CpuState, addr: u16) {
+pub(crate) fn lsr(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = lsr_helper(state, value);
     state.memory.store(addr, value)
@@ -31,13 +31,13 @@ pub(crate) fn lsr(state: &mut CpuState, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol_acc(state: &mut CpuState) {
+pub(crate) fn rol_acc(state: &mut Cpu) {
     state.reg.a = rol_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol(state: &mut CpuState, addr: u16) {
+pub(crate) fn rol(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = rol_helper(state, value);
     state.memory.store(addr, value)
@@ -45,33 +45,33 @@ pub(crate) fn rol(state: &mut CpuState, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror_acc(state: &mut CpuState) {
+pub(crate) fn ror_acc(state: &mut Cpu) {
     state.reg.a = ror_helper(state, state.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror(state: &mut CpuState, addr: u16) {
+pub(crate) fn ror(state: &mut Cpu, addr: u16) {
     let value = state.memory.load(addr);
     let value = ror_helper(state, value);
     state.memory.store(addr, value)
 }
 
-fn asl_helper(state: &mut CpuState, operand: u8) -> u8 {
+fn asl_helper(state: &mut Cpu, operand: u8) -> u8 {
     p_set!(state.reg, C, sign(operand));
     let new_value = operand << 1;
     set_flags_on_value(state, new_value);
     new_value
 }
 
-fn lsr_helper(state: &mut CpuState, operand: u8) -> u8 {
+fn lsr_helper(state: &mut Cpu, operand: u8) -> u8 {
     p_set!(state.reg, C, (operand & 0x01) != 0);
     let new_value = operand >> 1;
     set_flags_on_value(state, new_value);
     new_value
 }
 
-fn rol_helper(state: &mut CpuState, operand: u8) -> u8 {
+fn rol_helper(state: &mut Cpu, operand: u8) -> u8 {
     let old_carry = p_get!(state.reg, C);
     p_set!(state.reg, C, sign(operand));
     let new_value = (operand << 1) | (if old_carry { 0x01 } else { 0x00 });
@@ -79,7 +79,7 @@ fn rol_helper(state: &mut CpuState, operand: u8) -> u8 {
     new_value
 }
 
-fn ror_helper(state: &mut CpuState, operand: u8) -> u8 {
+fn ror_helper(state: &mut Cpu, operand: u8) -> u8 {
     let old_carry = p_get!(state.reg, C);
     p_set!(state.reg, C, (operand & 0x01) != 0);
     let new_value = (operand >> 1) | (if old_carry { 0x80 } else { 0x00 });
@@ -90,7 +90,7 @@ fn ror_helper(state: &mut CpuState, operand: u8) -> u8 {
 #[cfg(test)]
 mod tests {
     use crate::ops::rol_acc;
-    use crate::{CpuState, Memory, Reg, _p};
+    use crate::{Cpu, DummyMonitor, Memory, _p};
     use anyhow::Result;
     use rstest::rstest;
 
@@ -104,12 +104,12 @@ mod tests {
         #[case] a: u8,
     ) -> Result<()> {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.p = _p!(p);
-        state.reg.a = a;
-        rol_acc(&mut state);
-        assert_eq!(_p!(expected_p), state.reg.p);
-        assert_eq!(expected_a, state.reg.a);
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.p = _p!(p);
+        cpu.reg.a = a;
+        rol_acc(&mut cpu);
+        assert_eq!(_p!(expected_p), cpu.reg.p);
+        assert_eq!(expected_a, cpu.reg.a);
         Ok(())
     }
 }

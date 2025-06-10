@@ -1,23 +1,23 @@
 use crate::ops::helper::set_flags_on_value;
-use crate::CpuState;
+use crate::Cpu;
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDA
 // http://www.6502.org/users/obelisk/6502/reference.html#LDA
-pub(crate) fn lda(state: &mut CpuState, operand: u8) {
+pub(crate) fn lda(state: &mut Cpu, operand: u8) {
     state.reg.a = operand;
     set_flags_on_value(state, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDX
 // http://www.6502.org/users/obelisk/6502/reference.html#LDX
-pub(crate) fn ldx(state: &mut CpuState, operand: u8) {
+pub(crate) fn ldx(state: &mut Cpu, operand: u8) {
     state.reg.x = operand;
     set_flags_on_value(state, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDY
 // http://www.6502.org/users/obelisk/6502/reference.html#LDY
-pub(crate) fn ldy(state: &mut CpuState, operand: u8) {
+pub(crate) fn ldy(state: &mut Cpu, operand: u8) {
     state.reg.y = operand;
     set_flags_on_value(state, operand);
 }
@@ -25,7 +25,7 @@ pub(crate) fn ldy(state: &mut CpuState, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::ops::load::{lda, ldx, ldy};
-    use crate::{p, CpuState, Memory, Reg, P};
+    use crate::{p, Cpu, DummyMonitor, Memory, P};
     use rstest::rstest;
 
     #[rstest]
@@ -37,11 +37,11 @@ mod tests {
     #[case(p!(N), 0xff)]
     fn lda_basics(#[case] expected_p: P, #[case] operand: u8) {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.a = 0xff;
-        lda(&mut state, operand);
-        assert_eq!(operand, state.reg.a);
-        assert_eq!(expected_p, state.reg.p);
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.a = 0xff;
+        lda(&mut cpu, operand);
+        assert_eq!(operand, cpu.reg.a);
+        assert_eq!(expected_p, cpu.reg.p);
     }
 
     #[rstest]
@@ -53,11 +53,11 @@ mod tests {
     #[case(p!(N), 0xff)]
     fn ldx_basics(#[case] expected_p: P, #[case] operand: u8) {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.x = 0xff;
-        ldx(&mut state, operand);
-        assert_eq!(operand, state.reg.x);
-        assert_eq!(expected_p, state.reg.p);
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.x = 0xff;
+        ldx(&mut cpu, operand);
+        assert_eq!(operand, cpu.reg.x);
+        assert_eq!(expected_p, cpu.reg.p);
     }
 
     #[rstest]
@@ -69,10 +69,10 @@ mod tests {
     #[case(p!(N), 0xff)]
     fn ldy_basics(#[case] expected_p: P, #[case] operand: u8) {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        state.reg.y = 0xff;
-        ldy(&mut state, operand);
-        assert_eq!(operand, state.reg.y);
-        assert_eq!(expected_p, state.reg.p);
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        cpu.reg.y = 0xff;
+        ldy(&mut cpu, operand);
+        assert_eq!(operand, cpu.reg.y);
+        assert_eq!(expected_p, cpu.reg.p);
     }
 }

@@ -1,51 +1,51 @@
 use crate::ops::BranchResult;
-use crate::{CpuState, P};
+use crate::{Cpu, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCC
 // http://www.6502.org/users/obelisk/6502/reference.html#BCC
-pub(crate) fn bcc(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bcc(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::C, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCS
 // http://www.6502.org/users/obelisk/6502/reference.html#BCS
-pub(crate) fn bcs(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bcs(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::C, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BEQ
 // http://www.6502.org/users/obelisk/6502/reference.html#BEQ
-pub(crate) fn beq(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn beq(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::Z, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BMI
 // http://www.6502.org/users/obelisk/6502/reference.html#BMI
-pub(crate) fn bmi(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bmi(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::N, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BNE
 // http://www.6502.org/users/obelisk/6502/reference.html#BNE
-pub(crate) fn bne(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bne(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::Z, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BPL
 // http://www.6502.org/users/obelisk/6502/reference.html#BPL
-pub(crate) fn bpl(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bpl(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::N, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVC
 // http://www.6502.org/users/obelisk/6502/reference.html#BVC
-pub(crate) fn bvc(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bvc(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::V, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVS
 // http://www.6502.org/users/obelisk/6502/reference.html#BVS
-pub(crate) fn bvs(state: &mut CpuState, offset: u8) -> BranchResult {
+pub(crate) fn bvs(state: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(state, offset, P::V, true)
 }
 
@@ -53,7 +53,7 @@ pub(crate) fn bvs(state: &mut CpuState, offset: u8) -> BranchResult {
 mod tests {
     use crate::ops::branch::{bcs, beq};
     use crate::ops::BranchResult;
-    use crate::{p_set, CpuState, Memory, Reg};
+    use crate::{p_set, Cpu, DummyMonitor, Memory};
     use rstest::rstest;
 
     #[rstest]
@@ -69,12 +69,12 @@ mod tests {
         #[case] offset: u8,
     ) {
         let memory = Memory::default();
-        let mut state = CpuState::new(crate::Reg::default(), memory.view());
-        p_set!(state.reg, Z, flag_value);
-        state.reg.pc = pc;
-        let branch_result = beq(&mut state, offset);
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        p_set!(cpu.reg, Z, flag_value);
+        cpu.reg.pc = pc;
+        let branch_result = beq(&mut cpu, offset);
         assert_eq!(expected_branch_result, branch_result);
-        assert_eq!(expected_pc, state.reg.pc);
+        assert_eq!(expected_pc, cpu.reg.pc);
     }
 
     #[rstest]
@@ -86,10 +86,10 @@ mod tests {
         #[case] carry: bool,
     ) {
         let memory = Memory::default();
-        let mut state = CpuState::new(Reg::default(), memory.view());
-        p_set!(state.reg, C, carry);
-        state.reg.pc = pc.wrapping_add(2);
-        bcs(&mut state, offset);
-        assert_eq!(expected_pc, state.reg.pc);
+        let mut cpu = Cpu::new(crate::Reg::default(), memory.view(), Box::new(DummyMonitor));
+        p_set!(cpu.reg, C, carry);
+        cpu.reg.pc = pc.wrapping_add(2);
+        bcs(&mut cpu, offset);
+        assert_eq!(expected_pc, cpu.reg.pc);
     }
 }

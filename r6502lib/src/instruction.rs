@@ -1,5 +1,5 @@
 use crate::util::make_word;
-use crate::{Binding, CpuState, Op, OpCycles, Opcode, MOS_6502};
+use crate::{Binding, Cpu, Op, OpCycles, Opcode, MOS_6502};
 
 pub(crate) struct Instruction {
     pub(crate) pc: u16,
@@ -8,7 +8,7 @@ pub(crate) struct Instruction {
 }
 
 impl Instruction {
-    pub(crate) fn fetch(s: &CpuState) -> Self {
+    pub(crate) fn fetch(s: &Cpu) -> Self {
         let value = s.memory.load(s.reg.pc);
         match Opcode::from_u8(value) {
             Some(opcode) => match MOS_6502.get_op_info(&opcode) {
@@ -44,7 +44,7 @@ impl Instruction {
         }
     }
 
-    pub(crate) fn execute(&self, state: &mut CpuState) -> OpCycles {
+    pub(crate) fn execute(&self, state: &mut Cpu) -> OpCycles {
         match &self.binding {
             Binding::NoOperand(f) => {
                 state.reg.pc = state.reg.pc.wrapping_add(1);

@@ -36,40 +36,40 @@ impl Os {
         })
     }
 
-    pub fn load_into_vm(&self, vm: &mut Cpu) {
+    pub fn load_into_vm(&self, cpu: &mut Cpu) {
         if let Some(nmi_addr) = self.nmi_addr {
             let (hi, lo) = split_word(nmi_addr);
-            vm.s.memory.store(NMI, lo);
-            vm.s.memory.store(NMI.wrapping_add(1), hi)
+            cpu.memory.store(NMI, lo);
+            cpu.memory.store(NMI.wrapping_add(1), hi)
         }
         if let Some(reset_addr) = self.reset_addr {
             let (hi, lo) = split_word(reset_addr);
-            vm.s.memory.store(RESET, lo);
-            vm.s.memory.store(RESET.wrapping_add(1), hi)
+            cpu.memory.store(RESET, lo);
+            cpu.memory.store(RESET.wrapping_add(1), hi)
         }
         if let Some(irq_addr) = self.irq_addr {
             let (hi, lo) = split_word(irq_addr);
-            vm.s.memory.store(IRQ, lo);
-            vm.s.memory.store(IRQ.wrapping_add(1), hi)
+            cpu.memory.store(IRQ, lo);
+            cpu.memory.store(IRQ.wrapping_add(1), hi)
         }
 
         for os_vector in self.os_vectors.iter().cloned() {
-            vm.s.memory.store(os_vector, Opcode::Brk as u8);
-            vm.s.memory
+            cpu.memory.store(os_vector, Opcode::Brk as u8);
+            cpu.memory
                 .store(os_vector.wrapping_add(1), Opcode::Nop as u8);
-            vm.s.memory
+            cpu.memory
                 .store(os_vector.wrapping_add(2), Opcode::Rts as u8);
         }
 
         if let Some(return_addr) = self.return_addr {
-            vm.s.push_word(return_addr - 1);
+            cpu.push_word(return_addr - 1);
         }
     }
 
-    pub fn is_os_vector(&self, vm: &Cpu) -> Option<u16> {
+    pub fn is_os_vector(&self, cpu: &Cpu) -> Option<u16> {
         match self.irq_addr {
-            Some(irq) if vm.s.reg.pc == irq => {
-                let addr = vm.s.peek_back_word(1).wrapping_sub(2);
+            Some(irq) if cpu.reg.pc == irq => {
+                let addr = cpu.peek_back_word(1).wrapping_sub(2);
                 if self.os_vectors.contains(&addr) {
                     Some(addr)
                 } else {

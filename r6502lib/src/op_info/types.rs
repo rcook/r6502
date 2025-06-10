@@ -1,5 +1,5 @@
 use crate::op_info::op_infos::{Item, CONSTS};
-use crate::{AddressingMode, CpuState, InstructionInfo, Op, OpCycles, Opcode, SymbolInfo};
+use crate::{AddressingMode, Cpu, InstructionInfo, Op, OpCycles, Opcode, SymbolInfo};
 use anyhow::Result;
 
 #[derive(Clone)]
@@ -24,8 +24,8 @@ impl OpInfo {
         }
     }
 
-    pub fn execute_no_operand(&self, state: &mut CpuState) -> OpCycles {
-        self.op.execute_no_operand(state)
+    pub fn execute_no_operand(&self, cpu: &mut Cpu) -> OpCycles {
+        self.op.execute_no_operand(cpu)
     }
 
     pub(crate) fn opcode(&self) -> Opcode {
