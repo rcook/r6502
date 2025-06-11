@@ -63,7 +63,7 @@ pub use monitor::{DummyMonitor, Monitor, TracingMonitor};
 pub use no_operand_op::NoOperandOp;
 pub use op_info::OpInfo;
 pub use opcode::Opcode;
-pub use os::{Os, OsBuilder, OsBuilderError};
+pub use os::Os;
 pub use p::P;
 pub use ram::Ram;
 pub use reg::Reg;

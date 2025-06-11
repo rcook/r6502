@@ -37,7 +37,7 @@ impl UiHost {
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
         cpu.reg.pc = image.start;
 
-        let os = Os::emulate(MachineType::Acorn)?;
+        let os = Os::new(MachineType::Acorn);
         os.load_into_vm(&mut cpu);
 
         let rti = MOS_6502

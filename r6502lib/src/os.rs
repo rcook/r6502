@@ -1,39 +1,33 @@
 use crate::util::split_word;
-use crate::{constants::NMI, Cpu, MachineType, Opcode, IRQ, OSHALT, OSWRCH, RESET};
-use anyhow::Result;
-use derive_builder::Builder;
+use crate::{Cpu, MachineType, Opcode, IRQ, NMI, OSHALT, OSWRCH, RESET};
 
-#[derive(Builder)]
-#[builder(pattern = "owned")]
 pub struct Os {
-    #[builder(default, setter(strip_option))]
-    nmi_addr: Option<u16>,
-
-    #[builder(default, setter(strip_option))]
-    reset_addr: Option<u16>,
-
-    #[builder(default, setter(strip_option))]
-    irq_addr: Option<u16>,
-
-    #[builder(default, setter(strip_option))]
-    return_addr: Option<u16>,
-
-    #[builder(default)]
-    os_vectors: Vec<u16>,
+    pub(crate) nmi_addr: Option<u16>,
+    pub(crate) reset_addr: Option<u16>,
+    pub(crate) irq_addr: Option<u16>,
+    pub(crate) return_addr: Option<u16>,
+    pub(crate) os_vectors: Vec<u16>,
 }
 
 impl Os {
-    pub fn emulate(emulation: MachineType) -> Result<Self> {
-        Ok(match emulation {
-            MachineType::None => OsBuilder::default().build()?,
-            MachineType::Sim6502 => todo!(),
-            MachineType::Acorn => OsBuilder::default()
-                .irq_addr(0x8000)
-                .return_addr(OSHALT)
-                .os_vectors(vec![OSHALT, OSWRCH])
-                .build()?,
-            MachineType::Apple1 => OsBuilder::default().build()?,
-        })
+    #[must_use]
+    pub fn new(machine_type: MachineType) -> Self {
+        match machine_type {
+            MachineType::None | MachineType::Apple1 | MachineType::Sim6502 => Self {
+                nmi_addr: None,
+                reset_addr: None,
+                irq_addr: None,
+                return_addr: None,
+                os_vectors: vec![],
+            },
+            MachineType::Acorn => Self {
+                nmi_addr: None,
+                reset_addr: None,
+                irq_addr: Some(0x8000),
+                return_addr: Some(OSHALT),
+                os_vectors: vec![OSHALT, OSWRCH],
+            },
+        }
     }
 
     pub fn load_into_vm(&self, cpu: &mut Cpu) {

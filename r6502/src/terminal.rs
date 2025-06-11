@@ -20,50 +20,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     };
 
     if opts.trace {
-        println!("Image: {}", opts.path.display());
-
-        println!(
-            "  {label:<25}: {s} (${s:04X}) bytes",
-            label = "Image size",
-            s = image.values.len()
-        );
-
-        println!(
-            "  {label:<25}: {format:?}",
-            label = "Format",
-            format = image.format
-        );
-
-        println!(
-            "  {label:<25}: ${load:04X}",
-            label = "Load address",
-            load = image.load
-        );
-
-        if opts.reset {
-            println!(
-                "  {label:<25}: ${start:04X} (RESET, overriding ${original_start:04X})",
-                label = "Start address",
-                start = start,
-                original_start = image.start
-            );
-        } else {
-            println!(
-                "  {label:<25}: ${start:04X}",
-                label = "Start address",
-                start = image.start
-            );
-        }
-
-        println!(
-            "  {label:<25}: ${sp:02X}",
-            label = "Initial stack pointer",
-            sp = image.sp
-        );
-
-        if let Some(stop_after) = opts.stop_after {
-            println!("  {label:<25}: {stop_after} cycles", label = "Stop after");
-        }
+        show_image_info(opts, &image, start);
     }
 
     let rti = MOS_6502
@@ -71,7 +28,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         .ok_or_else(|| anyhow!("RTI must exist"))?
         .clone();
 
-    let os = Os::emulate(opts.emulation.into())?;
+    let os = Os::new(opts.emulation.into());
 
     let monitor: Option<Box<dyn Monitor>> = if opts.trace {
         Some(Box::new(TracingMonitor::default()))
@@ -119,4 +76,51 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     } else {
         cpu.reg.a as i32
     })
+}
+
+fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
+    println!("Image: {}", opts.path.display());
+
+    println!(
+        "  {label:<25}: {s} (${s:04X}) bytes",
+        label = "Image size",
+        s = image.values.len()
+    );
+
+    println!(
+        "  {label:<25}: {format:?}",
+        label = "Format",
+        format = image.format
+    );
+
+    println!(
+        "  {label:<25}: ${load:04X}",
+        label = "Load address",
+        load = image.load
+    );
+
+    if opts.reset {
+        println!(
+            "  {label:<25}: ${start:04X} (RESET, overriding ${original_start:04X})",
+            label = "Start address",
+            start = start,
+            original_start = image.start
+        );
+    } else {
+        println!(
+            "  {label:<25}: ${start:04X}",
+            label = "Start address",
+            start = image.start
+        );
+    }
+
+    println!(
+        "  {label:<25}: ${sp:02X}",
+        label = "Initial stack pointer",
+        sp = image.sp
+    );
+
+    if let Some(stop_after) = opts.stop_after {
+        println!("  {label:<25}: {stop_after} cycles", label = "Stop after");
+    }
 }

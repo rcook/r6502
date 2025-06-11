@@ -118,7 +118,7 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, Bus, Cpu, Image, Monitor, Opcode, OsBuilder, TracingMonitor, IRQ,
+        p, p_get, p_set, Bus, Cpu, Image, MachineType, Monitor, Opcode, Os, TracingMonitor, IRQ,
         MOS_6502, OSWRCH, P,
     };
     use anyhow::Result;
@@ -213,19 +213,17 @@ mod tests {
     }
 
     #[test]
-    fn jsr_brk() -> Result<()> {
-        const IRQ_ADDR: u16 = 0x7000;
+    fn jsr_brk() {
         const START: u16 = 0x1000;
         let p_test = P::D | P::ALWAYS_ONE;
 
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
 
-        let os = OsBuilder::default()
-            .irq_addr(IRQ_ADDR)
-            .os_vectors(vec![OSWRCH])
-            .build()?;
+        let os = Os::new(MachineType::Acorn);
         os.load_into_vm(&mut cpu);
+
+        let irq_addr = os.irq_addr.expect("Must have value");
 
         bus.store(START, Opcode::Jsr as u8);
         bus.store(START + 1, OSWRCH as u8);
@@ -243,10 +241,8 @@ mod tests {
         assert!(!cpu.step());
         assert_eq!(13, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
-        assert_eq!(IRQ_ADDR, cpu.reg.pc);
+        assert_eq!(irq_addr, cpu.reg.pc);
         assert_eq!(Some(OSWRCH), os.is_os_vector(&cpu));
-
-        Ok(())
     }
 
     #[rstest]
@@ -318,8 +314,6 @@ mod tests {
     }
 
     fn capture_stdout(input: &str, trace: bool) -> Result<String> {
-        const RETURN_ADDR: u16 = 0x1234;
-
         let monitor: Option<Box<dyn Monitor>> = if trace {
             Some(Box::new(TracingMonitor::default()))
         } else {
@@ -332,18 +326,17 @@ mod tests {
         bus.store_image(&image)?;
         cpu.reg.pc = image.start;
 
-        let os = OsBuilder::default()
-            .irq_addr(0x8000)
-            .os_vectors(vec![RETURN_ADDR, OSWRCH])
-            .build()?;
+        let os = Os::new(MachineType::Acorn);
         os.load_into_vm(&mut cpu);
+
+        let return_addr = os.return_addr.expect("Must have value");
 
         let rts = MOS_6502
             .get_op_info(&Opcode::Rts)
             .expect("RTS must exist")
             .clone();
 
-        cpu.push_word(RETURN_ADDR - 1);
+        cpu.push_word(return_addr - 1);
         p_set!(cpu.reg, B, false);
 
         let mut result = String::new();
@@ -351,7 +344,7 @@ mod tests {
             while cpu.step() {}
 
             match os.is_os_vector(&cpu) {
-                Some(RETURN_ADDR) => break,
+                Some(addr) if addr == return_addr => break,
                 Some(OSWRCH) => {
                     result.push(cpu.reg.a as char);
                     if trace {
