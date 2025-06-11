@@ -1,4 +1,4 @@
-use crate::AddressRange;
+use r6502lib::AddressRange;
 
 pub(crate) enum DebugMessage {
     Step,

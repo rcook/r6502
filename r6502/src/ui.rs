@@ -281,9 +281,12 @@ impl Ui {
                     snapshot,
                 } => {
                     const CHUNK_SIZE: usize = 16;
-                    let mut s =
-                        format!("${:04X}:${:04X}\n", address_range.begin, address_range.end);
-                    let mut addr = address_range.begin as usize;
+                    let mut s = format!(
+                        "${:04X}:${:04X}\n",
+                        address_range.start(),
+                        address_range.end()
+                    );
+                    let mut addr = address_range.start() as usize;
                     for chunk in snapshot.chunks(CHUNK_SIZE) {
                         s.push_str(&format!("{addr:04X} "));
                         let mut chars = String::with_capacity(CHUNK_SIZE);

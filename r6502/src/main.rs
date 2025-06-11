@@ -11,7 +11,6 @@
 #![allow(clippy::verbose_bit_mask)]
 #![allow(missing_docs)]
 
-mod address_range;
 mod args;
 mod command;
 mod debug_message;
@@ -25,7 +24,6 @@ mod ui;
 mod ui_host;
 mod ui_monitor;
 
-pub(crate) use address_range::AddressRange;
 pub(crate) use args::Args;
 pub(crate) use command::Command;
 pub(crate) use debug_message::DebugMessage;

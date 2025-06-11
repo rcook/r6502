@@ -1,5 +1,5 @@
-use crate::AddressRange;
 use anyhow::{bail, Error};
+use r6502lib::AddressRange;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
@@ -54,12 +54,13 @@ impl FromStr for Command {
 
 #[cfg(test)]
 mod tests {
-    use crate::{AddressRange, Command};
+    use crate::Command;
     use anyhow::Result;
+    use r6502lib::AddressRange;
     use rstest::rstest;
 
     #[rstest]
-    #[case(Command::FetchMemory(AddressRange { begin: 0x0e00, end: 0x0eff }), "m e00:eff")]
+    #[case(Command::FetchMemory(AddressRange::new(0x0e00, 0x0eff)), "m e00:eff")]
     fn basics(#[case] expected_result: Command, #[case] input: &str) -> Result<()> {
         assert_eq!(expected_result, input.parse()?);
         Ok(())

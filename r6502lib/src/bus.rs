@@ -1,7 +1,7 @@
 use crate::util::make_word;
 use crate::{
-    BusEvent, BusView, DeviceMapping, Image, MachineType, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI,
-    PIA_END_ADDR, PIA_START_ADDR, RESET,
+    AddressRange, BusEvent, BusView, DeviceMapping, Image, MachineType, Pia, Ram, Rom, IRQ,
+    MEMORY_SIZE, NMI, PIA_END_ADDR, PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
 use std::sync::mpsc::{channel, Sender};
@@ -29,20 +29,17 @@ impl Bus {
                 machine_type,
                 vec![
                     DeviceMapping {
-                        start: 0x0000,
-                        end: 0xfbff,
+                        address_range: AddressRange::new(0x0000, 0xfbff),
                         device: Box::new(Ram::<{ 0xfbff + 1 }>::default()),
                         offset: 0x0000,
                     },
                     DeviceMapping {
-                        start: 0xfc00,
-                        end: 0xfc03,
+                        address_range: AddressRange::new(0xfc00, 0xfc03),
                         device: Box::new(Pia::new(bus_tx)),
                         offset: 0xfc00,
                     },
                     DeviceMapping {
-                        start: 0xfc04,
-                        end: 0xffff,
+                        address_range: AddressRange::new(0xfc04, 0xffff),
                         device: Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default()),
                         offset: 0xfc04,
                     },
@@ -52,14 +49,12 @@ impl Bus {
                 machine_type,
                 vec![
                     DeviceMapping {
-                        start: 0x0000,
-                        end: 0x7fff,
+                        address_range: AddressRange::new(0x0000, 0x7fff),
                         device: Box::new(Ram::<0x8000>::default()),
                         offset: 0x0000,
                     },
                     DeviceMapping {
-                        start: 0x8000,
-                        end: 0xffff,
+                        address_range: AddressRange::new(0x8000, 0xffff),
                         device: Box::new(Rom::<0x8000>::default()),
                         offset: 0x8000,
                     },
@@ -69,20 +64,17 @@ impl Bus {
                 machine_type,
                 vec![
                     DeviceMapping {
-                        start: 0x0000,
-                        end: PIA_START_ADDR - 1,
+                        address_range: AddressRange::new(0x0000, PIA_START_ADDR - 1),
                         device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
                         offset: 0x0000,
                     },
                     DeviceMapping {
-                        start: PIA_START_ADDR,
-                        end: PIA_END_ADDR,
+                        address_range: AddressRange::new(PIA_START_ADDR, PIA_END_ADDR),
                         device: Box::new(Pia::new(bus_tx)),
                         offset: PIA_START_ADDR,
                     },
                     DeviceMapping {
-                        start: PIA_END_ADDR + 1,
-                        end: 0xffff,
+                        address_range: AddressRange::new(PIA_END_ADDR + 1, 0xffff),
                         device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
                         offset: PIA_END_ADDR + 1,
                     },
@@ -91,8 +83,7 @@ impl Bus {
             MachineType::Sim6502 | MachineType::None => Self::new(
                 machine_type,
                 vec![DeviceMapping {
-                    start: 0x0000,
-                    end: 0xffff,
+                    address_range: AddressRange::new(0x0000, 0xffff),
                     device: Box::new(Ram::<MEMORY_SIZE>::default()),
                     offset: 0x0000,
                 }],
@@ -160,11 +151,12 @@ impl Bus {
     }
 
     #[must_use]
-    pub fn snapshot(&self, begin: u16, end: u16) -> Vec<u8> {
-        let mut result = Vec::with_capacity(end as usize - begin as usize + 1);
+    pub fn snapshot(&self, address_range: &AddressRange) -> Vec<u8> {
+        let mut result =
+            Vec::with_capacity(address_range.end() as usize - address_range.start() as usize + 1);
 
         // Incredibly inefficient!
-        for addr in begin..=end {
+        for addr in address_range.start()..=address_range.end() {
             result.push(self.load(addr));
         }
 
@@ -192,7 +184,7 @@ impl Bus {
 
     #[must_use]
     fn new(machine_type: MachineType, mut mappings: Vec<DeviceMapping>) -> Self {
-        mappings.sort_by(|a, b| a.start.cmp(&b.start));
+        mappings.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
         Self {
             machine_type,
             mappings,
@@ -202,14 +194,14 @@ impl Bus {
     fn find_mapping(&self, addr: u16) -> Option<&DeviceMapping> {
         self.mappings
             .iter()
-            .find(|&mapping| addr >= mapping.start && addr <= mapping.end)
+            .find(|&mapping| mapping.address_range.contains(addr))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::bus::UNMAPPED_VALUE;
-    use crate::{Bus, DeviceMapping, Image, MachineType, Ram};
+    use crate::{AddressRange, Bus, DeviceMapping, Image, MachineType, Ram};
     use anyhow::Result;
 
     #[test]
@@ -227,8 +219,7 @@ mod tests {
     #[test]
     fn store_image() -> Result<()> {
         let mappings = vec![DeviceMapping {
-            start: 5,
-            end: 7,
+            address_range: AddressRange::new(5, 7),
             device: Box::new(Ram::<3>::default()),
             offset: 5,
         }];

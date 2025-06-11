@@ -1,9 +1,9 @@
 use crate::State::{Halted, Running, Stepping, Stopped};
-use crate::{AddressRange, DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
+use crate::{DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, Bus, Cpu, Image, InstructionInfo, MachineType, OpInfo, Opcode, Os, MOS_6502, OSHALT,
-    OSWRCH,
+    p_set, AddressRange, Bus, Cpu, Image, InstructionInfo, MachineType, OpInfo, Opcode, Os,
+    MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -115,7 +115,7 @@ impl UiHost {
                 Ok(m) => match m {
                     DebugMessage::Step | DebugMessage::Break => {}
                     DebugMessage::Run => return Running,
-                    DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
+                    DebugMessage::FetchMemory(address_range) => self.fetch_memory(&address_range),
                     DebugMessage::SetPc(addr) => self.set_pc(cpu, addr),
                     DebugMessage::Go(addr) => {
                         p_set!(cpu.reg, B, false);
@@ -140,7 +140,7 @@ impl UiHost {
                 Err(_) => return Stopped,
                 Ok(m) => match m {
                     DebugMessage::Step | DebugMessage::Run | DebugMessage::Break => {}
-                    DebugMessage::FetchMemory(address_range) => self.fetch_memory(address_range),
+                    DebugMessage::FetchMemory(address_range) => self.fetch_memory(&address_range),
                     DebugMessage::SetPc(addr) => self.set_pc(cpu, addr),
                     DebugMessage::Go(addr) => {
                         p_set!(cpu.reg, B, false);
@@ -152,11 +152,10 @@ impl UiHost {
         }
     }
 
-    fn fetch_memory(&self, address_range: AddressRange) {
-        assert!(address_range.end >= address_range.begin);
-        let snapshot = self.bus.snapshot(address_range.begin, address_range.end);
+    fn fetch_memory(&self, address_range: &AddressRange) {
+        let snapshot = self.bus.snapshot(address_range);
         _ = self.monitor_tx.send(MonitorMessage::FetchMemoryResponse {
-            address_range,
+            address_range: address_range.clone(),
             snapshot,
         });
     }

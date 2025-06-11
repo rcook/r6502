@@ -1,8 +1,7 @@
-use crate::MemoryMappedDevice;
+use crate::{AddressRange, MemoryMappedDevice};
 
 pub(crate) struct DeviceMapping {
-    pub(crate) start: u16,
-    pub(crate) end: u16,
+    pub(crate) address_range: AddressRange,
     pub(crate) device: Box<dyn MemoryMappedDevice>,
     pub(crate) offset: u16,
 }

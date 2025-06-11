@@ -13,6 +13,7 @@
 
 pub mod util;
 
+mod address_range;
 mod addressing_mode;
 mod binding;
 mod bus;
@@ -28,6 +29,7 @@ mod image_format;
 mod instruction;
 mod instruction_info;
 mod instruction_set;
+mod left_open_interval;
 mod machine_type;
 mod memory_mapped_device;
 mod monitor;
@@ -50,6 +52,7 @@ mod test_scenarios;
 mod total_cycles;
 mod word_op;
 
+pub use address_range::AddressRange;
 pub use bus::Bus;
 pub use bus_event::BusEvent;
 pub use bus_view::BusView;
@@ -85,6 +88,8 @@ pub(crate) use constants::{
 pub(crate) use device_mapping::DeviceMapping;
 pub(crate) use frequency::Frequency;
 pub(crate) use instruction::Instruction;
+#[allow(unused)]
+pub(crate) use left_open_interval::LeftOpenInterval;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;
