@@ -2,15 +2,20 @@
 
 MOS 6502 Emulator and Debugger
 
-This is my emulator and debugger for the 6502 CPU. It is _not_ cycle-accurate in that
-it does not fully emulate the fetch-decode-execute steps of a real 6502. This leads to
-a couple of fun little hacks ([example](r6502lib/src/ops/jump.rs#L21)). It also does
-not emulate the 6502's timing and currently runs "at full speed" - i.e. it will run
-instructions as quickly as the host operating system handle it. I have, however,
-verified the (reasonably) correct functioning of the all implemented opcodes using
-the [SingleStepTests/65x02][single-step-tests] test suite. It's also able to run
-[wozmon](cc65/apple1/README.md) and Apple 1 Integer BASIC. I plan to get it to run
-Microsoft Basic eventually.
+This is my emulator and debugger for the 6502 CPU. It is _not_
+cycle-accurate in that it does not fully emulate the
+fetch-decode-execute steps of a real 6502. This leads to a couple of fun
+little hacks ([example](r6502lib/src/ops/jump.rs#L21)). It also does not
+emulate the 6502's timing and currently runs "at full speed" - i.e. it
+will run instructions as quickly as the host operating system handle it.
+I have, however, verified the (reasonably) correct functioning of the
+all implemented opcodes using the [SingleStepTests/65x02][single-step-tests]
+test suite. It's also able to run [wozmon](cc65/apple1/README.md) and
+Apple 1 Integer BASIC. I plan to get it to run Microsoft BASIC
+eventually.
+
+Note that r6502 does not currently implement any undocumented 6502
+opcodes and will panic if any are encountered.
 
 # r6502
 
