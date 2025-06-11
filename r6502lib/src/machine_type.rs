@@ -2,7 +2,8 @@
 #[repr(u8)]
 pub enum MachineType {
     None = 0,
-    Sim6502 = 1,
-    Acorn = 2,
-    Apple1 = 3,
+    Custom = 10,
+    Sim6502 = 20,
+    Acorn = 30,
+    Apple1 = 40,
 }

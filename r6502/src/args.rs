@@ -68,6 +68,9 @@ pub(crate) enum Emulation {
     #[clap(name = "none")]
     None,
 
+    #[clap(name = "custom")]
+    Custom,
+
     #[clap(name = "sim65")]
     Sim6502,
 
@@ -82,6 +85,7 @@ impl From<Emulation> for MachineType {
     fn from(value: Emulation) -> Self {
         match value {
             Emulation::None => MachineType::None,
+            Emulation::Custom => MachineType::Custom,
             Emulation::Sim6502 => MachineType::Sim6502,
             Emulation::AcornStyle => MachineType::Acorn,
             Emulation::Apple1Style => MachineType::Apple1,

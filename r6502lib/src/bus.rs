@@ -25,6 +25,29 @@ impl Bus {
     #[must_use]
     pub fn configure_for(machine_type: MachineType, bus_tx: Sender<BusEvent>) -> Self {
         match machine_type {
+            MachineType::Custom => Self::new(
+                machine_type,
+                vec![
+                    DeviceMapping {
+                        start: 0x0000,
+                        end: 0xfbff,
+                        device: Box::new(Ram::<{ 0xfbff + 1 }>::default()),
+                        offset: 0x0000,
+                    },
+                    DeviceMapping {
+                        start: 0xfc00,
+                        end: 0xfc03,
+                        device: Box::new(Pia::new(bus_tx)),
+                        offset: 0xfc00,
+                    },
+                    DeviceMapping {
+                        start: 0xfc04,
+                        end: 0xffff,
+                        device: Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default()),
+                        offset: 0xfc04,
+                    },
+                ],
+            ),
             MachineType::Acorn => Self::new(
                 machine_type,
                 vec![
@@ -38,7 +61,7 @@ impl Bus {
                         start: 0x8000,
                         end: 0xffff,
                         device: Box::new(Rom::<0x8000>::default()),
-                        offset: 0x0000,
+                        offset: 0x8000,
                     },
                 ],
             ),
