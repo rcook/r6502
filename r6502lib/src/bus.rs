@@ -1,6 +1,6 @@
 use crate::util::make_word;
 use crate::{
-    BusView, DeviceInfo, Image, MachineType, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI, PIA_END_ADDR,
+    BusView, DeviceMapping, Image, MachineType, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI, PIA_END_ADDR,
     PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
@@ -9,12 +9,12 @@ const UNMAPPED_VALUE: u8 = 0xff;
 
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
 pub struct Bus {
-    devices: Vec<DeviceInfo>,
+    mappings: Vec<DeviceMapping>,
 }
 
 impl Default for Bus {
     fn default() -> Self {
-        Self::new(vec![DeviceInfo {
+        Self::new(vec![DeviceMapping {
             start: 0x0000,
             end: 0xffff,
             device: Box::new(Ram::<MEMORY_SIZE>::default()),
@@ -28,13 +28,13 @@ impl Bus {
     pub fn configure_for(machine_type: MachineType) -> Self {
         match machine_type {
             MachineType::Acorn => Self::new(vec![
-                DeviceInfo {
+                DeviceMapping {
                     start: 0x0000,
                     end: 0x7fff,
                     device: Box::new(Ram::<0x8000>::default()),
                     offset: 0x0000,
                 },
-                DeviceInfo {
+                DeviceMapping {
                     start: 0x8000,
                     end: 0xffff,
                     device: Box::new(Rom::<0x8000>::default()),
@@ -42,19 +42,19 @@ impl Bus {
                 },
             ]),
             MachineType::Apple1 => Self::new(vec![
-                DeviceInfo {
+                DeviceMapping {
                     start: 0x0000,
                     end: PIA_START_ADDR - 1,
                     device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
                     offset: 0x0000,
                 },
-                DeviceInfo {
+                DeviceMapping {
                     start: PIA_START_ADDR,
                     end: PIA_END_ADDR,
                     device: Box::new(Pia::default()),
                     offset: PIA_START_ADDR,
                 },
-                DeviceInfo {
+                DeviceMapping {
                     start: PIA_END_ADDR + 1,
                     end: 0xffff,
                     device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
@@ -66,14 +66,14 @@ impl Bus {
     }
 
     #[must_use]
-    fn new(mut devices: Vec<DeviceInfo>) -> Self {
-        devices.sort_by(|a, b| a.start.cmp(&b.start));
-        Self { devices }
+    fn new(mut mappings: Vec<DeviceMapping>) -> Self {
+        mappings.sort_by(|a, b| a.start.cmp(&b.start));
+        Self { mappings }
     }
 
     pub fn start(&self) {
-        for device in &self.devices {
-            device.device.start();
+        for mapping in &self.mappings {
+            mapping.device.start();
         }
     }
 
@@ -138,29 +138,29 @@ impl Bus {
 
     #[must_use]
     pub fn load(&self, addr: u16) -> u8 {
-        match self.find_device(addr) {
-            Some(device) => device.device.load(addr - device.offset),
+        match self.find_mapping(addr) {
+            Some(mapping) => mapping.device.load(addr - mapping.offset),
             None => UNMAPPED_VALUE,
         }
     }
 
     pub fn store(&self, addr: u16, value: u8) {
-        if let Some(device) = self.find_device(addr) {
-            device.device.store(addr - device.offset, value);
+        if let Some(mapping) = self.find_mapping(addr) {
+            mapping.device.store(addr - mapping.offset, value);
         }
     }
 
-    fn find_device(&self, addr: u16) -> Option<&DeviceInfo> {
-        self.devices
+    fn find_mapping(&self, addr: u16) -> Option<&DeviceMapping> {
+        self.mappings
             .iter()
-            .find(|&device| addr >= device.start && addr <= device.end)
+            .find(|&mapping| addr >= mapping.start && addr <= mapping.end)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::bus::UNMAPPED_VALUE;
-    use crate::{Bus, DeviceInfo, Image, Ram};
+    use crate::{Bus, DeviceMapping, Image, Ram};
     use anyhow::Result;
 
     #[test]
@@ -177,13 +177,13 @@ mod tests {
 
     #[test]
     fn store_image() -> Result<()> {
-        let devices = vec![DeviceInfo {
+        let mappings = vec![DeviceMapping {
             start: 5,
             end: 7,
             device: Box::new(Ram::<3>::default()),
             offset: 5,
         }];
-        let bus = Bus::new(devices);
+        let bus = Bus::new(mappings);
         let bytes = (0..=255).cycle().skip(10).take(100).collect::<Vec<_>>();
         let image = Image::from_bytes(&bytes, None, None, None)?;
         assert_eq!(0x0000, image.load);

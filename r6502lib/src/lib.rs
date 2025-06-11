@@ -18,7 +18,7 @@ mod bus_view;
 mod byte_op;
 mod constants;
 mod cpu;
-mod device_info;
+mod device_mapping;
 mod frequency;
 mod image;
 mod image_format;
@@ -79,7 +79,7 @@ pub(crate) use constants::{
     DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, PIA_END_ADDR, PIA_START_ADDR, R6502_MAGIC_NUMBER,
     SIM6502_MAGIC_NUMBER,
 };
-pub(crate) use device_info::DeviceInfo;
+pub(crate) use device_mapping::DeviceMapping;
 pub(crate) use frequency::Frequency;
 pub(crate) use instruction::Instruction;
 pub(crate) use op::Op;
