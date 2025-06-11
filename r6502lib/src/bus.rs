@@ -65,12 +65,6 @@ impl Bus {
         }
     }
 
-    #[must_use]
-    fn new(mut mappings: Vec<DeviceMapping>) -> Self {
-        mappings.sort_by(|a, b| a.start.cmp(&b.start));
-        Self { mappings }
-    }
-
     pub fn start(&self) {
         for mapping in &self.mappings {
             mapping.device.start();
@@ -148,6 +142,12 @@ impl Bus {
         if let Some(mapping) = self.find_mapping(addr) {
             mapping.device.store(addr - mapping.offset, value);
         }
+    }
+
+    #[must_use]
+    fn new(mut mappings: Vec<DeviceMapping>) -> Self {
+        mappings.sort_by(|a, b| a.start.cmp(&b.start));
+        Self { mappings }
     }
 
     fn find_mapping(&self, addr: u16) -> Option<&DeviceMapping> {
