@@ -66,7 +66,9 @@ array:
 .segment "OSWRCH"
 .org $FFEE
 OSWRCH:
+    ora #$80            ; Set high bit
+oswrch_loop:
     bit $fc02
-    bmi OSWRCH
+    bmi oswrch_loop
     sta $fc02
     rts
