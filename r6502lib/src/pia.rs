@@ -27,10 +27,10 @@ impl PiaState {
     fn new() -> Self {
         Self {
             started: false,
-            pa: 0,
-            pa_cr: 0,
-            pb: 0,
-            pb_cr: 0,
+            pa: 0x00,
+            pa_cr: 0x00,
+            pb: 0x00,
+            pb_cr: 0x00,
         }
     }
 
