@@ -14,12 +14,7 @@ pub struct Bus {
 
 impl Default for Bus {
     fn default() -> Self {
-        Self::new(vec![DeviceMapping {
-            start: 0x0000,
-            end: 0xffff,
-            device: Box::new(Ram::<MEMORY_SIZE>::default()),
-            offset: 0x0000,
-        }])
+        Self::configure_for(MachineType::None)
     }
 }
 
@@ -61,7 +56,12 @@ impl Bus {
                     offset: PIA_END_ADDR + 1,
                 },
             ]),
-            _ => Self::default(),
+            MachineType::Sim6502 | MachineType::None => Self::new(vec![DeviceMapping {
+                start: 0x0000,
+                end: 0xffff,
+                device: Box::new(Ram::<MEMORY_SIZE>::default()),
+                offset: 0x0000,
+            }]),
         }
     }
 
