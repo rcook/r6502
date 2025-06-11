@@ -1,7 +1,7 @@
 use crate::util::make_word;
 use crate::{
-    AddressRange, BusEvent, BusView, DeviceMapping, Image, MachineType, Pia, Ram, Rom, IRQ,
-    MEMORY_SIZE, NMI, PIA_END_ADDR, PIA_START_ADDR, RESET,
+    AddressRange, BusEvent, BusView, DeviceDescription, DeviceMapping, Image, MachineType, Pia,
+    Ram, Rom, IRQ, MEMORY_SIZE, NMI, PIA_END_ADDR, PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
 use std::sync::mpsc::{channel, Sender};
@@ -24,70 +24,20 @@ impl Default for Bus {
 impl Bus {
     #[must_use]
     pub fn configure_for(machine_type: MachineType, bus_tx: Sender<BusEvent>) -> Self {
-        match machine_type {
-            MachineType::Custom => Self::new(
-                machine_type,
-                vec![
-                    DeviceMapping {
-                        address_range: AddressRange::new(0x0000, 0xfbff),
-                        device: Box::new(Ram::<{ 0xfbff + 1 }>::default()),
-                        offset: 0x0000,
-                    },
-                    DeviceMapping {
-                        address_range: AddressRange::new(0xfc00, 0xfc03),
-                        device: Box::new(Pia::new(bus_tx)),
-                        offset: 0xfc00,
-                    },
-                    DeviceMapping {
-                        address_range: AddressRange::new(0xfc04, 0xffff),
-                        device: Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default()),
-                        offset: 0xfc04,
-                    },
-                ],
-            ),
-            MachineType::Acorn => Self::new(
-                machine_type,
-                vec![
-                    DeviceMapping {
-                        address_range: AddressRange::new(0x0000, 0x7fff),
-                        device: Box::new(Ram::<0x8000>::default()),
-                        offset: 0x0000,
-                    },
-                    DeviceMapping {
-                        address_range: AddressRange::new(0x8000, 0xffff),
-                        device: Box::new(Rom::<0x8000>::default()),
-                        offset: 0x8000,
-                    },
-                ],
-            ),
-            MachineType::Apple1 => Self::new(
-                machine_type,
-                vec![
-                    DeviceMapping {
-                        address_range: AddressRange::new(0x0000, PIA_START_ADDR - 1),
-                        device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
-                        offset: 0x0000,
-                    },
-                    DeviceMapping {
-                        address_range: AddressRange::new(PIA_START_ADDR, PIA_END_ADDR),
-                        device: Box::new(Pia::new(bus_tx)),
-                        offset: PIA_START_ADDR,
-                    },
-                    DeviceMapping {
-                        address_range: AddressRange::new(PIA_END_ADDR + 1, 0xffff),
-                        device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
-                        offset: PIA_END_ADDR + 1,
-                    },
-                ],
-            ),
-            MachineType::Sim6502 | MachineType::None => Self::new(
-                machine_type,
-                vec![DeviceMapping {
-                    address_range: AddressRange::new(0x0000, 0xffff),
-                    device: Box::new(Ram::<MEMORY_SIZE>::default()),
-                    offset: 0x0000,
-                }],
-            ),
+        let mut descriptions = Self::get_device_descriptions(machine_type, bus_tx);
+        descriptions.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
+
+        let mappings = descriptions
+            .into_iter()
+            .map(|d| DeviceMapping {
+                address_range: d.address_range,
+                device: (d.device)(),
+                offset: d.offset,
+            })
+            .collect();
+        Self {
+            machine_type,
+            mappings,
         }
     }
 
@@ -182,12 +132,74 @@ impl Bus {
         }
     }
 
+    #[cfg(test)]
     #[must_use]
     fn new(machine_type: MachineType, mut mappings: Vec<DeviceMapping>) -> Self {
         mappings.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
         Self {
             machine_type,
             mappings,
+        }
+    }
+
+    fn get_device_descriptions(
+        machine_type: MachineType,
+        bus_tx: Sender<BusEvent>,
+    ) -> Vec<DeviceDescription> {
+        match machine_type {
+            MachineType::Custom => vec![
+                DeviceDescription {
+                    address_range: AddressRange::new(0x0000, 0xfbff),
+                    device: Box::new(|| Box::new(Ram::<{ 0xfbff + 1 }>::default())),
+                    offset: 0x0000,
+                },
+                DeviceDescription {
+                    address_range: AddressRange::new(0xfc00, 0xfc03),
+                    device: Box::new(|| Box::new(Pia::new(bus_tx))),
+                    offset: 0xfc00,
+                },
+                DeviceDescription {
+                    address_range: AddressRange::new(0xfc04, 0xffff),
+                    device: Box::new(|| Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default())),
+                    offset: 0xfc04,
+                },
+            ],
+            MachineType::Acorn => vec![
+                DeviceDescription {
+                    address_range: AddressRange::new(0x0000, 0x7fff),
+                    device: Box::new(|| Box::new(Ram::<0x8000>::default())),
+                    offset: 0x0000,
+                },
+                DeviceDescription {
+                    address_range: AddressRange::new(0x8000, 0xffff),
+                    device: Box::new(|| Box::new(Rom::<0x8000>::default())),
+                    offset: 0x8000,
+                },
+            ],
+            MachineType::Apple1 => vec![
+                DeviceDescription {
+                    address_range: AddressRange::new(0x0000, PIA_START_ADDR - 1),
+                    device: Box::new(|| Box::new(Ram::<{ PIA_START_ADDR as usize }>::default())),
+                    offset: 0x0000,
+                },
+                DeviceDescription {
+                    address_range: AddressRange::new(PIA_START_ADDR, PIA_END_ADDR),
+                    device: Box::new(|| Box::new(Pia::new(bus_tx))),
+                    offset: PIA_START_ADDR,
+                },
+                DeviceDescription {
+                    address_range: AddressRange::new(PIA_END_ADDR + 1, 0xffff),
+                    device: Box::new(|| {
+                        Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default())
+                    }),
+                    offset: PIA_END_ADDR + 1,
+                },
+            ],
+            MachineType::Sim6502 | MachineType::None => vec![DeviceDescription {
+                address_range: AddressRange::new(0x0000, 0xffff),
+                device: Box::new(|| Box::new(Ram::<MEMORY_SIZE>::default())),
+                offset: 0x0000,
+            }],
         }
     }
 
