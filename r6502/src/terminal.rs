@@ -1,14 +1,20 @@
 use crate::args::RunOptions;
 use anyhow::{anyhow, Result};
+use chrono::Utc;
 use log::LevelFilter;
-use r6502lib::{Bus, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH};
+use r6502lib::{
+    Bus, BusEvent, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH,
+};
 use simple_logging::log_to_file;
+use std::env::current_dir;
 use std::process::exit;
+use std::sync::mpsc::{channel, TryRecvError};
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
-    let bus = Bus::configure_for(opts.emulation.into());
+    let (bus_tx, bus_rx) = channel();
+    let bus = Bus::configure_for(opts.emulation.into(), bus_tx);
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
     bus.store_image(&image)?;
     bus.start();
@@ -42,6 +48,17 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     let mut stopped_after_requested_cycles = false;
     'outer: loop {
         while cpu.step() {
+            match bus_rx.try_recv() {
+                Ok(BusEvent::HardwareBreak) => {
+                    println!("Ctrl+C");
+                    break 'outer;
+                }
+                Ok(BusEvent::Snapshot) => {
+                    write_snapshot(&cpu)?;
+                }
+                Err(TryRecvError::Disconnected | TryRecvError::Empty) => {}
+            }
+
             if let Some(stop_after) = opts.stop_after {
                 if cpu.total_cycles >= stop_after {
                     stopped_after_requested_cycles = true;
@@ -61,6 +78,8 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
             _ => break,
         }
     }
+
+    bus.join();
 
     if opts.cycles {
         if stopped_after_requested_cycles {
@@ -123,4 +142,16 @@ fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     if let Some(stop_after) = opts.stop_after {
         println!("  {label:<25}: {stop_after} cycles", label = "Stop after");
     }
+}
+
+fn write_snapshot(cpu: &Cpu) -> Result<()> {
+    let now = Utc::now();
+    let file_name = format!(
+        "r6502-snapshot-{timestamp}.bin",
+        timestamp = now.format("%Y%m%d%H%M%S")
+    );
+
+    let path = current_dir()?.join(file_name);
+    cpu.write_snapshot(&path)?;
+    Ok(())
 }

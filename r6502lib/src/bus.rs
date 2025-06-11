@@ -1,73 +1,96 @@
 use crate::util::make_word;
 use crate::{
-    BusView, DeviceMapping, Image, MachineType, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI, PIA_END_ADDR,
-    PIA_START_ADDR, RESET,
+    BusEvent, BusView, DeviceMapping, Image, MachineType, Pia, Ram, Rom, IRQ, MEMORY_SIZE, NMI,
+    PIA_END_ADDR, PIA_START_ADDR, RESET,
 };
 use anyhow::{bail, Result};
+use std::sync::mpsc::{channel, Sender};
 
 const UNMAPPED_VALUE: u8 = 0xff;
 
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
 pub struct Bus {
+    machine_type: MachineType,
     mappings: Vec<DeviceMapping>,
 }
 
 impl Default for Bus {
     fn default() -> Self {
-        Self::configure_for(MachineType::None)
+        let (bus_tx, _) = channel();
+        Self::configure_for(MachineType::None, bus_tx)
     }
 }
 
 impl Bus {
     #[must_use]
-    pub fn configure_for(machine_type: MachineType) -> Self {
+    pub fn configure_for(machine_type: MachineType, bus_tx: Sender<BusEvent>) -> Self {
         match machine_type {
-            MachineType::Acorn => Self::new(vec![
-                DeviceMapping {
+            MachineType::Acorn => Self::new(
+                machine_type,
+                vec![
+                    DeviceMapping {
+                        start: 0x0000,
+                        end: 0x7fff,
+                        device: Box::new(Ram::<0x8000>::default()),
+                        offset: 0x0000,
+                    },
+                    DeviceMapping {
+                        start: 0x8000,
+                        end: 0xffff,
+                        device: Box::new(Rom::<0x8000>::default()),
+                        offset: 0x0000,
+                    },
+                ],
+            ),
+            MachineType::Apple1 => Self::new(
+                machine_type,
+                vec![
+                    DeviceMapping {
+                        start: 0x0000,
+                        end: PIA_START_ADDR - 1,
+                        device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
+                        offset: 0x0000,
+                    },
+                    DeviceMapping {
+                        start: PIA_START_ADDR,
+                        end: PIA_END_ADDR,
+                        device: Box::new(Pia::new(bus_tx)),
+                        offset: PIA_START_ADDR,
+                    },
+                    DeviceMapping {
+                        start: PIA_END_ADDR + 1,
+                        end: 0xffff,
+                        device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
+                        offset: PIA_END_ADDR + 1,
+                    },
+                ],
+            ),
+            MachineType::Sim6502 | MachineType::None => Self::new(
+                machine_type,
+                vec![DeviceMapping {
                     start: 0x0000,
-                    end: 0x7fff,
-                    device: Box::new(Ram::<0x8000>::default()),
-                    offset: 0x0000,
-                },
-                DeviceMapping {
-                    start: 0x8000,
                     end: 0xffff,
-                    device: Box::new(Rom::<0x8000>::default()),
+                    device: Box::new(Ram::<MEMORY_SIZE>::default()),
                     offset: 0x0000,
-                },
-            ]),
-            MachineType::Apple1 => Self::new(vec![
-                DeviceMapping {
-                    start: 0x0000,
-                    end: PIA_START_ADDR - 1,
-                    device: Box::new(Ram::<{ PIA_START_ADDR as usize }>::default()),
-                    offset: 0x0000,
-                },
-                DeviceMapping {
-                    start: PIA_START_ADDR,
-                    end: PIA_END_ADDR,
-                    device: Box::new(Pia::default()),
-                    offset: PIA_START_ADDR,
-                },
-                DeviceMapping {
-                    start: PIA_END_ADDR + 1,
-                    end: 0xffff,
-                    device: Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default()),
-                    offset: PIA_END_ADDR + 1,
-                },
-            ]),
-            MachineType::Sim6502 | MachineType::None => Self::new(vec![DeviceMapping {
-                start: 0x0000,
-                end: 0xffff,
-                device: Box::new(Ram::<MEMORY_SIZE>::default()),
-                offset: 0x0000,
-            }]),
+                }],
+            ),
         }
+    }
+
+    #[must_use]
+    pub fn machine_type(&self) -> MachineType {
+        self.machine_type
     }
 
     pub fn start(&self) {
         for mapping in &self.mappings {
             mapping.device.start();
+        }
+    }
+
+    pub fn join(&self) {
+        for mapping in &self.mappings {
+            mapping.device.join();
         }
     }
 
@@ -145,9 +168,12 @@ impl Bus {
     }
 
     #[must_use]
-    fn new(mut mappings: Vec<DeviceMapping>) -> Self {
+    fn new(machine_type: MachineType, mut mappings: Vec<DeviceMapping>) -> Self {
         mappings.sort_by(|a, b| a.start.cmp(&b.start));
-        Self { mappings }
+        Self {
+            machine_type,
+            mappings,
+        }
     }
 
     fn find_mapping(&self, addr: u16) -> Option<&DeviceMapping> {
@@ -160,18 +186,18 @@ impl Bus {
 #[cfg(test)]
 mod tests {
     use crate::bus::UNMAPPED_VALUE;
-    use crate::{Bus, DeviceMapping, Image, Ram};
+    use crate::{Bus, DeviceMapping, Image, MachineType, Ram};
     use anyhow::Result;
 
     #[test]
     fn load_no_device() {
-        let bus = Bus::new(Vec::new());
+        let bus = Bus::new(MachineType::None, Vec::new());
         assert_eq!(UNMAPPED_VALUE, bus.load(0x0000));
     }
 
     #[test]
     fn store_no_device() {
-        let bus = Bus::new(Vec::new());
+        let bus = Bus::new(MachineType::None, Vec::new());
         bus.store(0x0000, 0x00);
     }
 
@@ -183,7 +209,7 @@ mod tests {
             device: Box::new(Ram::<3>::default()),
             offset: 5,
         }];
-        let bus = Bus::new(mappings);
+        let bus = Bus::new(MachineType::None, mappings);
         let bytes = (0..=255).cycle().skip(10).take(100).collect::<Vec<_>>();
         let image = Image::from_bytes(&bytes, None, None, None)?;
         assert_eq!(0x0000, image.load);

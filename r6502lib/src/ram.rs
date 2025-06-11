@@ -30,4 +30,6 @@ impl<const N: usize> MemoryMappedDevice for Ram<N> {
     fn store(&self, addr: u16, value: u8) {
         self.bytes[addr as usize].store(value, Ordering::SeqCst);
     }
+
+    fn join(&self) {}
 }

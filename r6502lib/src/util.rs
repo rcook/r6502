@@ -1,17 +1,19 @@
 use crate::Cpu;
 
-pub(crate) fn crosses_page_boundary(addr: u16) -> bool {
-    (addr & 0x00ff) == 0x00ff
-}
-
-pub(crate) fn make_word(hi: u8, lo: u8) -> u16 {
+#[must_use]
+pub fn make_word(hi: u8, lo: u8) -> u16 {
     ((hi as u16) << 8) + lo as u16
 }
 
-pub(crate) fn split_word(value: u16) -> (u8, u8) {
+#[must_use]
+pub fn split_word(value: u16) -> (u8, u8) {
     let hi = (value >> 8) as u8;
     let lo = value as u8;
     (hi, lo)
+}
+
+pub(crate) fn crosses_page_boundary(addr: u16) -> bool {
+    (addr & 0x00ff) == 0x00ff
 }
 
 // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502

@@ -1,5 +1,6 @@
-use crate::MemoryMappedDevice;
+use crate::{BusEvent, MemoryMappedDevice};
 use getch_rs::{Getch, Key};
+use std::cell::Cell;
 use std::io::{stdout, Write};
 use std::sync::mpsc::{channel, Sender};
 use std::sync::{Arc, Mutex};
@@ -46,8 +47,8 @@ impl PiaState {
 pub(crate) struct Pia {
     tx: Sender<Message>,
     state: Arc<Mutex<PiaState>>,
-    _stdin_handle: JoinHandle<()>,
-    _event_handle: JoinHandle<()>,
+    stdin_handle: Cell<Option<JoinHandle<()>>>,
+    event_handle: Cell<Option<JoinHandle<()>>>,
 }
 
 impl Pia {
@@ -57,14 +58,8 @@ impl Pia {
     const PB_CR_OFFSET: u16 = 0x0003;
 }
 
-impl Default for Pia {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Pia {
-    fn new() -> Self {
+    pub(crate) fn new(bus_tx: Sender<BusEvent>) -> Self {
         let (tx, rx) = channel();
         let state = Arc::new(Mutex::new(PiaState::new()));
 
@@ -73,10 +68,13 @@ impl Pia {
             let g = Getch::new();
             loop {
                 let key = g.getch().expect("Must succeed");
-                //info!("keypress: {key:?}");
                 _ = tx_clone.send(Message::Key(key.clone()));
                 if matches!(key, Key::Ctrl('c')) {
+                    _ = bus_tx.send(BusEvent::HardwareBreak);
                     break;
+                }
+                if matches!(key, Key::Ctrl('s')) {
+                    _ = bus_tx.send(BusEvent::Snapshot);
                 }
             }
         });
@@ -94,6 +92,7 @@ impl Pia {
                             .expect("Must succeed")
                             .set_key(0x1b as char),
                         Key::Ctrl('c') => break,
+                        Key::Ctrl('s') => {}
                         _ => todo!(),
                     },
                     Message::PacrUpdated => state_clone.lock().expect("Must succeed").pa_cr = 0x00,
@@ -127,8 +126,8 @@ impl Pia {
         Self {
             tx,
             state,
-            _stdin_handle: stdin_handle,
-            _event_handle: event_handle,
+            stdin_handle: Cell::new(Some(stdin_handle)),
+            event_handle: Cell::new(Some(event_handle)),
         }
     }
 }
@@ -152,32 +151,10 @@ impl MemoryMappedDevice for Pia {
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
 
-        // if log_enabled!(Level::Info) {
-        //     let name = match addr {
-        //         Self::PA_OFFSET => "PA (KBD)",
-        //         Self::PA_CR_OFFSET => "PA_CR (KBDCR)",
-        //         Self::PB_OFFSET => "PB (DSP)",
-        //         Self::PB_CR_OFFSET => "PB_CR (DSPCR)",
-        //         _ => panic!("Invalid PIA address ${addr:04X}"),
-        //     };
-        //     info!("PIA load: addr=${addr:04X} value=${value:02X} (0b{value:08b}) [({name})]");
-        // }
-
         value
     }
 
     fn store(&self, addr: u16, value: u8) {
-        // if log_enabled!(Level::Info) {
-        //     let name = match addr {
-        //         Self::PA_OFFSET => "PA (KBD)",
-        //         Self::PA_CR_OFFSET => "PA_CR (KBDCR)",
-        //         Self::PB_OFFSET => "PB (DSP)",
-        //         Self::PB_CR_OFFSET => "PB_CR (DSPCR)",
-        //         _ => panic!("Invalid PIA address ${addr:04X}"),
-        //     };
-        //     info!("PIA store: addr=${addr:04X} value=${value:02X} (0b{value:08b}) [({name})]");
-        // }
-
         if !self.state.lock().expect("Must succeed").started {
             return;
         }
@@ -202,5 +179,14 @@ impl MemoryMappedDevice for Pia {
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
         _ = self.tx.send(m);
+    }
+
+    fn join(&self) {
+        if let Some(h) = self.stdin_handle.take() {
+            _ = h.join();
+        }
+        if let Some(h) = self.event_handle.take() {
+            _ = h.join();
+        }
     }
 }

@@ -25,4 +25,6 @@ impl<const N: usize> MemoryMappedDevice for Rom<N> {
     }
 
     fn store(&self, _addr: u16, _value: u8) {}
+
+    fn join(&self) {}
 }

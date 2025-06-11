@@ -9,6 +9,7 @@ pub const OSHALT: u16 = 0xe000;
 pub const OSWRCH: u16 = 0xffee;
 
 pub(crate) const R6502_MAGIC_NUMBER: u16 = 0x6502;
+pub(crate) const R6502_DUMP_MAGIC_NUMBERS: [u8; 4] = [b'D', b'U', b'M', b'P'];
 pub(crate) const SIM6502_MAGIC_NUMBER: &str = "sim65";
 pub(crate) const DEFAULT_LOAD: u16 = 0x0000;
 pub(crate) const DEFAULT_START: u16 = 0x0000;

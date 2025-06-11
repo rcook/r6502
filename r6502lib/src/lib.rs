@@ -11,9 +11,12 @@
 #![allow(clippy::verbose_bit_mask)]
 #![allow(missing_docs)]
 
+pub mod util;
+
 mod addressing_mode;
 mod binding;
 mod bus;
+mod bus_event;
 mod bus_view;
 mod byte_op;
 mod constants;
@@ -45,10 +48,10 @@ mod scenario_runner;
 mod symbol_info;
 mod test_scenarios;
 mod total_cycles;
-mod util;
 mod word_op;
 
 pub use bus::Bus;
+pub use bus_event::BusEvent;
 pub use bus_view::BusView;
 pub use byte_op::ByteOp;
 pub use constants::{IRQ, IRQ_ADDR, MEMORY_SIZE, OSHALT, OSWRCH, RESET, STACK_BASE};
@@ -76,8 +79,8 @@ pub use word_op::WordOp;
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
 pub(crate) use constants::{
-    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, PIA_END_ADDR, PIA_START_ADDR, R6502_MAGIC_NUMBER,
-    SIM6502_MAGIC_NUMBER,
+    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, PIA_END_ADDR, PIA_START_ADDR,
+    R6502_DUMP_MAGIC_NUMBERS, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
 };
 pub(crate) use device_mapping::DeviceMapping;
 pub(crate) use frequency::Frequency;
