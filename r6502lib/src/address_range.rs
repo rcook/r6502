@@ -1,33 +1,41 @@
 use anyhow::{bail, Error};
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::ops::RangeInclusive;
 use std::str::FromStr;
 
-// Represents a closed interval of addresses (includes both addresses)
 #[derive(Clone, Debug, PartialEq)]
-pub struct AddressRange {
-    start: u16,
-    end: u16,
-}
+pub struct AddressRange(RangeInclusive<u16>);
 
 impl AddressRange {
     #[must_use]
     pub fn new(start: u16, end: u16) -> Self {
         assert!(end >= start);
-        Self { start, end }
+        Self(RangeInclusive::new(start, end))
     }
 
     #[must_use]
     pub fn start(&self) -> u16 {
-        self.start
+        *self.0.start()
     }
 
     #[must_use]
     pub fn end(&self) -> u16 {
-        self.end
+        *self.0.end()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        false
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 
     #[must_use]
     pub fn contains(&self, addr: u16) -> bool {
-        addr >= self.start && addr <= self.end
+        addr >= *self.0.start() && addr <= *self.0.end()
     }
 }
 
@@ -46,6 +54,12 @@ impl FromStr for AddressRange {
     }
 }
 
+impl Display for AddressRange {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "${:04X}:${:04X}", self.0.start(), self.0.end())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::AddressRange;
@@ -53,9 +67,19 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case(AddressRange::new(0x0e00, 0x0e80), "0e00:0e80")]
-    fn basics(#[case] expected_result: AddressRange, #[case] input: &str) -> Result<()> {
-        assert_eq!(expected_result, input.parse()?);
+    #[case(AddressRange::new(0x0e00, 0x0e80), 0x0e00, 0x0e80, 0x81, "0e00:0e80")]
+    fn basics(
+        #[case] expected_result: AddressRange,
+        #[case] expected_start: u16,
+        #[case] expected_end: u16,
+        #[case] expected_len: usize,
+        #[case] input: &str,
+    ) -> Result<()> {
+        let result = input.parse()?;
+        assert_eq!(expected_result, result);
+        assert_eq!(expected_start, result.start());
+        assert_eq!(expected_end, result.end());
+        assert_eq!(expected_len, result.len());
         Ok(())
     }
 }

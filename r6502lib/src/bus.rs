@@ -102,8 +102,7 @@ impl Bus {
 
     #[must_use]
     pub fn snapshot(&self, address_range: &AddressRange) -> Vec<u8> {
-        let mut result =
-            Vec::with_capacity(address_range.end() as usize - address_range.start() as usize + 1);
+        let mut result = Vec::with_capacity(address_range.len());
 
         // Incredibly inefficient!
         for addr in address_range.start()..=address_range.end() {
