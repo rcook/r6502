@@ -29,6 +29,8 @@ mod device_mapping;
 mod frequency;
 mod image;
 mod image_format;
+mod image_header;
+mod image_slice;
 mod instruction;
 mod instruction_info;
 mod instruction_set;
@@ -90,6 +92,8 @@ pub(crate) use constants::{
 pub(crate) use device_description::{DeviceDescription, DeviceFn};
 pub(crate) use device_mapping::DeviceMapping;
 pub(crate) use frequency::Frequency;
+pub(crate) use image_header::ImageHeader;
+pub(crate) use image_slice::ImageSlice;
 pub(crate) use instruction::Instruction;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;

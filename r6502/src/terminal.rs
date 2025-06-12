@@ -103,7 +103,7 @@ fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     println!(
         "  {label:<25}: {s} (${s:04X}) bytes",
         label = "Image size",
-        s = image.values.len()
+        s = image.bytes.len()
     );
 
     println!(

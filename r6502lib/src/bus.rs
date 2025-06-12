@@ -81,16 +81,16 @@ impl Bus {
 
     pub fn store_image(&self, image: &Image) -> Result<()> {
         let load = image.load;
-        let limit = load as usize + image.values.len();
+        let limit = load as usize + image.bytes.len();
         if limit > MEMORY_SIZE {
             bail!(
                 "Image size ${size:04X} starting at load address ${load:04X} is too big",
-                size = image.values.len()
+                size = image.bytes.len()
             );
         }
 
         // Also incredibly inefficient
-        for (i, value) in image.values.iter().enumerate() {
+        for (i, value) in image.bytes.iter().enumerate() {
             self.store(i as u16 + load, *value);
         }
 
