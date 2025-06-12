@@ -31,7 +31,6 @@ mod image_format;
 mod instruction;
 mod instruction_info;
 mod instruction_set;
-mod left_open_interval;
 mod machine_type;
 mod monitor;
 mod no_operand_op;
@@ -91,8 +90,6 @@ pub(crate) use device_description::{DeviceDescription, DeviceFn};
 pub(crate) use device_mapping::DeviceMapping;
 pub(crate) use frequency::Frequency;
 pub(crate) use instruction::Instruction;
-#[allow(unused)]
-pub(crate) use left_open_interval::LeftOpenInterval;
 pub(crate) use op::Op;
 pub(crate) use op_cycles::OpCycles;
 pub(crate) use operand::Operand;
