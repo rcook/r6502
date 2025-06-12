@@ -1,22 +1,21 @@
-use crate::BusDevice;
+use crate::{BusDevice, ImageSlice};
 use std::sync::atomic::{AtomicU8, Ordering};
 
 pub struct Ram<const N: usize> {
     bytes: [AtomicU8; N],
 }
 
-impl<const N: usize> Default for Ram<N> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl<const N: usize> Ram<N> {
     #[must_use]
-    pub const fn new() -> Self {
-        Self {
-            bytes: [const { AtomicU8::new(0x00) }; N],
+    pub fn new(image_slice: &Option<ImageSlice>) -> Self {
+        let bytes = [const { AtomicU8::new(0x00) }; N];
+        if let Some(image_slice) = image_slice {
+            let load = image_slice.load as usize;
+            for (i, value) in image_slice.bytes.iter().enumerate() {
+                bytes[load + i].store(*value, Ordering::SeqCst);
+            }
         }
+        Self { bytes }
     }
 }
 

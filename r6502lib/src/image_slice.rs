@@ -1,5 +1,5 @@
 #[allow(unused)]
-pub(crate) struct ImageSlice<'a> {
-    pub(crate) bytes: &'a [u8],
-    pub(crate) load: u16,
+pub struct ImageSlice<'a> {
+    pub bytes: &'a [u8],
+    pub load: u16,
 }

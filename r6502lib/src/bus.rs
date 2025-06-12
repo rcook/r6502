@@ -1,9 +1,8 @@
 use crate::util::make_word;
 use crate::{
-    AddressRange, BusEvent, BusView, DeviceMapping, Image, MachineType, IRQ, MEMORY_SIZE, NMI,
-    RESET,
+    AddressRange, BusEvent, BusView, DeviceDescription, DeviceMapping, Image, MachineType, IRQ,
+    NMI, RESET,
 };
-use anyhow::{bail, Result};
 use std::sync::mpsc::{channel, Sender};
 
 const UNMAPPED_VALUE: u8 = 0xff;
@@ -17,25 +16,23 @@ pub struct Bus {
 impl Default for Bus {
     fn default() -> Self {
         let (bus_tx, _) = channel();
-        Self::configure_for(MachineType::AllRam, &bus_tx)
+        Self::configure_for(MachineType::AllRam, &bus_tx, None)
     }
 }
 
 impl Bus {
     #[must_use]
-    pub fn configure_for(machine_type: MachineType, bus_tx: &Sender<BusEvent>) -> Self {
-        let mut descriptions = machine_type.get_device_descriptions();
-        descriptions.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
-
-        let mappings = descriptions
-            .into_iter()
-            .map(|d| DeviceMapping {
-                address_range: d.address_range,
-                device: (d.device_fn)(bus_tx.clone(), &[], 0x0000),
-                offset: d.offset,
-            })
-            .collect();
-        Self::new(machine_type, mappings)
+    pub fn configure_for(
+        machine_type: MachineType,
+        bus_tx: &Sender<BusEvent>,
+        image: Option<&Image>,
+    ) -> Self {
+        Self::new(
+            machine_type,
+            bus_tx,
+            machine_type.get_device_descriptions(),
+            image,
+        )
     }
 
     #[must_use]
@@ -79,24 +76,6 @@ impl Bus {
         make_word(hi, lo)
     }
 
-    pub fn store_image(&self, image: &Image) -> Result<()> {
-        let load = image.load;
-        let limit = load as usize + image.bytes.len();
-        if limit > MEMORY_SIZE {
-            bail!(
-                "Image size ${size:04X} starting at load address ${load:04X} is too big",
-                size = image.bytes.len()
-            );
-        }
-
-        // Also incredibly inefficient
-        for (i, value) in image.bytes.iter().enumerate() {
-            self.store(i as u16 + load, *value);
-        }
-
-        Ok(())
-    }
-
     #[must_use]
     pub fn snapshot(&self, address_range: &AddressRange) -> Vec<u8> {
         let mut result = Vec::with_capacity(address_range.len());
@@ -129,14 +108,32 @@ impl Bus {
     }
 
     #[must_use]
-    fn new(machine_type: MachineType, mut mappings: Vec<DeviceMapping>) -> Self {
+    pub(crate) fn new(
+        machine_type: MachineType,
+        bus_tx: &Sender<BusEvent>,
+        mut descriptions: Vec<DeviceDescription>,
+        image: Option<&Image>,
+    ) -> Self {
         assert!(!AddressRange::overlapping(
-            &mappings
+            &descriptions
                 .iter()
                 .map(|m| m.address_range.clone())
                 .collect::<Vec<_>>()
         ));
-        mappings.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
+        descriptions.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
+
+        let mappings = descriptions
+            .into_iter()
+            .map(|d| {
+                let slice = image.map(|i| i.slice(&d.address_range));
+                DeviceMapping {
+                    address_range: d.address_range,
+                    device: (d.device_fn)(bus_tx.clone(), slice),
+                    offset: d.offset,
+                }
+            })
+            .collect();
+
         Self {
             machine_type,
             mappings,
@@ -153,34 +150,43 @@ impl Bus {
 #[cfg(test)]
 mod tests {
     use crate::bus::UNMAPPED_VALUE;
-    use crate::{AddressRange, Bus, DeviceMapping, Image, MachineType, Ram};
+    use crate::{AddressRange, Bus, DeviceDescription, Image, MachineType, Ram};
     use anyhow::Result;
+    use std::sync::mpsc::channel;
 
     #[test]
     fn load_no_device() {
-        let bus = Bus::new(MachineType::AllRam, Vec::new());
+        let bus_channel = channel();
+        let bus = Bus::new(MachineType::AllRam, &bus_channel.0, Vec::new(), None);
         assert_eq!(UNMAPPED_VALUE, bus.load(0x0000));
     }
 
     #[test]
     fn store_no_device() {
-        let bus = Bus::new(MachineType::AllRam, Vec::new());
+        let bus_channel = channel();
+        let bus = Bus::new(MachineType::AllRam, &bus_channel.0, Vec::new(), None);
         bus.store(0x0000, 0x00);
     }
 
     #[test]
     fn store_image() -> Result<()> {
-        let mappings = vec![DeviceMapping {
+        let descriptions = vec![DeviceDescription {
             address_range: AddressRange::new(5, 7).expect("Must succeed"),
-            device: Box::new(Ram::<3>::default()),
+            device_fn: Box::new(|_, image_slice| Box::new(Ram::<3>::new(&image_slice))),
             offset: 5,
         }];
-        let bus = Bus::new(MachineType::AllRam, mappings);
+
         let bytes = (0..=255).cycle().skip(10).take(100).collect::<Vec<_>>();
         let image = Image::from_bytes(&bytes, None, None, None)?;
         assert_eq!(0x0000, image.load);
 
-        bus.store_image(&image)?;
+        let bus_channel = channel();
+        let bus = Bus::new(
+            MachineType::AllRam,
+            &bus_channel.0,
+            descriptions,
+            Some(&image),
+        );
 
         for addr in 0..5 {
             assert_eq!(UNMAPPED_VALUE, bus.load(addr));

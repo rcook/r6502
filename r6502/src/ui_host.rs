@@ -2,8 +2,8 @@ use crate::State::{Halted, Running, Stepping, Stopped};
 use crate::{DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, AddressRange, Bus, Cpu, Image, InstructionInfo, MachineType, OpInfo, Opcode, Os,
-    MOS_6502, OSHALT, OSWRCH,
+    p_set, AddressRange, Bus, BusEvent, Cpu, Image, InstructionInfo, MachineType, OpInfo, Opcode,
+    Os, MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -20,22 +20,22 @@ impl UiHost {
         debug_rx: Receiver<DebugMessage>,
         monitor_tx: Sender<MonitorMessage>,
         io_tx: Sender<IoMessage>,
+        bus_tx: &Sender<BusEvent>,
+        image: Option<&Image>,
     ) -> Self {
         Self {
-            bus: Bus::default(),
+            bus: Bus::configure_for(MachineType::AllRam, bus_tx, image),
             debug_rx,
             monitor_tx,
             io_tx,
         }
     }
 
-    pub(crate) fn run(&self, image: &Image) -> Result<()> {
+    pub(crate) fn run(&self, start: u16) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
 
-        self.bus.store_image(image)?;
-
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
-        cpu.reg.pc = image.start;
+        cpu.reg.pc = start;
 
         let os = Os::new(MachineType::Acorn);
         os.load_into_vm(&mut cpu);

@@ -14,9 +14,8 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
     let (bus_tx, bus_rx) = channel();
-    let bus = Bus::configure_for(opts.emulation.into(), &bus_tx);
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    bus.store_image(&image)?;
+    let bus = Bus::configure_for(opts.emulation.into(), &bus_tx, Some(&image));
     bus.start();
 
     let start = if opts.reset {

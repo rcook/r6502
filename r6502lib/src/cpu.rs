@@ -144,6 +144,8 @@ impl<'a> Cpu<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::mpsc::channel;
+
     use crate::util::make_word;
     use crate::{
         p, p_get, p_set, Bus, Cpu, Image, MachineType, Monitor, Opcode, Os, TracingMonitor, IRQ,
@@ -289,11 +291,12 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        bus.store_image(&image)?;
+        let bus_channel = channel();
+        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let mut cpu = Cpu::new(bus.view(), None);
+
         cpu.reg.pc = 0x0e01;
         while cpu.step() {}
         assert_eq!(21, cpu.total_cycles);
@@ -303,11 +306,12 @@ mod tests {
 
     #[test]
     fn add16() -> Result<()> {
-        let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        bus.store_image(&image)?;
+        let bus_channel = channel();
+        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let mut cpu = Cpu::new(bus.view(), None);
+
         cpu.reg.pc = 0x0e02;
         while cpu.step() {}
         assert_eq!(33, cpu.total_cycles);
@@ -322,11 +326,12 @@ mod tests {
         const NUM1: u16 = 0x0e33;
         const REM: u16 = 0x0e37;
 
-        let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        bus.store_image(&image)?;
+        let bus_channel = channel();
+        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let mut cpu = Cpu::new(bus.view(), None);
+
         cpu.reg.pc = 0x0e02;
         while cpu.step() {}
         assert_eq!(893, cpu.total_cycles);
@@ -348,10 +353,10 @@ mod tests {
             None
         };
 
-        let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), monitor);
+        let bus_channel = channel();
         let image = input.parse::<Image>()?;
-        bus.store_image(&image)?;
+        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let mut cpu = Cpu::new(bus.view(), monitor);
         cpu.reg.pc = image.start;
 
         let os = Os::new(MachineType::Acorn);
