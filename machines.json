@@ -1,0 +1,70 @@
+{
+    "defaultMachine": "AllRam",
+    "machines": [
+        {
+            "name": "AllRam",
+            "busDevices": [
+                {
+                    "type": "ram",
+                    "addressRange": "$0000:$FFFF",
+                    "offset": "$0000"
+                }
+            ]
+        },
+        {
+            "name": "Custom",
+            "busDevices": [
+                {
+                    "type": "ram",
+                    "addressRange": "$0000:$FBFF",
+                    "offset": "$0000"
+                },
+                {
+                    "type": "pia",
+                    "addressRange": "$FC00:$FC03",
+                    "offset": "$FC00"
+                },
+                {
+                    "type": "ram",
+                    "addressRange": "$FC04:$FFFF",
+                    "offset": "$FC04"
+                }
+            ]
+        },
+        {
+            "name": "Acorn",
+            "busDevices": [
+                {
+                    "type": "ram",
+                    "addressRange": "$0000:$7FFF",
+                    "offset": "$0000"
+                },
+                {
+                    "type": "rom",
+                    "addressRange": "$8000:$FFFF",
+                    "offset": "$8000"
+                }
+            ]
+        },
+        {
+            "name": "Apple1",
+            "busDevices": [
+                {
+                    "type": "ram",
+                    "addressRange": "$0000:$D00F",
+                    "offset": "$0000"
+                },
+                {
+                    "type": "pia",
+                    "addressRange": "$D010:$D013",
+                    "offset": "$D010"
+                },
+                {
+                    "type": "ram",
+                    "addressRange": "$D014:$FFFF",
+                    "offset": "$D014"
+                }
+            ]
+        }
+    ]
+}

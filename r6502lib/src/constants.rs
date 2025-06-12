@@ -14,6 +14,3 @@ pub(crate) const SIM6502_MAGIC_NUMBER: &str = "sim65";
 pub(crate) const DEFAULT_LOAD: u16 = 0x0000;
 pub(crate) const DEFAULT_START: u16 = 0x0000;
 pub(crate) const DEFAULT_SP: u8 = 0xff;
-
-pub(crate) const PIA_START_ADDR: u16 = 0xd010;
-pub(crate) const PIA_END_ADDR: u16 = 0xd013;

@@ -1,15 +1,12 @@
-use std::sync::mpsc::channel;
-
 use criterion::{criterion_group, criterion_main, Criterion};
-use r6502lib::{Bus, Cpu, Image, MachineType, _p};
+use r6502lib::{Bus, Cpu, Image, _p};
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
 fn div16_benchmark(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/div16.bin");
     let image = Image::from_bytes(bytes, None, None, None).expect("Must succeed");
-    let bus_channel = channel();
-    let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+    let bus = Bus::default_with_image(&image).expect("Must succeed");
     let mut cpu = Cpu::new(bus.view(), None);
 
     assert_eq!(0x35, bus.load(0x106c));

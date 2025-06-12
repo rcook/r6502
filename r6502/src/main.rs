@@ -17,6 +17,7 @@ mod command;
 mod debug_message;
 mod gui;
 mod io_message;
+mod machine_config;
 mod monitor_message;
 mod run;
 mod state;
@@ -24,6 +25,7 @@ mod terminal;
 mod ui;
 mod ui_host;
 mod ui_monitor;
+mod util;
 
 pub(crate) use args::Args;
 pub(crate) use command::Command;

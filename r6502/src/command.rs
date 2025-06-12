@@ -24,7 +24,7 @@ impl FromStr for Command {
                 bail!("invalid \"memory\" command")
             }
 
-            let address_range = parts[1].parse()?;
+            let address_range = AddressRange::parse_no_sigils(parts[1])?;
             return Ok(Self::FetchMemory(address_range));
         }
 

@@ -1,3 +1,4 @@
+use crate::util::create_bus;
 use crate::{Ui, UiHost};
 use anyhow::Result;
 use r6502lib::{Image, SymbolInfo};
@@ -11,18 +12,12 @@ pub(crate) fn run_gui(path: &Path, load: Option<u16>, start: Option<u16>) -> Res
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
-    let bus_channel = channel();
     let mut ui = Ui::new(monitor_channel.1, io_channel.1, &debug_channel.0, symbols);
     spawn(move || {
-        UiHost::new(
-            debug_channel.1,
-            monitor_channel.0,
-            io_channel.0,
-            &bus_channel.0,
-            Some(&image),
-        )
-        .run(image.start)
-        .expect("Must succeed");
+        let (bus, _) = create_bus(&image).expect("Must succeed");
+        UiHost::new(bus, debug_channel.1, monitor_channel.0, io_channel.0)
+            .run(image.start)
+            .expect("Must succeed");
     });
     ui.run();
     Ok(())

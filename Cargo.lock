@@ -1146,6 +1146,8 @@ dependencies = [
  "path-absolutize",
  "r6502lib",
  "rstest",
+ "serde",
+ "serde_json",
  "simple-logging",
 ]
 

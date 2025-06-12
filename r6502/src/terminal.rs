@@ -1,21 +1,21 @@
 use crate::args::RunOptions;
+use crate::util::create_bus;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use log::LevelFilter;
 use r6502lib::{
-    Bus, BusEvent, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH,
+    BusEvent, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH,
 };
 use simple_logging::log_to_file;
 use std::env::current_dir;
 use std::process::exit;
-use std::sync::mpsc::{channel, TryRecvError};
+use std::sync::mpsc::TryRecvError;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
-    let (bus_tx, bus_rx) = channel();
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let bus = Bus::configure_for(opts.emulation.into(), &bus_tx, Some(&image));
+    let (bus, bus_rx) = create_bus(&image)?;
     bus.start();
 
     let start = if opts.reset {

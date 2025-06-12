@@ -1,6 +1,6 @@
+use crate::deserialization::deserialize_word;
 use anyhow::{anyhow, Result};
-use serde::de::Error as SerdeError;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 use std::fs::File;
 use std::path::Path;
 
@@ -11,7 +11,7 @@ pub struct SymbolInfo {
 
     #[serde(
         rename = "value",
-        deserialize_with = "deserialize_value",
+        deserialize_with = "deserialize_word",
         serialize_with = "serialize_value"
     )]
     pub value: u16,
@@ -43,17 +43,6 @@ impl SymbolInfo {
         } else {
             Vec::new()
         })
-    }
-}
-
-fn deserialize_value<'de, D>(deserializer: D) -> Result<u16, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    match s.strip_prefix('$') {
-        Some(suffix) => u16::from_str_radix(suffix, 16).map_err(SerdeError::custom),
-        None => s.parse().map_err(SerdeError::custom),
     }
 }
 

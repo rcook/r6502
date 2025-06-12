@@ -1,4 +1,4 @@
-use crate::{Bus, MachineType};
+use crate::Bus;
 
 #[derive(Clone)]
 pub struct BusView<'a> {
@@ -9,11 +9,6 @@ impl<'a> BusView<'a> {
     #[must_use]
     pub const fn new(bus: &'a Bus) -> Self {
         Self { bus }
-    }
-
-    #[must_use]
-    pub const fn machine_type(&self) -> MachineType {
-        self.bus.machine_type()
     }
 
     #[must_use]

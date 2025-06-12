@@ -36,8 +36,8 @@ impl Image {
         Self::read(Cursor::new(bytes), default_load, default_start, default_sp)
     }
 
-    #[allow(unused)]
-    pub(crate) fn slice(&self, range: &AddressRange) -> ImageSlice {
+    #[must_use]
+    pub fn slice(&self, range: &AddressRange) -> ImageSlice {
         let image_start = self.load as usize;
         let image_end = image_start + self.bytes.len();
         let range_start = range.start() as usize;

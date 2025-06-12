@@ -2,8 +2,8 @@ use crate::State::{Halted, Running, Stepping, Stopped};
 use crate::{DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, AddressRange, Bus, BusEvent, Cpu, Image, InstructionInfo, MachineType, OpInfo, Opcode,
-    Os, MOS_6502, OSHALT, OSWRCH,
+    p_set, AddressRange, Bus, Cpu, InstructionInfo, MachineType, OpInfo, Opcode, Os, MOS_6502,
+    OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -16,15 +16,14 @@ pub(crate) struct UiHost {
 }
 
 impl UiHost {
-    pub(crate) fn new(
+    pub(crate) const fn new(
+        bus: Bus,
         debug_rx: Receiver<DebugMessage>,
         monitor_tx: Sender<MonitorMessage>,
         io_tx: Sender<IoMessage>,
-        bus_tx: &Sender<BusEvent>,
-        image: Option<&Image>,
     ) -> Self {
         Self {
-            bus: Bus::configure_for(MachineType::AllRam, bus_tx, image),
+            bus,
             debug_rx,
             monitor_tx,
             io_tx,

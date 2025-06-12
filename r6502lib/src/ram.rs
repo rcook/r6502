@@ -1,14 +1,15 @@
 use crate::{BusDevice, ImageSlice};
 use std::sync::atomic::{AtomicU8, Ordering};
 
-pub struct Ram<const N: usize> {
-    bytes: [AtomicU8; N],
+pub struct Ram {
+    bytes: Vec<AtomicU8>,
 }
 
-impl<const N: usize> Ram<N> {
+impl Ram {
     #[must_use]
-    pub fn new(image_slice: &Option<ImageSlice>) -> Self {
-        let bytes = [const { AtomicU8::new(0x00) }; N];
+    pub fn new(size: usize, image_slice: Option<&ImageSlice>) -> Self {
+        let mut bytes = Vec::with_capacity(size);
+        bytes.resize_with(size, || AtomicU8::new(0));
         if let Some(image_slice) = image_slice {
             let load = image_slice.load as usize;
             for (i, value) in image_slice.bytes.iter().enumerate() {
@@ -19,7 +20,7 @@ impl<const N: usize> Ram<N> {
     }
 }
 
-impl<const N: usize> BusDevice for Ram<N> {
+impl BusDevice for Ram {
     fn start(&self) {}
 
     fn load(&self, addr: u16) -> u8 {

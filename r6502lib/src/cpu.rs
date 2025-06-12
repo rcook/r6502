@@ -38,7 +38,7 @@ impl<'a> Cpu<'a> {
         let (hi, lo) = split_word(self.reg.pc);
         writer.write_all(&R6502_DUMP_MAGIC_NUMBERS)?;
         writer.write_all(&[
-            self.bus.machine_type() as u8,
+            0xff, //self.bus.machine_type() as u8,
             lo,
             hi,
             self.reg.a,
@@ -144,8 +144,6 @@ impl<'a> Cpu<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::mpsc::channel;
-
     use crate::util::make_word;
     use crate::{
         p, p_get, p_set, Bus, Cpu, Image, MachineType, Monitor, Opcode, Os, TracingMonitor, IRQ,
@@ -293,11 +291,10 @@ mod tests {
     fn add8() -> Result<()> {
         let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        let bus_channel = channel();
-        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
-        cpu.reg.pc = 0x0e01;
+        cpu.reg.pc = image.load.wrapping_add(1);
         while cpu.step() {}
         assert_eq!(21, cpu.total_cycles);
         assert_eq!(0x46, bus.load(0x0e00));
@@ -308,11 +305,10 @@ mod tests {
     fn add16() -> Result<()> {
         let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        let bus_channel = channel();
-        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
-        cpu.reg.pc = 0x0e02;
+        cpu.reg.pc = image.load.wrapping_add(2);
         while cpu.step() {}
         assert_eq!(33, cpu.total_cycles);
         let lo = bus.load(0x0e00);
@@ -328,11 +324,10 @@ mod tests {
 
         let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
-        let bus_channel = channel();
-        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
-        cpu.reg.pc = 0x0e02;
+        cpu.reg.pc = image.load.wrapping_add(2);
         while cpu.step() {}
         assert_eq!(893, cpu.total_cycles);
         let lo = bus.load(NUM1);
@@ -353,10 +348,10 @@ mod tests {
             None
         };
 
-        let bus_channel = channel();
         let image = input.parse::<Image>()?;
-        let bus = Bus::configure_for(MachineType::AllRam, &bus_channel.0, Some(&image));
+        let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), monitor);
+
         cpu.reg.pc = image.start;
 
         let os = Os::new(MachineType::Acorn);

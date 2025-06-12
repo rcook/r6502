@@ -1,13 +1,13 @@
 use crate::{BusDevice, ImageSlice};
 
-pub struct Rom<const N: usize> {
-    bytes: [u8; N],
+pub struct Rom {
+    bytes: Vec<u8>,
 }
 
-impl<const N: usize> Rom<N> {
+impl Rom {
     #[must_use]
-    pub fn new(image_slice: &Option<ImageSlice>) -> Self {
-        let mut bytes = [0x00; N];
+    pub fn new(size: usize, image_slice: Option<&ImageSlice>) -> Self {
+        let mut bytes = vec![0x00; size];
         if let Some(image_slice) = image_slice {
             let load = image_slice.load as usize;
             bytes[load..load + image_slice.bytes.len()].copy_from_slice(image_slice.bytes);
@@ -16,7 +16,7 @@ impl<const N: usize> Rom<N> {
     }
 }
 
-impl<const N: usize> BusDevice for Rom<N> {
+impl BusDevice for Rom {
     fn start(&self) {}
 
     fn load(&self, addr: u16) -> u8 {

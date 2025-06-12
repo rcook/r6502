@@ -44,7 +44,7 @@ impl PiaState {
     }
 }
 
-pub(crate) struct Pia {
+pub struct Pia {
     tx: Sender<Message>,
     state: Arc<Mutex<PiaState>>,
     stdin_handle: Cell<Option<JoinHandle<()>>>,
@@ -59,7 +59,8 @@ impl Pia {
 }
 
 impl Pia {
-    pub(crate) fn new(bus_tx: Sender<BusEvent>) -> Self {
+    #[must_use]
+    pub fn new(bus_tx: Sender<BusEvent>) -> Self {
         let (tx, rx) = channel();
         let state = Arc::new(Mutex::new(PiaState::new()));
 

@@ -7,6 +7,25 @@ use std::str::FromStr;
 pub struct AddressRange(RangeInclusive<u16>);
 
 impl AddressRange {
+    pub fn new(start: u16, end: u16) -> Result<Self> {
+        if end >= start {
+            Ok(Self(RangeInclusive::new(start, end)))
+        } else {
+            bail!("Invalid address range ${start:02X}:${end:02X}")
+        }
+    }
+
+    pub fn parse_no_sigils(s: &str) -> Result<Self> {
+        match s.split_once(':') {
+            Some((prefix, suffix)) => {
+                let start = u16::from_str_radix(prefix.trim(), 16)?;
+                let end = u16::from_str_radix(suffix.trim(), 16)?;
+                Self::new(start, end)
+            }
+            None => bail!("invalid address range {s}"),
+        }
+    }
+
     #[must_use]
     pub fn overlapping(ranges: &[Self]) -> bool {
         if ranges.is_empty() {
@@ -26,14 +45,6 @@ impl AddressRange {
         }
 
         false
-    }
-
-    pub fn new(start: u16, end: u16) -> Result<Self> {
-        if end >= start {
-            Ok(Self(RangeInclusive::new(start, end)))
-        } else {
-            bail!("Invalid address range ${start:02X}:${end:02X}")
-        }
     }
 
     #[must_use]
@@ -66,14 +77,23 @@ impl FromStr for AddressRange {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.split_once(':') {
-            Some((prefix, suffix)) => {
-                let start = u16::from_str_radix(prefix.trim(), 16)?;
-                let end = u16::from_str_radix(suffix.trim(), 16)?;
-                Self::new(start, end)
-            }
-            None => bail!("invalid address range {s}"),
-        }
+        let Some((prefix, suffix)) = s.split_once(':') else {
+            bail!("invalid address range {s}")
+        };
+
+        let Some(s) = prefix.strip_prefix('$') else {
+            bail!("invalid address range {s}")
+        };
+
+        let start = u16::from_str_radix(s, 16)?;
+
+        let Some(s) = suffix.strip_prefix('$') else {
+            bail!("invalid address range {s}")
+        };
+
+        let end = u16::from_str_radix(s, 16)?;
+
+        Self::new(start, end)
     }
 }
 
@@ -91,14 +111,14 @@ mod tests {
 
     #[rstest]
     #[case(AddressRange::new(0x0e00, 0x0e80).expect("Must succeed"), 0x0e00, 0x0e80, 0x81, "0e00:0e80")]
-    fn basics(
+    fn parse_no_sigils(
         #[case] expected_result: AddressRange,
         #[case] expected_start: u16,
         #[case] expected_end: u16,
         #[case] expected_len: usize,
         #[case] input: &str,
     ) -> Result<()> {
-        let result = input.parse()?;
+        let result = AddressRange::parse_no_sigils(input)?;
         assert_eq!(expected_result, result);
         assert_eq!(expected_start, result.start());
         assert_eq!(expected_end, result.end());
