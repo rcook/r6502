@@ -150,46 +150,49 @@ impl Bus {
         match machine_type {
             MachineType::Custom => vec![
                 DeviceDescription {
-                    address_range: AddressRange::new(0x0000, 0xfbff),
+                    address_range: AddressRange::new(0x0000, 0xfbff).expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Ram::<{ 0xfbff + 1 }>::default())),
                     offset: 0x0000,
                 },
                 DeviceDescription {
-                    address_range: AddressRange::new(0xfc00, 0xfc03),
+                    address_range: AddressRange::new(0xfc00, 0xfc03).expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Pia::new(bus_tx))),
                     offset: 0xfc00,
                 },
                 DeviceDescription {
-                    address_range: AddressRange::new(0xfc04, 0xffff),
+                    address_range: AddressRange::new(0xfc04, 0xffff).expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default())),
                     offset: 0xfc04,
                 },
             ],
             MachineType::Acorn => vec![
                 DeviceDescription {
-                    address_range: AddressRange::new(0x0000, 0x7fff),
+                    address_range: AddressRange::new(0x0000, 0x7fff).expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Ram::<0x8000>::default())),
                     offset: 0x0000,
                 },
                 DeviceDescription {
-                    address_range: AddressRange::new(0x8000, 0xffff),
+                    address_range: AddressRange::new(0x8000, 0xffff).expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Rom::<0x8000>::default())),
                     offset: 0x8000,
                 },
             ],
             MachineType::Apple1 => vec![
                 DeviceDescription {
-                    address_range: AddressRange::new(0x0000, PIA_START_ADDR - 1),
+                    address_range: AddressRange::new(0x0000, PIA_START_ADDR - 1)
+                        .expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Ram::<{ PIA_START_ADDR as usize }>::default())),
                     offset: 0x0000,
                 },
                 DeviceDescription {
-                    address_range: AddressRange::new(PIA_START_ADDR, PIA_END_ADDR),
+                    address_range: AddressRange::new(PIA_START_ADDR, PIA_END_ADDR)
+                        .expect("Must succeed"),
                     device_fn: Box::new(|| Box::new(Pia::new(bus_tx))),
                     offset: PIA_START_ADDR,
                 },
                 DeviceDescription {
-                    address_range: AddressRange::new(PIA_END_ADDR + 1, 0xffff),
+                    address_range: AddressRange::new(PIA_END_ADDR + 1, 0xffff)
+                        .expect("Must succeed"),
                     device_fn: Box::new(|| {
                         Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default())
                     }),
@@ -197,7 +200,7 @@ impl Bus {
                 },
             ],
             MachineType::Sim6502 | MachineType::None => vec![DeviceDescription {
-                address_range: AddressRange::new(0x0000, 0xffff),
+                address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
                 device_fn: Box::new(|| Box::new(Ram::<MEMORY_SIZE>::default())),
                 offset: 0x0000,
             }],
@@ -232,7 +235,7 @@ mod tests {
     #[test]
     fn store_image() -> Result<()> {
         let mappings = vec![DeviceMapping {
-            address_range: AddressRange::new(5, 7),
+            address_range: AddressRange::new(5, 7).expect("Must succeed"),
             device: Box::new(Ram::<3>::default()),
             offset: 5,
         }];

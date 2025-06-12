@@ -60,7 +60,7 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case(Command::FetchMemory(AddressRange::new(0x0e00, 0x0eff)), "m e00:eff")]
+    #[case(Command::FetchMemory(AddressRange::new(0x0e00, 0x0eff).expect("Must succeed")), "m e00:eff")]
     fn basics(#[case] expected_result: Command, #[case] input: &str) -> Result<()> {
         assert_eq!(expected_result, input.parse()?);
         Ok(())

@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{bail, Error, Result};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::RangeInclusive;
 use std::str::FromStr;
@@ -29,9 +29,12 @@ impl AddressRange {
     }
 
     #[must_use]
-    pub fn new(start: u16, end: u16) -> Self {
-        assert!(end >= start);
-        Self(RangeInclusive::new(start, end))
+    pub fn new(start: u16, end: u16) -> Result<Self> {
+        if end >= start {
+            Ok(Self(RangeInclusive::new(start, end)))
+        } else {
+            bail!("Invalid address range ${start:02X}:${end:02X}")
+        }
     }
 
     #[must_use]
@@ -68,7 +71,7 @@ impl FromStr for AddressRange {
             Some((prefix, suffix)) => {
                 let start = u16::from_str_radix(prefix.trim(), 16)?;
                 let end = u16::from_str_radix(suffix.trim(), 16)?;
-                Ok(Self::new(start, end))
+                Self::new(start, end)
             }
             None => bail!("invalid address range {s}"),
         }
@@ -88,7 +91,7 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case(AddressRange::new(0x0e00, 0x0e80), 0x0e00, 0x0e80, 0x81, "0e00:0e80")]
+    #[case(AddressRange::new(0x0e00, 0x0e80).expect("Must succeed"), 0x0e00, 0x0e80, 0x81, "0e00:0e80")]
     fn basics(
         #[case] expected_result: AddressRange,
         #[case] expected_start: u16,
@@ -107,16 +110,16 @@ mod tests {
     #[test]
     fn overlapping() {
         assert!(!AddressRange::overlapping(&[
-            AddressRange::new(0, 1),
-            AddressRange::new(2, 3)
+            AddressRange::new(0, 1).expect("Must succeed"),
+            AddressRange::new(2, 3).expect("Must succeed")
         ]));
         assert!(AddressRange::overlapping(&[
-            AddressRange::new(0, 1),
-            AddressRange::new(1, 3)
+            AddressRange::new(0, 1).expect("Must succeed"),
+            AddressRange::new(1, 3).expect("Must succeed")
         ]));
         assert!(AddressRange::overlapping(&[
-            AddressRange::new(0, 2),
-            AddressRange::new(1, 3)
+            AddressRange::new(0, 2).expect("Must succeed"),
+            AddressRange::new(1, 3).expect("Must succeed")
         ]));
     }
 }
