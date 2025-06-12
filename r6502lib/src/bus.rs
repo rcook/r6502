@@ -31,7 +31,7 @@ impl Bus {
             .into_iter()
             .map(|d| DeviceMapping {
                 address_range: d.address_range,
-                device: (d.device_fn)(bus_tx.clone()),
+                device: (d.device_fn)(bus_tx.clone(), &[], 0x0000),
                 offset: d.offset,
             })
             .collect();
