@@ -5,9 +5,8 @@ use crate::{
 #[derive(Clone, Copy)]
 #[repr(u8)]
 pub enum MachineType {
-    None = 0,
+    AllRam = 0,
     Custom = 10,
-    Sim6502 = 20,
     Acorn = 30,
     Apple1 = 40,
 }
@@ -15,6 +14,11 @@ pub enum MachineType {
 impl MachineType {
     pub(crate) fn get_device_descriptions(self) -> Vec<DeviceDescription> {
         match self {
+            Self::AllRam => vec![DeviceDescription {
+                address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
+                device_fn: Box::new(|_| Box::new(Ram::<MEMORY_SIZE>::default())),
+                offset: 0x0000,
+            }],
             Self::Custom => vec![
                 DeviceDescription {
                     address_range: AddressRange::new(0x0000, 0xfbff).expect("Must succeed"),
@@ -68,11 +72,6 @@ impl MachineType {
                     offset: PIA_END_ADDR + 1,
                 },
             ],
-            Self::Sim6502 | Self::None => vec![DeviceDescription {
-                address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
-                device_fn: Box::new(|_| Box::new(Ram::<MEMORY_SIZE>::default())),
-                offset: 0x0000,
-            }],
         }
     }
 }

@@ -13,10 +13,7 @@ impl Os {
     #[must_use]
     pub fn new(machine_type: MachineType) -> Self {
         match machine_type {
-            MachineType::None
-            | MachineType::Apple1
-            | MachineType::Sim6502
-            | MachineType::Custom => Self {
+            MachineType::AllRam | MachineType::Apple1 | MachineType::Custom => Self {
                 nmi_addr: None,
                 reset_addr: None,
                 irq_addr: None,

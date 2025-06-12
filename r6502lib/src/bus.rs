@@ -17,7 +17,7 @@ pub struct Bus {
 impl Default for Bus {
     fn default() -> Self {
         let (bus_tx, _) = channel();
-        Self::configure_for(MachineType::None, &bus_tx)
+        Self::configure_for(MachineType::AllRam, &bus_tx)
     }
 }
 
@@ -158,13 +158,13 @@ mod tests {
 
     #[test]
     fn load_no_device() {
-        let bus = Bus::new(MachineType::None, Vec::new());
+        let bus = Bus::new(MachineType::AllRam, Vec::new());
         assert_eq!(UNMAPPED_VALUE, bus.load(0x0000));
     }
 
     #[test]
     fn store_no_device() {
-        let bus = Bus::new(MachineType::None, Vec::new());
+        let bus = Bus::new(MachineType::AllRam, Vec::new());
         bus.store(0x0000, 0x00);
     }
 
@@ -175,7 +175,7 @@ mod tests {
             device: Box::new(Ram::<3>::default()),
             offset: 5,
         }];
-        let bus = Bus::new(MachineType::None, mappings);
+        let bus = Bus::new(MachineType::AllRam, mappings);
         let bytes = (0..=255).cycle().skip(10).take(100).collect::<Vec<_>>();
         let image = Image::from_bytes(&bytes, None, None, None)?;
         assert_eq!(0x0000, image.load);

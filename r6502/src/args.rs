@@ -58,7 +58,7 @@ pub(crate) struct RunOptions {
         help = "OS emulation mode",
         long = "emu",
         value_enum,
-        default_value_t = Emulation::None
+        default_value_t = Emulation::AllRam
     )]
     pub(crate) emulation: Emulation,
 }
@@ -66,29 +66,25 @@ pub(crate) struct RunOptions {
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub(crate) enum Emulation {
     #[clap(name = "none")]
-    None,
+    AllRam,
 
     #[clap(name = "custom")]
     Custom,
 
-    #[clap(name = "sim65")]
-    Sim6502,
-
     #[clap(name = "acorn")]
-    AcornStyle,
+    Acorn,
 
     #[clap(name = "apple1")]
-    Apple1Style,
+    Apple1,
 }
 
 impl From<Emulation> for MachineType {
     fn from(value: Emulation) -> Self {
         match value {
-            Emulation::None => MachineType::None,
-            Emulation::Custom => MachineType::Custom,
-            Emulation::Sim6502 => MachineType::Sim6502,
-            Emulation::AcornStyle => MachineType::Acorn,
-            Emulation::Apple1Style => MachineType::Apple1,
+            Emulation::AllRam => Self::AllRam,
+            Emulation::Custom => Self::Custom,
+            Emulation::Acorn => Self::Acorn,
+            Emulation::Apple1 => Self::Apple1,
         }
     }
 }
