@@ -1,18 +1,18 @@
 use crate::Cpu;
 
 #[must_use]
-pub fn make_word(hi: u8, lo: u8) -> u16 {
+pub const fn make_word(hi: u8, lo: u8) -> u16 {
     ((hi as u16) << 8) + lo as u16
 }
 
 #[must_use]
-pub fn split_word(value: u16) -> (u8, u8) {
+pub const fn split_word(value: u16) -> (u8, u8) {
     let hi = (value >> 8) as u8;
     let lo = value as u8;
     (hi, lo)
 }
 
-pub(crate) fn crosses_page_boundary(addr: u16) -> bool {
+pub(crate) const fn crosses_page_boundary(addr: u16) -> bool {
     (addr & 0x00ff) == 0x00ff
 }
 

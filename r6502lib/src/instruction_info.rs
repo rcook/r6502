@@ -16,7 +16,7 @@ impl InstructionInfo {
         InstructionInfo::from_instruction(&instruction)
     }
 
-    pub(crate) fn from_instruction(instruction: &Instruction) -> Self {
+    pub(crate) const fn from_instruction(instruction: &Instruction) -> Self {
         match &instruction.binding {
             Binding::NoOperand(_) => Self {
                 pc: instruction.pc,

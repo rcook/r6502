@@ -13,7 +13,7 @@ impl<const N: usize> Default for Ram<N> {
 
 impl<const N: usize> Ram<N> {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             bytes: [const { AtomicU8::new(0x00) }; N],
         }

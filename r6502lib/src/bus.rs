@@ -39,7 +39,7 @@ impl Bus {
     }
 
     #[must_use]
-    pub fn machine_type(&self) -> MachineType {
+    pub const fn machine_type(&self) -> MachineType {
         self.machine_type
     }
 
@@ -110,7 +110,7 @@ impl Bus {
     }
 
     #[must_use]
-    pub fn view(&self) -> BusView {
+    pub const fn view(&self) -> BusView {
         BusView::new(self)
     }
 

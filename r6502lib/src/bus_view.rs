@@ -7,12 +7,12 @@ pub struct BusView<'a> {
 
 impl<'a> BusView<'a> {
     #[must_use]
-    pub fn new(bus: &'a Bus) -> Self {
+    pub const fn new(bus: &'a Bus) -> Self {
         Self { bus }
     }
 
     #[must_use]
-    pub fn machine_type(&self) -> MachineType {
+    pub const fn machine_type(&self) -> MachineType {
         self.bus.machine_type()
     }
 

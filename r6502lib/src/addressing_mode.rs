@@ -124,7 +124,7 @@ impl AddressingMode {
         }
     }
 
-    fn compute_branch(pc: u16, operand: u8) -> u16 {
+    const fn compute_branch(pc: u16, operand: u8) -> u16 {
         let lhs = pc as i32;
         let rhs = (operand as i8) as i32;
         (lhs + rhs) as u16

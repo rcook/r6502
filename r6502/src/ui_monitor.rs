@@ -7,7 +7,7 @@ pub(crate) struct UiMonitor {
 }
 
 impl UiMonitor {
-    pub(crate) fn new(monitor_tx: Sender<MonitorMessage>) -> Self {
+    pub(crate) const fn new(monitor_tx: Sender<MonitorMessage>) -> Self {
         Self { monitor_tx }
     }
 }

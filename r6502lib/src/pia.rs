@@ -24,7 +24,7 @@ struct PiaState {
 }
 
 impl PiaState {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             started: false,
             pa: 0x00,

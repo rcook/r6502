@@ -1,3 +1,4 @@
+#![warn(clippy::missing_const_for_fn)]
 #![warn(clippy::pedantic)]
 #![allow(clippy::bool_to_int_with_if)]
 #![allow(clippy::cast_lossless)]

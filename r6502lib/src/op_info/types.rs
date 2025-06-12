@@ -28,11 +28,11 @@ impl OpInfo {
         self.op.execute_no_operand(cpu)
     }
 
-    pub(crate) fn opcode(&self) -> Opcode {
+    pub(crate) const fn opcode(&self) -> Opcode {
         self.opcode
     }
 
-    pub(crate) fn op(&self) -> &Op {
+    pub(crate) const fn op(&self) -> &Op {
         &self.op
     }
 

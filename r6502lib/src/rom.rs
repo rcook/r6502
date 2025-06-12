@@ -12,7 +12,7 @@ impl<const N: usize> Default for Rom<N> {
 
 impl<const N: usize> Rom<N> {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { bytes: [0x00; N] }
     }
 }

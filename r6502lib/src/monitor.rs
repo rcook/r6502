@@ -29,7 +29,7 @@ pub struct TracingMonitor {
 
 impl TracingMonitor {
     #[must_use]
-    pub fn new(symbols: Vec<SymbolInfo>) -> Self {
+    pub const fn new(symbols: Vec<SymbolInfo>) -> Self {
         Self { symbols }
     }
 }

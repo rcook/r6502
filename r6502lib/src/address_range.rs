@@ -37,17 +37,17 @@ impl AddressRange {
     }
 
     #[must_use]
-    pub fn start(&self) -> u16 {
+    pub const fn start(&self) -> u16 {
         *self.0.start()
     }
 
     #[must_use]
-    pub fn end(&self) -> u16 {
+    pub const fn end(&self) -> u16 {
         *self.0.end()
     }
 
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         false
     }
 
@@ -57,7 +57,7 @@ impl AddressRange {
     }
 
     #[must_use]
-    pub fn contains(&self, addr: u16) -> bool {
+    pub const fn contains(&self, addr: u16) -> bool {
         addr >= *self.0.start() && addr <= *self.0.end()
     }
 }
