@@ -1,4 +1,4 @@
-use crate::MemoryMappedDevice;
+use crate::BusDevice;
 
 pub struct Rom<const N: usize> {
     bytes: [u8; N],
@@ -17,7 +17,7 @@ impl<const N: usize> Rom<N> {
     }
 }
 
-impl<const N: usize> MemoryMappedDevice for Rom<N> {
+impl<const N: usize> BusDevice for Rom<N> {
     fn start(&self) {}
 
     fn load(&self, addr: u16) -> u8 {

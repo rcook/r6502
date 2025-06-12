@@ -1,4 +1,4 @@
-use crate::{BusEvent, MemoryMappedDevice};
+use crate::{BusDevice, BusEvent};
 use getch_rs::{Getch, Key};
 use std::cell::Cell;
 use std::io::{stdout, Write};
@@ -132,7 +132,7 @@ impl Pia {
     }
 }
 
-impl MemoryMappedDevice for Pia {
+impl BusDevice for Pia {
     fn start(&self) {
         self.state.lock().expect("Must succeed").started = true;
     }

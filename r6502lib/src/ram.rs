@@ -1,4 +1,4 @@
-use crate::MemoryMappedDevice;
+use crate::BusDevice;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 pub struct Ram<const N: usize> {
@@ -20,7 +20,7 @@ impl<const N: usize> Ram<N> {
     }
 }
 
-impl<const N: usize> MemoryMappedDevice for Ram<N> {
+impl<const N: usize> BusDevice for Ram<N> {
     fn start(&self) {}
 
     fn load(&self, addr: u16) -> u8 {
