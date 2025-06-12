@@ -31,7 +31,7 @@ impl Bus {
             .into_iter()
             .map(|d| DeviceMapping {
                 address_range: d.address_range,
-                device: (d.device)(),
+                device: (d.device_fn)(),
                 offset: d.offset,
             })
             .collect();
@@ -151,46 +151,46 @@ impl Bus {
             MachineType::Custom => vec![
                 DeviceDescription {
                     address_range: AddressRange::new(0x0000, 0xfbff),
-                    device: Box::new(|| Box::new(Ram::<{ 0xfbff + 1 }>::default())),
+                    device_fn: Box::new(|| Box::new(Ram::<{ 0xfbff + 1 }>::default())),
                     offset: 0x0000,
                 },
                 DeviceDescription {
                     address_range: AddressRange::new(0xfc00, 0xfc03),
-                    device: Box::new(|| Box::new(Pia::new(bus_tx))),
+                    device_fn: Box::new(|| Box::new(Pia::new(bus_tx))),
                     offset: 0xfc00,
                 },
                 DeviceDescription {
                     address_range: AddressRange::new(0xfc04, 0xffff),
-                    device: Box::new(|| Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default())),
+                    device_fn: Box::new(|| Box::new(Ram::<{ 0xffff - 0xfc04 + 1 }>::default())),
                     offset: 0xfc04,
                 },
             ],
             MachineType::Acorn => vec![
                 DeviceDescription {
                     address_range: AddressRange::new(0x0000, 0x7fff),
-                    device: Box::new(|| Box::new(Ram::<0x8000>::default())),
+                    device_fn: Box::new(|| Box::new(Ram::<0x8000>::default())),
                     offset: 0x0000,
                 },
                 DeviceDescription {
                     address_range: AddressRange::new(0x8000, 0xffff),
-                    device: Box::new(|| Box::new(Rom::<0x8000>::default())),
+                    device_fn: Box::new(|| Box::new(Rom::<0x8000>::default())),
                     offset: 0x8000,
                 },
             ],
             MachineType::Apple1 => vec![
                 DeviceDescription {
                     address_range: AddressRange::new(0x0000, PIA_START_ADDR - 1),
-                    device: Box::new(|| Box::new(Ram::<{ PIA_START_ADDR as usize }>::default())),
+                    device_fn: Box::new(|| Box::new(Ram::<{ PIA_START_ADDR as usize }>::default())),
                     offset: 0x0000,
                 },
                 DeviceDescription {
                     address_range: AddressRange::new(PIA_START_ADDR, PIA_END_ADDR),
-                    device: Box::new(|| Box::new(Pia::new(bus_tx))),
+                    device_fn: Box::new(|| Box::new(Pia::new(bus_tx))),
                     offset: PIA_START_ADDR,
                 },
                 DeviceDescription {
                     address_range: AddressRange::new(PIA_END_ADDR + 1, 0xffff),
-                    device: Box::new(|| {
+                    device_fn: Box::new(|| {
                         Box::new(Ram::<{ 0xffff - PIA_END_ADDR as usize }>::default())
                     }),
                     offset: PIA_END_ADDR + 1,
@@ -198,7 +198,7 @@ impl Bus {
             ],
             MachineType::Sim6502 | MachineType::None => vec![DeviceDescription {
                 address_range: AddressRange::new(0x0000, 0xffff),
-                device: Box::new(|| Box::new(Ram::<MEMORY_SIZE>::default())),
+                device_fn: Box::new(|| Box::new(Ram::<MEMORY_SIZE>::default())),
                 offset: 0x0000,
             }],
         }
