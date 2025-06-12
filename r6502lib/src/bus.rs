@@ -35,10 +35,7 @@ impl Bus {
                 offset: d.offset,
             })
             .collect();
-        Self {
-            machine_type,
-            mappings,
-        }
+        Self::new(machine_type, mappings)
     }
 
     #[must_use]
@@ -131,9 +128,14 @@ impl Bus {
         }
     }
 
-    #[cfg(test)]
     #[must_use]
     fn new(machine_type: MachineType, mut mappings: Vec<DeviceMapping>) -> Self {
+        assert!(!AddressRange::overlapping(
+            &mappings
+                .iter()
+                .map(|m| m.address_range.clone())
+                .collect::<Vec<_>>()
+        ));
         mappings.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
         Self {
             machine_type,

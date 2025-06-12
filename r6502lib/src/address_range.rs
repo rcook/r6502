@@ -8,6 +8,27 @@ pub struct AddressRange(RangeInclusive<u16>);
 
 impl AddressRange {
     #[must_use]
+    pub fn overlapping(ranges: &[Self]) -> bool {
+        if ranges.is_empty() {
+            return false;
+        }
+
+        let mut ranges = ranges.to_vec();
+        ranges.sort_by_key(AddressRange::start);
+
+        let mut end = ranges.first().expect("Range already checked").end();
+        for range in ranges.iter().skip(1) {
+            let start = range.start();
+            if start <= end {
+                return true;
+            }
+            end = start;
+        }
+
+        false
+    }
+
+    #[must_use]
     pub fn new(start: u16, end: u16) -> Self {
         assert!(end >= start);
         Self(RangeInclusive::new(start, end))
@@ -81,5 +102,21 @@ mod tests {
         assert_eq!(expected_end, result.end());
         assert_eq!(expected_len, result.len());
         Ok(())
+    }
+
+    #[test]
+    fn overlapping() {
+        assert!(!AddressRange::overlapping(&[
+            AddressRange::new(0, 1),
+            AddressRange::new(2, 3)
+        ]));
+        assert!(AddressRange::overlapping(&[
+            AddressRange::new(0, 1),
+            AddressRange::new(1, 3)
+        ]));
+        assert!(AddressRange::overlapping(&[
+            AddressRange::new(0, 2),
+            AddressRange::new(1, 3)
+        ]));
     }
 }
