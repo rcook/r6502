@@ -28,7 +28,6 @@ impl AddressRange {
         false
     }
 
-    #[must_use]
     pub fn new(start: u16, end: u16) -> Result<Self> {
         if end >= start {
             Ok(Self(RangeInclusive::new(start, end)))
