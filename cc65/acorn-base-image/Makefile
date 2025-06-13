@@ -1,22 +1,28 @@
-SOURCES = acorn.s os.s main.s vectors.s
-PROGRAM = acorn.r6502
-TARGET = none
-
+.DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: all clean copy run
-all: $(PROGRAM)
+BINEXT := r6502
+PROGRAM := acorn.$(BINEXT)
+default: $(PROGRAM)
+
+.PHONY: clean copy default run
+
+SOURCES := acorn.s os.s main.s vectors.s
+CFG := $(PROGRAM:.$(BINEXT)=.cfg)
+TARGET := -C $(CFG)
+LIB := none.lib
 
 %.o: %.s
 	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o) $(PROGRAM:.r6502=.cfg)
-	ld65 -C $(PROGRAM:.r6502=.cfg) -m $(PROGRAM:.r6502=.map) -o $@ $(filter-out $(PROGRAM:.r6502=.cfg),$^) $(TARGET).lib
+$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
+	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.r6502=.map)
+	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 copy: $(PROGRAM)
 	cp $(PROGRAM) ../../config/$(PROGRAM)
 
 run: copy
-	cargo run -p r6502 run ../../examples/hello-world.r6502
+	make -C ../hello-world
+	cargo run -p r6502 run ../hello-world/hello-world.r6502

@@ -1,20 +1,24 @@
-NAME = div16
-SOURCES = $(NAME).s
-PROGRAM = $(NAME).bin
-TARGET = sim6502
-
+.DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: all clean run
-all: $(PROGRAM)
+BINEXT := sim65
+PROGRAM := div16.$(BINEXT)
+default: $(PROGRAM)
+
+.PHONY: clean default run
+
+SOURCES := div16.s
+CFG :=
+TARGET := -t sim6502
+LIB := sim6502.lib
 
 %.o: %.s
 	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o)
-	ld65 -t $(TARGET) -m $(PROGRAM:bin=map) -o $@ $^ sim6502.lib
+$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
+	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(PROGRAM) $(PROGRAM:bin=lst) $(PROGRAM:bin=map)
+	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 run: $(PROGRAM)
 	sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }

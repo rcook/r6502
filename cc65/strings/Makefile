@@ -1,19 +1,25 @@
-SOURCES = strings.s
-PROGRAM = strings.sim65
-
+.DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: all clean run
-all: $(PROGRAM)
+BINEXT := sim65
+PROGRAM := strings.$(BINEXT)
+default: $(PROGRAM)
+
+.PHONY: clean default run
+
+SOURCES := strings.s
+CFG := $(PROGRAM:.$(BINEXT)=.cfg)
+TARGET := -C $(PROGRAM:.$(BINEXT)=.cfg)
+LIB :=
 
 %.o: %.s
 	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o) $(PROGRAM:.sim65=.cfg)
-	ld65 -C $(PROGRAM:.sim65=.cfg) -m $(PROGRAM:.sim65=.map) -o $@ $(filter-out $(PROGRAM:.sim65=.cfg),$^)
+$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
+	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.sim65=.map)
+	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 run: $(PROGRAM)
-	#sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
-	cargo run -p r6502 run $(PROGRAM) --cycles --emu custom
+	@#sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
+	cargo run -p r6502 run $(PROGRAM) -m Acorn

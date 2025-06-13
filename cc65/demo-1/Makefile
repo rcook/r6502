@@ -1,19 +1,24 @@
-SOURCES = constants.s main.s simple.s vectors.s
-PROGRAM = simple.sim65
-TARGET = none
-
+.DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: all clean run
-all: $(PROGRAM)
+BINEXT := sim65
+PROGRAM := simple.$(BINEXT)
+default: $(PROGRAM)
+
+.PHONY: clean default run
+
+SOURCES := constants.s main.s simple.s vectors.s
+CFG := $(PROGRAM:.$(BINEXT)=.cfg)
+TARGET := -C $(CFG)
+LIB := none.lib
 
 %.o: %.s
 	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o) $(PROGRAM:.sim65=.cfg)
-	ld65 -C $(PROGRAM:.sim65=.cfg) -m $(PROGRAM:.sim65=.map) -o $@ $(filter-out $(PROGRAM:.sim65=.cfg),$^) $(TARGET).lib
+$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
+	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.sim65=.map)
+	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 run: $(PROGRAM)
-	cargo run -p r6502 run $(PROGRAM) --reset --cycles --emu acorn --trace
+	cargo run -p r6502 run $(PROGRAM) --reset --cycles -m ACRN --trace

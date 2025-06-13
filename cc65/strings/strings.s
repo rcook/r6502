@@ -1,3 +1,4 @@
+EXIT            = $ffc0
 PRINT_STRS_ARG  = $80
 PRINT_STR_ARG   = $82
 
@@ -21,7 +22,8 @@ start:
     lda #>array
     sta PRINT_STRS_ARG + 1
     jsr print_strs
-    rts
+    lda #$00
+    jmp EXIT
 print_strs:
     ldy #$00
     lda (PRINT_STRS_ARG), y
