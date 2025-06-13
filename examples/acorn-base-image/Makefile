@@ -20,8 +20,10 @@ $(PROGRAM): $(SOURCES:.s=.o) $(CFG)
 clean:
 	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
-copy: $(PROGRAM)
+../../config/$(PROGRAM): $(PROGRAM)
 	cp $(PROGRAM) ../../config/$(PROGRAM)
+
+copy: ../../config/$(PROGRAM)
 
 run: copy
 	make -C ../hello-world
