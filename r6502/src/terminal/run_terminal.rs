@@ -15,7 +15,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let (bus, bus_rx) = create_bus(&image)?;
+    let (bus, bus_rx) = create_bus(&image, &opts.machine)?;
     bus.start();
 
     let start = if opts.reset {
@@ -33,7 +33,8 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         .ok_or_else(|| anyhow!("RTI must exist"))?
         .clone();
 
-    let os = Os::new(opts.emulation.into());
+    // Eventually Os will go away!
+    let os = Os::new(opts.machine == Some(String::from("Acorn")));
 
     let monitor: Option<Box<dyn Monitor>> = if opts.trace {
         Some(Box::new(TracingMonitor::default()))

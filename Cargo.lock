@@ -1141,6 +1141,7 @@ dependencies = [
  "clap",
  "clap-num",
  "cursive",
+ "dirs",
  "iter_mod",
  "log",
  "path-absolutize",

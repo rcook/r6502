@@ -19,7 +19,7 @@ impl ScenarioLoader {
             .join("v1");
 
         let archive_dir = config_dir()
-            .ok_or_else(|| anyhow!("Could not get home directory"))?
+            .ok_or_else(|| anyhow!("Could not get configuration directory"))?
             .join("r6502")
             .join("scenarios");
 

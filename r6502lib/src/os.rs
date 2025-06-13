@@ -1,6 +1,7 @@
 use crate::util::split_word;
-use crate::{Cpu, MachineType, Opcode, IRQ, NMI, OSHALT, OSWRCH, RESET};
+use crate::{Cpu, Opcode, IRQ, NMI, OSHALT, OSWRCH, RESET};
 
+// Eventually Os will go away!
 pub struct Os {
     pub(crate) nmi_addr: Option<u16>,
     pub(crate) reset_addr: Option<u16>,
@@ -11,22 +12,23 @@ pub struct Os {
 
 impl Os {
     #[must_use]
-    pub fn new(machine_type: MachineType) -> Self {
-        match machine_type {
-            MachineType::AllRam | MachineType::Apple1 | MachineType::Custom => Self {
-                nmi_addr: None,
-                reset_addr: None,
-                irq_addr: None,
-                return_addr: None,
-                os_vectors: vec![],
-            },
-            MachineType::Acorn => Self {
+    pub fn new(acorn_hack: bool) -> Self {
+        if acorn_hack {
+            Self {
                 nmi_addr: None,
                 reset_addr: None,
                 irq_addr: Some(0x8000),
                 return_addr: Some(OSHALT),
                 os_vectors: vec![OSHALT, OSWRCH],
-            },
+            }
+        } else {
+            Self {
+                nmi_addr: None,
+                reset_addr: None,
+                irq_addr: None,
+                return_addr: None,
+                os_vectors: vec![],
+            }
         }
     }
 

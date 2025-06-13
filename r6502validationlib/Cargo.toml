@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.98"
+dirs = "6.0.0"
+rancor = "0.1.0"
+rkyv = "0.8.10"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-anyhow = "1.0.98"
-rkyv = "0.8.10"
-rancor = "0.1.0"
-dirs = "6.0.0"

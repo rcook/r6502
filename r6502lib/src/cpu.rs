@@ -146,8 +146,8 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::util::make_word;
     use crate::{
-        p, p_get, p_set, Bus, Cpu, Image, MachineType, Monitor, Opcode, Os, TracingMonitor, IRQ,
-        MOS_6502, OSWRCH, P,
+        p, p_get, p_set, Bus, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, IRQ, MOS_6502,
+        OSWRCH, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -248,7 +248,7 @@ mod tests {
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
 
-        let os = Os::new(MachineType::Acorn);
+        let os = Os::new(true);
         os.load_into_vm(&mut cpu);
 
         let irq_addr = os.irq_addr.expect("Must have value");
@@ -354,7 +354,7 @@ mod tests {
 
         cpu.reg.pc = image.start;
 
-        let os = Os::new(MachineType::Acorn);
+        let os = Os::new(true);
         os.load_into_vm(&mut cpu);
 
         let return_addr = os.return_addr.expect("Must have value");

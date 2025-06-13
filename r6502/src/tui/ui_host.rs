@@ -3,8 +3,7 @@ use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
 use crate::tui::UiMonitor;
 use anyhow::{anyhow, Result};
 use r6502lib::{
-    p_set, AddressRange, Bus, Cpu, InstructionInfo, MachineType, OpInfo, Opcode, Os, MOS_6502,
-    OSHALT, OSWRCH,
+    p_set, AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, Os, MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -37,7 +36,8 @@ impl UiHost {
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
         cpu.reg.pc = start;
 
-        let os = Os::new(MachineType::Acorn);
+        // Eventually Os will go away!
+        let os = Os::new(true);
         os.load_into_vm(&mut cpu);
 
         let rti = MOS_6502

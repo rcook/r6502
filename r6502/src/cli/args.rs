@@ -1,7 +1,6 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 use clap_num::maybe_hex;
 use path_absolutize::Absolutize;
-use r6502lib::MachineType;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -54,39 +53,8 @@ pub(crate) struct RunOptions {
     #[arg(help = "Stop after given number of cycles", long = "stop-after")]
     pub(crate) stop_after: Option<u32>,
 
-    #[arg(
-        help = "OS emulation mode",
-        long = "emu",
-        value_enum,
-        default_value_t = Emulation::AllRam
-    )]
-    pub(crate) emulation: Emulation,
-}
-
-#[derive(Clone, Copy, Debug, ValueEnum)]
-pub(crate) enum Emulation {
-    #[clap(name = "none")]
-    AllRam,
-
-    #[clap(name = "custom")]
-    Custom,
-
-    #[clap(name = "acorn")]
-    Acorn,
-
-    #[clap(name = "apple1")]
-    Apple1,
-}
-
-impl From<Emulation> for MachineType {
-    fn from(value: Emulation) -> Self {
-        match value {
-            Emulation::AllRam => Self::AllRam,
-            Emulation::Custom => Self::Custom,
-            Emulation::Acorn => Self::Acorn,
-            Emulation::Apple1 => Self::Apple1,
-        }
-    }
+    #[arg(help = "Machine", long = "machine", short = 'm')]
+    pub(crate) machine: Option<String>,
 }
 
 fn parse_absolute_path(s: &str) -> Result<PathBuf, String> {
