@@ -3,7 +3,6 @@ use crate::machine_config::MachineInfo;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use log::LevelFilter;
-use r6502lib::util::get_brk_addr;
 use r6502lib::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
 use simple_logging::log_to_file;
 use std::env::current_dir;
@@ -33,9 +32,9 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         show_image_info(opts, &image, start);
     }
 
-    let rti = MOS_6502
-        .get_op_info(&Opcode::Rti)
-        .ok_or_else(|| anyhow!("RTI must exist"))?
+    let rts = MOS_6502
+        .get_op_info(&Opcode::Rts)
+        .ok_or_else(|| anyhow!("RTS must exist"))?
         .clone();
 
     let monitor: Option<Box<dyn Monitor>> = if opts.trace {
@@ -73,14 +72,13 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
                     break 'outer;
                 }
             }
-        }
 
-        match (machine_info.machine.write_char_addr, get_brk_addr(&cpu)) {
-            (Some(write_char_addr), Some(brk_addr)) if brk_addr == write_char_addr => {
-                print!("{}", cpu.reg.a as char);
-                rti.execute_no_operand(&mut cpu);
+            if let Some(write_char_addr) = machine_info.machine.write_char_addr {
+                if cpu.reg.pc == write_char_addr {
+                    print!("{}", cpu.reg.a as char);
+                    rts.execute_no_operand(&mut cpu);
+                }
             }
-            _ => todo!(),
         }
     }
 
