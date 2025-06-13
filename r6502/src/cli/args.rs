@@ -79,6 +79,21 @@ pub struct RunOptions {
     pub machine: Option<String>,
 }
 
+impl From<RunOptions> for r6502lib::run_options::RunOptions {
+    fn from(value: RunOptions) -> Self {
+        Self {
+            path: value.path,
+            load: value.load,
+            start: value.start,
+            trace: value.trace,
+            cycles: value.cycles,
+            reset: value.reset,
+            stop_after: value.stop_after,
+            machine: value.machine,
+        }
+    }
+}
+
 fn parse_absolute_path(s: &str) -> Result<PathBuf, String> {
     PathBuf::from(s)
         .absolutize()

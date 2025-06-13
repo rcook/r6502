@@ -1,11 +1,11 @@
+use crate::emulator::util::get_brk_addr;
+use crate::emulator::{AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, MOS_6502};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
+use crate::p_set;
 use crate::tui::UiMonitor;
 use anyhow::{anyhow, Result};
-use r6502lib::emulator::util::get_brk_addr;
-use r6502lib::emulator::{AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, MOS_6502};
-use r6502lib::p_set;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!

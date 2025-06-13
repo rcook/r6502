@@ -1,5 +1,5 @@
+use crate::emulator::{AddressRange, InstructionInfo, Reg, TotalCycles};
 use crate::messages::State;
-use r6502lib::emulator::{AddressRange, InstructionInfo, Reg, TotalCycles};
 
 pub enum MonitorMessage {
     NotifyState(State),

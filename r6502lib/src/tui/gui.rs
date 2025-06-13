@@ -1,8 +1,8 @@
+use crate::emulator::{Image, SymbolInfo};
 use crate::machine_config::MachineInfo;
 use crate::tui::ui::Ui;
 use crate::tui::ui_host::UiHost;
 use anyhow::Result;
-use r6502lib::emulator::{Image, SymbolInfo};
 use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread::spawn;

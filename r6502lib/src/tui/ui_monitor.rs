@@ -1,5 +1,5 @@
+use crate::emulator::{InstructionInfo, Monitor, Reg, TotalCycles};
 use crate::messages::MonitorMessage;
-use r6502lib::emulator::{InstructionInfo, Monitor, Reg, TotalCycles};
 use std::sync::mpsc::Sender;
 
 pub struct UiMonitor {

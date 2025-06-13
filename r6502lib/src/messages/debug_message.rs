@@ -1,4 +1,4 @@
-use r6502lib::emulator::AddressRange;
+use crate::emulator::AddressRange;
 
 pub enum DebugMessage {
     Step,

@@ -1,5 +1,5 @@
+use crate::emulator::AddressRange;
 use anyhow::{bail, Error};
-use r6502lib::emulator::AddressRange;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
@@ -54,9 +54,9 @@ impl FromStr for Command {
 
 #[cfg(test)]
 mod tests {
+    use crate::emulator::AddressRange;
     use crate::messages::Command;
     use anyhow::Result;
-    use r6502lib::emulator::AddressRange;
     use rstest::rstest;
 
     #[rstest]

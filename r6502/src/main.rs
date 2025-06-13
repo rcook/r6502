@@ -13,11 +13,11 @@
 #![allow(missing_docs)]
 
 mod cli;
-mod machine_config;
-mod messages;
-mod terminal;
-mod tui;
 
 fn main() -> anyhow::Result<()> {
+    use log::LevelFilter;
+    use simple_logging::log_to_file;
+
+    log_to_file("r6502.log", LevelFilter::Info)?;
     crate::cli::run()
 }

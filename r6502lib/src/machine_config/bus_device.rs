@@ -1,8 +1,8 @@
-use crate::machine_config::bus_device_type::BusDeviceType;
-use r6502lib::emulator::deserialization::deserialize_word;
-use r6502lib::emulator::{
+use crate::emulator::deserialization::deserialize_word;
+use crate::emulator::{
     AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, Pia, Ram, Rom,
 };
+use crate::machine_config::bus_device_type::BusDeviceType;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::sync::mpsc::Sender;

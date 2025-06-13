@@ -1,18 +1,14 @@
-use crate::cli::RunOptions;
+use crate::emulator::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
 use crate::machine_config::MachineInfo;
+use crate::run_options::RunOptions;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
-use log::LevelFilter;
-use r6502lib::emulator::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
-use simple_logging::log_to_file;
 use std::env::current_dir;
 use std::process::exit;
 use std::str::from_utf8;
 use std::sync::mpsc::TryRecvError;
 
 pub fn run_terminal(opts: &RunOptions) -> Result<()> {
-    log_to_file("r6502.log", LevelFilter::Info)?;
-
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
     let machine_info = match image.tag {
         Some(tag) => MachineInfo::find_by_tag(tag)?,

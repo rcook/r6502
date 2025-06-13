@@ -1,9 +1,9 @@
+use crate::emulator::{Bus, BusEvent, Image, MachineTag};
 use crate::machine_config::machine::Machine;
 use crate::machine_config::machines::Machines;
 use anyhow::{anyhow, bail, Result};
 use dirs::config_dir;
 use path_absolutize::Absolutize;
-use r6502lib::emulator::{Bus, BusEvent, Image, MachineTag};
 use std::env::current_exe;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};

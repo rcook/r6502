@@ -1,16 +1,16 @@
 use crate::cli::Args;
 use crate::cli::Command::{Debug, Run, Validate, ValidateJson};
-use crate::terminal::run_terminal;
-use crate::tui::run_gui;
 use anyhow::Result;
 use clap::Parser;
 use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
+use r6502lib::terminal::run_terminal;
+use r6502lib::tui::run_gui;
 use r6502lib::validation::Scenario;
 
 pub fn run() -> Result<()> {
     match Args::parse().command {
         Debug { path, load, start } => run_gui(&path, load, start)?,
-        Run(opts) => run_terminal(&opts)?,
+        Run(opts) => run_terminal(&opts.into())?,
         Validate {
             report_path,
             filter,
