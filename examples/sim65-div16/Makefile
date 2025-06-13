@@ -1,12 +1,12 @@
 .DEFAULT_GOAL := default
 .SUFFIXES:
 BINEXT := sim65
-PROGRAM := div16.$(BINEXT)
+PROGRAM := sim65-div16.$(BINEXT)
 default: $(PROGRAM)
 
 .PHONY: clean default run
 
-SOURCES := div16.s
+SOURCES := sim65-div16.s
 CFG :=
 TARGET := -t sim6502
 LIB := sim6502.lib
