@@ -77,7 +77,7 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         }
     }
 
-    bus.join();
+    bus.stop();
 
     if opts.cycles {
         if stopped_after_requested_cycles {

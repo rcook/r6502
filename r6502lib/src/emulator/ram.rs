@@ -21,8 +21,6 @@ impl Ram {
 }
 
 impl BusDevice for Ram {
-    fn start(&self) {}
-
     fn load(&self, addr: u16) -> u8 {
         self.bytes[addr as usize].load(Ordering::SeqCst)
     }
@@ -30,6 +28,4 @@ impl BusDevice for Ram {
     fn store(&self, addr: u16, value: u8) {
         self.bytes[addr as usize].store(value, Ordering::SeqCst);
     }
-
-    fn join(&self) {}
 }

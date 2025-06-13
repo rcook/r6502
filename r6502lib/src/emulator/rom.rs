@@ -17,13 +17,9 @@ impl Rom {
 }
 
 impl BusDevice for Rom {
-    fn start(&self) {}
-
     fn load(&self, addr: u16) -> u8 {
         self.bytes[addr as usize]
     }
 
     fn store(&self, _addr: u16, _value: u8) {}
-
-    fn join(&self) {}
 }

@@ -55,9 +55,9 @@ impl Bus {
         }
     }
 
-    pub fn join(&self) {
+    pub fn stop(&self) {
         for mapping in &self.mappings {
-            mapping.device.join();
+            mapping.device.stop();
         }
     }
 
