@@ -1,10 +1,13 @@
 use crate::emulator::{BusDevice, BusEvent};
-use getch_rs::{Getch, Key};
+use anyhow::Result;
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::cell::Cell;
 use std::io::{stdout, Write};
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
+use std::time::Duration;
 
 #[derive(Debug)]
 enum Message {
@@ -12,7 +15,7 @@ enum Message {
     PacrUpdated,
     PbUpdated,
     PbcrUpdated,
-    Key(Key),
+    Key(KeyEvent),
 }
 
 struct PiaState {
@@ -45,7 +48,7 @@ impl PiaState {
 }
 
 pub struct Pia {
-    tx: Sender<Message>,
+    message_tx: Sender<Message>,
     state: Arc<Mutex<PiaState>>,
     stdin_handle: Cell<Option<JoinHandle<()>>>,
     event_handle: Cell<Option<JoinHandle<()>>>,
@@ -61,94 +64,118 @@ impl Pia {
 impl Pia {
     #[must_use]
     pub fn new(bus_tx: Sender<BusEvent>) -> Self {
-        let (tx, rx) = channel();
+        let (message_tx, message_rx) = channel();
+        let message_tx_clone = message_tx.clone();
+        let stdin_handle =
+            spawn(move || Self::stdin_loop(&message_tx_clone, &bus_tx).expect("Must succeed"));
+
         let state = Arc::new(Mutex::new(PiaState::new()));
-
-        let tx_clone = tx.clone();
-        let stdin_handle = spawn(move || {
-            let g = Getch::new();
-            loop {
-                let key = g.getch().expect("Must succeed");
-                _ = tx_clone.send(Message::Key(key.clone()));
-                if matches!(key, Key::Ctrl('c')) {
-                    _ = bus_tx.send(BusEvent::HardwareBreak);
-                    break;
-                }
-                if matches!(key, Key::Ctrl('s')) {
-                    _ = bus_tx.send(BusEvent::Snapshot);
-                }
-            }
-        });
-
         let state_clone = Arc::clone(&state);
-        let event_handle = spawn(move || {
-            let mut stdout = stdout();
-            loop {
-                match rx.recv().expect("Must succeed") {
-                    Message::Key(key) => match key {
-                        Key::Char(c) => state_clone.lock().expect("Must succeed").set_key(c),
-                        Key::Delete => state_clone.lock().expect("Must succeed").set_key('_'),
-                        Key::Esc => state_clone
-                            .lock()
-                            .expect("Must succeed")
-                            .set_key(0x1b as char),
-                        Key::Ctrl('c') => break,
-                        Key::Ctrl('s') => {}
-                        _ => todo!(),
-                    },
-                    Message::PacrUpdated => state_clone.lock().expect("Must succeed").pa_cr = 0x00,
-                    Message::PbUpdated => {
-                        let value = {
-                            let mut state = state_clone.lock().expect("Must succeed");
-                            let value = state.pb;
-                            state.pb = 0x00;
-                            value
-                        };
-                        let char_value = value & 0x7f;
-                        let ch = char_value as char;
-                        match char_value {
-                            0 => {}
-                            13 => _ = stdout.write(&[10]),
-                            _ => {
-                                if !ch.is_control() {
-                                    _ = stdout.write(&[char_value]);
-                                }
-                            }
+        let event_handle =
+            spawn(move || Self::event_loop(&message_rx, &state_clone).expect("Must succeed"));
+
+        Self {
+            message_tx,
+            state,
+            stdin_handle: Cell::new(Some(stdin_handle)),
+            event_handle: Cell::new(Some(event_handle)),
+        }
+    }
+
+    fn is_event_available() -> Result<bool> {
+        Ok(poll(Duration::from_millis(100))?)
+    }
+
+    fn stdin_loop(message_tx: &Sender<Message>, bus_tx: &Sender<BusEvent>) -> Result<()> {
+        enable_raw_mode()?;
+        loop {
+            if Self::is_event_available()? {
+                let event = read()?;
+                match event {
+                    Event::Key(key) if key.is_press() => {
+                        _ = message_tx.send(Message::Key(key));
+                        if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('c')
+                        {
+                            _ = bus_tx.send(BusEvent::UserBreak);
+                            break;
                         }
-                        if char_value != 0 {
-                            _ = stdout.flush();
+                        if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('s')
+                        {
+                            _ = bus_tx.send(BusEvent::Snapshot);
                         }
                     }
                     _ => {}
                 }
             }
-        });
+        }
+        disable_raw_mode()?;
+        Ok(())
+    }
 
-        Self {
-            tx,
-            state,
-            stdin_handle: Cell::new(Some(stdin_handle)),
-            event_handle: Cell::new(Some(event_handle)),
+    fn event_loop(message_rx: &Receiver<Message>, state: &Arc<Mutex<PiaState>>) -> Result<()> {
+        let mut stdout = stdout();
+        loop {
+            match message_rx.recv()? {
+                Message::Key(key) => match (key.modifiers, key.code) {
+                    (KeyModifiers::CONTROL, KeyCode::Char('c')) => return Ok(()),
+                    (KeyModifiers::CONTROL, KeyCode::Char('s')) => {}
+                    (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                        state.lock().unwrap().set_key(c);
+                    }
+                    (KeyModifiers::NONE, KeyCode::Delete) => state.lock().unwrap().set_key('_'),
+                    (KeyModifiers::NONE, KeyCode::Enter) => {
+                        state.lock().unwrap().set_key(0x0d as char);
+                    }
+                    (KeyModifiers::NONE, KeyCode::Esc) => {
+                        state.lock().unwrap().set_key(0x1b as char);
+                    }
+                    _ => todo!("{key:?}"),
+                },
+                Message::PacrUpdated => state.lock().unwrap().pa_cr = 0x00,
+                Message::PbUpdated => {
+                    let value = {
+                        let mut state = state.lock().unwrap();
+                        let value = state.pb;
+                        state.pb = 0x00;
+                        value
+                    };
+                    let char_value = value & 0x7f;
+                    let ch = char_value as char;
+                    match char_value {
+                        0 => {}
+                        13 => _ = stdout.write(&[13, 10]),
+                        _ => {
+                            if !ch.is_control() {
+                                _ = stdout.write(&[char_value]);
+                            }
+                        }
+                    }
+                    if char_value != 0 {
+                        _ = stdout.flush();
+                    }
+                }
+                _ => {}
+            }
         }
     }
 }
 
 impl BusDevice for Pia {
     fn start(&self) {
-        self.state.lock().expect("Must succeed").started = true;
+        self.state.lock().unwrap().started = true;
     }
 
     fn load(&self, addr: u16) -> u8 {
         let value = match addr {
             Self::PA_OFFSET => {
-                let mut state = self.state.lock().expect("Must succeed");
+                let mut state = self.state.lock().unwrap();
                 let value = state.pa;
                 state.pa_cr = value & 0x7f;
                 value
             }
-            Self::PA_CR_OFFSET => self.state.lock().expect("Must succeed").pa_cr,
-            Self::PB_OFFSET => self.state.lock().expect("Must succeed").pb,
-            Self::PB_CR_OFFSET => self.state.lock().expect("Must succeed").pb_cr,
+            Self::PA_CR_OFFSET => self.state.lock().unwrap().pa_cr,
+            Self::PB_OFFSET => self.state.lock().unwrap().pb,
+            Self::PB_CR_OFFSET => self.state.lock().unwrap().pb_cr,
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
 
@@ -156,30 +183,30 @@ impl BusDevice for Pia {
     }
 
     fn store(&self, addr: u16, value: u8) {
-        if !self.state.lock().expect("Must succeed").started {
+        if !self.state.lock().unwrap().started {
             return;
         }
 
         let m = match addr {
             Self::PA_OFFSET => {
-                self.state.lock().expect("Must succeed").pa = value;
+                self.state.lock().unwrap().pa = value;
                 Message::PaUpdated
             }
             Self::PA_CR_OFFSET => {
-                self.state.lock().expect("Must succeed").pa_cr = value;
+                self.state.lock().unwrap().pa_cr = value;
                 Message::PacrUpdated
             }
             Self::PB_OFFSET => {
-                self.state.lock().expect("Must succeed").pb = value;
+                self.state.lock().unwrap().pb = value;
                 Message::PbUpdated
             }
             Self::PB_CR_OFFSET => {
-                self.state.lock().expect("Must succeed").pb_cr = value;
+                self.state.lock().unwrap().pb_cr = value;
                 Message::PbcrUpdated
             }
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
-        _ = self.tx.send(m);
+        _ = self.message_tx.send(m);
     }
 
     fn join(&self) {

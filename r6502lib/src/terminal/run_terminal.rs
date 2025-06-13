@@ -46,8 +46,7 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     'outer: loop {
         while cpu.step() {
             match bus_rx.try_recv() {
-                Ok(BusEvent::HardwareBreak) => {
-                    println!("Ctrl+C");
+                Ok(BusEvent::UserBreak) => {
                     break 'outer;
                 }
                 Ok(BusEvent::Snapshot) => {

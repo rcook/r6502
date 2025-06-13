@@ -1,4 +1,4 @@
 pub enum BusEvent {
-    HardwareBreak,
+    UserBreak,
     Snapshot,
 }
