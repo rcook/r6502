@@ -1,5 +1,6 @@
-use crate::util::create_bus;
-use crate::{Ui, UiHost};
+use crate::machine_config::create_bus;
+use crate::tui::ui::Ui;
+use crate::tui::ui_host::UiHost;
 use anyhow::Result;
 use r6502lib::{Image, SymbolInfo};
 use std::path::Path;

@@ -1,4 +1,4 @@
-use crate::State;
+use crate::messages::State;
 use r6502lib::{AddressRange, InstructionInfo, Reg, TotalCycles};
 
 pub(crate) enum MonitorMessage {

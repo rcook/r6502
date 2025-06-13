@@ -1,4 +1,4 @@
-use crate::machine_config::Machine;
+use crate::machine_config::machine::Machine;
 use anyhow::Result;
 use serde::Deserialize;
 use std::fs::File;

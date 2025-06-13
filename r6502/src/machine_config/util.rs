@@ -1,4 +1,4 @@
-use crate::machine_config::Machines;
+use crate::machine_config::machines::Machines;
 use anyhow::{anyhow, Result};
 use r6502lib::{Bus, BusEvent, Image};
 use std::path::Path;

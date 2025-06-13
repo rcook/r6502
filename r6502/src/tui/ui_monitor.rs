@@ -1,4 +1,4 @@
-use crate::MonitorMessage;
+use crate::messages::MonitorMessage;
 use r6502lib::{InstructionInfo, Monitor, Reg, TotalCycles};
 use std::sync::mpsc::Sender;
 

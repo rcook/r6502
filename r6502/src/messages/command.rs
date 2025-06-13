@@ -54,7 +54,7 @@ impl FromStr for Command {
 
 #[cfg(test)]
 mod tests {
-    use crate::Command;
+    use crate::messages::Command;
     use anyhow::Result;
     use r6502lib::AddressRange;
     use rstest::rstest;

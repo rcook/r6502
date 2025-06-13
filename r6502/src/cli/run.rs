@@ -1,5 +1,6 @@
-use crate::args::Command;
-use crate::{run_gui, run_terminal, Args};
+use crate::cli::{Args, Command};
+use crate::terminal::run_terminal;
+use crate::tui::run_gui;
 use anyhow::Result;
 use clap::Parser;
 

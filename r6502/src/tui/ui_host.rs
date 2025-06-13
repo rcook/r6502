@@ -1,5 +1,6 @@
-use crate::State::{Halted, Running, Stepping, Stopped};
-use crate::{DebugMessage, IoMessage, MonitorMessage, State, UiMonitor};
+use crate::messages::State::{Halted, Running, Stepping, Stopped};
+use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
+use crate::tui::UiMonitor;
 use anyhow::{anyhow, Result};
 use r6502lib::{
     p_set, AddressRange, Bus, Cpu, InstructionInfo, MachineType, OpInfo, Opcode, Os, MOS_6502,

@@ -1,4 +1,4 @@
-use crate::{Command, DebugMessage, IoMessage, MonitorMessage, State};
+use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
 use cursive::event::Key;
@@ -52,7 +52,7 @@ impl Ui {
         symbols: &[SymbolInfo],
         debug_tx: &Sender<DebugMessage>,
     ) -> CursiveRunner<CursiveRunnable> {
-        use crate::DebugMessage::{Break, FetchMemory, Go, Run, SetPc, Step};
+        use crate::messages::DebugMessage::{Break, FetchMemory, Go, Run, SetPc, Step};
 
         fn panel<V>(view: V, label: &str) -> Panel<V> {
             Panel::new(view).title(label).title_position(HAlign::Left)
@@ -191,8 +191,8 @@ impl Ui {
 
     #[allow(clippy::too_many_lines)]
     fn step(&mut self) -> bool {
-        use crate::IoMessage::WriteChar;
-        use crate::MonitorMessage::{
+        use crate::messages::IoMessage::WriteChar;
+        use crate::messages::MonitorMessage::{
             AfterExecute, BeforeExecute, FetchMemoryResponse, NotifyInvalidBrk, NotifyState,
         };
 
