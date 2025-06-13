@@ -13,7 +13,7 @@ impl Default for Bus {
     fn default() -> Self {
         Self::new(vec![DeviceMapping {
             address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
-            device: Box::new(Ram::new(MEMORY_SIZE, None)),
+            device: Box::new(Ram::new(MEMORY_SIZE, &Vec::new())),
             offset: 0x0000,
         }])
     }
@@ -35,7 +35,11 @@ impl Bus {
     #[allow(unused)]
     pub fn default_with_image(image: &Image) -> Result<Self> {
         let address_range = AddressRange::new(0x0000, 0xffff)?;
-        let device = Box::new(Ram::new(MEMORY_SIZE, Some(&image.slice(&address_range))));
+        let image_slices = [image]
+            .iter()
+            .map(|image| image.slice(&address_range))
+            .collect();
+        let device = Box::new(Ram::new(MEMORY_SIZE, &image_slices));
         Ok(Bus::new(vec![DeviceMapping {
             address_range,
             device,

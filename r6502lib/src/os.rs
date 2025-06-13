@@ -1,5 +1,5 @@
 use crate::util::split_word;
-use crate::{Cpu, Opcode, IRQ, NMI, OSHALT, OSWRCH, RESET};
+use crate::{Cpu, Opcode, IRQ, NMI, OSHALT, OSIRQ, OSWRCH, RESET};
 
 // Eventually Os will go away!
 pub struct Os {
@@ -17,7 +17,7 @@ impl Os {
             Self {
                 nmi_addr: None,
                 reset_addr: None,
-                irq_addr: Some(0x8000),
+                irq_addr: Some(OSIRQ),
                 return_addr: Some(OSHALT),
                 os_vectors: vec![OSHALT, OSWRCH],
             }

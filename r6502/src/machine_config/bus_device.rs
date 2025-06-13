@@ -26,13 +26,16 @@ impl BusDevice {
     pub(crate) fn create_device_mapping(
         &self,
         bus_tx: &Sender<BusEvent>,
-        image: &Image,
+        images: &[&Image],
     ) -> DeviceMapping {
-        let image_slice = image.slice(&self.address_range);
+        let image_slices = images
+            .iter()
+            .map(|image| image.slice(&self.address_range))
+            .collect();
         let device: Box<dyn _BusDevice> = match self.r#type {
             BusDeviceType::Pia => Box::new(Pia::new(bus_tx.clone())),
-            BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), Some(&image_slice))),
-            BusDeviceType::Rom => Box::new(Rom::new(self.address_range.len(), Some(&image_slice))),
+            BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), &image_slices)),
+            BusDeviceType::Rom => Box::new(Rom::new(self.address_range.len(), &image_slices)),
         };
         DeviceMapping {
             address_range: self.address_range.clone(),

@@ -33,6 +33,7 @@
         },
         {
             "name": "Acorn",
+            "baseImage": "acorn.r6502",
             "busDevices": [
                 {
                     "type": "ram",

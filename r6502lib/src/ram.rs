@@ -7,10 +7,10 @@ pub struct Ram {
 
 impl Ram {
     #[must_use]
-    pub fn new(size: usize, image_slice: Option<&ImageSlice>) -> Self {
+    pub fn new(size: usize, image_slices: &Vec<ImageSlice>) -> Self {
         let mut bytes = Vec::with_capacity(size);
         bytes.resize_with(size, || AtomicU8::new(0));
-        if let Some(image_slice) = image_slice {
+        for image_slice in image_slices {
             let load = image_slice.load as usize;
             for (i, value) in image_slice.bytes.iter().enumerate() {
                 bytes[load + i].store(*value, Ordering::SeqCst);

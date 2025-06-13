@@ -61,7 +61,7 @@ pub use bus_device::BusDevice;
 pub use bus_event::BusEvent;
 pub use bus_view::BusView;
 pub use byte_op::ByteOp;
-pub use constants::{IRQ, IRQ_ADDR, MEMORY_SIZE, OSHALT, OSWRCH, RESET, STACK_BASE};
+pub use constants::{IRQ, IRQ_ADDR, MEMORY_SIZE, OSHALT, OSIRQ, OSWRCH, RESET, STACK_BASE};
 pub use cpu::Cpu;
 pub use device_mapping::DeviceMapping;
 pub use image::Image;
@@ -88,8 +88,8 @@ pub use word_op::WordOp;
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
 pub(crate) use constants::{
-    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, R6502_DUMP_MAGIC_NUMBERS, R6502_MAGIC_NUMBER,
-    SIM6502_MAGIC_NUMBER,
+    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, R6502_DUMP_MAGIC_NUMBERS, R6502_MAGIC_NUMBER_1,
+    R6502_MAGIC_NUMBER_2, SIM6502_MAGIC_NUMBER,
 };
 #[allow(unused)]
 pub(crate) use frequency::Frequency;

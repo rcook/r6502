@@ -1,7 +1,7 @@
 use crate::util::make_word;
 use crate::{
     AddressRange, ImageFormat, ImageHeader, ImageSlice, DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START,
-    R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
+    R6502_MAGIC_NUMBER_1, R6502_MAGIC_NUMBER_2, SIM6502_MAGIC_NUMBER,
 };
 use anyhow::{bail, Error, Result};
 use std::fs::File;
@@ -24,7 +24,13 @@ impl Image {
         default_start: Option<u16>,
         default_sp: Option<u8>,
     ) -> Result<Self> {
-        Self::read(File::open(path)?, default_load, default_start, default_sp)
+        match File::open(path) {
+            Ok(f) => Self::read(f, default_load, default_start, default_sp),
+            Err(e) if e.kind() == ErrorKind::NotFound => {
+                bail!("Could not find file {}", path.display())
+            }
+            Err(e) => bail!(e),
+        }
     }
 
     pub fn from_bytes(
@@ -122,7 +128,7 @@ impl Image {
         }
 
         let magic_number = make_word(header[1], header[0]);
-        if magic_number != R6502_MAGIC_NUMBER {
+        if magic_number != R6502_MAGIC_NUMBER_1 && magic_number != R6502_MAGIC_NUMBER_2 {
             reader.rewind()?;
             return Ok(None);
         }

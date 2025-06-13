@@ -6,9 +6,9 @@ pub struct Rom {
 
 impl Rom {
     #[must_use]
-    pub fn new(size: usize, image_slice: Option<&ImageSlice>) -> Self {
+    pub fn new(size: usize, image_slices: &Vec<ImageSlice>) -> Self {
         let mut bytes = vec![0x00; size];
-        if let Some(image_slice) = image_slice {
+        for image_slice in image_slices {
             let load = image_slice.load as usize;
             bytes[load..load + image_slice.bytes.len()].copy_from_slice(image_slice.bytes);
         }
