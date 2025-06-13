@@ -11,9 +11,6 @@ pub(crate) struct Args {
 
 #[derive(Debug, Subcommand)]
 pub(crate) enum Command {
-    #[command(name = "run", about = "Run program")]
-    Run(RunOptions),
-
     #[command(name = "debug", about = "Debug program", value_parser = parse_absolute_path)]
     Debug {
         path: PathBuf,
@@ -23,6 +20,27 @@ pub(crate) enum Command {
 
         #[arg(long = "start", value_parser = maybe_hex::<u16>)]
         start: Option<u16>,
+    },
+
+    #[command(name = "run", about = "Run program")]
+    Run(RunOptions),
+
+    #[command(name = "validate", about = "Run validation suite")]
+    Validate {
+        #[arg(required = true, value_parser = parse_absolute_path)]
+        report_path: PathBuf,
+
+        #[arg(long = "filter")]
+        filter: Option<String>,
+    },
+
+    #[command(
+        name = "validate-json",
+        about = "Run validation scenario in JSON format"
+    )]
+    ValidateJson {
+        #[arg(required = true)]
+        json: String,
     },
 }
 

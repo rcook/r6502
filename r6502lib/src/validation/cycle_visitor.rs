@@ -1,4 +1,4 @@
-use crate::Cycle;
+use crate::validation::Cycle;
 use serde::de::{Error as SerdeError, SeqAccess, Visitor};
 use std::fmt::{Formatter, Result as FmtResult};
 use std::result::Result as StdResult;

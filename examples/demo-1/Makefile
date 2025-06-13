@@ -21,4 +21,4 @@ clean:
 	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 run: $(PROGRAM)
-	cargo run -p r6502 run $(PROGRAM) --reset --cycles -m ACRN --trace
+	cargo run -- run $(PROGRAM) --reset --cycles -m ACRN --trace

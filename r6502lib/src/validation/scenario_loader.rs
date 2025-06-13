@@ -1,4 +1,4 @@
-use crate::Scenario;
+use crate::validation::Scenario;
 use anyhow::{anyhow, Result};
 use dirs::config_dir;
 use std::env::current_dir;

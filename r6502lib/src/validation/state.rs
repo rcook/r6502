@@ -1,4 +1,4 @@
-use crate::AddressValue;
+use crate::validation::AddressValue;
 use serde::Deserialize;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 

@@ -1,4 +1,4 @@
-use crate::CycleVisitor;
+use crate::validation::CycleVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 

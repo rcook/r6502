@@ -1159,40 +1159,19 @@ dependencies = [
  "anyhow",
  "bitflags 2.9.1",
  "criterion",
+ "dirs",
  "getch-rs",
  "iter_mod",
  "log",
  "num-derive",
  "num-traits",
- "r6502validationlib",
+ "rancor",
+ "rkyv",
  "rstest",
  "serde",
  "serde_json",
  "strum",
  "strum_macros",
-]
-
-[[package]]
-name = "r6502validation"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "path-absolutize",
- "r6502lib",
- "r6502validationlib",
-]
-
-[[package]]
-name = "r6502validationlib"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dirs",
- "rancor",
- "rkyv",
- "serde",
- "serde_json",
 ]
 
 [[package]]

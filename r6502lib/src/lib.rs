@@ -14,6 +14,7 @@
 
 pub mod deserialization;
 pub mod util;
+pub mod validation;
 
 mod address_range;
 mod addressing_mode;

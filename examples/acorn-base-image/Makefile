@@ -25,4 +25,4 @@ copy: $(PROGRAM)
 
 run: copy
 	make -C ../hello-world
-	cargo run -p r6502 run ../hello-world/hello-world.r6502
+	cargo run -- run ../hello-world/hello-world.r6502

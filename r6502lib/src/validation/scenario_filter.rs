@@ -1,4 +1,4 @@
-use crate::{Scenario, ScenarioLoader};
+use crate::validation::{Scenario, ScenarioLoader};
 use anyhow::Result;
 use std::ffi::OsStr;
 use std::fs::read_dir;

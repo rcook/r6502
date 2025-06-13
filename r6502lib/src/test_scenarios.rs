@@ -1,7 +1,7 @@
 #![cfg(test)]
 
+use crate::validation::Scenario;
 use anyhow::Result;
-use r6502validationlib::Scenario;
 use rstest::rstest;
 
 use crate::run_scenario;

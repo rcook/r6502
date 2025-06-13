@@ -22,4 +22,4 @@ clean:
 
 run: $(PROGRAM)
 	@#sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
-	cargo run -p r6502 run $(PROGRAM) -m Acorn
+	cargo run -- run $(PROGRAM) -m Acorn

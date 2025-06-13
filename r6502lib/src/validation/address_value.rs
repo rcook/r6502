@@ -1,4 +1,4 @@
-use crate::AddressValueVisitor;
+use crate::validation::AddressValueVisitor;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;
 

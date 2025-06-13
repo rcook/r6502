@@ -1,6 +1,6 @@
+use crate::validation::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use crate::{Bus, Cpu, Opcode, _p};
 use anyhow::{anyhow, bail, Result};
-use r6502validationlib::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use std::ffi::OsStr;
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{ErrorKind, Write};
