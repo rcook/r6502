@@ -1,7 +1,0 @@
- 0E00  00                                               |.               |
- 0E01  18        CLC  
- 0E02  AD 0C 0E  LDA  $0E0C
- 0E05  6D 0D 0E  ADC  $0E0D
- 0E08  8D 00 0E  STA  $0E00
- 0E0B  00        BRK  
- 0E0C  12 34                                            |.4              |

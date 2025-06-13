@@ -355,7 +355,15 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let image = include_str!("../../examples/add8.r6502.txt").parse::<Image>()?;
+        let image = r#" 0E00  00                                               |.               |
+ 0E01  18        CLC  
+ 0E02  AD 0C 0E  LDA  $0E0C
+ 0E05  6D 0D 0E  ADC  $0E0D
+ 0E08  8D 00 0E  STA  $0E00
+ 0E0B  00        BRK  
+ 0E0C  12 34                                            |.4              |
+"#
+        .parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
@@ -369,7 +377,17 @@ mod tests {
 
     #[test]
     fn add16() -> Result<()> {
-        let image = include_str!("../../examples/add16.r6502.txt").parse::<Image>()?;
+        let image = r#" 0E00  00 00                                            |..              |
+ 0E02  18        CLC  
+ 0E03  AD 16 0E  LDA  $0E16
+ 0E06  6D 18 0E  ADC  $0E18
+ 0E09  8D 00 0E  STA  $0E00
+ 0E0C  AD 17 0E  LDA  $0E17
+ 0E0F  6D 19 0E  ADC  $0E19
+ 0E12  8D 01 0E  STA  $0E01
+ 0E15  00        BRK  
+ 0E16  12 34 56 78                                      |.4Vx            |"#
+            .parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
@@ -388,7 +406,30 @@ mod tests {
         const NUM1: u16 = 0x0e33;
         const REM: u16 = 0x0e37;
 
-        let image = include_str!("../../examples/div16.r6502.txt").parse::<Image>()?;
+        let image = r#" 0E00  A9 00     LDA  #$00
+ 0E02  8D 37 0E  STA  $0E37
+ 0E05  8D 38 0E  STA  $0E38
+ 0E08  A2 10     LDX  #$10
+ 0E0A  0E 33 0E  ASL  $0E33
+ 0E0D  2E 34 0E  ROL  $0E34
+ 0E10  2E 37 0E  ROL  $0E37
+ 0E13  2E 38 0E  ROL  $0E38
+ 0E16  AD 37 0E  LDA  $0E37
+ 0E19  38        SEC  
+ 0E1A  ED 35 0E  SBC  $0E35
+ 0E1D  A8        TAY  
+ 0E1E  AD 38 0E  LDA  $0E38
+ 0E21  ED 36 0E  SBC  $0E36
+ 0E24  90 09     BCC  $0E2F
+ 0E26  8D 38 0E  STA  $0E38
+ 0E29  8C 37 0E  STY  $0E37
+ 0E2C  EE 33 0E  INC  $0E33
+ 0E2F  CA        DEX  
+ 0E30  D0 D8     BNE  $0E0A
+ 0E32  60        RTS  
+ 0E33  34 12 0A 00 00 00                                |4.....          |
+"#
+        .parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
