@@ -2,8 +2,9 @@ use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
 use crate::tui::UiMonitor;
 use anyhow::{anyhow, Result};
+use r6502lib::util::get_brk_addr;
 use r6502lib::{
-    p_set, AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, Os, MOS_6502, OSHALT, OSWRCH,
+    p_set, AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, MOS_6502, OSHALT, OSWRCH,
 };
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
@@ -36,10 +37,6 @@ impl UiHost {
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
         cpu.reg.pc = start;
 
-        // Eventually Os will go away!
-        let os = Os::new(true);
-        os.load_into_vm(&mut cpu);
-
         let rti = MOS_6502
             .get_op_info(&Opcode::Rti)
             .ok_or_else(|| anyhow!("RTI must exist"))?
@@ -50,8 +47,8 @@ impl UiHost {
             self.send_state(state);
 
             match state {
-                Running => state = self.handle_running(&mut cpu, &os, &rti),
-                Stepping => state = self.handle_stepping(&mut cpu, &os, &rti),
+                Running => state = self.handle_running(&mut cpu, &rti),
+                Stepping => state = self.handle_stepping(&mut cpu, &rti),
                 Halted => state = self.handle_halted(&mut cpu),
                 Stopped => break,
             }
@@ -73,8 +70,8 @@ impl UiHost {
         });
     }
 
-    fn handle_brk(&self, cpu: &mut Cpu, os: &Os, rti: &OpInfo, state: State) -> State {
-        match os.is_os_vector(cpu) {
+    fn handle_brk(&self, cpu: &mut Cpu, rti: &OpInfo, state: State) -> State {
+        match get_brk_addr(cpu) {
             Some(OSHALT) => Halted,
             Some(OSWRCH) => {
                 self.io_tx
@@ -90,7 +87,7 @@ impl UiHost {
         }
     }
 
-    fn handle_running(&self, cpu: &mut Cpu, os: &Os, rti: &OpInfo) -> State {
+    fn handle_running(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {
         loop {
             self.fetch_instruction(cpu);
             match self.debug_rx.try_recv() {
@@ -99,7 +96,7 @@ impl UiHost {
             }
 
             if !cpu.step() {
-                let new_state = self.handle_brk(cpu, os, rti, Running);
+                let new_state = self.handle_brk(cpu, rti, Running);
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }
@@ -107,7 +104,7 @@ impl UiHost {
         }
     }
 
-    fn handle_stepping(&self, cpu: &mut Cpu, os: &Os, rti: &OpInfo) -> State {
+    fn handle_stepping(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {
         loop {
             self.fetch_instruction(cpu);
             match self.debug_rx.recv() {
@@ -125,7 +122,7 @@ impl UiHost {
             }
 
             if !cpu.step() {
-                let new_state = self.handle_brk(cpu, os, rti, Stepping);
+                let new_state = self.handle_brk(cpu, rti, Stepping);
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }

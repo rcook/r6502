@@ -138,16 +138,15 @@ impl<'a> Cpu<'a> {
 
     fn set_stack_value(&mut self, value: u8) {
         self.bus
-            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value);
+            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::util::make_word;
+    use crate::util::{get_brk_addr, make_word, split_word};
     use crate::{
-        p, p_get, p_set, Bus, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, IRQ, MOS_6502,
-        OSWRCH, P,
+        p, p_get, p_set, Bus, Cpu, Image, Monitor, Opcode, TracingMonitor, IRQ, MOS_6502, P,
     };
     use anyhow::Result;
     use rstest::rstest;
@@ -243,19 +242,21 @@ mod tests {
     #[test]
     fn jsr_brk() {
         const START: u16 = 0x1000;
+        const IRQ_ADDR: u16 = 0xdead;
+        const JUMP_ADDR: u16 = 0x1234;
         let p_test = P::D | P::ALWAYS_ONE;
 
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
 
-        let os = Os::new(true);
-        os.load_into_vm(&mut cpu);
-
-        let irq_addr = os.irq_addr.expect("Must have value");
+        let (hi, lo) = split_word(IRQ_ADDR);
+        bus.store(IRQ, lo);
+        bus.store(IRQ.wrapping_add(1), hi);
 
         bus.store(START, Opcode::Jsr as u8);
-        bus.store(START + 1, OSWRCH as u8);
-        bus.store(START + 2, (OSWRCH >> 8) as u8);
+        let (hi, lo) = split_word(JUMP_ADDR);
+        bus.store(START.wrapping_add(1), lo);
+        bus.store(START.wrapping_add(2), hi);
 
         cpu.reg.pc = START;
         cpu.reg.p = p_test;
@@ -264,13 +265,13 @@ mod tests {
         assert!(cpu.step());
         assert_eq!(6, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
-        assert_eq!(OSWRCH, cpu.reg.pc);
+        assert_eq!(JUMP_ADDR, cpu.reg.pc);
 
         assert!(!cpu.step());
         assert_eq!(13, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
-        assert_eq!(irq_addr, cpu.reg.pc);
-        assert_eq!(Some(OSWRCH), os.is_os_vector(&cpu));
+        assert_eq!(IRQ_ADDR, cpu.reg.pc);
+        assert_eq!(Some(JUMP_ADDR), get_brk_addr(&cpu));
     }
 
     #[rstest]
@@ -342,6 +343,8 @@ mod tests {
     }
 
     fn capture_stdout(input: &str, trace: bool) -> Result<String> {
+        const RETURN_ADDR: u16 = 0x1234;
+
         let monitor: Option<Box<dyn Monitor>> = if trace {
             Some(Box::new(TracingMonitor::default()))
         } else {
@@ -354,26 +357,22 @@ mod tests {
 
         cpu.reg.pc = image.start;
 
-        let os = Os::new(true);
-        os.load_into_vm(&mut cpu);
-
-        let return_addr = os.return_addr.expect("Must have value");
-
         let rts = MOS_6502
             .get_op_info(&Opcode::Rts)
             .expect("RTS must exist")
             .clone();
 
-        cpu.push_word(return_addr - 1);
+        cpu.push_word(RETURN_ADDR.wrapping_sub(1));
         p_set!(cpu.reg, B, false);
 
         let mut result = String::new();
         loop {
             while cpu.step() {}
 
-            match os.is_os_vector(&cpu) {
-                Some(addr) if addr == return_addr => break,
-                Some(OSWRCH) => {
+            match get_brk_addr(&cpu) {
+                Some(0xffc0) => break, // Hack!
+                Some(addr) if addr == RETURN_ADDR => break,
+                Some(0xffee) => {
                     result.push(cpu.reg.a as char);
                     if trace {
                         println!("stdout={result}");

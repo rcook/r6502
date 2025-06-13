@@ -1,7 +1,7 @@
 mod bus_device;
 mod bus_device_type;
 mod machine;
+mod machine_info;
 mod machines;
-mod util;
 
-pub(crate) use util::create_bus;
+pub(crate) use machine_info::MachineInfo;

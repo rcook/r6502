@@ -1,11 +1,10 @@
 use crate::cli::RunOptions;
-use crate::machine_config::create_bus;
+use crate::machine_config::MachineInfo;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use log::LevelFilter;
-use r6502lib::{
-    BusEvent, Cpu, Image, Monitor, Opcode, Os, TracingMonitor, MOS_6502, OSHALT, OSWRCH,
-};
+use r6502lib::util::get_brk_addr;
+use r6502lib::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502, OSHALT, OSWRCH};
 use simple_logging::log_to_file;
 use std::env::current_dir;
 use std::process::exit;
@@ -15,7 +14,8 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let (bus, bus_rx) = create_bus(&image, &opts.machine)?;
+    let machine_info = MachineInfo::load(&opts.machine)?;
+    let (bus, bus_rx) = machine_info.create_bus(&image)?;
     bus.start();
 
     let start = if opts.reset {
@@ -32,9 +32,6 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
         .get_op_info(&Opcode::Rti)
         .ok_or_else(|| anyhow!("RTI must exist"))?
         .clone();
-
-    // Eventually Os will go away!
-    let os = Os::new(opts.machine == Some(String::from("Acorn")));
 
     let monitor: Option<Box<dyn Monitor>> = if opts.trace {
         Some(Box::new(TracingMonitor::default()))
@@ -67,7 +64,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
             }
         }
 
-        match os.is_os_vector(&cpu) {
+        match get_brk_addr(&cpu) {
             Some(OSHALT) => {
                 break;
             }
@@ -75,7 +72,7 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
                 print!("{}", cpu.reg.a as char);
                 rti.execute_no_operand(&mut cpu);
             }
-            _ => break,
+            _ => todo!(),
         }
     }
 

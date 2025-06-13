@@ -7,7 +7,7 @@ use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::sync::mpsc::Sender;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub(crate) struct BusDevice {
     #[serde(rename = "type")]
     pub(crate) r#type: BusDeviceType,

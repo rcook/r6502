@@ -1,30 +1,45 @@
 [
   {
     "name": "done",
-    "value": "$0E0D",
-    "sourceLocation": "hello-world.asm:10"
+    "value": "$0E13",
+    "sourceLocation": "hello-world.asm:20"
   },
   {
     "name": "hello",
-    "value": "$0E0E",
-    "sourceLocation": "hello-world.asm:12"
+    "value": "$0E14",
+    "sourceLocation": "hello-world.asm:23"
   },
   {
     "name": "loop",
-    "value": "$0E02",
-    "sourceLocation": "hello-world.asm:5"
+    "value": "$0E08",
+    "sourceLocation": "hello-world.asm:14"
+  },
+  {
+    "name": "main",
+    "value": "$0E06",
+    "sourceLocation": "hello-world.asm:12"
   },
   {
     "name": "origin",
     "value": "$0E00"
   },
   {
+    "name": "oshalt",
+    "value": "$FFC0",
+    "sourceLocation": "hello-world.asm:1"
+  },
+  {
     "name": "oswrch",
     "value": "$FFEE",
-    "sourceLocation": "hello-world.asm:1"
+    "sourceLocation": "hello-world.asm:2"
   },
   {
     "name": "start",
     "value": "$0E00"
+  },
+  {
+    "name": "startup",
+    "value": "$0E00",
+    "sourceLocation": "hello-world.asm:5"
   }
 ]

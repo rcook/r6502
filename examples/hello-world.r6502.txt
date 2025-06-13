@@ -1,8 +1,12 @@
- 0E00  A2 00     LDX  #$00
- 0E02  BD 0E 0E  LDA  $0E0E, X
- 0E05  F0 06     BEQ  $0E0D
- 0E07  20 EE FF  JSR  $FFEE
- 0E0A  E8        INX  
- 0E0B  D0 F5     BNE  $0E02
- 0E0D  60        RTS  
- 0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
+ 0E00  A9 FF     LDA  #$FF
+ 0E02  48        PHA  
+ 0E03  A9 BF     LDA  #$BF
+ 0E05  48        PHA  
+ 0E06  A2 00     LDX  #$00
+ 0E08  BD 14 0E  LDA  $0E14, X
+ 0E0B  F0 06     BEQ  $0E13
+ 0E0D  20 EE FF  JSR  $FFEE
+ 0E10  E8        INX  
+ 0E11  D0 F5     BNE  $0E08
+ 0E13  60        RTS  
+ 0E14  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |

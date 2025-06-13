@@ -307,7 +307,7 @@ mod tests {
         assert_eq!(0x0e00, image.load);
         assert_eq!(0x0e00, image.start);
         assert_eq!(0xff, image.sp);
-        assert_eq!(28, image.bytes.len());
+        assert_eq!(34, image.bytes.len());
         Ok(())
     }
 
