@@ -1,15 +1,15 @@
+use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
 use crate::tui::UiMonitor;
 use anyhow::{anyhow, Result};
 use r6502lib::util::get_brk_addr;
-use r6502lib::{
-    p_set, AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, MOS_6502, OSHALT, OSWRCH,
-};
+use r6502lib::{p_set, AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, MOS_6502};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
 pub(crate) struct UiHost {
+    machine_info: MachineInfo,
     bus: Bus,
     debug_rx: Receiver<DebugMessage>,
     monitor_tx: Sender<MonitorMessage>,
@@ -18,12 +18,14 @@ pub(crate) struct UiHost {
 
 impl UiHost {
     pub(crate) const fn new(
+        machine_info: MachineInfo,
         bus: Bus,
         debug_rx: Receiver<DebugMessage>,
         monitor_tx: Sender<MonitorMessage>,
         io_tx: Sender<IoMessage>,
     ) -> Self {
         Self {
+            machine_info,
             bus,
             debug_rx,
             monitor_tx,
@@ -71,9 +73,8 @@ impl UiHost {
     }
 
     fn handle_brk(&self, cpu: &mut Cpu, rti: &OpInfo, state: State) -> State {
-        match get_brk_addr(cpu) {
-            Some(OSHALT) => Halted,
-            Some(OSWRCH) => {
+        match (self.machine_info.machine.write_char_addr, get_brk_addr(cpu)) {
+            (Some(write_char_addr), Some(brk_addr)) if brk_addr == write_char_addr => {
                 self.io_tx
                     .send(IoMessage::WriteChar(cpu.reg.a as char))
                     .expect("Must succeed");
@@ -101,6 +102,12 @@ impl UiHost {
                     return new_state;
                 }
             }
+
+            if let Some(halt_addr) = self.machine_info.machine.halt_addr {
+                if cpu.reg.pc == halt_addr {
+                    return Halted;
+                }
+            }
         }
     }
 
@@ -125,6 +132,12 @@ impl UiHost {
                 let new_state = self.handle_brk(cpu, rti, Stepping);
                 if !matches!(new_state, Stepping) {
                     return new_state;
+                }
+            }
+
+            if let Some(halt_addr) = self.machine_info.machine.halt_addr {
+                if cpu.reg.pc == halt_addr {
+                    return Halted;
                 }
             }
         }

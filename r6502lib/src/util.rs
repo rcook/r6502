@@ -34,6 +34,20 @@ pub(crate) fn compute_effective_addr_indexed_indirect_x(cpu: &mut Cpu, addr: u8)
     make_word(hi, lo)
 }
 
+#[must_use]
+pub fn get_brk_addr(cpu: &Cpu) -> Option<u16> {
+    let lo = cpu.bus.load(IRQ);
+    let hi = cpu.bus.load(IRQ.wrapping_add(1));
+    let current_irq_addr = make_word(hi, lo);
+
+    if cpu.reg.pc != current_irq_addr {
+        return None;
+    }
+
+    let addr = cpu.peek_back_word(1).wrapping_sub(2);
+    Some(addr)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::util::{crosses_page_boundary, make_word};
@@ -53,18 +67,4 @@ mod tests {
     fn crosses_page_boundary_basics(#[case] expected_result: bool, #[case] input: u16) {
         assert_eq!(expected_result, crosses_page_boundary(input));
     }
-}
-
-#[must_use]
-pub fn get_brk_addr(cpu: &Cpu) -> Option<u16> {
-    let lo = cpu.bus.load(IRQ);
-    let hi = cpu.bus.load(IRQ.wrapping_add(1));
-    let current_irq_addr = make_word(hi, lo);
-
-    if cpu.reg.pc != current_irq_addr {
-        return None;
-    }
-
-    let addr = cpu.peek_back_word(1).wrapping_sub(2);
-    Some(addr)
 }

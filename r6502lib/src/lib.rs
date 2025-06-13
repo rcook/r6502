@@ -60,7 +60,7 @@ pub use bus_device::BusDevice;
 pub use bus_event::BusEvent;
 pub use bus_view::BusView;
 pub use byte_op::ByteOp;
-pub use constants::{IRQ, IRQ_ADDR, MEMORY_SIZE, OSHALT, OSIRQ, OSWRCH, RESET, STACK_BASE};
+pub use constants::{IRQ, IRQ_ADDR, MEMORY_SIZE, RESET, STACK_BASE};
 pub use cpu::Cpu;
 pub use device_mapping::DeviceMapping;
 pub use image::Image;

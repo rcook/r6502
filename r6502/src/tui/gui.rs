@@ -17,9 +17,15 @@ pub(crate) fn run_gui(path: &Path, load: Option<u16>, start: Option<u16>) -> Res
     spawn(move || {
         let machine_info = MachineInfo::load(&Some(String::from("Acorn"))).expect("Must succeed");
         let (bus, _) = machine_info.create_bus(&image).expect("Must succeed");
-        UiHost::new(bus, debug_channel.1, monitor_channel.0, io_channel.0)
-            .run(image.start)
-            .expect("Must succeed");
+        UiHost::new(
+            machine_info,
+            bus,
+            debug_channel.1,
+            monitor_channel.0,
+            io_channel.0,
+        )
+        .run(image.start)
+        .expect("Must succeed");
     });
     ui.run();
     Ok(())

@@ -138,7 +138,7 @@ impl<'a> Cpu<'a> {
 
     fn set_stack_value(&mut self, value: u8) {
         self.bus
-            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value)
+            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value);
     }
 }
 

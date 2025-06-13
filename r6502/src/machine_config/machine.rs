@@ -16,14 +16,14 @@ pub(crate) struct Machine {
         deserialize_with = "deserialize_word_opt",
         default
     )]
-    pub(crate) halt_address: Option<u16>,
+    pub(crate) halt_addr: Option<u16>,
 
     #[serde(
         rename = "writeCharAddress",
         deserialize_with = "deserialize_word_opt",
         default
     )]
-    pub(crate) write_char_address: Option<u16>,
+    pub(crate) write_char_addr: Option<u16>,
 
     #[serde(rename = "busDevices")]
     pub(crate) bus_devices: Vec<BusDevice>,

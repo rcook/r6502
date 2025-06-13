@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use chrono::Utc;
 use log::LevelFilter;
 use r6502lib::util::get_brk_addr;
-use r6502lib::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502, OSHALT, OSWRCH};
+use r6502lib::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
 use simple_logging::log_to_file;
 use std::env::current_dir;
 use std::process::exit;
@@ -62,13 +62,16 @@ pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
                     break 'outer;
                 }
             }
+
+            if let Some(halt_addr) = machine_info.machine.halt_addr {
+                if cpu.reg.pc == halt_addr {
+                    break 'outer;
+                }
+            }
         }
 
-        match get_brk_addr(&cpu) {
-            Some(OSHALT) => {
-                break;
-            }
-            Some(OSWRCH) => {
+        match (machine_info.machine.write_char_addr, get_brk_addr(&cpu)) {
+            (Some(write_char_addr), Some(brk_addr)) if brk_addr == write_char_addr => {
                 print!("{}", cpu.reg.a as char);
                 rti.execute_no_operand(&mut cpu);
             }
