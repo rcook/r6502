@@ -2,7 +2,7 @@ use crate::emulator::{InstructionInfo, Operand, SymbolInfo};
 use anyhow::{bail, Result};
 
 #[derive(Clone)]
-pub(crate) enum AddressingMode {
+pub enum AddressingMode {
     Absolute,
     AbsoluteX,
     AbsoluteY,
@@ -19,7 +19,7 @@ pub(crate) enum AddressingMode {
 }
 
 impl AddressingMode {
-    pub(crate) fn format_instruction_info(
+    pub fn format_instruction_info(
         &self,
         instruction_info: &InstructionInfo,
         symbols: &[SymbolInfo],

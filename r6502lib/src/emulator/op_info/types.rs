@@ -10,13 +10,13 @@ pub struct OpInfo {
 }
 
 impl OpInfo {
-    pub(crate) fn iter() -> impl Iterator<Item = &'static OpInfo> {
+    pub fn iter() -> impl Iterator<Item = &'static OpInfo> {
         CONSTS.iter().map(|(_, item)| match item {
             Item::OpInfo(op) => op,
         })
     }
 
-    pub(crate) const fn new(opcode: Opcode, addressing_mode: AddressingMode, op: Op) -> Self {
+    pub const fn new(opcode: Opcode, addressing_mode: AddressingMode, op: Op) -> Self {
         Self {
             opcode,
             addressing_mode,
@@ -28,15 +28,15 @@ impl OpInfo {
         self.op.execute_no_operand(cpu)
     }
 
-    pub(crate) const fn opcode(&self) -> Opcode {
+    pub const fn opcode(&self) -> Opcode {
         self.opcode
     }
 
-    pub(crate) const fn op(&self) -> &Op {
+    pub const fn op(&self) -> &Op {
         &self.op
     }
 
-    pub(crate) fn format_instruction_info(
+    pub fn format_instruction_info(
         &self,
         instruction_info: &InstructionInfo,
         symbols: &[SymbolInfo],

@@ -7,7 +7,7 @@ use clap::Parser;
 use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
 use r6502lib::validation::Scenario;
 
-pub(crate) fn run() -> Result<()> {
+pub fn run() -> Result<()> {
     match Args::parse().command {
         Debug { path, load, start } => run_gui(&path, load, start)?,
         Run(opts) => run_terminal(&opts)?,

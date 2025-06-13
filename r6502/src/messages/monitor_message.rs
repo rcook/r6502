@@ -1,7 +1,7 @@
 use crate::messages::State;
 use r6502lib::emulator::{AddressRange, InstructionInfo, Reg, TotalCycles};
 
-pub(crate) enum MonitorMessage {
+pub enum MonitorMessage {
     NotifyState(State),
     NotifyInvalidBrk,
     BeforeExecute {

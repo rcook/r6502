@@ -12,12 +12,12 @@ pub const fn split_word(value: u16) -> (u8, u8) {
     (hi, lo)
 }
 
-pub(crate) const fn crosses_page_boundary(addr: u16) -> bool {
+pub const fn crosses_page_boundary(addr: u16) -> bool {
     (addr & 0x00ff) == 0x00ff
 }
 
 // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502
-pub(crate) fn compute_effective_addr_indirect_indexed_y(cpu: &mut Cpu, addr: u8) -> u16 {
+pub fn compute_effective_addr_indirect_indexed_y(cpu: &mut Cpu, addr: u8) -> u16 {
     let (lo, carry) = cpu.bus.load(addr as u16).overflowing_add(cpu.reg.y);
     let next_addr = addr.wrapping_add(1);
     let hi = cpu
@@ -27,7 +27,7 @@ pub(crate) fn compute_effective_addr_indirect_indexed_y(cpu: &mut Cpu, addr: u8)
     make_word(hi, lo)
 }
 
-pub(crate) fn compute_effective_addr_indexed_indirect_x(cpu: &mut Cpu, addr: u8) -> u16 {
+pub fn compute_effective_addr_indexed_indirect_x(cpu: &mut Cpu, addr: u8) -> u16 {
     let addr_with_index = addr.wrapping_add(cpu.reg.x);
     let lo = cpu.bus.load(addr_with_index as u16);
     let hi = cpu.bus.load(addr_with_index.wrapping_add(1) as u16);

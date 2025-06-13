@@ -1,5 +1,5 @@
 #[derive(Clone, Copy)]
-pub(crate) enum State {
+pub enum State {
     Running,
     Stepping,
     Halted,

@@ -1,16 +1,16 @@
 use crate::emulator::{Cpu, OpCycles};
 
-pub(crate) type NoOperandFn = fn(&mut Cpu) -> OpCycles;
+pub type NoOperandFn = fn(&mut Cpu) -> OpCycles;
 
 #[derive(Clone)]
 pub struct NoOperandOp(NoOperandFn);
 
 impl NoOperandOp {
-    pub(crate) const fn new(f: NoOperandFn) -> Self {
+    pub const fn new(f: NoOperandFn) -> Self {
         Self(f)
     }
 
-    pub(crate) fn execute(&self, cpu: &mut Cpu) -> OpCycles {
+    pub fn execute(&self, cpu: &mut Cpu) -> OpCycles {
         self.0(cpu)
     }
 }

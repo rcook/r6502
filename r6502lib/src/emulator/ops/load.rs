@@ -3,21 +3,21 @@ use crate::emulator::Cpu;
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDA
 // http://www.6502.org/users/obelisk/6502/reference.html#LDA
-pub(crate) fn lda(cpu: &mut Cpu, operand: u8) {
+pub fn lda(cpu: &mut Cpu, operand: u8) {
     cpu.reg.a = operand;
     set_flags_on_value(cpu, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDX
 // http://www.6502.org/users/obelisk/6502/reference.html#LDX
-pub(crate) fn ldx(cpu: &mut Cpu, operand: u8) {
+pub fn ldx(cpu: &mut Cpu, operand: u8) {
     cpu.reg.x = operand;
     set_flags_on_value(cpu, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LDY
 // http://www.6502.org/users/obelisk/6502/reference.html#LDY
-pub(crate) fn ldy(cpu: &mut Cpu, operand: u8) {
+pub fn ldy(cpu: &mut Cpu, operand: u8) {
     cpu.reg.y = operand;
     set_flags_on_value(cpu, operand);
 }
@@ -25,7 +25,8 @@ pub(crate) fn ldy(cpu: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::load::{lda, ldx, ldy};
-    use crate::emulator::{p, Bus, Cpu, P};
+    use crate::emulator::{Bus, Cpu, P};
+    use crate::p;
     use rstest::rstest;
 
     #[rstest]

@@ -4,13 +4,13 @@ use path_absolutize::Absolutize;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
-pub(crate) struct Args {
+pub struct Args {
     #[command(subcommand)]
-    pub(crate) command: Command,
+    pub command: Command,
 }
 
 #[derive(Debug, Subcommand)]
-pub(crate) enum Command {
+pub enum Command {
     #[command(name = "debug", about = "Debug program", value_parser = parse_absolute_path)]
     Debug {
         path: PathBuf,
@@ -45,38 +45,38 @@ pub(crate) enum Command {
 }
 
 #[derive(Debug, Parser)]
-pub(crate) struct RunOptions {
+pub struct RunOptions {
     #[arg(value_parser = parse_absolute_path)]
-    pub(crate) path: PathBuf,
+    pub path: PathBuf,
 
     #[arg(long = "load", value_parser = maybe_hex::<u16>)]
-    pub(crate) load: Option<u16>,
+    pub load: Option<u16>,
 
     #[arg(long = "start", value_parser = maybe_hex::<u16>)]
-    pub(crate) start: Option<u16>,
+    pub start: Option<u16>,
 
     #[arg(help = "Trace execution", long = "trace", default_value_t = false)]
-    pub(crate) trace: bool,
+    pub trace: bool,
 
     #[arg(help = "Report cycles", long = "cycles", default_value_t = false)]
-    pub(crate) cycles: bool,
+    pub cycles: bool,
 
     #[arg(
         help = "Start execution from RESET vector",
         long = "reset",
         default_value_t = false
     )]
-    pub(crate) reset: bool,
+    pub reset: bool,
 
     #[arg(help = "Stop after given number of cycles", long = "stop-after")]
-    pub(crate) stop_after: Option<u32>,
+    pub stop_after: Option<u32>,
 
     #[arg(
         help = "Machine hint if machine tag not in image header",
         long = "machine",
         short = 'm'
     )]
-    pub(crate) machine: Option<String>,
+    pub machine: Option<String>,
 }
 
 fn parse_absolute_path(s: &str) -> Result<PathBuf, String> {

@@ -4,13 +4,13 @@ use crate::{_p, p_set};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
-pub(crate) fn pha(cpu: &mut Cpu) {
+pub fn pha(cpu: &mut Cpu) {
     cpu.push(cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHP
 // http://www.6502.org/users/obelisk/6502/reference.html#PHP
-pub(crate) fn php(cpu: &mut Cpu) {
+pub fn php(cpu: &mut Cpu) {
     // https://www.nesdev.org/wiki/Status_flags
     // "B is 0 when pushed by interrupts (NMI and IRQ) and 1 when pushed by instructions (BRK and PHP)"
     cpu.push((cpu.reg.p | P::B).bits());
@@ -18,7 +18,7 @@ pub(crate) fn php(cpu: &mut Cpu) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLA
 // http://www.6502.org/users/obelisk/6502/reference.html#PLA
-pub(crate) fn pla(cpu: &mut Cpu) {
+pub fn pla(cpu: &mut Cpu) {
     let value = cpu.pull();
     cpu.reg.a = value;
     p_set!(cpu.reg, N, is_neg(value));
@@ -27,7 +27,7 @@ pub(crate) fn pla(cpu: &mut Cpu) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#PLP
 // http://www.6502.org/users/obelisk/6502/reference.html#PLP
-pub(crate) fn plp(cpu: &mut Cpu) {
+pub fn plp(cpu: &mut Cpu) {
     // Retain ALWAYS_ONE and B
     let current_p = cpu.reg.p.bits();
     assert!((current_p & 0b00100000) == 0b00100000);

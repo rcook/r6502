@@ -9,7 +9,7 @@ use r6502lib::p_set;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
-pub(crate) struct UiHost {
+pub struct UiHost {
     machine_info: MachineInfo,
     bus: Bus,
     debug_rx: Receiver<DebugMessage>,
@@ -18,7 +18,7 @@ pub(crate) struct UiHost {
 }
 
 impl UiHost {
-    pub(crate) const fn new(
+    pub const fn new(
         machine_info: MachineInfo,
         bus: Bus,
         debug_rx: Receiver<DebugMessage>,
@@ -34,7 +34,7 @@ impl UiHost {
         }
     }
 
-    pub(crate) fn run(&self, start: u16) -> Result<()> {
+    pub fn run(&self, start: u16) -> Result<()> {
         let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
 
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));

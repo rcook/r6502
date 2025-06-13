@@ -10,7 +10,7 @@ use std::process::exit;
 use std::str::from_utf8;
 use std::sync::mpsc::TryRecvError;
 
-pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
+pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;

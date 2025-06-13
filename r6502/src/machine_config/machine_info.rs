@@ -9,13 +9,13 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
-pub(crate) struct MachineInfo {
-    pub(crate) config_dir: PathBuf,
-    pub(crate) machine: Machine,
+pub struct MachineInfo {
+    pub config_dir: PathBuf,
+    pub machine: Machine,
 }
 
 impl MachineInfo {
-    pub(crate) fn find_by_tag(tag: MachineTag) -> Result<Self> {
+    pub fn find_by_tag(tag: MachineTag) -> Result<Self> {
         let (machines, config_dir) = Self::read_machines()?;
         let machine = machines
             .machines
@@ -30,7 +30,7 @@ impl MachineInfo {
         })
     }
 
-    pub(crate) fn find_by_name(name: &Option<String>) -> Result<Self> {
+    pub fn find_by_name(name: &Option<String>) -> Result<Self> {
         let (machines, config_dir) = Self::read_machines()?;
         let name = name.as_ref().unwrap_or(&machines.default_machine);
         let machine = machines
@@ -46,7 +46,7 @@ impl MachineInfo {
         })
     }
 
-    pub(crate) fn create_bus(&self, image: &Image) -> Result<(Bus, Receiver<BusEvent>)> {
+    pub fn create_bus(&self, image: &Image) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
 
         #[allow(unused_assignments)]

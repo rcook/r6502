@@ -1,6 +1,6 @@
 macro_rules! flag_fn {
     ($name: ident, $flag: ident, $value: expr) => {
-        pub(crate) fn $name(cpu: &mut $crate::emulator::Cpu) {
+        pub fn $name(cpu: &mut $crate::emulator::Cpu) {
             $crate::p_set!(cpu.reg, $flag, $value);
         }
     };

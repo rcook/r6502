@@ -317,7 +317,7 @@ impl Opcode {
         FromPrimitive::from_u8(value)
     }
 
-    pub(crate) fn mnemonic(self) -> &'static str {
+    pub fn mnemonic(self) -> &'static str {
         match self.get_str("mnemonic") {
             Some(s) => s,
             None => panic!("mnemonic must be defined for opcode {self}"),

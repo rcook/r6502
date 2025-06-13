@@ -2,12 +2,12 @@ use crate::messages::MonitorMessage;
 use r6502lib::emulator::{InstructionInfo, Monitor, Reg, TotalCycles};
 use std::sync::mpsc::Sender;
 
-pub(crate) struct UiMonitor {
+pub struct UiMonitor {
     monitor_tx: Sender<MonitorMessage>,
 }
 
 impl UiMonitor {
-    pub(crate) const fn new(monitor_tx: Sender<MonitorMessage>) -> Self {
+    pub const fn new(monitor_tx: Sender<MonitorMessage>) -> Self {
         Self { monitor_tx }
     }
 }

@@ -53,7 +53,7 @@ macro_rules! _p {
     };
 }
 
-#[cfg(test)]
+#[macro_export]
 macro_rules! p {
     () => {
         $crate::emulator::P::empty()
@@ -62,12 +62,9 @@ macro_rules! p {
         $crate::emulator::P::$flag
     };
     ($flag: ident, $($flags: ident), +) => {
-        $crate::emulator::p!($flag) | $crate::emulator::p!($($flags), +)
+        $crate::p!($flag) | $crate::p!($($flags), +)
     };
 }
-
-#[cfg(test)]
-pub(crate) use p;
 
 #[macro_export]
 macro_rules! p_get {

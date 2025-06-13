@@ -71,19 +71,16 @@ pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;
 pub use word_op::WordOp;
 
-pub(crate) use addressing_mode::AddressingMode;
-pub(crate) use binding::Binding;
-pub(crate) use constants::{
+pub use addressing_mode::AddressingMode;
+pub use binding::Binding;
+pub use constants::{
     DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, R6502_DUMP_MAGIC_NUMBERS, R6502_MAGIC_NUMBER,
     SIM6502_MAGIC_NUMBER,
 };
 #[allow(unused)]
-pub(crate) use frequency::Frequency;
-pub(crate) use image_header::ImageHeader;
-pub(crate) use instruction::Instruction;
-pub(crate) use op::Op;
-pub(crate) use op_cycles::OpCycles;
-pub(crate) use operand::Operand;
-
-#[cfg(test)]
-pub(crate) use p::p;
+pub use frequency::Frequency;
+pub use image_header::ImageHeader;
+pub use instruction::Instruction;
+pub use op::Op;
+pub use op_cycles::OpCycles;
+pub use operand::Operand;

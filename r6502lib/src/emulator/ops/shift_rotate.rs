@@ -4,13 +4,13 @@ use crate::{p_get, p_set};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl_acc(cpu: &mut Cpu) {
+pub fn asl_acc(cpu: &mut Cpu) {
     cpu.reg.a = asl_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
-pub(crate) fn asl(cpu: &mut Cpu, addr: u16) {
+pub fn asl(cpu: &mut Cpu, addr: u16) {
     let value = cpu.bus.load(addr);
     let value = asl_helper(cpu, value);
     cpu.bus.store(addr, value);
@@ -18,13 +18,13 @@ pub(crate) fn asl(cpu: &mut Cpu, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr_acc(cpu: &mut Cpu) {
+pub fn lsr_acc(cpu: &mut Cpu) {
     cpu.reg.a = lsr_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#LSR
 // http://www.6502.org/users/obelisk/6502/reference.html#LSR
-pub(crate) fn lsr(cpu: &mut Cpu, addr: u16) {
+pub fn lsr(cpu: &mut Cpu, addr: u16) {
     let value = cpu.bus.load(addr);
     let value = lsr_helper(cpu, value);
     cpu.bus.store(addr, value);
@@ -32,13 +32,13 @@ pub(crate) fn lsr(cpu: &mut Cpu, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol_acc(cpu: &mut Cpu) {
+pub fn rol_acc(cpu: &mut Cpu) {
     cpu.reg.a = rol_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROL
 // http://www.6502.org/users/obelisk/6502/reference.html#ROL
-pub(crate) fn rol(cpu: &mut Cpu, addr: u16) {
+pub fn rol(cpu: &mut Cpu, addr: u16) {
     let value = cpu.bus.load(addr);
     let value = rol_helper(cpu, value);
     cpu.bus.store(addr, value);
@@ -46,13 +46,13 @@ pub(crate) fn rol(cpu: &mut Cpu, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror_acc(cpu: &mut Cpu) {
+pub fn ror_acc(cpu: &mut Cpu) {
     cpu.reg.a = ror_helper(cpu, cpu.reg.a);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#ROR
 // http://www.6502.org/users/obelisk/6502/reference.html#ROR
-pub(crate) fn ror(cpu: &mut Cpu, addr: u16) {
+pub fn ror(cpu: &mut Cpu, addr: u16) {
     let value = cpu.bus.load(addr);
     let value = ror_helper(cpu, value);
     cpu.bus.store(addr, value);

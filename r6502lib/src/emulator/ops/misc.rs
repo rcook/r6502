@@ -11,7 +11,7 @@ use crate::p_set;
 // https://retrocomputing.stackexchange.com/questions/29923/why-does-the-brk-instruction-set-the-b-flag
 // https://forums.nesdev.org/viewtopic.php?p=64224#p64224
 // https://www.pagetable.com/?p=410
-pub(crate) fn brk(cpu: &mut Cpu) {
+pub fn brk(cpu: &mut Cpu) {
     cpu.push_word(cpu.reg.pc + 1);
     cpu.push((cpu.reg.p | P::B).bits());
     cpu.reg.pc = make_word(cpu.bus.load(IRQ.wrapping_add(1)), cpu.bus.load(IRQ));
@@ -20,7 +20,7 @@ pub(crate) fn brk(cpu: &mut Cpu) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#NOP
 // http://www.6502.org/users/obelisk/6502/reference.html#NOP
-pub(crate) fn nop(_cpu: &mut Cpu) {}
+pub fn nop(_cpu: &mut Cpu) {}
 
 #[cfg(test)]
 mod tests {

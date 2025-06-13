@@ -120,12 +120,12 @@ impl<'a> Cpu<'a> {
 
     #[cfg(test)]
     #[must_use]
-    pub(crate) fn peek_word(&self) -> u16 {
+    pub fn peek_word(&self) -> u16 {
         self.peek_back_word(0x00)
     }
 
     #[must_use]
-    pub(crate) fn peek_back_word(&self, offset: u8) -> u16 {
+    pub fn peek_back_word(&self, offset: u8) -> u16 {
         let stack_addr = (STACK_BASE + self.reg.sp as u16).wrapping_add(offset as u16);
         let hi = self.bus.load(stack_addr.wrapping_add(2));
         let lo = self.bus.load(stack_addr.wrapping_add(1));
@@ -146,8 +146,8 @@ impl<'a> Cpu<'a> {
 #[cfg(test)]
 mod tests {
     use crate::emulator::util::{get_brk_addr, make_word, split_word};
-    use crate::emulator::{p, Bus, Cpu, Image, Monitor, Opcode, TracingMonitor, IRQ, MOS_6502, P};
-    use crate::{p_get, p_set};
+    use crate::emulator::{Bus, Cpu, Image, Monitor, Opcode, TracingMonitor, IRQ, MOS_6502, P};
+    use crate::{p, p_get, p_set};
     use anyhow::Result;
     use rstest::rstest;
 

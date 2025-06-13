@@ -5,7 +5,7 @@ use crate::{p_get, p_set, p_value};
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
-pub(crate) fn adc(cpu: &mut Cpu, operand: u8) {
+pub fn adc(cpu: &mut Cpu, operand: u8) {
     if p_get!(cpu.reg, D) {
         let a = cpu.reg.a as i32;
         let value = operand as i32;
@@ -114,7 +114,7 @@ Final:
 // http://www.visual6502.org/JSSim/expert.html?graphics=false&a=0&d=a900f8e988eaeaea&steps=18
 // http://vice-emu.sourceforge.net/plain/64doc.txt
 // https://github.com/mattgodbolt/jsbeeb/blob/main/src/6502.js
-pub(crate) fn sbc(cpu: &mut Cpu, operand: u8) {
+pub fn sbc(cpu: &mut Cpu, operand: u8) {
     if p_get!(cpu.reg, D) {
         let carry = if p_get!(cpu.reg, C) { 0 } else { 1 };
 
@@ -144,9 +144,9 @@ pub(crate) fn sbc(cpu: &mut Cpu, operand: u8) {
 
 #[cfg(test)]
 mod tests {
-    use crate::_p;
     use crate::emulator::ops::arithmetic::{adc, sbc};
-    use crate::emulator::{p, Bus, Cpu, P};
+    use crate::emulator::{Bus, Cpu, P};
+    use crate::{_p, p};
     use rstest::rstest;
 
     #[rstest]

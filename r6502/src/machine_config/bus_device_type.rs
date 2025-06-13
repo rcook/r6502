@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) enum BusDeviceType {
+pub enum BusDeviceType {
     #[serde(rename = "pia")]
     Pia,
 

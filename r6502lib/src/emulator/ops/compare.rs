@@ -4,19 +4,19 @@ use crate::p_set;
 
 // http://www.6502.org/tutorials/6502opcodes.html#CMP
 // http://www.6502.org/users/obelisk/6502/reference.html#CMP
-pub(crate) fn cmp(cpu: &mut Cpu, operand: u8) {
+pub fn cmp(cpu: &mut Cpu, operand: u8) {
     compare_helper(cpu, cpu.reg.a, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#CPX
 // http://www.6502.org/users/obelisk/6502/reference.html#CPX
-pub(crate) fn cpx(cpu: &mut Cpu, operand: u8) {
+pub fn cpx(cpu: &mut Cpu, operand: u8) {
     compare_helper(cpu, cpu.reg.x, operand);
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#CPY
 // http://www.6502.org/users/obelisk/6502/reference.html#CPY
-pub(crate) fn cpy(cpu: &mut Cpu, operand: u8) {
+pub fn cpy(cpu: &mut Cpu, operand: u8) {
     compare_helper(cpu, cpu.reg.y, operand);
 }
 

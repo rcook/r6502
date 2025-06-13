@@ -4,13 +4,13 @@ use crate::p_set;
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
-pub(crate) fn jmp(cpu: &mut Cpu, operand: u16) {
+pub fn jmp(cpu: &mut Cpu, operand: u16) {
     cpu.reg.pc = operand;
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#JSR
 // http://www.6502.org/users/obelisk/6502/reference.html#JSR
-pub(crate) fn jsr(cpu: &mut Cpu, addr: u16) {
+pub fn jsr(cpu: &mut Cpu, addr: u16) {
     // We can look back at the bytes immediately before PC and the
     // target address should be exactly the same as the argument
     // to this function.
@@ -34,7 +34,7 @@ pub(crate) fn jsr(cpu: &mut Cpu, addr: u16) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTI
 // http://www.6502.org/users/obelisk/6502/reference.html#RTI
-pub(crate) fn rti(cpu: &mut Cpu) {
+pub fn rti(cpu: &mut Cpu) {
     cpu.reg.p = P::from_bits(cpu.pull()).expect("Must succeed");
     p_set!(cpu.reg, ALWAYS_ONE, true);
     p_set!(cpu.reg, B, false);
@@ -44,7 +44,7 @@ pub(crate) fn rti(cpu: &mut Cpu) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#RTS
 // http://www.6502.org/users/obelisk/6502/reference.html#RTS
-pub(crate) fn rts(cpu: &mut Cpu) {
+pub fn rts(cpu: &mut Cpu) {
     let return_addr = cpu.pull_word().wrapping_add(1);
     cpu.reg.pc = return_addr;
 }

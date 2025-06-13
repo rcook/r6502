@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
-pub(crate) fn run_gui(path: &Path, load: Option<u16>, start: Option<u16>) -> Result<()> {
+pub fn run_gui(path: &Path, load: Option<u16>, start: Option<u16>) -> Result<()> {
     let image = Image::load(path, load, start, None)?;
     let symbols = SymbolInfo::load(path)?;
     let debug_channel = channel();

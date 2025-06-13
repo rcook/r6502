@@ -1,5 +1,5 @@
 #[derive(Clone, Debug)]
-pub(crate) enum Operand {
+pub enum Operand {
     None,
     Byte(u8),
     Word(u16),

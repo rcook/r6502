@@ -19,7 +19,7 @@ const COMMAND_RESPONSE_NAME: &str = "command-response";
 const COMMAND_NAME: &str = "command";
 const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
 
-pub(crate) struct Ui {
+pub struct Ui {
     cursive: CursiveRunner<CursiveRunnable>,
     monitor_rx: Receiver<MonitorMessage>,
     io_rx: Receiver<IoMessage>,
@@ -27,7 +27,7 @@ pub(crate) struct Ui {
 }
 
 impl Ui {
-    pub(crate) fn new(
+    pub fn new(
         monitor_rx: Receiver<MonitorMessage>,
         io_rx: Receiver<IoMessage>,
         debug_tx: &Sender<DebugMessage>,
@@ -43,7 +43,7 @@ impl Ui {
         }
     }
 
-    pub(crate) fn run(&mut self) {
+    pub fn run(&mut self) {
         while self.step() {}
     }
 

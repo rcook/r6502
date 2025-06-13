@@ -8,22 +8,22 @@ use serde::{Deserialize, Deserializer};
 use std::sync::mpsc::Sender;
 
 #[derive(Clone, Debug, Deserialize)]
-pub(crate) struct BusDevice {
+pub struct BusDevice {
     #[serde(rename = "type")]
-    pub(crate) r#type: BusDeviceType,
+    pub r#type: BusDeviceType,
 
     #[serde(
         rename = "addressRange",
         deserialize_with = "deserialize_address_range"
     )]
-    pub(crate) address_range: AddressRange,
+    pub address_range: AddressRange,
 
     #[serde(rename = "offset", deserialize_with = "deserialize_word")]
-    pub(crate) offset: u16,
+    pub offset: u16,
 }
 
 impl BusDevice {
-    pub(crate) fn create_device_mapping(
+    pub fn create_device_mapping(
         &self,
         bus_tx: &Sender<BusEvent>,
         images: &[&Image],

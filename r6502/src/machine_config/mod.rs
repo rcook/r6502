@@ -4,4 +4,4 @@ mod machine;
 mod machine_info;
 mod machines;
 
-pub(crate) use machine_info::MachineInfo;
+pub use machine_info::MachineInfo;

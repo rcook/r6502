@@ -1,6 +1,6 @@
 use r6502lib::emulator::AddressRange;
 
-pub(crate) enum DebugMessage {
+pub enum DebugMessage {
     Step,
     Run,
     Break,

@@ -3,7 +3,7 @@ use serde::de::{Error as SerdeError, SeqAccess, Visitor};
 use std::fmt::{Formatter, Result as FmtResult};
 use std::result::Result as StdResult;
 
-pub(crate) struct CycleVisitor;
+pub struct CycleVisitor;
 
 impl<'de> Visitor<'de> for CycleVisitor {
     type Value = Cycle;

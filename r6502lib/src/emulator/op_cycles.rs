@@ -1,1 +1,1 @@
-pub(crate) type OpCycles = u8;
+pub type OpCycles = u8;

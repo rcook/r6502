@@ -4,9 +4,9 @@ use anyhow::{anyhow, Result};
 
 #[derive(Clone, Debug)]
 pub struct InstructionInfo {
-    pub(crate) pc: u16,
-    pub(crate) opcode: Opcode,
-    pub(crate) operand: Operand,
+    pub pc: u16,
+    pub opcode: Opcode,
+    pub operand: Operand,
 }
 
 impl InstructionInfo {
@@ -16,7 +16,7 @@ impl InstructionInfo {
         InstructionInfo::from_instruction(&instruction)
     }
 
-    pub(crate) const fn from_instruction(instruction: &Instruction) -> Self {
+    pub const fn from_instruction(instruction: &Instruction) -> Self {
         match &instruction.binding {
             Binding::NoOperand(_) => Self {
                 pc: instruction.pc,

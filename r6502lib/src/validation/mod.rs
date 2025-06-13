@@ -28,5 +28,5 @@ pub use scenario_filter::ScenarioFilter;
 pub use scenario_loader::ScenarioLoader;
 pub use state::State;
 
-pub(crate) use address_value_visitor::AddressValueVisitor;
-pub(crate) use cycle_visitor::CycleVisitor;
+pub use address_value_visitor::AddressValueVisitor;
+pub use cycle_visitor::CycleVisitor;

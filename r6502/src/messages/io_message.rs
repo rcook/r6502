@@ -1,3 +1,3 @@
-pub(crate) enum IoMessage {
+pub enum IoMessage {
     WriteChar(char),
 }

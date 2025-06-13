@@ -3,7 +3,7 @@ use r6502lib::emulator::AddressRange;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum Command {
+pub enum Command {
     FetchMemory(AddressRange),
     SetPc(u16),
     Go(u16),

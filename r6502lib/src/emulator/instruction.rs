@@ -1,14 +1,14 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{Binding, Cpu, Op, OpCycles, Opcode, MOS_6502};
 
-pub(crate) struct Instruction {
-    pub(crate) pc: u16,
-    pub(crate) opcode: Opcode,
-    pub(crate) binding: Binding,
+pub struct Instruction {
+    pub pc: u16,
+    pub opcode: Opcode,
+    pub binding: Binding,
 }
 
 impl Instruction {
-    pub(crate) fn fetch(cpu: &Cpu) -> Self {
+    pub fn fetch(cpu: &Cpu) -> Self {
         let value = cpu.bus.load(cpu.reg.pc);
         match Opcode::from_u8(value) {
             Some(opcode) => match MOS_6502.get_op_info(&opcode) {
@@ -44,7 +44,7 @@ impl Instruction {
         }
     }
 
-    pub(crate) fn execute(&self, cpu: &mut Cpu) -> OpCycles {
+    pub fn execute(&self, cpu: &mut Cpu) -> OpCycles {
         match &self.binding {
             Binding::NoOperand(f) => {
                 cpu.reg.pc = cpu.reg.pc.wrapping_add(1);

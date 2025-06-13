@@ -1,3 +1,4 @@
+#[macro_export]
 macro_rules! absolute_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -10,8 +11,7 @@ macro_rules! absolute_wrapped {
     };
 }
 
-pub(crate) use absolute_wrapped;
-
+#[macro_export]
 macro_rules! absolute_x_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -24,8 +24,7 @@ macro_rules! absolute_x_wrapped {
     };
 }
 
-pub(crate) use absolute_x_wrapped;
-
+#[macro_export]
 macro_rules! absolute_y_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -38,8 +37,7 @@ macro_rules! absolute_y_wrapped {
     };
 }
 
-pub(crate) use absolute_y_wrapped;
-
+#[macro_export]
 macro_rules! accumulator_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -52,8 +50,7 @@ macro_rules! accumulator_wrapped {
     };
 }
 
-pub(crate) use accumulator_wrapped;
-
+#[macro_export]
 macro_rules! immediate_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -66,8 +63,7 @@ macro_rules! immediate_wrapped {
     };
 }
 
-pub(crate) use immediate_wrapped;
-
+#[macro_export]
 macro_rules! implied_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -80,8 +76,7 @@ macro_rules! implied_wrapped {
     };
 }
 
-pub(crate) use implied_wrapped;
-
+#[macro_export]
 macro_rules! indexed_indirect_x_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -94,8 +89,7 @@ macro_rules! indexed_indirect_x_wrapped {
     };
 }
 
-pub(crate) use indexed_indirect_x_wrapped;
-
+#[macro_export]
 macro_rules! indirect_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -108,8 +102,7 @@ macro_rules! indirect_wrapped {
     };
 }
 
-pub(crate) use indirect_wrapped;
-
+#[macro_export]
 macro_rules! indirect_indexed_y_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -122,8 +115,7 @@ macro_rules! indirect_indexed_y_wrapped {
     };
 }
 
-pub(crate) use indirect_indexed_y_wrapped;
-
+#[macro_export]
 macro_rules! relative_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -136,8 +128,7 @@ macro_rules! relative_wrapped {
     };
 }
 
-pub(crate) use relative_wrapped;
-
+#[macro_export]
 macro_rules! zero_page_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -150,8 +141,7 @@ macro_rules! zero_page_wrapped {
     };
 }
 
-pub(crate) use zero_page_wrapped;
-
+#[macro_export]
 macro_rules! zero_page_x_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -164,8 +154,7 @@ macro_rules! zero_page_x_wrapped {
     };
 }
 
-pub(crate) use zero_page_x_wrapped;
-
+#[macro_export]
 macro_rules! zero_page_y_wrapped {
     ($opcode: ident, $f: ident) => {
         $crate::emulator::OpInfo::new(
@@ -177,5 +166,3 @@ macro_rules! zero_page_y_wrapped {
         )
     };
 }
-
-pub(crate) use zero_page_y_wrapped;
