@@ -4,6 +4,7 @@
 .segment "HEADER"
 .byte $65
 .byte $02
+.byte "ACRN"
 .addr $8000
 .addr RESET
 

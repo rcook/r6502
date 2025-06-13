@@ -1,3 +1,4 @@
+use crate::MachineTag;
 use anyhow::Result;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
@@ -24,5 +25,20 @@ where
     match Option::<String>::deserialize(deserializer)? {
         Some(s) => Ok(Some(parse_word(&s).map_err(SerdeError::custom)?)),
         None => Ok(None),
+    }
+}
+
+pub fn deserialize_machine_tag<'de, D>(deserializer: D) -> StdResult<MachineTag, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    let bytes = s.bytes().collect::<Vec<_>>();
+    if bytes.len() == 4 {
+        let mut tag = [0x00; 4];
+        tag.copy_from_slice(&bytes);
+        Ok(tag)
+    } else {
+        Err(SerdeError::custom("invalid tag"))
     }
 }

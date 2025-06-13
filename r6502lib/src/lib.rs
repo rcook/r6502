@@ -34,6 +34,7 @@ mod image_slice;
 mod instruction;
 mod instruction_info;
 mod instruction_set;
+mod machine_tag;
 mod machine_type;
 mod monitor;
 mod no_operand_op;
@@ -68,6 +69,7 @@ pub use image_format::ImageFormat;
 pub use image_slice::ImageSlice;
 pub use instruction_info::InstructionInfo;
 pub use instruction_set::{InstructionSet, MOS_6502};
+pub use machine_tag::MachineTag;
 pub use machine_type::MachineType;
 pub use monitor::{DummyMonitor, Monitor, TracingMonitor};
 pub use no_operand_op::NoOperandOp;
@@ -86,8 +88,8 @@ pub use word_op::WordOp;
 pub(crate) use addressing_mode::AddressingMode;
 pub(crate) use binding::Binding;
 pub(crate) use constants::{
-    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, R6502_DUMP_MAGIC_NUMBERS, R6502_MAGIC_NUMBER_1,
-    R6502_MAGIC_NUMBER_2, SIM6502_MAGIC_NUMBER,
+    DEFAULT_LOAD, DEFAULT_SP, DEFAULT_START, NMI, R6502_DUMP_MAGIC_NUMBERS, R6502_MAGIC_NUMBER,
+    SIM6502_MAGIC_NUMBER,
 };
 #[allow(unused)]
 pub(crate) use frequency::Frequency;

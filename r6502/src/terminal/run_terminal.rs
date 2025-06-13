@@ -8,13 +8,18 @@ use r6502lib::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
 use simple_logging::log_to_file;
 use std::env::current_dir;
 use std::process::exit;
+use std::str::from_utf8;
 use std::sync::mpsc::TryRecvError;
 
 pub(crate) fn run_terminal(opts: &RunOptions) -> Result<()> {
     log_to_file("r6502.log", LevelFilter::Info)?;
 
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let machine_info = MachineInfo::load(&opts.machine)?;
+    let machine_info = match image.tag {
+        Some(tag) => MachineInfo::find_by_tag(tag)?,
+        None => MachineInfo::find_by_name(&opts.machine)?,
+    };
+
     let (bus, bus_rx) = machine_info.create_bus(&image)?;
     bus.start();
 
@@ -111,6 +116,19 @@ fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
         label = "Format",
         format = image.format
     );
+
+    match image.tag {
+        Some(tag) => {
+            println!(
+                "  {label:<25}: {tag}",
+                label = "Format",
+                tag = from_utf8(&tag).expect("Must be valid UTF-8")
+            );
+        }
+        None => {
+            println!("  {label:<25}: (unspecified)", label = "Machine tag",);
+        }
+    }
 
     println!(
         "  {label:<25}: ${load:04X}",

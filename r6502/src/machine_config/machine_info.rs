@@ -3,7 +3,7 @@ use crate::machine_config::machines::Machines;
 use anyhow::{anyhow, bail, Result};
 use dirs::config_dir;
 use path_absolutize::Absolutize;
-use r6502lib::{Bus, BusEvent, Image};
+use r6502lib::{Bus, BusEvent, Image, MachineTag};
 use std::env::current_exe;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
@@ -15,27 +15,28 @@ pub(crate) struct MachineInfo {
 }
 
 impl MachineInfo {
-    pub(crate) fn load(machine: &Option<String>) -> Result<Self> {
-        let bin_path = current_exe()?;
-        let config_dir = Self::get_config_dir(&bin_path)?;
-
-        let config_path = config_dir.join("machines.json");
-
-        if !config_path.is_file() {
-            bail!(
-                "Could not find configuration file at {}",
-                config_path.display()
-            )
-        }
-
-        let machines = Machines::read(&config_path)?;
-
-        let machine_name = machine.as_ref().unwrap_or(&machines.default_machine);
-
+    pub(crate) fn find_by_tag(tag: MachineTag) -> Result<Self> {
+        let (machines, config_dir) = Self::read_machines()?;
         let machine = machines
             .machines
             .iter()
-            .find(|m| m.name == *machine_name)
+            .find(|m| m.tag == tag)
+            .ok_or_else(|| anyhow!("No such machine"))?
+            .clone();
+
+        Ok(Self {
+            config_dir,
+            machine,
+        })
+    }
+
+    pub(crate) fn find_by_name(name: &Option<String>) -> Result<Self> {
+        let (machines, config_dir) = Self::read_machines()?;
+        let name = name.as_ref().unwrap_or(&machines.default_machine);
+        let machine = machines
+            .machines
+            .iter()
+            .find(|m| m.name == *name)
             .ok_or_else(|| anyhow!("No such machine"))?
             .clone();
 
@@ -98,5 +99,19 @@ impl MachineInfo {
             .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p1.display()))?;
 
         Ok(p2.join("config"))
+    }
+
+    fn read_machines() -> Result<(Machines, PathBuf)> {
+        let bin_path = current_exe()?;
+        let config_dir = Self::get_config_dir(&bin_path)?;
+        let config_path = config_dir.join("machines.json");
+        if !config_path.is_file() {
+            bail!(
+                "Could not find configuration file at {}",
+                config_path.display()
+            )
+        }
+
+        Ok((Machines::read(&config_path)?, config_dir))
     }
 }

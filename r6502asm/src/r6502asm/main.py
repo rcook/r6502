@@ -13,6 +13,7 @@ import shutil
 
 ORG_REGEX = re.compile("^\\s*\\.org\\s+(?P<addr>\\$?.+)\\s*$")
 MAGIC_NUMBER = 0x6502
+MACHINE_TAG: bytes = "ACRN".encode("ascii", "strict")
 ORIGIN_SYMBOL: str = "origin"
 START_SYMBOL: str = "start"
 
@@ -165,7 +166,9 @@ def assemble(asm_path: Path, output_path: Path | None) -> None:
                 source_location=None)
 
         with output_paths.image_path.open("wb") as image_f:
-            _ = image_f.write(MAGIC_NUMBER.to_bytes(2, byteorder="little"))
+            # Deliberately encode in big-endian so it appears as "65 02" in hexdump...
+            _ = image_f.write(MAGIC_NUMBER.to_bytes(2, byteorder="big"))
+            _ = image_f.write(MACHINE_TAG)
             _ = image_f.write(origin.to_bytes(2, byteorder="little"))
             _ = image_f.write(start.to_bytes(2, byteorder="little"))
             with temp_bin_path.open("rb") as other_f:

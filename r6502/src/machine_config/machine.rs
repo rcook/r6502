@@ -1,5 +1,6 @@
 use crate::machine_config::bus_device::BusDevice;
-use r6502lib::deserialization::deserialize_word_opt;
+use r6502lib::deserialization::{deserialize_machine_tag, deserialize_word_opt};
+use r6502lib::MachineTag;
 use serde::Deserialize;
 use std::path::PathBuf;
 
@@ -7,6 +8,9 @@ use std::path::PathBuf;
 pub(crate) struct Machine {
     #[serde(rename = "name")]
     pub(crate) name: String,
+
+    #[serde(rename = "tag", deserialize_with = "deserialize_machine_tag")]
+    pub(crate) tag: MachineTag,
 
     #[serde(rename = "baseImage")]
     pub(crate) base_image_path: Option<PathBuf>,

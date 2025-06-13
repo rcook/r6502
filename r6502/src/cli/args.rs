@@ -53,7 +53,11 @@ pub(crate) struct RunOptions {
     #[arg(help = "Stop after given number of cycles", long = "stop-after")]
     pub(crate) stop_after: Option<u32>,
 
-    #[arg(help = "Machine", long = "machine", short = 'm')]
+    #[arg(
+        help = "Machine hint if machine tag not in image header",
+        long = "machine",
+        short = 'm'
+    )]
     pub(crate) machine: Option<String>,
 }
 

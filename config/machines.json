@@ -3,6 +3,7 @@
     "machines": [
         {
             "name": "AllRam",
+            "tag": "ALLR",
             "busDevices": [
                 {
                     "type": "ram",
@@ -13,6 +14,7 @@
         },
         {
             "name": "Custom",
+            "tag": "CUST",
             "busDevices": [
                 {
                     "type": "ram",
@@ -33,6 +35,7 @@
         },
         {
             "name": "Acorn",
+            "tag": "ACRN",
             "baseImage": "acorn.r6502",
             "haltAddress": "$FFC0",
             "writeCharAddress": "$FFEE",
@@ -51,6 +54,7 @@
         },
         {
             "name": "Apple1",
+            "tag": "APL1",
             "busDevices": [
                 {
                     "type": "ram",

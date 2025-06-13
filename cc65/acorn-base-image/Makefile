@@ -19,4 +19,4 @@ copy: $(PROGRAM)
 	cp $(PROGRAM) ../../config/$(PROGRAM)
 
 run: copy
-	cargo run -p r6502 run ../../examples/hello-world.r6502 -m Acorn
+	cargo run -p r6502 run ../../examples/hello-world.r6502
