@@ -12,6 +12,7 @@ pub const fn split_word(value: u16) -> (u8, u8) {
     (hi, lo)
 }
 
+#[must_use]
 pub const fn crosses_page_boundary(addr: u16) -> bool {
     (addr & 0x00ff) == 0x00ff
 }

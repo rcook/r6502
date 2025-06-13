@@ -7,6 +7,7 @@ pub struct UiMonitor {
 }
 
 impl UiMonitor {
+    #[must_use]
     pub const fn new(monitor_tx: Sender<MonitorMessage>) -> Self {
         Self { monitor_tx }
     }

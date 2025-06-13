@@ -16,6 +16,7 @@ impl OpInfo {
         })
     }
 
+    #[must_use]
     pub const fn new(opcode: Opcode, addressing_mode: AddressingMode, op: Op) -> Self {
         Self {
             opcode,
@@ -28,10 +29,12 @@ impl OpInfo {
         self.op.execute_no_operand(cpu)
     }
 
+    #[must_use]
     pub const fn opcode(&self) -> Opcode {
         self.opcode
     }
 
+    #[must_use]
     pub const fn op(&self) -> &Op {
         &self.op
     }

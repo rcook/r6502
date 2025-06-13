@@ -355,14 +355,14 @@ mod tests {
 
     #[test]
     fn add8() -> Result<()> {
-        let image = r#" 0E00  00                                               |.               |
+        let image = r" 0E00  00                                               |.               |
  0E01  18        CLC  
  0E02  AD 0C 0E  LDA  $0E0C
  0E05  6D 0D 0E  ADC  $0E0D
  0E08  8D 00 0E  STA  $0E00
  0E0B  00        BRK  
  0E0C  12 34                                            |.4              |
-"#
+"
         .parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let bus = Bus::default_with_image(&image)?;
@@ -377,7 +377,7 @@ mod tests {
 
     #[test]
     fn add16() -> Result<()> {
-        let image = r#" 0E00  00 00                                            |..              |
+        let image = r" 0E00  00 00                                            |..              |
  0E02  18        CLC  
  0E03  AD 16 0E  LDA  $0E16
  0E06  6D 18 0E  ADC  $0E18
@@ -386,7 +386,7 @@ mod tests {
  0E0F  6D 19 0E  ADC  $0E19
  0E12  8D 01 0E  STA  $0E01
  0E15  00        BRK  
- 0E16  12 34 56 78                                      |.4Vx            |"#
+ 0E16  12 34 56 78                                      |.4Vx            |"
             .parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let bus = Bus::default_with_image(&image)?;
@@ -406,7 +406,7 @@ mod tests {
         const NUM1: u16 = 0x0e33;
         const REM: u16 = 0x0e37;
 
-        let image = r#" 0E00  A9 00     LDA  #$00
+        let image = r" 0E00  A9 00     LDA  #$00
  0E02  8D 37 0E  STA  $0E37
  0E05  8D 38 0E  STA  $0E38
  0E08  A2 10     LDX  #$10
@@ -428,7 +428,7 @@ mod tests {
  0E30  D0 D8     BNE  $0E0A
  0E32  60        RTS  
  0E33  34 12 0A 00 00 00                                |4.....          |
-"#
+"
         .parse::<Image>()?;
         assert_eq!(0x0e00, image.load);
         let bus = Bus::default_with_image(&image)?;
