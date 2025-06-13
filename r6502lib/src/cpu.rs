@@ -274,11 +274,76 @@ mod tests {
         assert_eq!(Some(JUMP_ADDR), get_brk_addr(&cpu));
     }
 
+    const TEST_PROGRAM_0: &str = r" 0E00  A2 00     LDX  #$00
+ 0E02  BD 10 0E  LDA  $0E10, X
+ 0E05  F0 06     BEQ  $0E0D
+ 0E07  20 EE FF  JSR  $FFEE
+ 0E0A  E8        INX  
+ 0E0B  D0 F5     BNE  $0E02
+ 0E0D  4C C0 FF  JMP  $FFC0
+ 0E10  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
+";
+    const TEST_PROGRAM_1: &str = r" 2000  A2 00     LDX  #$00
+ 2002  BD 11 20  LDA  $2011, X
+ 2005  C9 00     CMP  #$00
+ 2007  F0 07     BEQ  $2010
+ 2009  20 EE FF  JSR  $FFEE
+ 200C  E8        INX  
+ 200D  4C 02 20  JMP  $2002
+ 2010  60        RTS  
+ 2011  48 65 6C 6C 6F 2C 20 77 6F 72 6C 64 0D 0A 00     |Hello, world... |
+";
+    const TEST_PROGRAM_2: &str = r" 2000  A2 00     LDX  #$00
+ 2002  BD 0F 20  LDA  $200F, X
+ 2005  F0 07     BEQ  $200E
+ 2007  20 EE FF  JSR  $FFEE
+ 200A  E8        INX  
+ 200B  4C 02 20  JMP  $2002
+ 200E  60        RTS  
+ 200F  48 65 6C 6C 6F 2C 20 77 6F 72 6C 64 0D 0A 00     |Hello, world... |
+";
+    const TEST_PROGRAM_3: &str = r" 0E00  A9 4D     LDA  #$4D
+ 0E02  85 80     STA  $80
+ 0E04  A9 0E     LDA  #$0E
+ 0E06  85 81     STA  $81
+ 0E08  20 0C 0E  JSR  $0E0C
+ 0E0B  60        RTS  
+ 0E0C  A0 00     LDY  #$00
+ 0E0E  B1 80     LDA  ($80), Y
+ 0E10  AA        TAX  
+ 0E11  E0 00     CPX  #$00
+ 0E13  F0 15     BEQ  $0E2A
+ 0E15  C8        INY  
+ 0E16  B1 80     LDA  ($80), Y
+ 0E18  85 82     STA  $82
+ 0E1A  C8        INY  
+ 0E1B  B1 80     LDA  ($80), Y
+ 0E1D  85 83     STA  $83
+ 0E1F  98        TYA  
+ 0E20  48        PHA  
+ 0E21  20 2B 0E  JSR  $0E2B
+ 0E24  68        PLA  
+ 0E25  A8        TAY  
+ 0E26  CA        DEX  
+ 0E27  4C 11 0E  JMP  $0E11
+ 0E2A  60        RTS  
+ 0E2B  A0 00     LDY  #$00
+ 0E2D  B1 82     LDA  ($82), Y
+ 0E2F  C9 00     CMP  #$00
+ 0E31  F0 07     BEQ  $0E3A
+ 0E33  20 EE FF  JSR  $FFEE
+ 0E36  C8        INY  
+ 0E37  4C 2D 0E  JMP  $0E2D
+ 0E3A  60        RTS  
+ 0E3B  53 74 72 69 6E 67 30 0A 00 53 74 72 69 6E 67 31  |String0..String1|
+ 0E4B  0A 00 02 3B 0E 44 0E                             |...;.D.         |
+";
+
     #[rstest]
-    #[case("HELLO, WORLD!", include_str!("../../examples/hello-world.r6502.txt"))]
-    #[case("Hello, world\r\n", include_str!("../../examples/test.r6502.txt"))]
-    #[case("Hello, world\r\n", include_str!("../../examples/test-optimized.r6502.txt"))]
-    #[case("String0\nString1\n", include_str!("../../examples/strings.r6502.txt"))]
+    #[case("HELLO, WORLD!", TEST_PROGRAM_0)]
+    #[case("Hello, world\r\n", TEST_PROGRAM_1)]
+    #[case("Hello, world\r\n", TEST_PROGRAM_2)]
+    #[case("String0\nString1\n", TEST_PROGRAM_3)]
     fn stdout(#[case] expected_stdout: &str, #[case] input: &str) -> Result<()> {
         #[cfg(feature = "not-implemented")]
         const TRACE: bool = true;
@@ -370,7 +435,7 @@ mod tests {
             while cpu.step() {}
 
             match get_brk_addr(&cpu) {
-                Some(0xffc0) => break, // Hack!
+                Some(0xffc0) => break,
                 Some(addr) if addr == RETURN_ADDR => break,
                 Some(0xffee) => {
                     result.push(cpu.reg.a as char);
