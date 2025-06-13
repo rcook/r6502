@@ -1,6 +1,6 @@
-EXIT            = $ffc0
-PRINT_STRS_ARG  = $80
-PRINT_STR_ARG   = $82
+EXIT = $FFC0
+PRINT_STRS_ARG = $80
+PRINT_STR_ARG = $82
 
 .segment "EXEHDR"
 .export __EXEHDR__

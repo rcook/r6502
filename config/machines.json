@@ -55,6 +55,7 @@
         {
             "name": "Apple1",
             "tag": "APL1",
+            "haltAddress": "$FFC0",
             "busDevices": [
                 {
                     "type": "ram",

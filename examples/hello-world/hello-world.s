@@ -1,5 +1,5 @@
-EXIT = $ffc0
-OSWRCH = $ffee
+EXIT = $FFC0
+OSWRCH = $FFEE
 
 .segment "HEADER"
 .byte $65

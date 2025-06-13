@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := sim65
+BINEXT := r6502
 PROGRAM := strings.$(BINEXT)
 default: $(PROGRAM)
 
@@ -22,4 +22,4 @@ clean:
 
 run: $(PROGRAM)
 	@#sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
-	cargo run -- run $(PROGRAM) -m Acorn
+	cargo run -- run $(PROGRAM)

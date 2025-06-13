@@ -1,20 +1,18 @@
-EXIT            = $ffc0
-PRINT_STRS_ARG  = $80
-PRINT_STR_ARG   = $82
+EXIT = $FFC0
+DSP = $D012
+PRINT_STRS_ARG = $80
+PRINT_STR_ARG = $82
 
-.segment "EXEHDR"
-.export __EXEHDR__
-__EXEHDR__:
-.byte   "sim65"	; magic number
-.byte   2	; simulator version: 2 = current
-.byte   0	; CPU version: 0 = 6502, 1 = 65c02
-.byte   $FF	; initial SP
-.addr   $0000   ; load address
-.addr   _main   ; start address (these are the same if _main is first in STARTUP)
+.segment "HEADER"
+.byte $65
+.byte $02
+.byte "APL1"
+.addr $8000
+.addr _main
 
-.segment "STARTUP"
+.code
 .export _main
-.org $0E00
+.org $C000
 _main:
 start:
     lda #<array
@@ -52,25 +50,23 @@ print_str_loop:
     lda (PRINT_STR_ARG), y
     cmp #$00
     beq print_str_end
-    jsr OSWRCH
+    jsr write_char
     iny
     jmp print_str_loop
 print_str_end:
     rts
 str0:
-    .byte "string0", 10, 0
+    .byte "string0", 13, 0
 str1:
-    .byte "string1", 10, 0
+    .byte "string1", 13, 0
 array:
     .byte 2
     .word str0, str1
 
-.segment "OSWRCH"
-.org $FFEE
-OSWRCH:
+write_char:
     ora #$80            ; Set high bit
-oswrch_loop:
-    bit $fc02
-    bmi oswrch_loop
-    sta $fc02
+write_char_loop:
+    bit DSP
+    bmi write_char_loop
+    sta DSP
     rts
