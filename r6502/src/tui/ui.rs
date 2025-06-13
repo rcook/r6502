@@ -5,7 +5,7 @@ use cursive::event::Key;
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
-use r6502lib::SymbolInfo;
+use r6502lib::emulator::SymbolInfo;
 use std::sync::mpsc::{Receiver, Sender};
 
 const RIGHT_NAME: &str = "right";

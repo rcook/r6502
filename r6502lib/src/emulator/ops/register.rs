@@ -1,0 +1,127 @@
+use crate::emulator::ops::helper::set_flags_on_value;
+use crate::emulator::Cpu;
+
+// http://www.6502.org/tutorials/6502opcodes.html#DEX
+// http://www.6502.org/users/obelisk/6502/reference.html#DEX
+pub(crate) fn dex(cpu: &mut Cpu) {
+    let value = cpu.reg.x.wrapping_sub(1);
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#DEY
+// http://www.6502.org/users/obelisk/6502/reference.html#DEY
+pub(crate) fn dey(cpu: &mut Cpu) {
+    let value = cpu.reg.y.wrapping_sub(1);
+    cpu.reg.y = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#INX
+// http://www.6502.org/users/obelisk/6502/reference.html#INX
+pub(crate) fn inx(cpu: &mut Cpu) {
+    let value = cpu.reg.x.wrapping_add(1);
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#INY
+// http://www.6502.org/users/obelisk/6502/reference.html#INY
+pub(crate) fn iny(cpu: &mut Cpu) {
+    let value = cpu.reg.y.wrapping_add(1);
+    cpu.reg.y = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TAX
+// http://www.6502.org/users/obelisk/6502/reference.html#TAX
+pub(crate) fn tax(cpu: &mut Cpu) {
+    let value = cpu.reg.a;
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TAY
+// http://www.6502.org/users/obelisk/6502/reference.html#TAY
+pub(crate) fn tay(cpu: &mut Cpu) {
+    let value = cpu.reg.a;
+    cpu.reg.y = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TSX
+// http://www.6502.org/users/obelisk/6502/reference.html#TSX
+pub(crate) fn tsx(cpu: &mut Cpu) {
+    let value = cpu.reg.sp;
+    cpu.reg.x = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TXA
+// http://www.6502.org/users/obelisk/6502/reference.html#TXA
+pub(crate) fn txa(cpu: &mut Cpu) {
+    let value = cpu.reg.x;
+    cpu.reg.a = value;
+    set_flags_on_value(cpu, value);
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TXS
+// http://www.6502.org/users/obelisk/6502/reference.html#TXS
+pub(crate) fn txs(cpu: &mut Cpu) {
+    let value = cpu.reg.x;
+    cpu.reg.sp = value;
+}
+
+// http://www.6502.org/tutorials/6502opcodes.html#TYA
+// http://www.6502.org/users/obelisk/6502/reference.html#TYA
+pub(crate) fn tya(cpu: &mut Cpu) {
+    let value = cpu.reg.y;
+    cpu.reg.a = value;
+    set_flags_on_value(cpu, value);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::emulator::ops::register::{tax, tay, txa, tya};
+    use crate::emulator::{Bus, Cpu};
+
+    #[test]
+    fn tax_basics() {
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
+        cpu.reg.a = 0x22;
+        cpu.reg.x = 0x00;
+        tax(&mut cpu);
+        assert_eq!(0x22, cpu.reg.x);
+    }
+
+    #[test]
+    fn tay_basics() {
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
+        cpu.reg.a = 0x22;
+        cpu.reg.y = 0x00;
+        tay(&mut cpu);
+        assert_eq!(0x22, cpu.reg.y);
+    }
+
+    #[test]
+    fn txa_basics() {
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
+        cpu.reg.a = 0x00;
+        cpu.reg.x = 0x22;
+        txa(&mut cpu);
+        assert_eq!(0x22, cpu.reg.a);
+    }
+
+    #[test]
+    fn tya_basics() {
+        let bus = Bus::default();
+        let mut cpu = Cpu::new(bus.view(), None);
+        cpu.reg.a = 0x00;
+        cpu.reg.y = 0x22;
+        tya(&mut cpu);
+        assert_eq!(0x22, cpu.reg.a);
+    }
+}

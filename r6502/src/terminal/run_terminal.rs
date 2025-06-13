@@ -3,7 +3,7 @@ use crate::machine_config::MachineInfo;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use log::LevelFilter;
-use r6502lib::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
+use r6502lib::emulator::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
 use simple_logging::log_to_file;
 use std::env::current_dir;
 use std::process::exit;

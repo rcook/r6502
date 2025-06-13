@@ -1,6 +1,6 @@
 use crate::machine_config::bus_device_type::BusDeviceType;
-use r6502lib::deserialization::deserialize_word;
-use r6502lib::{
+use r6502lib::emulator::deserialization::deserialize_word;
+use r6502lib::emulator::{
     AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, Pia, Ram, Rom,
 };
 use serde::de::Error as SerdeError;

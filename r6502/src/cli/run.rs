@@ -4,8 +4,8 @@ use crate::terminal::run_terminal;
 use crate::tui::run_gui;
 use anyhow::Result;
 use clap::Parser;
+use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
 use r6502lib::validation::Scenario;
-use r6502lib::{run_scenario, run_scenarios_with_filter};
 
 pub(crate) fn run() -> Result<()> {
     match Args::parse().command {

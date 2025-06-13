@@ -1,6 +1,6 @@
 use crate::machine_config::bus_device::BusDevice;
-use r6502lib::deserialization::{deserialize_machine_tag, deserialize_word_opt};
-use r6502lib::MachineTag;
+use r6502lib::emulator::deserialization::{deserialize_machine_tag, deserialize_word_opt};
+use r6502lib::emulator::MachineTag;
 use serde::Deserialize;
 use std::path::PathBuf;
 
