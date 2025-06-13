@@ -2,7 +2,7 @@
 .SUFFIXES:
 BINEXT := r6502
 PROGRAM := acorn.$(BINEXT)
-default: $(PROGRAM)
+default: copy
 
 .PHONY: clean copy default run
 
