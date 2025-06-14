@@ -79,20 +79,28 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
 
     bus.stop();
 
-    if opts.cycles {
-        if stopped_after_requested_cycles {
-            println!("Stopped after {} cycles", cpu.total_cycles);
-        } else {
-            println!("Completed after {} total cycles", cpu.total_cycles);
-        }
-    }
-
     // If program hits BRK return contents of A as exit code, otherwise 0.
-    exit(if stopped_after_requested_cycles {
+    let code = if stopped_after_requested_cycles {
         0
     } else {
         cpu.reg.a as i32
-    })
+    };
+
+    if opts.cycles {
+        if stopped_after_requested_cycles {
+            println!(
+                "Stopped after {cycles} cycles with exit code {code}",
+                cycles = cpu.total_cycles
+            );
+        } else {
+            println!(
+                "Completed after {cycles} total cycles with exit code {code}",
+                cycles = cpu.total_cycles
+            );
+        }
+    }
+
+    exit(code)
 }
 
 fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
