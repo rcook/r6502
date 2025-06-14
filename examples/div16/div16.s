@@ -1,17 +1,22 @@
-        .segment "EXEHDR"
-        .export __EXEHDR__
-__EXEHDR__:
-        .byte   "sim65"	; magic number
-        .byte   2	; simulator version: 2 = current
-        .byte   0	; CPU version: 0 = 6502, 1 = 65c02
-        .byte   $FF	; initial SP
-        .addr   _main   ; load address
-        .addr   _main   ; start address (these are the same if _main is first in STARTUP)
+.import __DATA_LOAD__
+.segment "HEADER"
+.dbyt $6502
+.byte "ACRN"
+.addr __DATA_LOAD__
+.addr startup
 
-        .segment "STARTUP"
-        .export _main
-.org $1000
-_main:
+EXIT = $FFC0
+
+.code
+startup:
+    ldx #$ff
+    txs
+    cld
+    ;jsr copydata
+    jsr test_div16
+    jmp EXIT
+
+test_div16:
         ; Test 16-bit division
         ; Reference: https://www.llx.com/Neil/a2/mult.html
         ; WORD_REG_0 = $1235 (4661) (dividend)
@@ -29,13 +34,13 @@ check_quotient_lo:
         cmp     #$d2            ; Must be $d2
         beq     check_quotient_hi
         lda     #$01            ; Failure
-        jmp     exit
+        rts
 check_quotient_hi:
         lda     WORD_REG_0 + 1  ; Low high byte of quotient
         cmp     #$01            ; Must be $01
         beq     check_remainder_lo
         lda     #$02            ; Failure
-        jmp     exit
+        rts
 
         ; Remainder stored in WORD_REG_2
 check_remainder_lo:
@@ -43,17 +48,17 @@ check_remainder_lo:
         cmp     #$01            ; Must be $01
         beq     check_remainder_hi
         lda     #$03            ; Failure
-        jmp     exit
+        rts
 check_remainder_hi:
         lda     WORD_REG_2 + 1  ; Low high byte of remainder
         cmp     #$00            ; Must be $01
         beq     done
         lda     #$04            ; Failure
-        jmp     exit
+        rts
 
 done:
         lda     #$00            ; Success
-        jmp     exit
+        rts
 
 div16:
         lda     #0
@@ -80,10 +85,7 @@ l2:
         bne     l1
         rts
 
-        .segment "RODATA"
-        .export status
-status:
-        .byte   25
+.data
 WORD_REG_0:
         .word   $1235
 WORD_REG_1:
