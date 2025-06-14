@@ -1,24 +1,35 @@
-EXIT = $FFC0
-OSWRCH = $FFEE
-
+.import __DATA_LOAD__
 .segment "HEADER"
 .dbyt $6502
 .byte "ACRN"
-.addr $8000
-.addr main
+.addr __DATA_LOAD__
+.addr startup
+
+.feature string_escapes
+
+EXIT = $FFC0
+OSWRCH = $FFEE
 
 .code
-.org $c000
-main:
-    ldx #0
-loop:
-    lda hello, X
-    beq done
-    jsr OSWRCH
-    inx
-    bne loop
-done:
+startup:
+    ldx #$ff
+    txs
+    cld
+    jsr copydata
+    jsr hello_world
     jmp EXIT
 
-hello:
-    .byte "HELLO, WORLD!", 0
+hello_world:
+    ldx #$00
+hello_world_loop:
+    lda hello_world_string, X
+    beq hello_world_done
+    jsr OSWRCH
+    inx
+    bne hello_world_loop
+hello_world_done:
+    rts
+
+.data
+hello_world_string:
+    .asciiz "HELLO, WORLD!\n"

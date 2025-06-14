@@ -21,4 +21,4 @@ clean:
 	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 run: $(PROGRAM)
-	cargo run -- run $(PROGRAM)
+	cargo run -- run $(PROGRAM) --cycles
