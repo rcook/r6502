@@ -1,15 +1,22 @@
 .import __CODE_LOAD__
-
-EXIT = $FFC0
-
 .segment "HEADER"
 .dbyt $6502
 .byte "ACRN"
 .addr __CODE_LOAD__
-.addr main
+.addr startup
+
+EXIT = $FFC0
 
 .code
-main:
+startup:
+    ldx #$ff
+    txs
+    cld
+    jsr copydata
+    jsr test_add16
+    jmp EXIT
+
+test_add16:
     jsr add16
     lda result
     bcs failed
