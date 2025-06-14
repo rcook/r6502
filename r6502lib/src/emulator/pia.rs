@@ -109,11 +109,21 @@ impl Pia {
                 match event {
                     Event::Key(key) if key.is_press() => {
                         _ = event_tx.send(EventMessage::Key(key));
+
+                        // Halt program
                         if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('c')
                         {
                             _ = bus_tx.send(BusEvent::UserBreak);
                             break;
                         }
+
+                        // Reset
+                        if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('r')
+                        {
+                            _ = bus_tx.send(BusEvent::Reset);
+                        }
+
+                        // Save snapshot
                         if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('s')
                         {
                             _ = bus_tx.send(BusEvent::Snapshot);
@@ -157,11 +167,13 @@ impl Pia {
                 }
                 EventMessage::Key(key) => match (key.modifiers, key.code) {
                     (KeyModifiers::CONTROL, KeyCode::Char('c')) => break,
-                    (KeyModifiers::CONTROL, KeyCode::Char('s')) => {}
+                    (KeyModifiers::CONTROL, KeyCode::Char('r' | 's')) => {}
                     (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
                         state.lock().unwrap().set_key(c);
                     }
-                    (KeyModifiers::NONE, KeyCode::Delete) => state.lock().unwrap().set_key('_'),
+                    (KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => {
+                        state.lock().unwrap().set_key('_')
+                    }
                     (KeyModifiers::NONE, KeyCode::Enter) => {
                         state.lock().unwrap().set_key(0x0d as char);
                     }

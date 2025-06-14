@@ -29,6 +29,10 @@ impl OpInfo {
         self.op.execute_no_operand(cpu)
     }
 
+    pub fn execute_word(&self, cpu: &mut Cpu, value: u16) -> OpCycles {
+        self.op.execute_word(cpu, value)
+    }
+
     #[must_use]
     pub const fn opcode(&self) -> Opcode {
         self.opcode

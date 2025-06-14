@@ -1,4 +1,4 @@
-use crate::emulator::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502};
+use crate::emulator::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use anyhow::{anyhow, Result};
@@ -28,6 +28,11 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         show_image_info(opts, &image, start);
     }
 
+    let jmp_ind = MOS_6502
+        .get_op_info(&Opcode::JmpInd)
+        .ok_or_else(|| anyhow!("JMP_IND must exist"))?
+        .clone();
+
     let rts = MOS_6502
         .get_op_info(&Opcode::Rts)
         .ok_or_else(|| anyhow!("RTS must exist"))?
@@ -48,6 +53,9 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
             match bus_rx.try_recv() {
                 Ok(BusEvent::UserBreak) => {
                     break 'outer;
+                }
+                Ok(BusEvent::Reset) => {
+                    jmp_ind.execute_word(&mut cpu, RESET);
                 }
                 Ok(BusEvent::Snapshot) => {
                     write_snapshot(&cpu)?;

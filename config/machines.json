@@ -55,12 +55,17 @@
         {
             "name": "Apple1",
             "tag": "APL1",
-            "haltAddress": "$FFC0",
+            "haltAddress": "$D014",
             "busDevices": [
                 {
                     "type": "ram",
-                    "addressRange": "$0000:$D00F",
+                    "addressRange": "$0000:$8FFF",
                     "offset": "$0000"
+                },
+                {
+                    "type": "rom",
+                    "addressRange": "$9000:$D00A",
+                    "offset": "$9000"
                 },
                 {
                     "type": "pia",
@@ -68,9 +73,14 @@
                     "offset": "$D010"
                 },
                 {
-                    "type": "ram",
-                    "addressRange": "$D014:$FFFF",
+                    "type": "rom",
+                    "addressRange": "$D014:$D015",
                     "offset": "$D014"
+                },
+                {
+                    "type": "rom",
+                    "addressRange": "$D016:$FFFF",
+                    "offset": "$D016"
                 }
             ]
         }

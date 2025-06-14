@@ -1,4 +1,6 @@
-.segment "MONITOR"
+.export WOZMON
+
+.segment "WOZMON"
 
 ;  The WOZ Monitor for the Apple 1
 ;  Written by Steve Wozniak in 1976
@@ -24,10 +26,8 @@ KBDCR           = $D011         ;  PIA.A keyboard control register
 DSP             = $D012         ;  PIA.B display output register
 DSPCR           = $D013         ;  PIA.B display control register
 
-               .org $FF00
-               .export RESET
-
-RESET:          CLD             ; Clear decimal arithmetic mode.
+WOZMON:
+                CLD             ; Clear decimal arithmetic mode.
                 CLI
                 LDY #$7F        ; Mask for DSP data direction register.
                 STY DSP         ; Set it up.
@@ -154,9 +154,3 @@ ECHO:           BIT DSP         ; DA bit (B7) cleared yet?
 
                 BRK             ; unused
                 BRK             ; unused
-
-; Interrupt Vectors
-
-                .WORD $0F00     ; NMI
-                .WORD RESET     ; RESET
-                .WORD $0000     ; BRK/IRQ

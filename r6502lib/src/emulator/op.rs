@@ -14,4 +14,11 @@ impl Op {
             _ => unimplemented!("Cannot execute with no operand"),
         }
     }
+
+    pub fn execute_word(&self, cpu: &mut Cpu, value: u16) -> OpCycles {
+        match self {
+            Self::Word(op) => op.execute(cpu, value),
+            _ => unimplemented!("Cannot execute with no operand"),
+        }
+    }
 }
