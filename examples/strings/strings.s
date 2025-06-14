@@ -4,8 +4,7 @@ PRINT_STRS_ARG = $80
 PRINT_STR_ARG = $82
 
 .segment "HEADER"
-.byte $65
-.byte $02
+.dbyt $6502
 .byte "APL1"
 .addr $8000
 .addr _main

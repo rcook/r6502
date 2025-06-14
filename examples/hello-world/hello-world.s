@@ -2,8 +2,7 @@ EXIT = $FFC0
 OSWRCH = $FFEE
 
 .segment "HEADER"
-.byte $65
-.byte $02
+.dbyt $6502
 .byte "ACRN"
 .addr $8000
 .addr main
