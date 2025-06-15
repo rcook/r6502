@@ -1,11 +1,10 @@
-use crate::emulator::{BusDevice, BusEvent, PiaBehaviour};
+use crate::emulator::{BusDevice, BusEvent, InputQueueRef};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
 use std::cell::Cell;
 use std::io::{stdout, Write};
-use std::marker::PhantomData;
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
@@ -52,28 +51,28 @@ impl PiaState {
     }
 }
 
-pub struct Pia<B: PiaBehaviour> {
+pub struct Pia {
     input_tx: Sender<InputMessage>,
     event_tx: Sender<EventMessage>,
     state: Arc<Mutex<PiaState>>,
     input: Cell<Option<JoinHandle<()>>>,
     event: Cell<Option<JoinHandle<()>>>,
-    behaviour: PhantomData<B>,
 }
 
-impl<B: PiaBehaviour> Pia<B> {
+impl Pia {
     const PA_OFFSET: u16 = 0x0000;
     const PA_CR_OFFSET: u16 = 0x0001;
     const PB_OFFSET: u16 = 0x0002;
     const PB_CR_OFFSET: u16 = 0x0003;
 
     #[must_use]
-    pub fn new(bus_tx: Sender<BusEvent>) -> Self {
+    pub fn new(bus_tx: Sender<BusEvent>, input_queue: InputQueueRef) -> Self {
         let (input_tx, input_rx) = channel();
         let (event_tx, event_rx) = channel();
         let temp = event_tx.clone();
-        let input =
-            spawn(move || Self::input_loop(&input_rx, &temp, &bus_tx).expect("Must succeed"));
+        let input = spawn(move || {
+            Self::input_loop(input_queue, &input_rx, &temp, &bus_tx).expect("Must succeed")
+        });
 
         let state = Arc::new(Mutex::new(PiaState::new()));
         let temp = Arc::clone(&state);
@@ -85,16 +84,16 @@ impl<B: PiaBehaviour> Pia<B> {
             state,
             input: Cell::new(Some(input)),
             event: Cell::new(Some(event)),
-            behaviour: PhantomData,
         }
     }
 
     fn input_loop(
+        input_queue: InputQueueRef,
         input_rx: &Receiver<InputMessage>,
         event_tx: &Sender<EventMessage>,
         bus_tx: &Sender<BusEvent>,
     ) -> Result<()> {
-        B::enable_raw_mode();
+        input_queue.lock().unwrap().enable_raw_mode()?;
 
         loop {
             match input_rx.try_recv() {
@@ -102,7 +101,7 @@ impl<B: PiaBehaviour> Pia<B> {
                 Err(TryRecvError::Empty) => {}
             }
 
-            if let Some(event) = B::try_read_event()? {
+            if let Some(event) = input_queue.lock().unwrap().try_read_event()? {
                 match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         _ = event_tx.send(EventMessage::Key(key));
@@ -131,7 +130,7 @@ impl<B: PiaBehaviour> Pia<B> {
             }
         }
 
-        B::disable_raw_mode();
+        input_queue.lock().unwrap().disable_raw_mode()?;
 
         Ok(())
     }
@@ -194,7 +193,7 @@ impl<B: PiaBehaviour> Pia<B> {
     }
 }
 
-impl<B: PiaBehaviour> BusDevice for Pia<B> {
+impl BusDevice for Pia {
     fn start(&self) {
         self.state.lock().unwrap().started = true;
     }

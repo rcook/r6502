@@ -20,5 +20,4 @@ pub mod run_options;
 pub mod symbols;
 pub mod terminal;
 pub mod tui;
-pub mod ui_mode;
 pub mod validation;
