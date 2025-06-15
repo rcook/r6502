@@ -172,7 +172,7 @@ impl Pia {
                         state.lock().unwrap().set_key(c);
                     }
                     (KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => {
-                        state.lock().unwrap().set_key('_')
+                        state.lock().unwrap().set_key('_');
                     }
                     (KeyModifiers::NONE, KeyCode::Enter) => {
                         state.lock().unwrap().set_key(0x0d as char);
