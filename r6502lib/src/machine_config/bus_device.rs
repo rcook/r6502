@@ -1,10 +1,9 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
     AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, Pia, Ram, Rom,
-    TerminalPia,
+    TerminalPia, TuiPia,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
-use crate::machine_config::dummy_bus_device::DummyBusDevice;
 use crate::ui_mode::UiMode;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
@@ -39,7 +38,7 @@ impl BusDevice {
         let device: Box<dyn _BusDevice> = match self.r#type {
             BusDeviceType::Pia => match ui_mode {
                 UiMode::Terminal => Box::new(Pia::<TerminalPia>::new(bus_tx.clone())),
-                UiMode::Tui => Box::new(DummyBusDevice),
+                UiMode::Tui => Box::new(Pia::<TuiPia>::new(bus_tx.clone())),
             },
             BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), &image_slices)),
             BusDeviceType::Rom => Box::new(Rom::new(self.address_range.len(), &image_slices)),

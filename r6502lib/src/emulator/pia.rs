@@ -1,7 +1,7 @@
 use crate::emulator::{BusDevice, BusEvent, PiaBehaviour};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
-    poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
+    Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
 use std::cell::Cell;
 use std::io::{stdout, Write};
@@ -9,7 +9,6 @@ use std::marker::PhantomData;
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
-use std::time::Duration;
 
 enum InputMessage {
     ShutDown,
@@ -90,24 +89,20 @@ impl<B: PiaBehaviour> Pia<B> {
         }
     }
 
-    fn is_terminal_event_available() -> Result<bool> {
-        Ok(poll(Duration::from_millis(100))?)
-    }
-
     fn input_loop(
         input_rx: &Receiver<InputMessage>,
         event_tx: &Sender<EventMessage>,
         bus_tx: &Sender<BusEvent>,
     ) -> Result<()> {
         B::enable_raw_mode();
+
         loop {
             match input_rx.try_recv() {
                 Ok(InputMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
                 Err(TryRecvError::Empty) => {}
             }
 
-            if Self::is_terminal_event_available()? {
-                let event = read()?;
+            if let Some(event) = B::try_read_event()? {
                 match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         _ = event_tx.send(EventMessage::Key(key));
@@ -135,7 +130,9 @@ impl<B: PiaBehaviour> Pia<B> {
                 }
             }
         }
+
         B::disable_raw_mode();
+
         Ok(())
     }
 

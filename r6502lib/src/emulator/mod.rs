@@ -40,6 +40,7 @@ mod scenario_runner;
 mod terminal_pia;
 mod test_scenarios;
 mod total_cycles;
+mod tui_pia;
 mod word_op;
 
 pub use address_range::*;
@@ -79,4 +80,5 @@ pub use rom::*;
 pub use scenario_runner::*;
 pub use terminal_pia::*;
 pub use total_cycles::*;
+pub use tui_pia::*;
 pub use word_op::*;
