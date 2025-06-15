@@ -10,12 +10,12 @@ use r6502lib::validation::Scenario;
 use simple_logging::log_to_file;
 
 pub fn run() -> Result<()> {
+    log_to_file("r6502.log", LevelFilter::Info)?;
+    log_panics::init();
+
     match Args::parse().command {
         Debug(opts) => run_gui(&opts.into())?,
-        Run(opts) => {
-            log_to_file("r6502.log", LevelFilter::Info)?;
-            run_terminal(&opts.into())?
-        }
+        Run(opts) => run_terminal(&opts.into())?,
         Validate {
             report_path,
             filter,

@@ -33,7 +33,6 @@ impl Ui {
         debug_tx: &Sender<DebugMessage>,
         symbols: Vec<SymbolInfo>,
     ) -> Self {
-        cursive::logger::init();
         let cursive = Self::make_ui(&symbols, debug_tx);
         Self {
             cursive,
