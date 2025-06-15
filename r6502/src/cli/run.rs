@@ -11,7 +11,7 @@ use simple_logging::log_to_file;
 
 pub fn run() -> Result<()> {
     match Args::parse().command {
-        Debug { path, load, start } => run_gui(&path, load, start)?,
+        Debug(opts) => run_gui(&opts.into())?,
         Run(opts) => {
             log_to_file("r6502.log", LevelFilter::Info)?;
             run_terminal(&opts.into())?

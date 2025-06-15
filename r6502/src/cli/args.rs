@@ -12,15 +12,7 @@ pub struct Args {
 #[derive(Debug, Subcommand)]
 pub enum Command {
     #[command(name = "debug", about = "Debug program", value_parser = parse_absolute_path)]
-    Debug {
-        path: PathBuf,
-
-        #[arg(long = "load", value_parser = maybe_hex::<u16>)]
-        load: Option<u16>,
-
-        #[arg(long = "start", value_parser = maybe_hex::<u16>)]
-        start: Option<u16>,
-    },
+    Debug(DebugOptions),
 
     #[command(name = "run", about = "Run program")]
     Run(RunOptions),
@@ -42,6 +34,36 @@ pub enum Command {
         #[arg(required = true)]
         json: String,
     },
+}
+
+#[derive(Debug, Parser)]
+pub struct DebugOptions {
+    #[arg(value_parser = parse_absolute_path)]
+    pub path: PathBuf,
+
+    #[arg(long = "load", value_parser = maybe_hex::<u16>)]
+    pub load: Option<u16>,
+
+    #[arg(long = "start", value_parser = maybe_hex::<u16>)]
+    pub start: Option<u16>,
+
+    #[arg(
+        help = "Machine hint if machine tag not in image header",
+        long = "machine",
+        short = 'm'
+    )]
+    pub machine: Option<String>,
+}
+
+impl From<DebugOptions> for r6502lib::debug_options::DebugOptions {
+    fn from(value: DebugOptions) -> Self {
+        Self {
+            path: value.path,
+            load: value.load,
+            start: value.start,
+            machine: value.machine,
+        }
+    }
 }
 
 #[derive(Debug, Parser)]

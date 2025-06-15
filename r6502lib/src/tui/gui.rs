@@ -1,23 +1,27 @@
+use crate::debug_options::DebugOptions;
 use crate::emulator::Image;
 use crate::machine_config::MachineInfo;
 use crate::symbols::SymbolInfo;
 use crate::tui::ui::Ui;
 use crate::tui::ui_host::UiHost;
 use anyhow::Result;
-use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
-pub fn run_gui(path: &Path, load: Option<u16>, start: Option<u16>) -> Result<()> {
-    let image = Image::load(path, load, start, None)?;
-    let symbols = SymbolInfo::load(path)?;
+pub fn run_gui(opts: &DebugOptions) -> Result<()> {
+    let image = Image::load(&opts.path, opts.load, opts.start, None)?;
+    let machine_info = match image.tag {
+        Some(tag) => MachineInfo::find_by_tag(tag)?,
+        None => MachineInfo::find_by_name(&opts.machine)?,
+    };
+
+    // TBD: Use MapFile instead!
+    let symbols = SymbolInfo::load(&opts.path)?;
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
     let mut ui = Ui::new(monitor_channel.1, io_channel.1, &debug_channel.0, symbols);
     spawn(move || {
-        let machine_info =
-            MachineInfo::find_by_name(&Some(String::from("Acorn"))).expect("Must succeed");
         let (bus, _) = machine_info.create_bus(&image).expect("Must succeed");
         UiHost::new(
             machine_info,

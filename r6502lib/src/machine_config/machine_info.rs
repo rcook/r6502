@@ -9,6 +9,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
+#[derive(Debug)]
 pub struct MachineInfo {
     pub config_dir: PathBuf,
     pub machine: Machine,
