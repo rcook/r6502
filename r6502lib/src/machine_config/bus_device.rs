@@ -3,6 +3,8 @@ use crate::emulator::{
     AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, Pia, Ram, Rom,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
+use crate::machine_config::dummy_bus_device::DummyBusDevice;
+use crate::ui_mode::UiMode;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::sync::mpsc::Sender;
@@ -23,8 +25,9 @@ pub struct BusDevice {
 }
 
 impl BusDevice {
-    pub fn create_device_mapping(
+    pub fn map_device(
         &self,
+        ui_mode: UiMode,
         bus_tx: &Sender<BusEvent>,
         images: &[&Image],
     ) -> DeviceMapping {
@@ -33,7 +36,10 @@ impl BusDevice {
             .map(|image| image.slice(&self.address_range))
             .collect();
         let device: Box<dyn _BusDevice> = match self.r#type {
-            BusDeviceType::Pia => Box::new(Pia::new(bus_tx.clone())),
+            BusDeviceType::Pia => match ui_mode {
+                UiMode::Terminal => Box::new(Pia::new(bus_tx.clone())),
+                UiMode::Tui => Box::new(DummyBusDevice),
+            },
             BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), &image_slices)),
             BusDeviceType::Rom => Box::new(Rom::new(self.address_range.len(), &image_slices)),
         };

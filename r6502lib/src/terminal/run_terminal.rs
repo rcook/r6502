@@ -1,6 +1,7 @@
 use crate::emulator::{BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
+use crate::ui_mode::UiMode;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
 use std::env::current_dir;
@@ -15,7 +16,7 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
 
-    let (bus, bus_rx) = machine_info.create_bus(&image)?;
+    let (bus, bus_rx) = machine_info.create_bus(UiMode::Terminal, &image)?;
     bus.start();
 
     let start = if opts.reset {

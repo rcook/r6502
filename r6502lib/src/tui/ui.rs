@@ -1,3 +1,4 @@
+use crate::emulator::InstructionInfo;
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use crate::symbols::SymbolInfo;
 use cursive::align::HAlign;
@@ -222,6 +223,9 @@ impl Ui {
                         .find_name::<TextView>(STATUS_NAME)
                         .expect("Must exist")
                         .set_content(s);
+                    if matches!(status, State::Halted | State::Stopped) {
+                        self.update_current(None);
+                    }
                 }
                 NotifyInvalidBrk => {
                     self.cursive
@@ -242,14 +246,7 @@ impl Ui {
                         .find_name::<TextView>(CYCLES_NAME)
                         .expect("Must exist")
                         .set_content(format!("{total_cycles}"));
-                    self.cursive
-                        .find_name::<TextView>(CURRENT_NAME)
-                        .expect("Must exist")
-                        .set_content(
-                            instruction_info
-                                .display(&self.symbols)
-                                .expect("Must succeed"),
-                        );
+                    self.update_current(Some(&instruction_info));
                 }
                 AfterExecute {
                     total_cycles,
@@ -307,5 +304,17 @@ impl Ui {
 
         self.cursive.step();
         true
+    }
+
+    fn update_current(&mut self, instruction_info: Option<&InstructionInfo>) {
+        self.cursive
+            .find_name::<TextView>(CURRENT_NAME)
+            .expect("Must exist")
+            .set_content(match instruction_info {
+                Some(instruction_info) => instruction_info
+                    .display(&self.symbols)
+                    .expect("Must succeed"),
+                None => String::from("-"),
+            });
     }
 }

@@ -145,7 +145,6 @@ impl UiHost {
     }
 
     fn handle_halted(&self, cpu: &mut Cpu) -> State {
-        self.fetch_instruction(cpu);
         loop {
             match self.debug_rx.recv() {
                 Err(_) => return Stopped,
