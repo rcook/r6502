@@ -1,5 +1,5 @@
 use crate::emulator::{
-    BusEvent, Cpu, Image, Monitor, Opcode, TerminalInputQueue, TracingMonitor, MOS_6502, RESET,
+    BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, UiMode, MOS_6502, RESET,
 };
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
@@ -9,7 +9,6 @@ use std::env::current_dir;
 use std::process::exit;
 use std::str::from_utf8;
 use std::sync::mpsc::TryRecvError;
-use std::sync::{Arc, Mutex};
 
 pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
@@ -18,8 +17,7 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
 
-    let (bus, bus_rx) =
-        machine_info.create_bus(Arc::new(Mutex::new(TerminalInputQueue::new())), &image)?;
+    let (bus, bus_rx) = machine_info.create_bus(UiMode::Terminal, &image)?;
     bus.start();
 
     let start = if opts.reset {

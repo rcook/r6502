@@ -1,4 +1,4 @@
-use crate::emulator::{Bus, BusEvent, Image, InputQueueRef, MachineTag};
+use crate::emulator::{Bus, BusEvent, Image, MachineTag, UiMode};
 use crate::machine_config::machine::Machine;
 use crate::machine_config::machines::Machines;
 use anyhow::{anyhow, bail, Result};
@@ -47,11 +47,7 @@ impl MachineInfo {
         })
     }
 
-    pub fn create_bus(
-        &self,
-        input_queue: InputQueueRef,
-        image: &Image,
-    ) -> Result<(Bus, Receiver<BusEvent>)> {
+    pub fn create_bus(&self, ui_mode: UiMode, image: &Image) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
 
         #[allow(unused_assignments)]
@@ -72,7 +68,7 @@ impl MachineInfo {
             .machine
             .bus_devices
             .iter()
-            .map(|d| d.map_device(input_queue.clone(), &bus_tx, &images))
+            .map(|d| d.map_device(ui_mode, &bus_tx, &images))
             .collect();
         let bus = Bus::new(mappings);
         Ok((bus, bus_rx))

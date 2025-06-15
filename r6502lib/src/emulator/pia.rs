@@ -1,13 +1,15 @@
-use crate::emulator::{BusDevice, BusEvent, InputQueueRef};
+use crate::emulator::{BusDevice, BusEvent};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
-    Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
+    poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
+use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::cell::Cell;
 use std::io::{stdout, Write};
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
+use std::time::Duration;
 
 enum InputMessage {
     ShutDown,
@@ -66,13 +68,12 @@ impl Pia {
     const PB_CR_OFFSET: u16 = 0x0003;
 
     #[must_use]
-    pub fn new(bus_tx: Sender<BusEvent>, input_queue: InputQueueRef) -> Self {
+    pub fn new(bus_tx: Sender<BusEvent>) -> Self {
         let (input_tx, input_rx) = channel();
         let (event_tx, event_rx) = channel();
         let temp = event_tx.clone();
-        let input = spawn(move || {
-            Self::input_loop(input_queue, &input_rx, &temp, &bus_tx).expect("Must succeed")
-        });
+        let input =
+            spawn(move || Self::input_loop(&input_rx, &temp, &bus_tx).expect("Must succeed"));
 
         let state = Arc::new(Mutex::new(PiaState::new()));
         let temp = Arc::clone(&state);
@@ -88,12 +89,11 @@ impl Pia {
     }
 
     fn input_loop(
-        input_queue: InputQueueRef,
         input_rx: &Receiver<InputMessage>,
         event_tx: &Sender<EventMessage>,
         bus_tx: &Sender<BusEvent>,
     ) -> Result<()> {
-        input_queue.lock().unwrap().enable_raw_mode()?;
+        enable_raw_mode()?;
 
         loop {
             match input_rx.try_recv() {
@@ -101,7 +101,7 @@ impl Pia {
                 Err(TryRecvError::Empty) => {}
             }
 
-            if let Some(event) = input_queue.lock().unwrap().try_read_event()? {
+            if let Some(event) = Self::try_read_event()? {
                 match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         _ = event_tx.send(EventMessage::Key(key));
@@ -130,7 +130,7 @@ impl Pia {
             }
         }
 
-        input_queue.lock().unwrap().disable_raw_mode()?;
+        disable_raw_mode()?;
 
         Ok(())
     }
@@ -185,6 +185,14 @@ impl Pia {
         }
 
         Ok(())
+    }
+
+    fn try_read_event() -> Result<Option<Event>> {
+        if poll(Duration::from_millis(100))? {
+            Ok(Some(read()?))
+        } else {
+            Ok(None)
+        }
     }
 
     // TBD: Use KeyEvent::is_press in crossterm >= 0.29
