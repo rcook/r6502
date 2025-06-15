@@ -1,6 +1,7 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
     AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, Pia, Ram, Rom,
+    TerminalPia,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::dummy_bus_device::DummyBusDevice;
@@ -37,7 +38,7 @@ impl BusDevice {
             .collect();
         let device: Box<dyn _BusDevice> = match self.r#type {
             BusDeviceType::Pia => match ui_mode {
-                UiMode::Terminal => Box::new(Pia::new(bus_tx.clone())),
+                UiMode::Terminal => Box::new(Pia::<TerminalPia>::new(bus_tx.clone())),
                 UiMode::Tui => Box::new(DummyBusDevice),
             },
             BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), &image_slices)),

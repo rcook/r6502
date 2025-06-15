@@ -1,9 +1,11 @@
-use crate::emulator::{BusDevice, BusEvent};
+use crate::emulator::{BusDevice, BusEvent, PiaBehaviour};
 use anyhow::Result;
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use cursive::backends::crossterm::crossterm::event::{
+    poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
+};
 use std::cell::Cell;
 use std::io::{stdout, Write};
+use std::marker::PhantomData;
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
@@ -51,22 +53,21 @@ impl PiaState {
     }
 }
 
-pub struct Pia {
+pub struct Pia<B: PiaBehaviour> {
     input_tx: Sender<InputMessage>,
     event_tx: Sender<EventMessage>,
     state: Arc<Mutex<PiaState>>,
     input: Cell<Option<JoinHandle<()>>>,
     event: Cell<Option<JoinHandle<()>>>,
+    behaviour: PhantomData<B>,
 }
 
-impl Pia {
+impl<B: PiaBehaviour> Pia<B> {
     const PA_OFFSET: u16 = 0x0000;
     const PA_CR_OFFSET: u16 = 0x0001;
     const PB_OFFSET: u16 = 0x0002;
     const PB_CR_OFFSET: u16 = 0x0003;
-}
 
-impl Pia {
     #[must_use]
     pub fn new(bus_tx: Sender<BusEvent>) -> Self {
         let (input_tx, input_rx) = channel();
@@ -85,6 +86,7 @@ impl Pia {
             state,
             input: Cell::new(Some(input)),
             event: Cell::new(Some(event)),
+            behaviour: PhantomData,
         }
     }
 
@@ -97,7 +99,7 @@ impl Pia {
         event_tx: &Sender<EventMessage>,
         bus_tx: &Sender<BusEvent>,
     ) -> Result<()> {
-        enable_raw_mode()?;
+        B::enable_raw_mode();
         loop {
             match input_rx.try_recv() {
                 Ok(InputMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
@@ -107,7 +109,7 @@ impl Pia {
             if Self::is_terminal_event_available()? {
                 let event = read()?;
                 match event {
-                    Event::Key(key) if key.is_press() => {
+                    Event::Key(key) if Self::key_event_is_press(&key) => {
                         _ = event_tx.send(EventMessage::Key(key));
 
                         // Halt program
@@ -133,7 +135,7 @@ impl Pia {
                 }
             }
         }
-        disable_raw_mode()?;
+        B::disable_raw_mode();
         Ok(())
     }
 
@@ -188,9 +190,14 @@ impl Pia {
 
         Ok(())
     }
+
+    // TBD: Use KeyEvent::is_press in crossterm >= 0.29
+    const fn key_event_is_press(key: &KeyEvent) -> bool {
+        matches!(key.kind, KeyEventKind::Press)
+    }
 }
 
-impl BusDevice for Pia {
+impl<B: PiaBehaviour> BusDevice for Pia<B> {
     fn start(&self) {
         self.state.lock().unwrap().started = true;
     }
