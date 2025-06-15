@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
 use std::time::Duration;
 
-enum InputMessage {
+enum StdinMessage {
     ShutDown,
 }
 
@@ -20,7 +20,6 @@ enum EventMessage {
     PacrUpdated,
     PbUpdated,
     PbcrUpdated,
-    Key(KeyEvent),
     ShutDown,
 }
 
@@ -54,11 +53,11 @@ impl PiaState {
 }
 
 pub struct Pia {
-    input_tx: Sender<InputMessage>,
+    stdin_tx: Sender<StdinMessage>,
     event_tx: Sender<EventMessage>,
     state: Arc<Mutex<PiaState>>,
-    input: Cell<Option<JoinHandle<()>>>,
-    event: Cell<Option<JoinHandle<()>>>,
+    input_thread: Cell<Option<JoinHandle<()>>>,
+    event_thread: Cell<Option<JoinHandle<()>>>,
 }
 
 impl Pia {
@@ -69,42 +68,61 @@ impl Pia {
 
     #[must_use]
     pub fn new(bus_tx: Sender<BusEvent>) -> Self {
-        let (input_tx, input_rx) = channel();
-        let (event_tx, event_rx) = channel();
-        let temp = event_tx.clone();
-        let input =
-            spawn(move || Self::input_loop(&input_rx, &temp, &bus_tx).expect("Must succeed"));
-
         let state = Arc::new(Mutex::new(PiaState::new()));
-        let temp = Arc::clone(&state);
-        let event = spawn(move || Self::event_loop(&event_rx, &temp).expect("Must succeed"));
+        let (stdin_tx, stdin_rx) = channel();
+        let (event_tx, event_rx) = channel();
+
+        let state_clone = Arc::clone(&state);
+        let stdin_thread = spawn(move || {
+            Self::stdin_loop(&state_clone, &stdin_rx, &bus_tx).expect("Must succeed")
+        });
+
+        let state_clone = Arc::clone(&state);
+        let event_thread =
+            spawn(move || Self::event_loop(&state_clone, &event_rx).expect("Must succeed"));
 
         Self {
-            input_tx,
+            stdin_tx,
             event_tx,
             state,
-            input: Cell::new(Some(input)),
-            event: Cell::new(Some(event)),
+            input_thread: Cell::new(Some(stdin_thread)),
+            event_thread: Cell::new(Some(event_thread)),
         }
     }
 
-    fn input_loop(
-        input_rx: &Receiver<InputMessage>,
-        event_tx: &Sender<EventMessage>,
+    fn stdin_loop(
+        state: &Arc<Mutex<PiaState>>,
+        input_rx: &Receiver<StdinMessage>,
         bus_tx: &Sender<BusEvent>,
     ) -> Result<()> {
         enable_raw_mode()?;
 
         loop {
             match input_rx.try_recv() {
-                Ok(InputMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
+                Ok(StdinMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
                 Err(TryRecvError::Empty) => {}
             }
 
             if let Some(event) = Self::try_read_event()? {
                 match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
-                        _ = event_tx.send(EventMessage::Key(key));
+                        match (key.modifiers, key.code) {
+                            (KeyModifiers::CONTROL, KeyCode::Char('c')) => break,
+                            (KeyModifiers::CONTROL, KeyCode::Char('r' | 's')) => {}
+                            (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                                state.lock().unwrap().set_key(c);
+                            }
+                            (KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => {
+                                state.lock().unwrap().set_key('_');
+                            }
+                            (KeyModifiers::NONE, KeyCode::Enter) => {
+                                state.lock().unwrap().set_key(0x0d as char);
+                            }
+                            (KeyModifiers::NONE, KeyCode::Esc) => {
+                                state.lock().unwrap().set_key(0x1b as char);
+                            }
+                            _ => todo!("{key:?}"),
+                        }
 
                         // Halt program
                         if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('c')
@@ -135,7 +153,7 @@ impl Pia {
         Ok(())
     }
 
-    fn event_loop(event_rx: &Receiver<EventMessage>, state: &Arc<Mutex<PiaState>>) -> Result<()> {
+    fn event_loop(state: &Arc<Mutex<PiaState>>, event_rx: &Receiver<EventMessage>) -> Result<()> {
         let mut stdout = stdout();
         loop {
             match event_rx.recv()? {
@@ -163,23 +181,6 @@ impl Pia {
                         _ = stdout.flush();
                     }
                 }
-                EventMessage::Key(key) => match (key.modifiers, key.code) {
-                    (KeyModifiers::CONTROL, KeyCode::Char('c')) => break,
-                    (KeyModifiers::CONTROL, KeyCode::Char('r' | 's')) => {}
-                    (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
-                        state.lock().unwrap().set_key(c);
-                    }
-                    (KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => {
-                        state.lock().unwrap().set_key('_');
-                    }
-                    (KeyModifiers::NONE, KeyCode::Enter) => {
-                        state.lock().unwrap().set_key(0x0d as char);
-                    }
-                    (KeyModifiers::NONE, KeyCode::Esc) => {
-                        state.lock().unwrap().set_key(0x1b as char);
-                    }
-                    _ => todo!("{key:?}"),
-                },
                 EventMessage::ShutDown => break,
             }
         }
@@ -207,13 +208,13 @@ impl BusDevice for Pia {
     }
 
     fn stop(&self) {
-        _ = self.input_tx.send(InputMessage::ShutDown);
+        _ = self.stdin_tx.send(StdinMessage::ShutDown);
         _ = self.event_tx.send(EventMessage::ShutDown);
 
-        if let Some(h) = self.input.take() {
+        if let Some(h) = self.input_thread.take() {
             _ = h.join();
         }
-        if let Some(h) = self.event.take() {
+        if let Some(h) = self.event_thread.take() {
             _ = h.join();
         }
     }
