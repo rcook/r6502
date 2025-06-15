@@ -1,5 +1,5 @@
+mod cursive_tui;
 mod run_tui;
-mod tui;
 mod tui_host;
 mod tui_monitor;
 

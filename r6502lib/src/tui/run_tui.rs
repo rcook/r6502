@@ -2,7 +2,7 @@ use crate::debug_options::DebugOptions;
 use crate::emulator::Image;
 use crate::machine_config::MachineInfo;
 use crate::symbols::SymbolInfo;
-use crate::tui::tui::Tui;
+use crate::tui::cursive_tui::CursiveTui;
 use crate::tui::tui_host::TuiHost;
 use crate::ui_mode::UiMode;
 use anyhow::Result;
@@ -21,7 +21,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
-    let mut ui = Tui::new(monitor_channel.1, io_channel.1, &debug_channel.0, symbols);
+    let mut ui = CursiveTui::new(monitor_channel.1, io_channel.1, &debug_channel.0, symbols);
     spawn(move || {
         let (bus, _) = machine_info
             .create_bus(UiMode::Tui, &image)
