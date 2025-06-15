@@ -15,9 +15,5 @@
 mod cli;
 
 fn main() -> anyhow::Result<()> {
-    use log::LevelFilter;
-    use simple_logging::log_to_file;
-
-    log_to_file("r6502.log", LevelFilter::Info)?;
     crate::cli::run()
 }
