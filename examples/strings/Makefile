@@ -4,7 +4,7 @@ BINEXT := r6502
 PROGRAM := strings.$(BINEXT)
 default: $(PROGRAM)
 
-.PHONY: clean default run
+.PHONY: clean debug default run
 
 SOURCES := strings.s
 CFG := $(PROGRAM:.$(BINEXT)=.cfg)
@@ -21,5 +21,7 @@ clean:
 	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
 
 run: $(PROGRAM)
-	@#sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
 	cargo run -- run $(PROGRAM)
+
+debug: $(PROGRAM)
+	cargo run -- debug $(PROGRAM)
