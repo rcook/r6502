@@ -1,7 +1,4 @@
-EXIT = $FFC0
-DSP = $D012
-PRINT_STRS_ARG = $80
-PRINT_STR_ARG = $82
+.export _main
 
 .segment "HEADER"
 .dbyt $6502
@@ -9,9 +6,12 @@ PRINT_STR_ARG = $82
 .addr $8000
 .addr _main
 
+HALT = $D014
+DSP = $D012
+PRINT_STRS_ARG = $80
+PRINT_STR_ARG = $82
+
 .code
-.export _main
-.org $C000
 _main:
 start:
     lda #<array
@@ -20,7 +20,7 @@ start:
     sta PRINT_STRS_ARG + 1
     jsr print_strs
     lda #$00
-    jmp EXIT
+    jmp HALT
 print_strs:
     ldy #$00
     lda (PRINT_STRS_ARG), y
