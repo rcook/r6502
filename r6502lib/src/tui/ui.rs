@@ -160,7 +160,6 @@ impl Ui {
 
         cursive.set_fps(30);
 
-        cursive.add_global_callback('~', Cursive::toggle_debug_console);
         cursive.add_global_callback('q', Cursive::quit);
         let d = debug_tx.clone();
         cursive.add_global_callback(' ', move |_| _ = d.send(Step));
