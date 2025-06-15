@@ -4,12 +4,12 @@ use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
 use crate::p_set;
-use crate::tui::UiMonitor;
+use crate::tui::TuiMonitor;
 use anyhow::{anyhow, Result};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
-pub struct UiHost {
+pub struct TuiHost {
     machine_info: MachineInfo,
     bus: Bus,
     debug_rx: Receiver<DebugMessage>,
@@ -17,7 +17,7 @@ pub struct UiHost {
     io_tx: Sender<IoMessage>,
 }
 
-impl UiHost {
+impl TuiHost {
     pub const fn new(
         machine_info: MachineInfo,
         bus: Bus,
@@ -35,7 +35,7 @@ impl UiHost {
     }
 
     pub fn run(&self, start: u16) -> Result<()> {
-        let monitor = Box::new(UiMonitor::new(self.monitor_tx.clone()));
+        let monitor = Box::new(TuiMonitor::new(self.monitor_tx.clone()));
 
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
         cpu.reg.pc = start;

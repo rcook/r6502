@@ -2,18 +2,18 @@ use crate::emulator::{InstructionInfo, Monitor, Reg, TotalCycles};
 use crate::messages::MonitorMessage;
 use std::sync::mpsc::Sender;
 
-pub struct UiMonitor {
+pub struct TuiMonitor {
     monitor_tx: Sender<MonitorMessage>,
 }
 
-impl UiMonitor {
+impl TuiMonitor {
     #[must_use]
     pub const fn new(monitor_tx: Sender<MonitorMessage>) -> Self {
         Self { monitor_tx }
     }
 }
 
-impl Monitor for UiMonitor {
+impl Monitor for TuiMonitor {
     fn on_before_execute(
         &self,
         total_cycles: TotalCycles,

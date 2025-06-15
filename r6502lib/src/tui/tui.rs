@@ -20,14 +20,14 @@ const COMMAND_RESPONSE_NAME: &str = "command-response";
 const COMMAND_NAME: &str = "command";
 const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
 
-pub struct Ui {
+pub struct Tui {
     cursive: CursiveRunner<CursiveRunnable>,
     monitor_rx: Receiver<MonitorMessage>,
     io_rx: Receiver<IoMessage>,
     symbols: Vec<SymbolInfo>,
 }
 
-impl Ui {
+impl Tui {
     pub fn new(
         monitor_rx: Receiver<MonitorMessage>,
         io_rx: Receiver<IoMessage>,
