@@ -1,5 +1,5 @@
-use crate::emulator::SymbolInfo;
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
+use crate::symbols::SymbolInfo;
 use cursive::align::HAlign;
 use cursive::direction::Orientation;
 use cursive::event::Key;

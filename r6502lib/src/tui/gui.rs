@@ -1,5 +1,6 @@
-use crate::emulator::{Image, SymbolInfo};
+use crate::emulator::Image;
 use crate::machine_config::MachineInfo;
+use crate::symbols::SymbolInfo;
 use crate::tui::ui::Ui;
 use crate::tui::ui_host::UiHost;
 use anyhow::Result;

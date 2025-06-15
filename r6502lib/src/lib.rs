@@ -16,6 +16,7 @@ pub mod emulator;
 pub mod machine_config;
 pub mod messages;
 pub mod run_options;
+pub mod symbols;
 pub mod terminal;
 pub mod tui;
 pub mod validation;

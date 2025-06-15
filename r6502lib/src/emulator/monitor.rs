@@ -1,4 +1,5 @@
-use crate::emulator::{InstructionInfo, Reg, SymbolInfo, TotalCycles};
+use crate::emulator::{InstructionInfo, Reg, TotalCycles};
+use crate::symbols::SymbolInfo;
 
 pub trait Monitor {
     fn on_before_execute(

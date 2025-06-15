@@ -1,5 +1,6 @@
 use crate::emulator::op_info::op_infos::{Item, CONSTS};
-use crate::emulator::{AddressingMode, Cpu, InstructionInfo, Op, OpCycles, Opcode, SymbolInfo};
+use crate::emulator::{AddressingMode, Cpu, InstructionInfo, Op, OpCycles, Opcode};
+use crate::symbols::SymbolInfo;
 use anyhow::Result;
 
 #[derive(Clone)]

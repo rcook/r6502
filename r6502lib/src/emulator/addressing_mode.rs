@@ -1,4 +1,5 @@
-use crate::emulator::{InstructionInfo, Operand, SymbolInfo};
+use crate::emulator::{InstructionInfo, Operand};
+use crate::symbols::SymbolInfo;
 use anyhow::{bail, Result};
 
 #[derive(Clone)]

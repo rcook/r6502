@@ -36,7 +36,6 @@ mod ram;
 mod reg;
 mod rom;
 mod scenario_runner;
-mod symbol_info;
 mod test_scenarios;
 mod total_cycles;
 mod word_op;
@@ -67,7 +66,6 @@ pub use ram::Ram;
 pub use reg::Reg;
 pub use rom::Rom;
 pub use scenario_runner::{run_scenario, run_scenarios_with_filter};
-pub use symbol_info::SymbolInfo;
 pub use total_cycles::TotalCycles;
 pub use word_op::WordOp;
 

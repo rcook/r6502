@@ -1,5 +1,6 @@
 use crate::emulator::util::split_word;
-use crate::emulator::{Binding, Cpu, Instruction, Opcode, Operand, SymbolInfo, MOS_6502};
+use crate::emulator::{Binding, Cpu, Instruction, Opcode, Operand, MOS_6502};
+use crate::symbols::SymbolInfo;
 use anyhow::{anyhow, Result};
 
 #[derive(Clone, Debug)]
