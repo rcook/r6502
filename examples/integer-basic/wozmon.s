@@ -1,3 +1,11 @@
+.export DSP
+.export DSPCR
+.export ECHO
+.export GETLINE
+.export KBD
+.export KBDCR
+.export PRBYTE
+.export PRHEX
 .export WOZMON
 
 .segment "WOZMON"

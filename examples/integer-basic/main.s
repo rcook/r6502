@@ -7,6 +7,17 @@
 .addr __DATA_LOAD__
 .addr startup
 
+; Make sure these symbols always show up in the map file
+.forceimport DSP
+.forceimport DSPCR
+.forceimport HALT
+.forceimport KBDCR
+.forceimport ECHO
+.forceimport GETLINE
+.forceimport PRBYTE
+.forceimport PRHEX
+.forceimport WOZMON
+
 ; Interrupt Vectors
 .segment "NMI"
 .addr $0000
