@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := default
 .SUFFIXES:
 BINEXT := r6502
-PROGRAM := apple1.$(BINEXT)
+PROGRAM := integer-basic.$(BINEXT)
 default: $(PROGRAM)
 
 .PHONY: clean default run
