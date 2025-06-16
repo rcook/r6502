@@ -203,10 +203,21 @@ impl CursiveTui {
                     )));
                 }
 
+                fn send_ctrl_char(event_tx: &Sender<CrosstermEvent>, ch: char) {
+                    _ = event_tx.send(CrosstermEvent::Key(KeyEvent::new(
+                        KeyCode::Char(ch),
+                        KeyModifiers::CONTROL,
+                    )));
+                }
+
                 match e {
                     Event::CtrlChar('p') => {
                         program_gets_input.store(false, Ordering::SeqCst);
                     }
+                    // TBD: Get this working!
+                    Event::CtrlChar('r') => send_ctrl_char(&event_tx_clone, 'r'),
+                    // TBD: Get this working!
+                    Event::CtrlChar('s') => send_ctrl_char(&event_tx_clone, 's'),
                     Event::Key(Key::Backspace | Key::Del) => send_char(&event_tx_clone, '_'),
                     Event::Key(Key::Enter) => send_char(&event_tx_clone, '\r'),
                     Event::Key(Key::Esc) => send_char(&event_tx_clone, 0x1b as char),
