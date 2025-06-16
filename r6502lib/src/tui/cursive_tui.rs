@@ -16,7 +16,7 @@ use std::sync::mpsc::{Receiver, Sender};
 const RIGHT_NAME: &str = "right";
 const CURRENT_NAME: &str = "current";
 const DISASSEMBLY_NAME: &str = "disassembly";
-const STATUS_NAME: &str = "status";
+const STATE_NAME: &str = "state";
 const STDOUT_NAME: &str = "stdout";
 const REGISTERS_NAME: &str = "registers";
 const CYCLES_NAME: &str = "cycles";
@@ -70,8 +70,8 @@ impl CursiveTui {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let status = TextView::new("")
-            .with_name(STATUS_NAME)
+        let state = TextView::new("")
+            .with_name(STATE_NAME)
             .fixed_height(3)
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
@@ -147,7 +147,7 @@ impl CursiveTui {
             .child(panel(registers, "Registers"))
             .child(panel(cycles, "Cycles"))
             .child(panel(disassembly, "Disassembly"))
-            .child(panel(status, "Status"));
+            .child(panel(state, "Status"));
 
         let right = LinearLayout::new(Orientation::Vertical)
             .child(panel(stdout, "Output"))
@@ -194,10 +194,10 @@ impl CursiveTui {
         let event_tx_clone = event_tx.clone();
         cursive.set_on_pre_event_inner(EventTrigger::any(), move |e| {
             if let Event::Char(ch) = e {
-                // TBD: Implement this!
-                info!("ch={ch}");
+                // TBD: Only do this when input is redirected to program!
+                // Perhaps implement Ctrl+P to toggle between debugger and program input
                 _ = event_tx_clone.send(CrosstermEvent::Key(KeyEvent::new(
-                    KeyCode::Char('X'),
+                    KeyCode::Char(*ch),
                     KeyModifiers::NONE,
                 )));
             }
@@ -231,18 +231,19 @@ impl CursiveTui {
 
         while let Some(message) = self.monitor_rx.try_iter().next() {
             match message {
-                NotifyState(status) => {
-                    let s = match status {
+                NotifyState(state) => {
+                    info!("NotifyState: state={state:?}");
+                    let s = match state {
                         State::Running => "Running",
                         State::Stepping => "Stepping",
                         State::Halted => "Waiting",
                         State::Stopped => "Stopped",
                     };
                     self.cursive
-                        .find_name::<TextView>(STATUS_NAME)
+                        .find_name::<TextView>(STATE_NAME)
                         .expect("Must exist")
                         .set_content(s);
-                    if matches!(status, State::Halted | State::Stopped) {
+                    if matches!(state, State::Halted | State::Running | State::Stopped) {
                         self.update_current(None);
                     }
                 }

@@ -59,13 +59,21 @@ impl<'a> Cpu<'a> {
 
     #[must_use]
     pub fn step(&mut self) -> bool {
+        self.step2(false)
+    }
+
+    #[must_use]
+    pub fn step2(&mut self, running: bool) -> bool {
         let instruction = Instruction::fetch(self);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
-        self.monitor.on_before_execute(
-            self.total_cycles,
-            self.reg.clone(),
-            instruction_info.clone(),
-        );
+
+        if !running {
+            self.monitor.on_before_execute(
+                self.total_cycles,
+                self.reg.clone(),
+                instruction_info.clone(),
+            );
+        }
 
         if log_enabled!(Level::Debug) {
             debug!("{:?}", instruction_info);
@@ -85,11 +93,14 @@ impl<'a> Cpu<'a> {
             }
         }
 
-        self.monitor.on_after_execute(
-            self.total_cycles,
-            self.reg.clone(),
-            instruction_info.clone(),
-        );
+        if !running {
+            self.monitor.on_after_execute(
+                self.total_cycles,
+                self.reg.clone(),
+                instruction_info.clone(),
+            );
+        }
+
         self.total_cycles += instruction_cycles as TotalCycles;
         !p_get!(self.reg, I)
     }

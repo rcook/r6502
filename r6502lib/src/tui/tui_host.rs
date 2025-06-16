@@ -91,13 +91,12 @@ impl TuiHost {
 
     fn handle_running(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {
         loop {
-            self.fetch_instruction(cpu);
             match self.debug_rx.try_recv() {
                 Err(TryRecvError::Disconnected) => return Stopped,
                 Err(TryRecvError::Empty) | Ok(_) => {}
             }
 
-            if !cpu.step() {
+            if !cpu.step2(true) {
                 let new_state = self.handle_brk(cpu, rti, Running);
                 if !matches!(new_state, Stepping) {
                     return new_state;
@@ -115,6 +114,7 @@ impl TuiHost {
     fn handle_stepping(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {
         loop {
             self.fetch_instruction(cpu);
+
             match self.debug_rx.recv() {
                 Err(_) => return Stopped,
                 Ok(m) => match m {
