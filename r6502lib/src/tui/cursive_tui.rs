@@ -5,8 +5,10 @@ use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
 };
+use cursive::backends::crossterm::crossterm::style::SetBackgroundColor;
 use cursive::direction::Orientation;
 use cursive::event::{Event, EventResult, EventTrigger, Key};
+use cursive::theme::{BaseColor, Color};
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
@@ -85,6 +87,7 @@ impl CursiveTui {
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let stdout = TextView::new("")
+            .style(Color::Dark(BaseColor::Blue))
             .with_name(STDOUT_NAME)
             .full_width()
             .full_height()
