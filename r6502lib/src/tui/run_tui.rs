@@ -2,7 +2,7 @@ use crate::debug_options::DebugOptions;
 use crate::emulator::{Image, OutputDevice};
 use crate::machine_config::MachineInfo;
 use crate::messages::IoMessage;
-use crate::symbols::SymbolInfo;
+use crate::symbols::MapFile;
 use crate::tui::cursive_tui::CursiveTui;
 use crate::tui::tui_host::TuiHost;
 use anyhow::Result;
@@ -37,8 +37,8 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
 
-    // TBD: Use MapFile instead!
-    let symbols = SymbolInfo::load(&opts.path)?;
+    let map_file = MapFile::load(&opts.path)?;
+
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
@@ -52,7 +52,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
         io_channel.1,
         &debug_channel.0,
         &event_tx,
-        symbols,
+        map_file,
     );
     spawn(move || {
         let (bus, _) = machine_info

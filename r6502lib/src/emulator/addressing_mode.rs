@@ -1,5 +1,7 @@
-use crate::emulator::{InstructionInfo, Operand};
-use crate::symbols::SymbolInfo;
+use crate::{
+    emulator::{InstructionInfo, Operand},
+    symbols::MapFile,
+};
 use anyhow::{bail, Result};
 
 #[derive(Clone)]
@@ -23,14 +25,14 @@ impl AddressingMode {
     pub fn format_instruction_info(
         &self,
         instruction_info: &InstructionInfo,
-        symbols: &[SymbolInfo],
+        map_file: &MapFile,
     ) -> Result<String> {
         match self {
             Self::Absolute => match instruction_info.operand {
                 Operand::Word(value) => Ok(format!(
                     "{} {}",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_addr(symbols, value)
+                    Self::format_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -38,7 +40,7 @@ impl AddressingMode {
                 Operand::Word(value) => Ok(format!(
                     "{} {},X",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_addr(symbols, value)
+                    Self::format_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -46,7 +48,7 @@ impl AddressingMode {
                 Operand::Word(value) => Ok(format!(
                     "{} {},Y",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_addr(symbols, value)
+                    Self::format_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -70,7 +72,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} ({},X)",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -78,7 +80,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} ({})",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -86,7 +88,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} ({}),Y",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -94,7 +96,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {}",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_branch(symbols, value, instruction_info.pc)
+                    Self::format_branch(map_file, value, instruction_info.pc)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -102,7 +104,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {}",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -110,7 +112,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {},X",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -118,7 +120,7 @@ impl AddressingMode {
                 Operand::Byte(value) => Ok(format!(
                     "{} {},Y",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(symbols, value)
+                    Self::format_zero_page_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
@@ -131,10 +133,11 @@ impl AddressingMode {
         (lhs + rhs) as u16
     }
 
-    fn find_name(symbols: &[SymbolInfo], value: u16) -> Option<String> {
-        for symbol in symbols {
-            if symbol.value == value {
-                return Some(symbol.name.clone());
+    fn find_name(map_file: &MapFile, value: u16) -> Option<String> {
+        let temp = value as u32;
+        for export in &map_file.exports {
+            if export.value == temp {
+                return Some(export.name.clone());
             }
         }
         None
@@ -144,17 +147,17 @@ impl AddressingMode {
         format!("${value:02X}")
     }
 
-    fn format_addr(symbols: &[SymbolInfo], value: u16) -> String {
-        Self::find_name(symbols, value).unwrap_or_else(|| format!("${value:04X}"))
+    fn format_addr(map_file: &MapFile, value: u16) -> String {
+        Self::find_name(map_file, value).unwrap_or_else(|| format!("${value:04X}"))
     }
 
-    fn format_branch(symbols: &[SymbolInfo], value: u8, pc: u16) -> String {
+    fn format_branch(map_file: &MapFile, value: u8, pc: u16) -> String {
         let effective_value = Self::compute_branch(pc + 2, value);
-        Self::find_name(symbols, effective_value)
+        Self::find_name(map_file, effective_value)
             .unwrap_or_else(|| format!("${effective_value:04X}"))
     }
 
-    fn format_zero_page_addr(symbols: &[SymbolInfo], value: u8) -> String {
-        Self::find_name(symbols, value as u16).unwrap_or_else(|| format!("${value:02X}"))
+    fn format_zero_page_addr(map_file: &MapFile, value: u8) -> String {
+        Self::find_name(map_file, value as u16).unwrap_or_else(|| format!("${value:02X}"))
     }
 }

@@ -1,6 +1,6 @@
 use crate::emulator::InstructionInfo;
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
-use crate::symbols::SymbolInfo;
+use crate::symbols::MapFile;
 use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
@@ -30,7 +30,7 @@ pub struct CursiveTui {
     cursive: CursiveRunner<CursiveRunnable>,
     monitor_rx: Receiver<MonitorMessage>,
     io_rx: Receiver<IoMessage>,
-    symbols: Vec<SymbolInfo>,
+    map_file: MapFile,
 }
 
 impl CursiveTui {
@@ -39,14 +39,14 @@ impl CursiveTui {
         io_rx: Receiver<IoMessage>,
         debug_tx: &Sender<DebugMessage>,
         event_tx: &Sender<CrosstermEvent>,
-        symbols: Vec<SymbolInfo>,
+        map_file: MapFile,
     ) -> Self {
-        let cursive = Self::make_ui(&symbols, debug_tx, event_tx);
+        let cursive = Self::make_ui(&map_file, debug_tx, event_tx);
         Self {
             cursive,
             monitor_rx,
             io_rx,
-            symbols,
+            map_file,
         }
     }
 
@@ -56,7 +56,7 @@ impl CursiveTui {
 
     #[allow(clippy::too_many_lines)]
     fn make_ui(
-        symbols: &[SymbolInfo],
+        map_file: &MapFile,
         debug_tx: &Sender<DebugMessage>,
         event_tx: &Sender<CrosstermEvent>,
     ) -> CursiveRunner<CursiveRunnable> {
@@ -66,7 +66,8 @@ impl CursiveTui {
             Panel::new(view).title(label).title_position(HAlign::Left)
         }
 
-        let s = symbols
+        let s = map_file
+            .exports
             .iter()
             .map(|s| format!("{} = ${:04X}", s.name, s.value))
             .collect::<Vec<_>>()
@@ -317,7 +318,7 @@ impl CursiveTui {
                         .set_content(format!("{total_cycles}"));
 
                     let mut s = instruction_info
-                        .disassembly(&self.symbols)
+                        .disassembly(&self.map_file)
                         .expect("Must succeed");
                     s.push('\n');
                     self.cursive
@@ -367,7 +368,7 @@ impl CursiveTui {
                 .expect("Must exist")
                 .set_content(
                     instruction_info
-                        .display(&self.symbols)
+                        .display(&self.map_file)
                         .expect("Must succeed"),
                 );
         } else {

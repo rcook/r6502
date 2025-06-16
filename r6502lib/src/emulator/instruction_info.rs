@@ -1,6 +1,6 @@
 use crate::emulator::util::split_word;
 use crate::emulator::{Binding, Cpu, Instruction, Opcode, Operand, MOS_6502};
-use crate::symbols::SymbolInfo;
+use crate::symbols::MapFile;
 use anyhow::{anyhow, Result};
 
 #[derive(Clone, Debug)]
@@ -38,18 +38,18 @@ impl InstructionInfo {
         }
     }
 
-    pub fn display(&self, symbols: &[SymbolInfo]) -> Result<String> {
+    pub fn display(&self, map_file: &MapFile) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
-        op_info.format_instruction_info(self, symbols)
+        op_info.format_instruction_info(self, map_file)
     }
 
-    pub fn disassembly(&self, symbols: &[SymbolInfo]) -> Result<String> {
+    pub fn disassembly(&self, map_file: &MapFile) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
             .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
-        let s = op_info.format_instruction_info(self, symbols)?;
+        let s = op_info.format_instruction_info(self, map_file)?;
         Ok(match &self.operand {
             Operand::None => format!("{:04X}  {:02X}        {s}", self.pc, self.opcode as u8),
             Operand::Byte(value) => format!(
@@ -71,20 +71,21 @@ impl InstructionInfo {
 mod tests {
     use crate::emulator::Opcode::*;
     use crate::emulator::{InstructionInfo, Operand};
+    use crate::symbols::MapFile;
     use anyhow::Result;
 
     #[test]
     fn basics() -> Result<()> {
-        let symbols = Vec::new();
+        let map_file = MapFile::default();
         let instruction_info = InstructionInfo {
             pc: 0x1234,
             opcode: Nop,
             operand: Operand::None,
         };
-        assert_eq!("NOP", instruction_info.display(&symbols)?);
+        assert_eq!("NOP", instruction_info.display(&map_file)?);
         assert_eq!(
             "1234  EA        NOP",
-            instruction_info.disassembly(&symbols)?
+            instruction_info.disassembly(&map_file)?
         );
 
         let instruction_info = InstructionInfo {
@@ -92,10 +93,10 @@ mod tests {
             opcode: AdcImm,
             operand: Operand::Byte(0x12),
         };
-        assert_eq!("ADC #$12", instruction_info.display(&symbols)?);
+        assert_eq!("ADC #$12", instruction_info.display(&map_file)?);
         assert_eq!(
             "1234  69 12     ADC #$12",
-            instruction_info.disassembly(&symbols)?
+            instruction_info.disassembly(&map_file)?
         );
 
         let instruction_info = InstructionInfo {
@@ -103,10 +104,10 @@ mod tests {
             opcode: AdcAbs,
             operand: Operand::Word(0x1234),
         };
-        assert_eq!("ADC $1234", instruction_info.display(&symbols)?);
+        assert_eq!("ADC $1234", instruction_info.display(&map_file)?);
         assert_eq!(
             "1234  6D 34 12  ADC $1234",
-            instruction_info.disassembly(&symbols)?
+            instruction_info.disassembly(&map_file)?
         );
 
         Ok(())

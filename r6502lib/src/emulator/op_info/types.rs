@@ -1,6 +1,6 @@
 use crate::emulator::op_info::op_infos::{Item, CONSTS};
 use crate::emulator::{AddressingMode, Cpu, InstructionInfo, Op, OpCycles, Opcode};
-use crate::symbols::SymbolInfo;
+use crate::symbols::MapFile;
 use anyhow::Result;
 
 #[derive(Clone)]
@@ -47,9 +47,9 @@ impl OpInfo {
     pub fn format_instruction_info(
         &self,
         instruction_info: &InstructionInfo,
-        symbols: &[SymbolInfo],
+        map_file: &MapFile,
     ) -> Result<String> {
         self.addressing_mode
-            .format_instruction_info(instruction_info, symbols)
+            .format_instruction_info(instruction_info, map_file)
     }
 }

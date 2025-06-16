@@ -2,6 +2,7 @@ use crate::symbols::{ModuleName, ModuleSegment};
 use anyhow::{bail, Error, Result};
 use std::{iter::Peekable, path::PathBuf};
 
+#[derive(Debug)]
 pub struct Module {
     pub name: ModuleName,
     pub segments: Vec<ModuleSegment>,

@@ -1,14 +1,37 @@
 use crate::symbols::util::iter_map_file_lines;
-use crate::symbols::Export;
-use crate::symbols::Module;
-use crate::symbols::Segment;
-use anyhow::{bail, Error, Result};
+use crate::symbols::{Export, Module, Segment};
+use anyhow::{anyhow, bail, Error, Result};
+use std::fs::{read_to_string, File};
+use std::io::Read;
+use std::path::Path;
 use std::str::FromStr;
 
+#[derive(Debug, Default)]
 pub struct MapFile {
-    modules: Vec<Module>,
-    segments: Vec<Segment>,
-    exports: Vec<Export>,
+    pub modules: Vec<Module>,
+    pub segments: Vec<Segment>,
+    pub exports: Vec<Export>,
+}
+
+impl MapFile {
+    pub fn load(image_path: &Path) -> Result<Self> {
+        let mut file_name = image_path
+            .file_stem()
+            .ok_or_else(|| anyhow!("could not get file stem"))?
+            .to_os_string();
+        file_name.push(".map");
+        let map_path = image_path
+            .parent()
+            .ok_or_else(|| anyhow!("could not get parent of path"))?
+            .join(file_name);
+
+        if map_path.is_file() {
+            let s = read_to_string(map_path)?;
+            s.parse()
+        } else {
+            Ok(Self::default())
+        }
+    }
 }
 
 impl FromStr for MapFile {
