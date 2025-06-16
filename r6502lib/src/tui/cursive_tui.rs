@@ -361,34 +361,32 @@ impl CursiveTui {
     }
 
     fn update_current(&mut self, instruction_info: Option<&InstructionInfo>) {
-        match instruction_info {
-            Some(instruction_info) => self
-                .cursive
+        if let Some(instruction_info) = instruction_info {
+            self.cursive
                 .find_name::<TextView>(CURRENT_NAME)
                 .expect("Must exist")
                 .set_content(
                     instruction_info
                         .display(&self.symbols)
                         .expect("Must succeed"),
-                ),
-            None => {
-                self.cursive
-                    .find_name::<TextView>(CURRENT_NAME)
-                    .expect("Must exist")
-                    .set_content("(running)");
-                self.cursive
-                    .find_name::<TextView>(REGISTERS_NAME)
-                    .expect("Must exist")
-                    .set_content("(running)");
-                self.cursive
-                    .find_name::<TextView>(CYCLES_NAME)
-                    .expect("Must exist")
-                    .set_content("(running)");
-                self.cursive
-                    .find_name::<TextView>(DISASSEMBLY_NAME)
-                    .expect("Must exist")
-                    .set_content(' ');
-            }
+                );
+        } else {
+            self.cursive
+                .find_name::<TextView>(CURRENT_NAME)
+                .expect("Must exist")
+                .set_content("(running)");
+            self.cursive
+                .find_name::<TextView>(REGISTERS_NAME)
+                .expect("Must exist")
+                .set_content("(running)");
+            self.cursive
+                .find_name::<TextView>(CYCLES_NAME)
+                .expect("Must exist")
+                .set_content("(running)");
+            self.cursive
+                .find_name::<TextView>(DISASSEMBLY_NAME)
+                .expect("Must exist")
+                .set_content(' ');
         }
     }
 }
