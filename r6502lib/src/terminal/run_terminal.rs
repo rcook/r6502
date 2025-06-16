@@ -50,10 +50,6 @@ fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, event_tx: &Sender<Event>)
 struct TerminalOutput;
 
 impl OutputDevice for TerminalOutput {
-    fn dup(&self) -> Box<dyn OutputDevice> {
-        Box::new(Self)
-    }
-
     fn write(&self, ch: char) -> Result<()> {
         let mut stdout = stdout();
         if ch == '\n' {

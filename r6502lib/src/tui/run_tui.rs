@@ -20,10 +20,6 @@ impl TuiOutput {
 }
 
 impl OutputDevice for TuiOutput {
-    fn dup(&self) -> Box<dyn OutputDevice> {
-        Box::new(Self::new(self.io_tx.clone()))
-    }
-
     fn write(&self, ch: char) -> Result<()> {
         _ = self.io_tx.send(IoMessage::WriteChar(ch));
         Ok(())
