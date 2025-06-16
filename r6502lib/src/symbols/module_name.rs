@@ -39,12 +39,24 @@ mod tests {
     use rstest::rstest;
     use std::path::{Path, PathBuf};
 
+    #[cfg(not(target_os = "windows"))]
+    const INPUT: &str = "/bin/cc65/lib/none.lib(copydata.o)";
+
+    #[cfg(target_os = "windows")]
+    const INPUT: &str = "C:\\bin\\cc65\\lib/none.lib(copydata.o)";
+
+    #[cfg(not(target_os = "windows"))]
+    const EXPECTED_PATH_STR: &str = "/bin/cc65/lib/none.lib";
+
+    #[cfg(target_os = "windows")]
+    const EXPECTED_PATH_STR: &str = "C:\\bin\\cc65\\lib\\none.lib";
+
     #[rstest]
     #[case("a1basic.o", None, "a1basic.o")]
     #[case(
         "copydata.o",
-        Some("C:\\bin\\cc65\\lib\\none.lib".parse().unwrap()),
-        "C:\\bin\\cc65\\lib/none.lib(copydata.o)"
+        Some(EXPECTED_PATH_STR.parse().unwrap()),
+        INPUT
     )]
     fn basics(
         #[case] expected_name: &str,
