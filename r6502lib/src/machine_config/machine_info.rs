@@ -1,9 +1,8 @@
-use crate::emulator::{Bus, BusEvent, Image, MachineTag, OutputDevice};
+use crate::emulator::{Bus, BusEvent, Image, MachineTag, OutputDevice, PiaChannel};
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
 use crate::machine_config::machines::Machines;
 use anyhow::{anyhow, bail, Result};
-use cursive::backends::crossterm::crossterm::event::Event;
 use dirs::config_dir;
 use path_absolutize::Absolutize;
 use std::env::current_exe;
@@ -52,7 +51,7 @@ impl MachineInfo {
     pub fn create_bus(
         &self,
         output: Box<dyn OutputDevice>,
-        event_rx: Receiver<Event>,
+        input_channel: PiaChannel,
         image: &Image,
     ) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
@@ -88,7 +87,7 @@ impl MachineInfo {
         let mut mappings = Vec::with_capacity(self.machine.bus_devices.len());
 
         if let Some(d) = io_devices.first() {
-            mappings.push(d.map_io_device(output, event_rx, &bus_tx));
+            mappings.push(d.map_io_device(output, input_channel, &bus_tx));
         }
 
         for d in memory_devices {

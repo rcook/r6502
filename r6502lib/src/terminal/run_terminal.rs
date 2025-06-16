@@ -1,5 +1,6 @@
 use crate::emulator::{
-    BusEvent, Cpu, Image, Monitor, Opcode, OutputDevice, TracingMonitor, MOS_6502, RESET,
+    BusEvent, Cpu, Image, Monitor, Opcode, OutputDevice, PiaChannel, PiaEvent, TracingMonitor,
+    MOS_6502, RESET,
 };
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
@@ -20,7 +21,7 @@ enum TerminalMessage {
     ShutDown,
 }
 
-fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, event_tx: &Sender<Event>) -> Result<()> {
+fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, input_tx: &Sender<PiaEvent>) -> Result<()> {
     fn try_read_event() -> Result<Option<Event>> {
         if poll(Duration::from_millis(100))? {
             Ok(Some(read()?))
@@ -38,7 +39,7 @@ fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, event_tx: &Sender<Event>)
         }
 
         if let Some(event) = try_read_event()? {
-            _ = event_tx.send(event);
+            _ = input_tx.send(PiaEvent::Input(event));
         }
     }
 
@@ -70,12 +71,13 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     };
 
     let (terminal_tx, terminal_rx) = channel();
-    let (event_tx, event_rx) = channel();
+    let input_channel = PiaChannel::new();
+    let input_tx = input_channel.sender.clone();
 
-    let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), event_rx, &image)?;
+    let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), input_channel, &image)?;
     bus.start();
 
-    let stdin_thread = spawn(move || stdin_loop(&terminal_rx, &event_tx).expect("Must succeed"));
+    let stdin_thread = spawn(move || stdin_loop(&terminal_rx, &input_tx).expect("Must succeed"));
 
     let start = if opts.reset {
         bus.load_reset_unsafe()

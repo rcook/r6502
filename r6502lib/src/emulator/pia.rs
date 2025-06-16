@@ -1,26 +1,12 @@
-use crate::emulator::{BusDevice, BusEvent, OutputDevice};
+use crate::emulator::{BusDevice, BusEvent, OutputDevice, PiaChannel, PiaEvent};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
 use std::cell::Cell;
-use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
-
-#[derive(Debug)]
-enum StdinMessage {
-    ShutDown,
-}
-
-#[derive(Debug)]
-enum EventMessage {
-    PaUpdated,
-    PacrUpdated,
-    PbUpdated,
-    PbcrUpdated,
-    ShutDown,
-}
 
 struct PiaState {
     started: bool,
@@ -52,11 +38,9 @@ impl PiaState {
 }
 
 pub struct Pia {
-    stdin_tx: Sender<StdinMessage>,
-    event_tx: Sender<EventMessage>,
     state: Arc<Mutex<PiaState>>,
-    input_thread: Cell<Option<JoinHandle<()>>>,
-    event_thread: Cell<Option<JoinHandle<()>>>,
+    pia_tx: Sender<PiaEvent>,
+    handle: Cell<Option<JoinHandle<()>>>,
 }
 
 impl Pia {
@@ -66,53 +50,55 @@ impl Pia {
     const PB_CR_OFFSET: u16 = 0x0003;
 
     #[must_use]
-    #[allow(clippy::similar_names)]
     pub fn new(
         output: Box<dyn OutputDevice>,
-        event_rx: Receiver<Event>,
+        pia_channel: PiaChannel,
         bus_tx: Sender<BusEvent>,
     ) -> Self {
         let state = Arc::new(Mutex::new(PiaState::new()));
-        let (stdin_tx, stdin_rx) = channel();
-        let (event_tx2, event_rx2) = channel();
-
-        // TBD: Fuse these two threads into a single event loop if possible
-
         let state_clone = Arc::clone(&state);
-        let stdin_thread =
-            spawn(move || Self::stdin_loop(&state_clone, event_rx, &stdin_rx, &bus_tx));
-
-        let state_clone = Arc::clone(&state);
-        let event_thread = spawn(move || {
-            Self::event_loop(&state_clone, &event_rx2, output).expect("Must succeed");
+        let handle = spawn(move || {
+            Self::event_loop(&state_clone, &pia_channel.receiver, &bus_tx, output)
+                .expect("Must succeed");
         });
-
         Self {
-            stdin_tx,
-            event_tx: event_tx2,
             state,
-            input_thread: Cell::new(Some(stdin_thread)),
-            event_thread: Cell::new(Some(event_thread)),
+            pia_tx: pia_channel.sender,
+            handle: Cell::new(Some(handle)),
         }
     }
 
     #[allow(clippy::needless_pass_by_value)]
-    fn stdin_loop(
+    fn event_loop(
         state: &Arc<Mutex<PiaState>>,
-        event_rx: Receiver<Event>,
-        input_rx: &Receiver<StdinMessage>,
+        pia_rx: &Receiver<PiaEvent>,
         bus_tx: &Sender<BusEvent>,
-    ) {
+        output: Box<dyn OutputDevice>,
+    ) -> Result<()> {
         loop {
-            match input_rx.try_recv() {
-                Ok(StdinMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
-                Err(TryRecvError::Empty) => {}
-            }
-
-            match event_rx.try_recv() {
-                Err(TryRecvError::Disconnected) => break,
-                Err(TryRecvError::Empty) => {}
-                Ok(event) => match event {
+            match pia_rx.recv() {
+                Ok(PiaEvent::PaUpdated | PiaEvent::PbcrUpdated) => {}
+                Ok(PiaEvent::PacrUpdated) => state.lock().unwrap().pa_cr = 0x00,
+                Ok(PiaEvent::PbUpdated) => {
+                    let value = {
+                        let mut state = state.lock().unwrap();
+                        let value = state.pb;
+                        state.pb = 0x00;
+                        value
+                    };
+                    let char_value = value & 0x7f;
+                    let ch = char_value as char;
+                    match char_value {
+                        0 => {}
+                        13 => output.write('\n')?,
+                        _ => {
+                            if !ch.is_control() {
+                                output.write(ch)?;
+                            }
+                        }
+                    }
+                }
+                Ok(PiaEvent::Input(event)) => match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         match (key.modifiers, key.code) {
                             (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
@@ -145,40 +131,7 @@ impl Pia {
                     }
                     _ => {}
                 },
-            }
-        }
-    }
-
-    #[allow(clippy::needless_pass_by_value)]
-    fn event_loop(
-        state: &Arc<Mutex<PiaState>>,
-        event_rx: &Receiver<EventMessage>,
-        output: Box<dyn OutputDevice>,
-    ) -> Result<()> {
-        loop {
-            match event_rx.recv()? {
-                EventMessage::PaUpdated | EventMessage::PbcrUpdated => {}
-                EventMessage::PacrUpdated => state.lock().unwrap().pa_cr = 0x00,
-                EventMessage::PbUpdated => {
-                    let value = {
-                        let mut state = state.lock().unwrap();
-                        let value = state.pb;
-                        state.pb = 0x00;
-                        value
-                    };
-                    let char_value = value & 0x7f;
-                    let ch = char_value as char;
-                    match char_value {
-                        0 => {}
-                        13 => output.write('\n')?,
-                        _ => {
-                            if !ch.is_control() {
-                                output.write(ch)?;
-                            }
-                        }
-                    }
-                }
-                EventMessage::ShutDown => break,
+                Ok(PiaEvent::Shutdown) | Err(_) => break,
             }
         }
 
@@ -197,13 +150,8 @@ impl BusDevice for Pia {
     }
 
     fn stop(&self) {
-        _ = self.stdin_tx.send(StdinMessage::ShutDown);
-        _ = self.event_tx.send(EventMessage::ShutDown);
-
-        if let Some(h) = self.input_thread.take() {
-            _ = h.join();
-        }
-        if let Some(h) = self.event_thread.take() {
+        _ = self.pia_tx.send(PiaEvent::Shutdown);
+        if let Some(h) = self.handle.take() {
             _ = h.join();
         }
     }
@@ -233,22 +181,22 @@ impl BusDevice for Pia {
         let m = match addr {
             Self::PA_OFFSET => {
                 self.state.lock().unwrap().pa = value;
-                EventMessage::PaUpdated
+                PiaEvent::PaUpdated
             }
             Self::PA_CR_OFFSET => {
                 self.state.lock().unwrap().pa_cr = value;
-                EventMessage::PacrUpdated
+                PiaEvent::PacrUpdated
             }
             Self::PB_OFFSET => {
                 self.state.lock().unwrap().pb = value;
-                EventMessage::PbUpdated
+                PiaEvent::PbUpdated
             }
             Self::PB_CR_OFFSET => {
                 self.state.lock().unwrap().pb_cr = value;
-                EventMessage::PbcrUpdated
+                PiaEvent::PbcrUpdated
             }
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
-        _ = self.event_tx.send(m);
+        _ = self.pia_tx.send(m);
     }
 }

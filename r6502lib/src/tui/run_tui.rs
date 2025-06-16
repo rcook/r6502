@@ -1,5 +1,5 @@
 use crate::debug_options::DebugOptions;
-use crate::emulator::{Image, OutputDevice};
+use crate::emulator::{Image, OutputDevice, PiaChannel};
 use crate::machine_config::MachineInfo;
 use crate::messages::IoMessage;
 use crate::symbols::MapFile;
@@ -41,18 +41,12 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
 
     let tui_output = TuiOutput::new(io_channel.0.clone());
 
-    let (event_tx, event_rx) = channel();
+    let input_channel = PiaChannel::new();
+    let input_tx = input_channel.sender.clone();
 
-    let mut ui = CursiveTui::new(
-        monitor_channel.1,
-        io_channel.1,
-        &debug_channel.0,
-        &event_tx,
-        map_file,
-    );
     spawn(move || {
         let (bus, _) = machine_info
-            .create_bus(Box::new(tui_output), event_rx, &image)
+            .create_bus(Box::new(tui_output), input_channel, &image)
             .expect("Must succeed");
         bus.start();
 
@@ -66,6 +60,14 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
         .run(image.start)
         .expect("Must succeed");
     });
+
+    let mut ui = CursiveTui::new(
+        monitor_channel.1,
+        io_channel.1,
+        &debug_channel.0,
+        &input_tx,
+        map_file,
+    );
     ui.run();
     Ok(())
 }

@@ -1,13 +1,12 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
-    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, OutputDevice, Pia, Ram,
-    Rom,
+    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, OutputDevice, Pia,
+    PiaChannel, Ram, Rom,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
-use cursive::backends::crossterm::crossterm::event::Event;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::mpsc::Sender;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct BusDevice {
@@ -28,11 +27,11 @@ impl BusDevice {
     pub fn map_io_device(
         &self,
         output: Box<dyn OutputDevice>,
-        event_rx: Receiver<Event>,
+        input_channel: PiaChannel,
         bus_tx: &Sender<BusEvent>,
     ) -> DeviceMapping {
         let device: Box<dyn _BusDevice> = match self.r#type {
-            BusDeviceType::Pia => Box::new(Pia::new(output, event_rx, bus_tx.clone())),
+            BusDeviceType::Pia => Box::new(Pia::new(output, input_channel, bus_tx.clone())),
             BusDeviceType::Ram | BusDeviceType::Rom => unimplemented!(),
         };
         DeviceMapping {
