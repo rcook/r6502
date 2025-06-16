@@ -11,6 +11,7 @@ use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Sel
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
 use log::info;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender};
 
 const RIGHT_NAME: &str = "right";
@@ -94,7 +95,7 @@ impl CursiveTui {
             .scrollable()
             .scroll_strategy(ScrollStrategy::KeepRow);
         let help =
-            TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break\nC: Command\nEsc: Exit command")
+            TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break\nC: Command\nEsc: Exit command\nCtrl+P: Toggle between debugger and program input")
                 .scrollable()
                 .scroll_strategy(ScrollStrategy::KeepRow);
         let d = debug_tx.clone();
@@ -191,17 +192,42 @@ impl CursiveTui {
             });
         });
 
+        let program_has_focus = AtomicBool::new(false);
         let event_tx_clone = event_tx.clone();
         cursive.set_on_pre_event_inner(EventTrigger::any(), move |e| {
-            if let Event::Char(ch) = e {
-                // TBD: Only do this when input is redirected to program!
-                // Perhaps implement Ctrl+P to toggle between debugger and program input
-                _ = event_tx_clone.send(CrosstermEvent::Key(KeyEvent::new(
-                    KeyCode::Char(*ch),
-                    KeyModifiers::NONE,
-                )));
+            if program_has_focus.load(Ordering::SeqCst) {
+                match e {
+                    Event::CtrlChar('p') => {
+                        program_has_focus.store(false, Ordering::SeqCst);
+                    }
+                    Event::Key(Key::Enter) => {
+                        // TBD: Only do this when input is redirected to program!
+                        // Perhaps implement Ctrl+P to toggle between debugger and program input
+                        _ = event_tx_clone.send(CrosstermEvent::Key(KeyEvent::new(
+                            KeyCode::Char('\r'),
+                            KeyModifiers::NONE,
+                        )));
+                    }
+                    Event::Char(ch) => {
+                        // TBD: Only do this when input is redirected to program!
+                        // Perhaps implement Ctrl+P to toggle between debugger and program input
+                        _ = event_tx_clone.send(CrosstermEvent::Key(KeyEvent::new(
+                            KeyCode::Char(*ch),
+                            KeyModifiers::NONE,
+                        )));
+                    }
+                    _ => {}
+                }
+                Some(EventResult::consumed())
+            } else {
+                match e {
+                    Event::CtrlChar('p') => {
+                        program_has_focus.store(true, Ordering::SeqCst);
+                        Some(EventResult::consumed())
+                    }
+                    _ => Some(EventResult::Ignored),
+                }
             }
-            Some(EventResult::Ignored)
         });
 
         cursive
