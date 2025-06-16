@@ -197,21 +197,21 @@ impl CursiveTui {
         let program_gets_input = AtomicBool::new(false);
         let event_tx_clone = event_tx.clone();
         cursive.set_on_pre_event_inner(EventTrigger::any(), move |e| {
+            fn send_char(event_tx: &Sender<CrosstermEvent>, ch: char) {
+                _ = event_tx.send(CrosstermEvent::Key(KeyEvent::new(
+                    KeyCode::Char(ch),
+                    KeyModifiers::NONE,
+                )));
+            }
+
+            fn send_ctrl_char(event_tx: &Sender<CrosstermEvent>, ch: char) {
+                _ = event_tx.send(CrosstermEvent::Key(KeyEvent::new(
+                    KeyCode::Char(ch),
+                    KeyModifiers::CONTROL,
+                )));
+            }
+
             if program_gets_input.load(Ordering::SeqCst) {
-                fn send_char(event_tx: &Sender<CrosstermEvent>, ch: char) {
-                    _ = event_tx.send(CrosstermEvent::Key(KeyEvent::new(
-                        KeyCode::Char(ch),
-                        KeyModifiers::NONE,
-                    )));
-                }
-
-                fn send_ctrl_char(event_tx: &Sender<CrosstermEvent>, ch: char) {
-                    _ = event_tx.send(CrosstermEvent::Key(KeyEvent::new(
-                        KeyCode::Char(ch),
-                        KeyModifiers::CONTROL,
-                    )));
-                }
-
                 match e {
                     Event::CtrlChar('p') => {
                         program_gets_input.store(false, Ordering::SeqCst);
@@ -224,7 +224,7 @@ impl CursiveTui {
                     Event::Key(Key::Enter) => send_char(&event_tx_clone, '\r'),
                     Event::Key(Key::Esc) => send_char(&event_tx_clone, 0x1b as char),
                     Event::Char(ch) => send_char(&event_tx_clone, *ch),
-                    _ => {}
+                    _ => return None,
                 }
                 Some(EventResult::consumed())
             } else {
@@ -233,7 +233,7 @@ impl CursiveTui {
                         program_gets_input.store(true, Ordering::SeqCst);
                         Some(EventResult::consumed())
                     }
-                    _ => Some(EventResult::Ignored),
+                    _ => None,
                 }
             }
         });
