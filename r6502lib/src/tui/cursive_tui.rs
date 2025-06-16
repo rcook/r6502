@@ -5,7 +5,6 @@ use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
 };
-use cursive::backends::crossterm::crossterm::style::SetBackgroundColor;
 use cursive::direction::Orientation;
 use cursive::event::{Event, EventResult, EventTrigger, Key};
 use cursive::theme::{BaseColor, Color};
