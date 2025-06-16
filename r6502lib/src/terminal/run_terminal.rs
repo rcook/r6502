@@ -17,11 +17,26 @@ use std::thread::spawn;
 use std::time::Duration;
 
 #[derive(Debug)]
-enum TerminalMessage {
-    ShutDown,
+enum TerminalEvent {
+    Shutdown,
 }
 
-fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, input_tx: &Sender<PiaEvent>) -> Result<()> {
+struct RawMode;
+
+impl RawMode {
+    fn new() -> Result<()> {
+        enable_raw_mode()?;
+        Ok(())
+    }
+}
+
+impl Drop for RawMode {
+    fn drop(&mut self) {
+        disable_raw_mode().expect("Must succeed");
+    }
+}
+
+fn event_loop(terminal_rx: &Receiver<TerminalEvent>, pia_tx: &Sender<PiaEvent>) -> Result<()> {
     fn try_read_event() -> Result<Option<Event>> {
         if poll(Duration::from_millis(100))? {
             Ok(Some(read()?))
@@ -30,20 +45,20 @@ fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, input_tx: &Sender<PiaEven
         }
     }
 
-    enable_raw_mode()?;
+    let raw_mode = RawMode::new();
 
     loop {
         match terminal_rx.try_recv() {
-            Ok(TerminalMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
+            Ok(TerminalEvent::Shutdown) | Err(TryRecvError::Disconnected) => break,
             Err(TryRecvError::Empty) => {}
         }
 
         if let Some(event) = try_read_event()? {
-            _ = input_tx.send(PiaEvent::Input(event));
+            _ = pia_tx.send(PiaEvent::Input(event));
         }
     }
 
-    disable_raw_mode()?;
+    drop(raw_mode);
 
     Ok(())
 }
@@ -71,13 +86,13 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     };
 
     let (terminal_tx, terminal_rx) = channel();
-    let input_channel = PiaChannel::new();
-    let input_tx = input_channel.sender.clone();
+    let pia_channel = PiaChannel::new();
+    let pia_tx = pia_channel.sender.clone();
 
-    let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), input_channel, &image)?;
+    let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
     bus.start();
 
-    let stdin_thread = spawn(move || stdin_loop(&terminal_rx, &input_tx).expect("Must succeed"));
+    let handle = spawn(move || event_loop(&terminal_rx, &pia_tx).expect("Must succeed"));
 
     let start = if opts.reset {
         bus.load_reset_unsafe()
@@ -146,8 +161,8 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         }
     }
 
-    _ = terminal_tx.send(TerminalMessage::ShutDown);
-    _ = stdin_thread.join();
+    _ = terminal_tx.send(TerminalEvent::Shutdown);
+    _ = handle.join();
 
     bus.stop();
 

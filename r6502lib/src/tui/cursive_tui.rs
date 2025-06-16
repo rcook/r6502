@@ -38,10 +38,10 @@ impl CursiveTui {
         monitor_rx: Receiver<MonitorMessage>,
         io_rx: Receiver<IoMessage>,
         debug_tx: &Sender<DebugMessage>,
-        input_tx: &Sender<PiaEvent>,
+        pia_tx: &Sender<PiaEvent>,
         map_file: MapFile,
     ) -> Self {
-        let cursive = Self::make_ui(&map_file, debug_tx, input_tx);
+        let cursive = Self::make_ui(&map_file, debug_tx, pia_tx);
         Self {
             cursive,
             monitor_rx,
@@ -58,7 +58,7 @@ impl CursiveTui {
     fn make_ui(
         map_file: &MapFile,
         debug_tx: &Sender<DebugMessage>,
-        input_tx: &Sender<PiaEvent>,
+        pia_tx: &Sender<PiaEvent>,
     ) -> CursiveRunner<CursiveRunnable> {
         use crate::messages::DebugMessage::{Break, FetchMemory, Go, Run, SetPc, Step};
 
@@ -196,17 +196,17 @@ impl CursiveTui {
         });
 
         let program_gets_input = AtomicBool::new(false);
-        let input_tx_clone = input_tx.clone();
+        let pia_tx_clone = pia_tx.clone();
         cursive.set_on_pre_event_inner(EventTrigger::any(), move |e| {
-            fn send_char(input_tx: &Sender<PiaEvent>, ch: char) {
-                _ = input_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
+            fn send_char(pia_tx: &Sender<PiaEvent>, ch: char) {
+                _ = pia_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
                     KeyCode::Char(ch),
                     KeyModifiers::NONE,
                 ))));
             }
 
-            fn send_ctrl_char(input_tx: &Sender<PiaEvent>, ch: char) {
-                _ = input_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
+            fn send_ctrl_char(pia_tx: &Sender<PiaEvent>, ch: char) {
+                _ = pia_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
                     KeyCode::Char(ch),
                     KeyModifiers::CONTROL,
                 ))));
@@ -218,13 +218,13 @@ impl CursiveTui {
                         program_gets_input.store(false, Ordering::SeqCst);
                     }
                     // TBD: Get this working!
-                    Event::CtrlChar('r') => send_ctrl_char(&input_tx_clone, 'r'),
+                    Event::CtrlChar('r') => send_ctrl_char(&pia_tx_clone, 'r'),
                     // TBD: Get this working!
-                    Event::CtrlChar('s') => send_ctrl_char(&input_tx_clone, 's'),
-                    Event::Key(Key::Backspace | Key::Del) => send_char(&input_tx_clone, '_'),
-                    Event::Key(Key::Enter) => send_char(&input_tx_clone, '\r'),
-                    Event::Key(Key::Esc) => send_char(&input_tx_clone, 0x1b as char),
-                    Event::Char(ch) => send_char(&input_tx_clone, *ch),
+                    Event::CtrlChar('s') => send_ctrl_char(&pia_tx_clone, 's'),
+                    Event::Key(Key::Backspace | Key::Del) => send_char(&pia_tx_clone, '_'),
+                    Event::Key(Key::Enter) => send_char(&pia_tx_clone, '\r'),
+                    Event::Key(Key::Esc) => send_char(&pia_tx_clone, 0x1b as char),
+                    Event::Char(ch) => send_char(&pia_tx_clone, *ch),
                     _ => return None,
                 }
                 Some(EventResult::consumed())
