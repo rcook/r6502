@@ -2,11 +2,15 @@ use crate::emulator::InstructionInfo;
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use crate::symbols::SymbolInfo;
 use cursive::align::HAlign;
+use cursive::backends::crossterm::crossterm::event::{
+    Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
+};
 use cursive::direction::Orientation;
-use cursive::event::Key;
+use cursive::event::{Event, EventResult, EventTrigger, Key};
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
+use log::info;
 use std::sync::mpsc::{Receiver, Sender};
 
 const RIGHT_NAME: &str = "right";
@@ -32,9 +36,10 @@ impl CursiveTui {
         monitor_rx: Receiver<MonitorMessage>,
         io_rx: Receiver<IoMessage>,
         debug_tx: &Sender<DebugMessage>,
+        event_tx: &Sender<CrosstermEvent>,
         symbols: Vec<SymbolInfo>,
     ) -> Self {
-        let cursive = Self::make_ui(&symbols, debug_tx);
+        let cursive = Self::make_ui(&symbols, debug_tx, event_tx);
         Self {
             cursive,
             monitor_rx,
@@ -51,6 +56,7 @@ impl CursiveTui {
     fn make_ui(
         symbols: &[SymbolInfo],
         debug_tx: &Sender<DebugMessage>,
+        event_tx: &Sender<CrosstermEvent>,
     ) -> CursiveRunner<CursiveRunnable> {
         use crate::messages::DebugMessage::{Break, FetchMemory, Go, Run, SetPc, Step};
 
@@ -183,6 +189,19 @@ impl CursiveTui {
             c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                 command.disable();
             });
+        });
+
+        let event_tx_clone = event_tx.clone();
+        cursive.set_on_pre_event_inner(EventTrigger::any(), move |e| {
+            if let Event::Char(ch) = e {
+                // TBD: Implement this!
+                info!("ch={ch}");
+                _ = event_tx_clone.send(CrosstermEvent::Key(KeyEvent::new(
+                    KeyCode::Char('X'),
+                    KeyModifiers::NONE,
+                )));
+            }
+            Some(EventResult::Ignored)
         });
 
         cursive

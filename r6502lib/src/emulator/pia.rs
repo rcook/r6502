@@ -1,20 +1,19 @@
-use crate::emulator::{BusDevice, BusEvent};
+use crate::emulator::{BusDevice, BusEvent, OutputDevice};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
-    poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
+    Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
-use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::cell::Cell;
-use std::io::{stdout, Write};
 use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
-use std::time::Duration;
 
+#[derive(Debug)]
 enum StdinMessage {
     ShutDown,
 }
 
+#[derive(Debug)]
 enum EventMessage {
     PaUpdated,
     PacrUpdated,
@@ -67,48 +66,68 @@ impl Pia {
     const PB_CR_OFFSET: u16 = 0x0003;
 
     #[must_use]
-    pub fn new(bus_tx: Sender<BusEvent>) -> Self {
+    #[allow(clippy::similar_names)]
+    pub fn new(
+        output: Box<dyn OutputDevice>,
+        event_rx: Receiver<Event>,
+        bus_tx: Sender<BusEvent>,
+    ) -> Self {
         let state = Arc::new(Mutex::new(PiaState::new()));
         let (stdin_tx, stdin_rx) = channel();
-        let (event_tx, event_rx) = channel();
+        let (event_tx2, event_rx2) = channel();
+
+        // TBD: Fuse these two threads into a single event loop if possible
 
         let state_clone = Arc::clone(&state);
-        let stdin_thread = spawn(move || {
-            Self::stdin_loop(&state_clone, &stdin_rx, &bus_tx).expect("Must succeed")
+        let stdin_thread =
+            spawn(move || Self::stdin_loop(&state_clone, event_rx, &stdin_rx, &bus_tx));
+
+        let state_clone = Arc::clone(&state);
+        let event_thread = spawn(move || {
+            Self::event_loop(&state_clone, &event_rx2, output).expect("Must succeed");
         });
-
-        let state_clone = Arc::clone(&state);
-        let event_thread =
-            spawn(move || Self::event_loop(&state_clone, &event_rx).expect("Must succeed"));
 
         Self {
             stdin_tx,
-            event_tx,
+            event_tx: event_tx2,
             state,
             input_thread: Cell::new(Some(stdin_thread)),
             event_thread: Cell::new(Some(event_thread)),
         }
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn stdin_loop(
         state: &Arc<Mutex<PiaState>>,
+        event_rx: Receiver<Event>,
         input_rx: &Receiver<StdinMessage>,
         bus_tx: &Sender<BusEvent>,
-    ) -> Result<()> {
-        enable_raw_mode()?;
-
+    ) {
         loop {
             match input_rx.try_recv() {
                 Ok(StdinMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
                 Err(TryRecvError::Empty) => {}
             }
 
-            if let Some(event) = Self::try_read_event()? {
-                match event {
+            match event_rx.try_recv() {
+                Err(TryRecvError::Disconnected) => break,
+                Err(TryRecvError::Empty) => {}
+                Ok(event) => match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         match (key.modifiers, key.code) {
-                            (KeyModifiers::CONTROL, KeyCode::Char('c')) => break,
-                            (KeyModifiers::CONTROL, KeyCode::Char('r' | 's')) => {}
+                            (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
+                                // Halt program
+                                _ = bus_tx.send(BusEvent::UserBreak);
+                                break;
+                            }
+                            (KeyModifiers::CONTROL, KeyCode::Char('r')) => {
+                                // Reset CPU: i.e. call the RESET vector etc.
+                                _ = bus_tx.send(BusEvent::Reset);
+                            }
+                            (KeyModifiers::CONTROL, KeyCode::Char('s')) => {
+                                // Save snapshot of memory to disc
+                                _ = bus_tx.send(BusEvent::Snapshot);
+                            }
                             (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
                                 state.lock().unwrap().set_key(c);
                             }
@@ -123,38 +142,19 @@ impl Pia {
                             }
                             _ => todo!("{key:?}"),
                         }
-
-                        // Halt program
-                        if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('c')
-                        {
-                            _ = bus_tx.send(BusEvent::UserBreak);
-                            break;
-                        }
-
-                        // Reset
-                        if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('r')
-                        {
-                            _ = bus_tx.send(BusEvent::Reset);
-                        }
-
-                        // Save snapshot
-                        if key.modifiers == KeyModifiers::CONTROL && key.code == KeyCode::Char('s')
-                        {
-                            _ = bus_tx.send(BusEvent::Snapshot);
-                        }
                     }
                     _ => {}
-                }
+                },
             }
         }
-
-        disable_raw_mode()?;
-
-        Ok(())
     }
 
-    fn event_loop(state: &Arc<Mutex<PiaState>>, event_rx: &Receiver<EventMessage>) -> Result<()> {
-        let mut stdout = stdout();
+    #[allow(clippy::needless_pass_by_value)]
+    fn event_loop(
+        state: &Arc<Mutex<PiaState>>,
+        event_rx: &Receiver<EventMessage>,
+        output: Box<dyn OutputDevice>,
+    ) -> Result<()> {
         loop {
             match event_rx.recv()? {
                 EventMessage::PaUpdated | EventMessage::PbcrUpdated => {}
@@ -170,15 +170,12 @@ impl Pia {
                     let ch = char_value as char;
                     match char_value {
                         0 => {}
-                        13 => _ = stdout.write(&[13, 10]),
+                        13 => output.write('\n')?,
                         _ => {
                             if !ch.is_control() {
-                                _ = stdout.write(&[char_value]);
+                                output.write(ch)?;
                             }
                         }
-                    }
-                    if char_value != 0 {
-                        _ = stdout.flush();
                     }
                 }
                 EventMessage::ShutDown => break,
@@ -186,14 +183,6 @@ impl Pia {
         }
 
         Ok(())
-    }
-
-    fn try_read_event() -> Result<Option<Event>> {
-        if poll(Duration::from_millis(100))? {
-            Ok(Some(read()?))
-        } else {
-            Ok(None)
-        }
     }
 
     // TBD: Use KeyEvent::is_press in crossterm >= 0.29

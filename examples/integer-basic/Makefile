@@ -4,7 +4,7 @@ BINEXT := r6502
 PROGRAM := integer-basic.$(BINEXT)
 default: $(PROGRAM)
 
-.PHONY: clean default run
+.PHONY: clean debug default run
 
 SOURCES := a1basic.s constants.s main.s wozmon.s
 CFG := $(PROGRAM:.$(BINEXT)=.cfg)
@@ -22,3 +22,6 @@ clean:
 
 run: $(PROGRAM)
 	cargo run -- run $(PROGRAM)
+
+debug: $(PROGRAM)
+	cargo run -- debug $(PROGRAM)

@@ -1,12 +1,34 @@
 use crate::debug_options::DebugOptions;
-use crate::emulator::{Image, UiMode};
+use crate::emulator::{Image, OutputDevice};
 use crate::machine_config::MachineInfo;
+use crate::messages::IoMessage;
 use crate::symbols::SymbolInfo;
 use crate::tui::cursive_tui::CursiveTui;
 use crate::tui::tui_host::TuiHost;
 use anyhow::Result;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Sender};
 use std::thread::spawn;
+
+struct TuiOutput {
+    io_tx: Sender<IoMessage>,
+}
+
+impl TuiOutput {
+    const fn new(io_tx: Sender<IoMessage>) -> Self {
+        Self { io_tx }
+    }
+}
+
+impl OutputDevice for TuiOutput {
+    fn dup(&self) -> Box<dyn OutputDevice> {
+        Box::new(Self::new(self.io_tx.clone()))
+    }
+
+    fn write(&self, ch: char) -> Result<()> {
+        _ = self.io_tx.send(IoMessage::WriteChar(ch));
+        Ok(())
+    }
+}
 
 pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
@@ -20,11 +42,24 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let debug_channel = channel();
     let monitor_channel = channel();
     let io_channel = channel();
-    let mut ui = CursiveTui::new(monitor_channel.1, io_channel.1, &debug_channel.0, symbols);
+
+    let tui_output = TuiOutput::new(io_channel.0.clone());
+
+    let (event_tx, event_rx) = channel();
+
+    let mut ui = CursiveTui::new(
+        monitor_channel.1,
+        io_channel.1,
+        &debug_channel.0,
+        &event_tx,
+        symbols,
+    );
     spawn(move || {
         let (bus, _) = machine_info
-            .create_bus(UiMode::Tui, &image)
+            .create_bus(Box::new(tui_output), event_rx, &image)
             .expect("Must succeed");
+        bus.start();
+
         TuiHost::new(
             machine_info,
             bus,

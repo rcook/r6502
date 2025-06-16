@@ -1,14 +1,70 @@
 use crate::emulator::{
-    BusEvent, Cpu, Image, Monitor, Opcode, TracingMonitor, UiMode, MOS_6502, RESET,
+    BusEvent, Cpu, Image, Monitor, Opcode, OutputDevice, TracingMonitor, MOS_6502, RESET,
 };
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use anyhow::{anyhow, Result};
 use chrono::Utc;
+use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
+use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::env::current_dir;
+use std::io::{stdout, Write};
 use std::process::exit;
 use std::str::from_utf8;
-use std::sync::mpsc::TryRecvError;
+use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
+use std::thread::spawn;
+use std::time::Duration;
+
+#[derive(Debug)]
+enum TerminalMessage {
+    ShutDown,
+}
+
+fn stdin_loop(terminal_rx: &Receiver<TerminalMessage>, event_tx: &Sender<Event>) -> Result<()> {
+    fn try_read_event() -> Result<Option<Event>> {
+        if poll(Duration::from_millis(100))? {
+            Ok(Some(read()?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    enable_raw_mode()?;
+
+    loop {
+        match terminal_rx.try_recv() {
+            Ok(TerminalMessage::ShutDown) | Err(TryRecvError::Disconnected) => break,
+            Err(TryRecvError::Empty) => {}
+        }
+
+        if let Some(event) = try_read_event()? {
+            _ = event_tx.send(event);
+        }
+    }
+
+    disable_raw_mode()?;
+
+    Ok(())
+}
+
+struct TerminalOutput;
+
+impl OutputDevice for TerminalOutput {
+    fn dup(&self) -> Box<dyn OutputDevice> {
+        Box::new(Self)
+    }
+
+    fn write(&self, ch: char) -> Result<()> {
+        let mut stdout = stdout();
+        if ch == '\n' {
+            stdout.write_all(&[13, 10])?;
+        } else {
+            stdout.write_all(&[ch as u8])?;
+        }
+        stdout.flush()?;
+        Ok(())
+    }
+}
 
 pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
@@ -17,8 +73,13 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
 
-    let (bus, bus_rx) = machine_info.create_bus(UiMode::Terminal, &image)?;
+    let (terminal_tx, terminal_rx) = channel();
+    let (event_tx, event_rx) = channel();
+
+    let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), event_rx, &image)?;
     bus.start();
+
+    let stdin_thread = spawn(move || stdin_loop(&terminal_rx, &event_tx).expect("Must succeed"));
 
     let start = if opts.reset {
         bus.load_reset_unsafe()
@@ -86,6 +147,9 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
             }
         }
     }
+
+    _ = terminal_tx.send(TerminalMessage::ShutDown);
+    _ = stdin_thread.join();
 
     bus.stop();
 

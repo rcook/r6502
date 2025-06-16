@@ -1,7 +1,9 @@
-use crate::emulator::{Bus, BusEvent, Image, MachineTag, UiMode};
+use crate::emulator::{Bus, BusEvent, Image, MachineTag, OutputDevice};
+use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
 use crate::machine_config::machines::Machines;
 use anyhow::{anyhow, bail, Result};
+use cursive::backends::crossterm::crossterm::event::Event;
 use dirs::config_dir;
 use path_absolutize::Absolutize;
 use std::env::current_exe;
@@ -47,7 +49,12 @@ impl MachineInfo {
         })
     }
 
-    pub fn create_bus(&self, ui_mode: UiMode, image: &Image) -> Result<(Bus, Receiver<BusEvent>)> {
+    pub fn create_bus(
+        &self,
+        output: Box<dyn OutputDevice>,
+        event_rx: Receiver<Event>,
+        image: &Image,
+    ) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
 
         #[allow(unused_assignments)]
@@ -64,12 +71,30 @@ impl MachineInfo {
         images.push(image);
 
         let (bus_tx, bus_rx) = channel();
-        let mappings = self
-            .machine
-            .bus_devices
-            .iter()
-            .map(|d| d.map_device(ui_mode, &bus_tx, &images))
-            .collect();
+
+        let mut io_devices = Vec::new();
+        let mut memory_devices = Vec::new();
+        for d in &self.machine.bus_devices {
+            match d.r#type {
+                BusDeviceType::Pia => io_devices.push(d),
+                BusDeviceType::Ram | BusDeviceType::Rom => memory_devices.push(d),
+            }
+        }
+
+        if io_devices.len() > 1 {
+            bail!("Only one I/O bus device allowed")
+        }
+
+        let mut mappings = Vec::with_capacity(self.machine.bus_devices.len());
+
+        if let Some(d) = io_devices.first() {
+            mappings.push(d.map_io_device(output, event_rx, &bus_tx));
+        }
+
+        for d in memory_devices {
+            mappings.push(d.map_memory_device(&images));
+        }
+
         let bus = Bus::new(mappings);
         Ok((bus, bus_rx))
     }

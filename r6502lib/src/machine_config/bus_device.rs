@@ -1,12 +1,13 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
-    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, DummyDevice, Image, Pia, Ram,
-    Rom, UiMode,
+    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, OutputDevice, Pia, Ram,
+    Rom,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
+use cursive::backends::crossterm::crossterm::event::Event;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Receiver, Sender};
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct BusDevice {
@@ -24,21 +25,30 @@ pub struct BusDevice {
 }
 
 impl BusDevice {
-    pub fn map_device(
+    pub fn map_io_device(
         &self,
-        ui_mode: UiMode,
+        output: Box<dyn OutputDevice>,
+        event_rx: Receiver<Event>,
         bus_tx: &Sender<BusEvent>,
-        images: &[&Image],
     ) -> DeviceMapping {
+        let device: Box<dyn _BusDevice> = match self.r#type {
+            BusDeviceType::Pia => Box::new(Pia::new(output, event_rx, bus_tx.clone())),
+            BusDeviceType::Ram | BusDeviceType::Rom => unimplemented!(),
+        };
+        DeviceMapping {
+            address_range: self.address_range.clone(),
+            device,
+            offset: self.offset,
+        }
+    }
+
+    pub fn map_memory_device(&self, images: &[&Image]) -> DeviceMapping {
         let image_slices = images
             .iter()
             .map(|image| image.slice(&self.address_range))
             .collect();
         let device: Box<dyn _BusDevice> = match self.r#type {
-            BusDeviceType::Pia => match ui_mode {
-                UiMode::Terminal => Box::new(Pia::new(bus_tx.clone())),
-                UiMode::Tui => Box::new(DummyDevice),
-            },
+            BusDeviceType::Pia => unimplemented!(),
             BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), &image_slices)),
             BusDeviceType::Rom => Box::new(Rom::new(self.address_range.len(), &image_slices)),
         };
