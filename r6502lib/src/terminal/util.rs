@@ -8,7 +8,7 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     println!(
         "  {label:<25}: {s} (${s:04X}) bytes",
         label = "Image size",
-        s = image.bytes.len()
+        s = image.bytes().len()
     );
 
     match image.machine_tag() {

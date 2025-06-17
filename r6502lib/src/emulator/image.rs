@@ -1,17 +1,14 @@
-use crate::emulator::util::make_word;
-use crate::emulator::{
-    read_r6502_image_header, AddressRange, ImageHeader, ImageSlice, MachineTag,
-    R6502SnapshotHeader, R6502Type0Header, SIM6502_MAGIC_NUMBER,
-};
+use crate::emulator::r6502_image::Image as R6502Image;
+use crate::emulator::{AddressRange, ImageSlice, MachineTag, OtherImage};
 use anyhow::{bail, Error, Result};
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
 use std::str::FromStr;
 
-pub struct Image {
-    pub bytes: Vec<u8>,
-    header: ImageHeader,
+pub enum Image {
+    R6502(R6502Image),
+    Other(OtherImage),
 }
 
 impl Image {
@@ -19,7 +16,7 @@ impl Image {
         match File::open(path) {
             Ok(f) => Self::from_reader(f),
             Err(e) if e.kind() == ErrorKind::NotFound => {
-                bail!("Could not find file {}", path.display())
+                bail!("Could not find image file {path}", path = path.display())
             }
             Err(e) => bail!(e),
         }
@@ -31,52 +28,48 @@ impl Image {
 
     #[must_use]
     pub const fn machine_tag(&self) -> Option<MachineTag> {
-        match self.header {
-            ImageHeader::R6502Type0(R6502Type0Header { machine_tag, .. })
-            | ImageHeader::R6502Snapshot(R6502SnapshotHeader { machine_tag, .. }) => {
-                Some(machine_tag)
-            }
-            ImageHeader::Sim6502 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => None,
+        match self {
+            Self::R6502(image) => Some(image.machine_tag()),
+            Self::Other(_) => None,
         }
     }
 
     #[must_use]
     pub const fn load(&self) -> Option<u16> {
-        match self.header {
-            ImageHeader::R6502Type0(R6502Type0Header { load, .. })
-            | ImageHeader::Sim6502 { load, .. }
-            | ImageHeader::Listing { load, .. } => Some(load),
-            ImageHeader::R6502Snapshot(_) => Some(0x0000),
-            ImageHeader::None => None,
+        match self {
+            Self::R6502(image) => image.load(),
+            Self::Other(other) => other.load(),
         }
     }
 
     #[must_use]
     pub const fn start(&self) -> Option<u16> {
-        match self.header {
-            ImageHeader::R6502Type0(R6502Type0Header { start, .. })
-            | ImageHeader::R6502Snapshot(R6502SnapshotHeader { pc: start, .. })
-            | ImageHeader::Sim6502 { start, .. }
-            | ImageHeader::Listing { load: _, start } => Some(start),
-            ImageHeader::None => None,
+        match self {
+            Self::R6502(image) => Some(image.start()),
+            Self::Other(other) => other.start(),
         }
     }
 
     #[must_use]
     pub const fn sp(&self) -> Option<u8> {
-        match self.header {
-            ImageHeader::R6502Type0 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => {
-                None
-            }
-            ImageHeader::R6502Snapshot(R6502SnapshotHeader { sp, .. })
-            | ImageHeader::Sim6502 { sp, .. } => Some(sp),
+        match self {
+            Self::R6502(image) => image.sp(),
+            Self::Other(other) => other.sp(),
+        }
+    }
+    #[must_use]
+    pub const fn bytes(&self) -> &Vec<u8> {
+        match self {
+            Self::R6502(image) => image.bytes(),
+            Self::Other(other) => other.bytes(),
         }
     }
 
     #[must_use]
     pub fn slice(&self, range: &AddressRange) -> ImageSlice {
         let image_start = self.load().unwrap_or_default() as usize;
-        let image_end = image_start + self.bytes.len();
+        let bytes = self.bytes();
+        let image_end = image_start + bytes.len();
         let range_start = range.start() as usize;
         let range_end = range.end() as usize + 1;
 
@@ -100,75 +93,17 @@ impl Image {
         };
 
         ImageSlice {
-            bytes: &self.bytes[bytes_start..bytes_end],
+            bytes: &bytes[bytes_start..bytes_end],
             load,
         }
     }
 
     fn from_reader<R: Read + Seek>(mut reader: R) -> Result<Self> {
-        let header = Self::read_header(&mut reader)?;
-        let mut bytes = Vec::new();
-        reader.read_to_end(&mut bytes)?;
-        Ok(Self { bytes, header })
-    }
-
-    fn read_header<R: Read + Seek>(reader: &mut R) -> Result<ImageHeader> {
-        let header = read_r6502_image_header(reader)?;
-        if let Some(header) = header {
-            return Ok(header);
-        }
-
-        let header = Self::read_sim6502_header(reader)?;
-        if let Some(header) = header {
-            return Ok(header);
-        }
-
-        Ok(ImageHeader::None)
-    }
-
-    fn read_sim6502_header<R: Read + Seek>(reader: &mut R) -> Result<Option<ImageHeader>> {
-        let mut header = [0x00u8; 12];
-        match reader.read_exact(&mut header) {
-            Ok(()) => {}
-            Err(e) if e.kind() == ErrorKind::UnexpectedEof => {
-                reader.rewind()?;
-                return Ok(None);
-            }
-            Err(e) => bail!(e),
-        }
-
-        let bytes = SIM6502_MAGIC_NUMBER.as_bytes();
-        assert_eq!(5, bytes.len());
-
-        // "sim65" header
-        if *bytes != header[0..bytes.len()] {
-            reader.rewind()?;
-            return Ok(None);
-        }
-
-        // Version number
-        if header[5] != 2 {
-            reader.rewind()?;
-            return Ok(None);
-        }
-
-        // CPU version
-        if header[6] != 0 {
-            reader.rewind()?;
-            return Ok(None);
-        }
-
-        // Initial stack pointer
-        let sp = header[7];
-        assert_eq!(0xff, sp);
-
-        // Load address
-        let load = make_word(header[9], header[8]);
-
-        // Start address
-        let start = make_word(header[11], header[10]);
-
-        Ok(Some(ImageHeader::Sim6502 { load, start, sp }))
+        if let Some(image) = R6502Image::try_from_reader(&mut reader)? {
+            return Ok(Self::R6502(image));
+        };
+        let image = OtherImage::from_reader(&mut reader)?;
+        Ok(Self::Other(image))
     }
 }
 
@@ -211,10 +146,7 @@ impl FromStr for Image {
         let mut bytes = Vec::new();
         let mut i = s.lines();
         let Some(line) = i.next() else {
-            return Ok(Self {
-                header: ImageHeader::None,
-                bytes,
-            });
+            return Ok(Self::Other(OtherImage::new_raw(bytes)));
         };
 
         let (mut pc, count) = read_line(&mut bytes, line)?;
@@ -243,16 +175,13 @@ impl FromStr for Image {
         }
 
         let start = load;
-        Ok(Self {
-            header: ImageHeader::Listing { load, start },
-            bytes,
-        })
+        Ok(Self::Other(OtherImage::new_listing(load, start, bytes)))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::{AddressRange, Image, ImageHeader, DEFAULT_SP};
+    use crate::emulator::{AddressRange, Image, OtherImage, DEFAULT_SP};
     use anyhow::Result;
 
     #[test]
@@ -270,7 +199,7 @@ mod tests {
 
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
-        assert_eq!(28, image.bytes.len());
+        assert_eq!(28, image.bytes().len());
         Ok(())
     }
 
@@ -285,7 +214,7 @@ mod tests {
         assert_eq!(0x0e00, image.load().unwrap_or_default());
         assert_eq!(0x0e00, image.start().unwrap_or_default());
         assert_eq!(0xff, image.sp().unwrap_or(DEFAULT_SP));
-        assert_eq!(30, image.bytes.len());
+        assert_eq!(30, image.bytes().len());
         Ok(())
     }
 
@@ -306,7 +235,7 @@ mod tests {
         assert_eq!(0x1000, image.load().unwrap_or_default());
         assert_eq!(0x1000, image.start().unwrap_or_default());
         assert_eq!(0xff, image.sp().unwrap_or(DEFAULT_SP));
-        assert_eq!(114, image.bytes.len());
+        assert_eq!(114, image.bytes().len());
         Ok(())
     }
 
@@ -322,14 +251,12 @@ mod tests {
         let c = AddressRange::new(14, 16).expect("Must be valid");
         let d = AddressRange::new(20, 22).expect("Must be valid");
         let e = AddressRange::new(25, 26).expect("Must be valid");
-        let image = Image {
-            header: ImageHeader::Sim6502 {
-                load: 0x0005,
-                start: 0x0000,
-                sp: 0xff,
-            },
-            bytes: (1..=16).collect(),
-        };
+        let image = Image::Other(OtherImage::new_sim6502(
+            0x0005,
+            0x0000,
+            0xff,
+            (1..=16).collect(),
+        ));
 
         let slice = image.slice(&a);
         assert_eq!(vec![1, 2], slice.bytes);

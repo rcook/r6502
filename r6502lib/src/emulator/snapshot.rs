@@ -1,6 +1,5 @@
-use crate::emulator::{
-    Cpu, MachineTag, R6502SnapshotHeader, TotalCycles, MEMORY_SIZE, R6502_DUMP_MAGIC_NUMBERS,
-};
+use crate::emulator::r6502_image::ImageHeader;
+use crate::emulator::{Cpu, MachineTag, TotalCycles, MEMORY_SIZE, R6502_DUMP_MAGIC_NUMBERS};
 use anyhow::{bail, Result};
 use chrono::Utc;
 use std::env::current_dir;
@@ -11,11 +10,12 @@ use std::path::Path;
 const SNAPSHOT_SIZE: u64 = MEMORY_SIZE as u64 + 23;
 
 pub struct Snapshot {
-    pub header: R6502SnapshotHeader,
+    pub header: ImageHeader,
     pub bytes: [u8; MEMORY_SIZE],
 }
 
 impl Snapshot {
+    #[allow(unused)]
     #[allow(clippy::many_single_char_names)]
     pub fn read(path: &Path) -> Result<Self> {
         let m = metadata(path)?;
@@ -40,6 +40,8 @@ impl Snapshot {
         let p = bytes[14];
         let total_cycles = TotalCycles::from_le_bytes(<[u8; 8]>::try_from(&bytes[15..23]).unwrap());
         let bytes = <[u8; MEMORY_SIZE]>::try_from(&bytes[23..]).unwrap();
+        todo!();
+        /*
         Ok(Self {
             header: R6502SnapshotHeader {
                 machine_tag,
@@ -53,6 +55,7 @@ impl Snapshot {
             },
             bytes,
         })
+        */
     }
 }
 

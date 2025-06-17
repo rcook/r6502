@@ -53,7 +53,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
 
 pub fn run_from_snapshot(path: &Path) -> Result<()> {
     let snapshot = Snapshot::read(path)?;
-    let machine_info = MachineInfo::find_by_tag(snapshot.header.machine_tag)?;
+    let machine_info = MachineInfo::find_by_tag(snapshot.header.machine_tag())?;
     //let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
     todo!("{machine_info:?}");
 }
