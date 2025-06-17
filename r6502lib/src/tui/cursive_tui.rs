@@ -1,6 +1,6 @@
 use crate::emulator::{InstructionInfo, PiaEvent};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
-use crate::symbols::MapFile;
+use crate::symbols::{Export, MapFile};
 use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
@@ -69,7 +69,7 @@ impl CursiveTui {
         let s = map_file
             .exports
             .iter()
-            .map(|s| format!("{} = ${:04X}", s.name, s.value))
+            .map(Export::to_string)
             .collect::<Vec<_>>()
             .join("\n");
 

@@ -1,5 +1,6 @@
 use crate::symbols::{AddressSize, ExportKind};
 use anyhow::{bail, Error, Result};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::iter::Peekable;
 use std::result::Result as StdResult;
 use std::str::FromStr;
@@ -91,6 +92,26 @@ impl Export {
             kind,
             address_size,
         })
+    }
+}
+
+impl Display for Export {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{name} = ", name = self.name)?;
+        match self.address_size {
+            AddressSize::ZeroPage => write!(f, "${value:02X} ", value = self.value)?,
+            AddressSize::Absolute => write!(f, "${value:04X} ", value = self.value)?,
+            AddressSize::Far => write!(f, "${value:06X} ", value = self.value)?,
+            AddressSize::Long => write!(f, "${value:08X} ", value = self.value)?,
+        }
+        match self.kind {
+            ExportKind::Label => write!(f, "(label)")?,
+            ExportKind::Constant => write!(f, "(constant)")?,
+        }
+        if !self.referenced {
+            write!(f, " (unreferenced)")?;
+        }
+        Ok(())
     }
 }
 
