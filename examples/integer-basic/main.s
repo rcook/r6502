@@ -29,7 +29,6 @@
 
 .code
 startup:
-    ; TBD: Display welcome message!
     ldx #$ff
     txs
     cld
