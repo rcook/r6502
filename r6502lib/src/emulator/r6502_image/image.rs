@@ -1,38 +1,13 @@
-use crate::emulator::{ImageHeader, MachineTag, TotalCycles, R6502_MAGIC_NUMBER};
+use crate::emulator::{
+    r6502_image::{
+        image_header::{R6502SnapshotHeader, R6502Type0Header},
+        image_type::R6502ImageType,
+    },
+    ImageHeader, MachineTag, R6502_MAGIC_NUMBER,
+};
 use anyhow::Result;
-use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use std::io::{ErrorKind, Read, Seek};
-
-const TYPE0: u8 = 0b00000000;
-const SNAPSHOT: u8 = 0b00000001;
-const RLE: u8 = 0b10000000; // TBD: run-length encoding
-
-#[derive(Debug, FromPrimitive)]
-#[repr(u8)]
-pub enum R6502ImageType {
-    Type0 = TYPE0,
-    Type0Rle = TYPE0 | RLE, // Not implemented yet!
-    Snapshot = SNAPSHOT,
-    SnapshotRle = SNAPSHOT | RLE, // Not implemented yet!
-}
-
-pub struct R6502Type0Header {
-    pub machine_tag: MachineTag,
-    pub load: u16,
-    pub start: u16,
-}
-
-pub struct R6502SnapshotHeader {
-    pub machine_tag: MachineTag,
-    pub pc: u16,
-    pub a: u8,
-    pub x: u8,
-    pub y: u8,
-    pub sp: u8,
-    pub p: u8,
-    pub total_cycles: TotalCycles,
-}
 
 pub fn read_r6502_image_header<R: Read + Seek>(reader: &mut R) -> Result<Option<ImageHeader>> {
     macro_rules! fill_buffer {
