@@ -1,6 +1,6 @@
 use crate::emulator::{
-    write_snapshot_with_unique_name, BusEvent, Cpu, Image, Monitor, Opcode, OutputDevice,
-    PiaChannel, PiaEvent, TracingMonitor, MOS_6502, RESET,
+    write_snapshot_with_unique_name, Bus, BusEvent, Channel, Cpu, Image, Monitor, Opcode,
+    OutputDevice, PiaChannel, PiaEvent, TracingMonitor, MOS_6502, RESET,
 };
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
@@ -10,7 +10,7 @@ use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable
 use std::io::{stdout, Write};
 use std::process::exit;
 use std::str::from_utf8;
-use std::sync::mpsc::{channel, Receiver, Sender, TryRecvError};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::thread::spawn;
 use std::time::Duration;
 
@@ -18,6 +18,8 @@ use std::time::Duration;
 enum TerminalEvent {
     Shutdown,
 }
+
+type TerminalChannel = Channel<TerminalEvent>;
 
 struct RawMode;
 
@@ -83,14 +85,12 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
 
-    let (terminal_tx, terminal_rx) = channel();
+    let terminal_channel = TerminalChannel::new();
     let pia_channel = PiaChannel::new();
     let pia_tx = pia_channel.sender.clone();
 
     let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
     bus.start();
-
-    let handle = spawn(move || event_loop(&terminal_rx, &pia_tx).expect("Must succeed"));
 
     let start = if opts.reset {
         bus.load_reset_unsafe()
@@ -102,16 +102,6 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         show_image_info(opts, &image, start);
     }
 
-    let jmp_ind = MOS_6502
-        .get_op_info(&Opcode::JmpInd)
-        .ok_or_else(|| anyhow!("JMP_IND must exist"))?
-        .clone();
-
-    let rts = MOS_6502
-        .get_op_info(&Opcode::Rts)
-        .ok_or_else(|| anyhow!("RTS must exist"))?
-        .clone();
-
     let monitor: Option<Box<dyn Monitor>> = if opts.trace {
         Some(Box::new(TracingMonitor::default()))
     } else {
@@ -121,69 +111,111 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
     let mut cpu = Cpu::new(bus.view(), monitor);
     cpu.reg.pc = start;
 
-    let mut stopped_after_requested_cycles = false;
-    'outer: loop {
-        while cpu.step() {
-            match bus_rx.try_recv() {
-                Ok(BusEvent::UserBreak) => {
-                    break 'outer;
-                }
-                Ok(BusEvent::Reset) => {
-                    jmp_ind.execute_word(&mut cpu, RESET);
-                }
-                Ok(BusEvent::Snapshot) => write_snapshot_with_unique_name(&cpu)?,
-                Err(TryRecvError::Disconnected | TryRecvError::Empty) => {}
-            }
+    Runner {
+        cpu: &mut cpu,
+        bus_rx,
+        pia_tx,
+        terminal_channel,
+        stop_after: opts.stop_after,
+        machine_info,
+        bus: &bus,
+        cycles: opts.cycles,
+    }
+    .run()
+}
 
-            if let Some(stop_after) = opts.stop_after {
-                if cpu.total_cycles >= stop_after {
-                    stopped_after_requested_cycles = true;
-                    break 'outer;
-                }
-            }
+// TBD: This is ugly but it'll work for now
+struct Runner<'a> {
+    cpu: &'a mut Cpu<'a>,
+    bus_rx: Receiver<BusEvent>,
+    terminal_channel: TerminalChannel,
+    pia_tx: Sender<PiaEvent>,
+    stop_after: Option<u64>,
+    machine_info: MachineInfo,
+    bus: &'a Bus,
+    cycles: bool,
+}
 
-            if let Some(halt_addr) = machine_info.machine.halt_addr {
-                if cpu.reg.pc == halt_addr {
-                    break 'outer;
-                }
-            }
+impl<'a> Runner<'a> {
+    fn run(self) -> Result<()> {
+        let handle = spawn(move || {
+            event_loop(&self.terminal_channel.receiver, &self.pia_tx).expect("Must succeed");
+        });
 
-            if let Some(write_char_addr) = machine_info.machine.write_char_addr {
-                if cpu.reg.pc == write_char_addr {
-                    print!("{}", cpu.reg.a as char);
-                    rts.execute_no_operand(&mut cpu);
+        let jmp_ind = MOS_6502
+            .get_op_info(&Opcode::JmpInd)
+            .ok_or_else(|| anyhow!("JMP_IND must exist"))?
+            .clone();
+
+        let rts = MOS_6502
+            .get_op_info(&Opcode::Rts)
+            .ok_or_else(|| anyhow!("RTS must exist"))?
+            .clone();
+
+        let mut stopped_after_requested_cycles = false;
+        'outer: loop {
+            while self.cpu.step() {
+                match self.bus_rx.try_recv() {
+                    Ok(BusEvent::UserBreak) => {
+                        break 'outer;
+                    }
+                    Ok(BusEvent::Reset) => {
+                        jmp_ind.execute_word(self.cpu, RESET);
+                    }
+                    Ok(BusEvent::Snapshot) => write_snapshot_with_unique_name(self.cpu)?,
+                    Err(TryRecvError::Disconnected | TryRecvError::Empty) => {}
+                }
+
+                if let Some(stop_after) = self.stop_after {
+                    if self.cpu.total_cycles >= stop_after {
+                        stopped_after_requested_cycles = true;
+                        break 'outer;
+                    }
+                }
+
+                if let Some(halt_addr) = self.machine_info.machine.halt_addr {
+                    if self.cpu.reg.pc == halt_addr {
+                        break 'outer;
+                    }
+                }
+
+                if let Some(write_char_addr) = self.machine_info.machine.write_char_addr {
+                    if self.cpu.reg.pc == write_char_addr {
+                        print!("{}", self.cpu.reg.a as char);
+                        rts.execute_no_operand(self.cpu);
+                    }
                 }
             }
         }
-    }
 
-    _ = terminal_tx.send(TerminalEvent::Shutdown);
-    _ = handle.join();
+        _ = self.terminal_channel.sender.send(TerminalEvent::Shutdown);
+        _ = handle.join();
 
-    bus.stop();
+        self.bus.stop();
 
-    // If program hits BRK return contents of A as exit code, otherwise 0.
-    let code = if stopped_after_requested_cycles {
-        0
-    } else {
-        cpu.reg.a as i32
-    };
-
-    if opts.cycles {
-        if stopped_after_requested_cycles {
-            println!(
-                "Stopped after {cycles} cycles with exit code {code}",
-                cycles = cpu.total_cycles
-            );
+        // If program hits BRK return contents of A as exit code, otherwise 0.
+        let code = if stopped_after_requested_cycles {
+            0
         } else {
-            println!(
-                "Completed after {cycles} total cycles with exit code {code}",
-                cycles = cpu.total_cycles
-            );
-        }
-    }
+            self.cpu.reg.a as i32
+        };
 
-    exit(code)
+        if self.cycles {
+            if stopped_after_requested_cycles {
+                println!(
+                    "Stopped after {cycles} cycles with exit code {code}",
+                    cycles = self.cpu.total_cycles
+                );
+            } else {
+                println!(
+                    "Completed after {cycles} total cycles with exit code {code}",
+                    cycles = self.cpu.total_cycles
+                );
+            }
+        }
+
+        exit(code)
+    }
 }
 
 fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
