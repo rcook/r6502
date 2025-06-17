@@ -6,7 +6,7 @@ use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
 };
 use cursive::direction::Orientation;
-use cursive::event::{Event, EventResult, EventTrigger, Key};
+use cursive::event::{Callback, Event, EventResult, EventTrigger, Key};
 use cursive::theme::{BaseColor, Color};
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
 use cursive::views::{EditView, LinearLayout, Panel, TextView};
@@ -216,6 +216,11 @@ impl CursiveTui {
                 match e {
                     Event::CtrlChar('p') => {
                         program_gets_input.store(false, Ordering::SeqCst);
+                        return Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
+                            c.call_on_name(STDOUT_NAME, |stdout: &mut TextView| {
+                                stdout.set_style(Color::Dark(BaseColor::Blue));
+                            });
+                        }))));
                     }
                     // TBD: Get this working!
                     Event::CtrlChar('r') => send_ctrl_char(&pia_tx_clone, 'r'),
@@ -232,7 +237,11 @@ impl CursiveTui {
                 match e {
                     Event::CtrlChar('p') => {
                         program_gets_input.store(true, Ordering::SeqCst);
-                        Some(EventResult::consumed())
+                        return Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
+                            c.call_on_name(STDOUT_NAME, |stdout: &mut TextView| {
+                                stdout.set_style(Color::Light(BaseColor::Blue));
+                            });
+                        }))));
                     }
                     _ => None,
                 }
