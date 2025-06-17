@@ -1,6 +1,6 @@
 use crate::emulator::{
     write_snapshot_with_unique_name, Bus, BusEvent, Channel, Cpu, Image, Monitor, Opcode,
-    OutputDevice, PiaChannel, PiaEvent, TracingMonitor, MOS_6502, RESET,
+    OutputDevice, PiaChannel, PiaEvent, Snapshot, TracingMonitor, MOS_6502, RESET,
 };
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
@@ -8,6 +8,7 @@ use anyhow::{anyhow, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
 use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::io::{stdout, Write};
+use std::path::Path;
 use std::process::exit;
 use std::str::from_utf8;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
@@ -122,6 +123,13 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
         cycles: opts.cycles,
     }
     .run()
+}
+
+pub fn run_terminal_from_snapshot(path: &Path) -> Result<()> {
+    let snapshot = Snapshot::read(path)?;
+    let _machine_info = MachineInfo::find_by_tag(snapshot.machine_tag)?;
+    //let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
+    todo!();
 }
 
 // TBD: This is ugly but it'll work for now
