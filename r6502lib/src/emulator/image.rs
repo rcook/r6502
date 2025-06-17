@@ -1,7 +1,7 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{
-    read_r6502_image_header, AddressRange, ImageHeader, ImageSlice, MachineTag, R6502Type0Header,
-    SIM6502_MAGIC_NUMBER,
+    read_r6502_image_header, AddressRange, ImageHeader, ImageSlice, MachineTag,
+    R6502SnapshotHeader, R6502Type0Header, SIM6502_MAGIC_NUMBER,
 };
 use anyhow::{bail, Error, Result};
 use std::fs::File;
@@ -32,11 +32,10 @@ impl Image {
     #[must_use]
     pub const fn machine_tag(&self) -> Option<MachineTag> {
         match self.header {
-            ImageHeader::R6502Type0(R6502Type0Header {
-                machine_tag,
-                load: _,
-                start: _,
-            }) => Some(machine_tag),
+            ImageHeader::R6502Type0(R6502Type0Header { machine_tag, .. })
+            | ImageHeader::R6502Snapshot(R6502SnapshotHeader { machine_tag, .. }) => {
+                Some(machine_tag)
+            }
             ImageHeader::Sim6502 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => None,
         }
     }
@@ -44,17 +43,10 @@ impl Image {
     #[must_use]
     pub const fn load(&self) -> Option<u16> {
         match self.header {
-            ImageHeader::R6502Type0(R6502Type0Header {
-                machine_tag: _,
-                load,
-                start: _,
-            })
-            | ImageHeader::Sim6502 {
-                load,
-                start: _,
-                sp: _,
-            }
-            | ImageHeader::Listing { load, start: _ } => Some(load),
+            ImageHeader::R6502Type0(R6502Type0Header { load, .. })
+            | ImageHeader::Sim6502 { load, .. }
+            | ImageHeader::Listing { load, .. } => Some(load),
+            ImageHeader::R6502Snapshot(_) => Some(0x0000),
             ImageHeader::None => None,
         }
     }
@@ -62,16 +54,9 @@ impl Image {
     #[must_use]
     pub const fn start(&self) -> Option<u16> {
         match self.header {
-            ImageHeader::R6502Type0(R6502Type0Header {
-                machine_tag: _,
-                load: _,
-                start,
-            })
-            | ImageHeader::Sim6502 {
-                load: _,
-                start,
-                sp: _,
-            }
+            ImageHeader::R6502Type0(R6502Type0Header { start, .. })
+            | ImageHeader::R6502Snapshot(R6502SnapshotHeader { pc: start, .. })
+            | ImageHeader::Sim6502 { start, .. }
             | ImageHeader::Listing { load: _, start } => Some(start),
             ImageHeader::None => None,
         }
@@ -83,11 +68,8 @@ impl Image {
             ImageHeader::R6502Type0 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => {
                 None
             }
-            ImageHeader::Sim6502 {
-                load: _,
-                start: _,
-                sp,
-            } => Some(sp),
+            ImageHeader::R6502Snapshot(R6502SnapshotHeader { sp, .. })
+            | ImageHeader::Sim6502 { sp, .. } => Some(sp),
         }
     }
 

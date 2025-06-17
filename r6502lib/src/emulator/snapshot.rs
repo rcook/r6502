@@ -1,4 +1,6 @@
-use crate::emulator::{Cpu, MachineTag, TotalCycles, MEMORY_SIZE, R6502_DUMP_MAGIC_NUMBERS};
+use crate::emulator::{
+    Cpu, MachineTag, R6502SnapshotHeader, TotalCycles, MEMORY_SIZE, R6502_DUMP_MAGIC_NUMBERS,
+};
 use anyhow::{bail, Result};
 use chrono::Utc;
 use std::env::current_dir;
@@ -9,14 +11,7 @@ use std::path::Path;
 const SNAPSHOT_SIZE: u64 = MEMORY_SIZE as u64 + 23;
 
 pub struct Snapshot {
-    pub machine_tag: MachineTag,
-    pub pc: u16,
-    pub a: u8,
-    pub x: u8,
-    pub y: u8,
-    pub sp: u8,
-    pub p: u8,
-    pub total_cycles: TotalCycles,
+    pub header: R6502SnapshotHeader,
     pub bytes: [u8; MEMORY_SIZE],
 }
 
@@ -46,14 +41,16 @@ impl Snapshot {
         let total_cycles = TotalCycles::from_le_bytes(<[u8; 8]>::try_from(&bytes[15..23]).unwrap());
         let bytes = <[u8; MEMORY_SIZE]>::try_from(&bytes[23..]).unwrap();
         Ok(Self {
-            machine_tag,
-            pc,
-            a,
-            x,
-            y,
-            sp,
-            p,
-            total_cycles,
+            header: R6502SnapshotHeader {
+                machine_tag,
+                pc,
+                a,
+                x,
+                y,
+                sp,
+                p,
+                total_cycles,
+            },
             bytes,
         })
     }
