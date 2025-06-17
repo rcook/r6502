@@ -1,7 +1,6 @@
-use crate::{
-    emulator::{InstructionInfo, Reg, TotalCycles},
-    symbols::MapFile,
-};
+use crate::emulator::{InstructionInfo, Reg, TotalCycles};
+use crate::symbols::MapFile;
+use log::info;
 
 pub trait Monitor {
     fn on_before_execute(
@@ -44,7 +43,7 @@ impl Monitor for TracingMonitor {
         reg: Reg,
         instruction_info: InstructionInfo,
     ) {
-        println!(
+        info!(
             "{disassembly:<50}  A={a:02X} X={x:02X} Y={y:02X} P={p} SP={sp:02X}",
             disassembly = instruction_info
                 .disassembly(&self.map_file)
