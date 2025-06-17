@@ -24,9 +24,9 @@ enum TerminalEvent {
 struct RawMode;
 
 impl RawMode {
-    fn new() -> Result<()> {
+    fn new() -> Result<Self> {
         enable_raw_mode()?;
-        Ok(())
+        Ok(Self)
     }
 }
 
@@ -45,7 +45,7 @@ fn event_loop(terminal_rx: &Receiver<TerminalEvent>, pia_tx: &Sender<PiaEvent>) 
         }
     }
 
-    let raw_mode = RawMode::new();
+    let raw_mode = RawMode::new()?;
 
     loop {
         match terminal_rx.try_recv() {
