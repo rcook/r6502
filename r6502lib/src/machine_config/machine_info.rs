@@ -1,4 +1,6 @@
-use crate::emulator::{Bus, BusEvent, Image, MachineTag, OutputDevice, PiaChannel};
+use crate::emulator::{
+    Bus, BusEvent, Image, MachineTag, OutputDevice, PiaChannel, NULL_MACHINE_TAG,
+};
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
 use crate::machine_config::machines::Machines;
@@ -94,7 +96,7 @@ impl MachineInfo {
             mappings.push(d.map_memory_device(&images));
         }
 
-        let bus = Bus::new(image.machine_tag(), mappings);
+        let bus = Bus::new(image.machine_tag().unwrap_or(NULL_MACHINE_TAG), mappings);
         Ok((bus, bus_rx))
     }
 

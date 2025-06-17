@@ -17,12 +17,6 @@ pub enum Command {
     #[command(name = "run", about = "Run program")]
     Run(RunOptions),
 
-    #[command(name = "run-snapshot", about = "Run from snapshot")]
-    RunFromSnapshot {
-        #[arg(required = true, value_parser = parse_absolute_path)]
-        path: PathBuf,
-    },
-
     #[command(name = "validate", about = "Run validation suite")]
     Validate {
         #[arg(required = true, value_parser = parse_absolute_path)]

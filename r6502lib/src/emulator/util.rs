@@ -1,4 +1,17 @@
 use crate::emulator::{Cpu, IRQ};
+use anyhow::Result;
+use chrono::Utc;
+use std::{env::current_dir, path::PathBuf};
+
+pub fn make_unique_snapshot_path() -> Result<PathBuf> {
+    let now = Utc::now();
+    let file_name = format!(
+        "r6502-snapshot-{timestamp}.r6502",
+        timestamp = now.format("%Y%m%d%H%M%S")
+    );
+
+    Ok(current_dir()?.join(file_name))
+}
 
 #[must_use]
 pub const fn make_word(hi: u8, lo: u8) -> u16 {

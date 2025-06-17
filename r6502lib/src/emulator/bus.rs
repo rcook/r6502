@@ -1,6 +1,7 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{
-    AddressRange, BusView, DeviceMapping, Image, MachineTag, Ram, IRQ, MEMORY_SIZE, NMI, RESET,
+    AddressRange, BusView, DeviceMapping, Image, MachineTag, Ram, IRQ, MEMORY_SIZE, NMI,
+    NULL_MACHINE_TAG, RESET,
 };
 use anyhow::Result;
 
@@ -8,14 +9,14 @@ const UNMAPPED_VALUE: u8 = 0xff;
 
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
 pub struct Bus {
-    machine_tag: Option<MachineTag>,
+    machine_tag: MachineTag,
     mappings: Vec<DeviceMapping>,
 }
 
 impl Default for Bus {
     fn default() -> Self {
         Self::new(
-            None,
+            NULL_MACHINE_TAG,
             vec![DeviceMapping {
                 address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
                 device: Box::new(Ram::new(MEMORY_SIZE, &Vec::new())),
@@ -27,7 +28,7 @@ impl Default for Bus {
 
 impl Bus {
     #[must_use]
-    pub fn new(machine_tag: Option<MachineTag>, mut mappings: Vec<DeviceMapping>) -> Self {
+    pub fn new(machine_tag: MachineTag, mut mappings: Vec<DeviceMapping>) -> Self {
         assert!(!AddressRange::overlapping(
             &mappings
                 .iter()
@@ -50,7 +51,7 @@ impl Bus {
             .collect();
         let device = Box::new(Ram::new(MEMORY_SIZE, &image_slices));
         Ok(Bus::new(
-            image.machine_tag(),
+            image.machine_tag().unwrap_or(NULL_MACHINE_TAG),
             vec![DeviceMapping {
                 address_range,
                 device,
@@ -60,8 +61,8 @@ impl Bus {
     }
 
     #[must_use]
-    pub const fn machine_tag(&self) -> &Option<MachineTag> {
-        &self.machine_tag
+    pub const fn machine_tag(&self) -> MachineTag {
+        self.machine_tag
     }
 
     pub fn start(&self) {
@@ -141,17 +142,17 @@ impl Bus {
 #[cfg(test)]
 mod tests {
     use crate::emulator::bus::UNMAPPED_VALUE;
-    use crate::emulator::Bus;
+    use crate::emulator::{Bus, NULL_MACHINE_TAG};
 
     #[test]
     fn load_no_device() {
-        let bus = Bus::new(None, Vec::new());
+        let bus = Bus::new(NULL_MACHINE_TAG, Vec::new());
         assert_eq!(UNMAPPED_VALUE, bus.load(0x0000));
     }
 
     #[test]
     fn store_no_device() {
-        let bus = Bus::new(None, Vec::new());
+        let bus = Bus::new(NULL_MACHINE_TAG, Vec::new());
         bus.store(0x0000, 0x00);
     }
 }

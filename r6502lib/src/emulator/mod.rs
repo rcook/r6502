@@ -1,4 +1,5 @@
 pub mod deserialization;
+pub mod r6502_image;
 pub mod util;
 
 mod address_range;
@@ -35,12 +36,10 @@ mod output_device;
 mod p;
 mod pia;
 mod pia_event;
-mod r6502_image;
 mod ram;
 mod reg;
 mod rom;
 mod scenario_runner;
-mod snapshot;
 mod test_scenarios;
 mod total_cycles;
 mod word_op;
@@ -82,6 +81,5 @@ pub use ram::*;
 pub use reg::*;
 pub use rom::*;
 pub use scenario_runner::*;
-pub use snapshot::*;
 pub use total_cycles::*;
 pub use word_op::*;

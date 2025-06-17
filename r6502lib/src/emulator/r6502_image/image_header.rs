@@ -1,7 +1,8 @@
-use crate::emulator::{r6502_image::R6502ImageType, MachineTag, TotalCycles, R6502_MAGIC_NUMBER};
+use crate::emulator::r6502_image::R6502ImageType;
+use crate::emulator::{Cpu, MachineTag, TotalCycles, R6502_MAGIC_NUMBER};
 use anyhow::Result;
 use num_traits::FromPrimitive;
-use std::io::{ErrorKind, Read, Seek};
+use std::io::{ErrorKind, Read, Seek, Write};
 
 pub enum ImageHeader {
     Type0 {
@@ -79,6 +80,20 @@ impl ImageHeader {
     }
 
     #[must_use]
+    pub const fn new_snapshot(cpu: &Cpu) -> Self {
+        Self::Snapshot {
+            machine_tag: cpu.bus.machine_tag(),
+            pc: cpu.reg.pc,
+            a: cpu.reg.a,
+            x: cpu.reg.x,
+            y: cpu.reg.y,
+            sp: cpu.reg.sp,
+            p: cpu.reg.p.bits(),
+            total_cycles: cpu.total_cycles,
+        }
+    }
+
+    #[must_use]
     pub const fn machine_tag(&self) -> MachineTag {
         match self {
             Self::Type0 { machine_tag, .. } | Self::Snapshot { machine_tag, .. } => *machine_tag,
@@ -106,6 +121,28 @@ impl ImageHeader {
             Self::Type0 { .. } => None,
             Self::Snapshot { sp, .. } => Some(*sp),
         }
+    }
+
+    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
+        let Self::Snapshot {
+            machine_tag,
+            pc,
+            a,
+            x,
+            y,
+            sp,
+            p,
+            total_cycles,
+        } = *self
+        else {
+            todo!();
+        };
+
+        writer.write_all(&machine_tag)?;
+        writer.write_all(&pc.to_le_bytes())?;
+        writer.write_all(&[a, x, y, sp, p])?;
+        writer.write_all(&total_cycles.to_le_bytes())?;
+        Ok(())
     }
 
     fn try_read_type0<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {

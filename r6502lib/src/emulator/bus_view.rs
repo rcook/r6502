@@ -12,7 +12,7 @@ impl<'a> BusView<'a> {
     }
 
     #[must_use]
-    pub const fn machine_tag(&self) -> &Option<MachineTag> {
+    pub const fn machine_tag(&self) -> MachineTag {
         self.bus.machine_tag()
     }
 

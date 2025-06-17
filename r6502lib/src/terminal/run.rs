@@ -1,9 +1,8 @@
-use crate::emulator::{Cpu, Image, Monitor, PiaChannel, Snapshot, TracingMonitor};
+use crate::emulator::{Cpu, Image, Monitor, PiaChannel, TracingMonitor};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use crate::terminal::{show_image_info, Runner, TerminalChannel, TerminalOutput};
 use anyhow::Result;
-use std::path::Path;
 
 pub fn run(opts: &RunOptions) -> Result<()> {
     let image = Image::from_file(&opts.path)?;
@@ -49,11 +48,4 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         cycles: opts.cycles,
     }
     .run()
-}
-
-pub fn run_from_snapshot(path: &Path) -> Result<()> {
-    let snapshot = Snapshot::read(path)?;
-    let machine_info = MachineInfo::find_by_tag(snapshot.header.machine_tag())?;
-    //let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
-    todo!("{machine_info:?}");
 }
