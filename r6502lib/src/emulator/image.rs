@@ -1,5 +1,5 @@
 use crate::emulator::r6502_image::Image as R6502Image;
-use crate::emulator::{AddressRange, ImageSlice, MachineTag, OtherImage};
+use crate::emulator::{AddressRange, Cpu, ImageSlice, MachineTag, OtherImage};
 use anyhow::{bail, Error, Result};
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
@@ -62,6 +62,13 @@ impl Image {
         match self {
             Self::R6502(image) => image.bytes(),
             Self::Other(other) => other.bytes(),
+        }
+    }
+
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+        match self {
+            Self::R6502(image) => image.set_initial_cpu_state(cpu),
+            Self::Other(image) => image.set_initial_cpu_state(cpu),
         }
     }
 

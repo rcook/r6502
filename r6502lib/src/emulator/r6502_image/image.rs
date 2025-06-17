@@ -52,6 +52,10 @@ impl Image {
         &self.bytes
     }
 
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+        self.header.set_initial_cpu_state(cpu);
+    }
+
     pub fn write(&self, path: &Path) -> Result<()> {
         let file = File::create(path)?;
         let mut writer = BufWriter::new(file);

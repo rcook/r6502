@@ -20,6 +20,7 @@ fn div16_benchmark(c: &mut Criterion) {
 
     let bus = Bus::default_with_image(&image).expect("Must succeed");
     let mut cpu = Cpu::new(bus.view(), None);
+    image.set_initial_cpu_state(&mut cpu);
 
     assert_eq!(0x35, bus.load(0x106c));
     assert_eq!(0x12, bus.load(0x106d));
@@ -29,6 +30,7 @@ fn div16_benchmark(c: &mut Criterion) {
             // Reset state so that full 938 cycles is executed in every iteration
             bus.store(0x106c, 0x35);
             bus.store(0x106d, 0x12);
+            // image.set_initial_cpu_state(&mut cpu);
             cpu.reg.p = _p!(0b00000000);
             cpu.reg.pc = image.start().unwrap_or_default();
             cpu.reg.sp = image.sp().unwrap_or(DEFAULT_SP);

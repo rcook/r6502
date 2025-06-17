@@ -35,7 +35,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
     };
 
     let mut cpu = Cpu::new(bus.view(), monitor);
-    cpu.reg.pc = start;
+    image.set_initial_cpu_state(&mut cpu);
 
     Runner {
         cpu: &mut cpu,

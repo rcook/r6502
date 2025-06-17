@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use std::io::{ErrorKind, Read, Seek};
 
-use crate::emulator::{util::make_word, SIM6502_MAGIC_NUMBER};
+use crate::emulator::{util::make_word, Cpu, SIM6502_MAGIC_NUMBER};
 
 pub enum OtherImageHeader {
     Sim6502 { load: u16, start: u16, sp: u8 },
@@ -12,6 +12,19 @@ pub enum OtherImageHeader {
 impl OtherImageHeader {
     pub fn from_reader<R: Read + Seek>(reader: &mut R) -> Result<Self> {
         Ok(Self::try_read_sim6502(reader)?.unwrap_or(Self::Raw))
+    }
+
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+        match self {
+            Self::Sim6502 { start, sp, .. } => {
+                cpu.reg.pc = *start;
+                cpu.reg.sp = *sp;
+            }
+            Self::Listing { start, .. } => {
+                cpu.reg.pc = *start;
+            }
+            Self::Raw { .. } => {}
+        }
     }
 
     fn try_read_sim6502<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {

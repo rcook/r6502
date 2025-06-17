@@ -1,3 +1,4 @@
+use crate::_p;
 use crate::emulator::r6502_image::R6502ImageType;
 use crate::emulator::{Cpu, MachineTag, TotalCycles, R6502_MAGIC_NUMBER};
 use anyhow::Result;
@@ -120,6 +121,30 @@ impl ImageHeader {
         match self {
             Self::Type0 { .. } => None,
             Self::Snapshot { sp, .. } => Some(*sp),
+        }
+    }
+
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+        match self {
+            Self::Type0 { start, .. } => cpu.reg.pc = *start,
+            Self::Snapshot {
+                pc,
+                a,
+                x,
+                y,
+                sp,
+                p,
+                total_cycles,
+                ..
+            } => {
+                cpu.reg.pc = *pc;
+                cpu.reg.a = *a;
+                cpu.reg.x = *x;
+                cpu.reg.y = *y;
+                cpu.reg.sp = *sp;
+                cpu.reg.p = _p!(*p);
+                cpu.total_cycles = *total_cycles;
+            }
         }
     }
 
