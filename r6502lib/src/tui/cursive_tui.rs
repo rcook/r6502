@@ -7,9 +7,11 @@ use cursive::backends::crossterm::crossterm::event::{
 };
 use cursive::direction::Orientation;
 use cursive::event::{Callback, Event, EventResult, EventTrigger, Key};
-use cursive::theme::{BaseColor, Color};
+use cursive::theme::{BaseColor, Color, ColorStyle, ColorType};
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
-use cursive::views::{EditView, LinearLayout, Panel, TextView};
+use cursive::views::{
+    EditView, Layer, LinearLayout, NamedView, Panel, ResizedView, ScrollView, TextView,
+};
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
 use log::info;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -20,11 +22,18 @@ const CURRENT_NAME: &str = "current";
 const DISASSEMBLY_NAME: &str = "disassembly";
 const STATE_NAME: &str = "state";
 const STDOUT_NAME: &str = "stdout";
+const STDOUT_CONTAINER_NAME: &str = "stdout-container";
 const REGISTERS_NAME: &str = "registers";
 const CYCLES_NAME: &str = "cycles";
 const COMMAND_RESPONSE_NAME: &str = "command-response";
 const COMMAND_NAME: &str = "command";
 const COMMAND_FEEDBACK_NAME: &str = "command-feedback";
+
+const STDOUT_TEXT_COLOUR_ACTIVE: Color = Color::Light(BaseColor::Yellow);
+const STDOUT_TEXT_COLOUR_INACTIVE: Color = Color::Dark(BaseColor::Blue);
+const STDOUT_BACKGROUND_COLOUR_ACTIVE: ColorType = ColorType::Color(Color::Dark(BaseColor::Black));
+const STDOUT_BACKGROUND_COLOUR_INACTIVE: ColorType =
+    ColorType::Color(Color::Dark(BaseColor::White));
 
 pub struct CursiveTui {
     cursive: CursiveRunner<CursiveRunnable>,
@@ -87,12 +96,13 @@ impl CursiveTui {
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let stdout = TextView::new("")
-            .style(Color::Dark(BaseColor::Blue))
+            .style(STDOUT_TEXT_COLOUR_INACTIVE)
             .with_name(STDOUT_NAME)
             .full_width()
             .full_height()
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
+        let stdout_container = Layer::new(stdout).with_name(STDOUT_CONTAINER_NAME);
         let symbols = TextView::new(s)
             .min_height(10)
             .scrollable()
@@ -154,7 +164,7 @@ impl CursiveTui {
             .child(panel(state, "Status"));
 
         let right = LinearLayout::new(Orientation::Vertical)
-            .child(panel(stdout, "Output"))
+            .child(panel(stdout_container, "Output"))
             .child(panel(symbols, "Symbols"))
             .child(panel(help, "Help"))
             .child(panel(command_response, "Command Response"))
@@ -212,14 +222,37 @@ impl CursiveTui {
                 ))));
             }
 
+            fn set_stdout_colour(c: &mut Cursive, active: bool) {
+                c.call_on_name(STDOUT_NAME, |stdout: &mut TextView| {
+                    stdout.set_style(if active {
+                        STDOUT_TEXT_COLOUR_ACTIVE
+                    } else {
+                        STDOUT_TEXT_COLOUR_INACTIVE
+                    });
+                });
+                c.call_on_name(
+                    STDOUT_CONTAINER_NAME,
+                    |layer: &mut Layer<
+                        ScrollView<ResizedView<ResizedView<NamedView<TextView>>>>,
+                    >| {
+                        layer.set_color(ColorStyle {
+                            front: ColorType::Color(Color::TerminalDefault),
+                            back: if active {
+                                STDOUT_BACKGROUND_COLOUR_ACTIVE
+                            } else {
+                                STDOUT_BACKGROUND_COLOUR_INACTIVE
+                            },
+                        });
+                    },
+                );
+            }
+
             if program_gets_input.load(Ordering::SeqCst) {
                 match e {
                     Event::CtrlChar('p') => {
                         program_gets_input.store(false, Ordering::SeqCst);
                         return Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
-                            c.call_on_name(STDOUT_NAME, |stdout: &mut TextView| {
-                                stdout.set_style(Color::Dark(BaseColor::Blue));
-                            });
+                            set_stdout_colour(c, false);
                         }))));
                     }
                     // TBD: Get this working!
@@ -237,11 +270,9 @@ impl CursiveTui {
                 match e {
                     Event::CtrlChar('p') => {
                         program_gets_input.store(true, Ordering::SeqCst);
-                        return Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
-                            c.call_on_name(STDOUT_NAME, |stdout: &mut TextView| {
-                                stdout.set_style(Color::Light(BaseColor::Blue));
-                            });
-                        }))));
+                        Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
+                            set_stdout_colour(c, true);
+                        }))))
                     }
                     _ => None,
                 }
