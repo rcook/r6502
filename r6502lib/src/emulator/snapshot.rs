@@ -1,5 +1,4 @@
-use crate::emulator::util::{make_word, split_word};
-use crate::emulator::{Cpu, R6502_DUMP_MAGIC_NUMBERS};
+use crate::emulator::{Cpu, TotalCycles, R6502_DUMP_MAGIC_NUMBERS};
 use anyhow::{bail, Result};
 use chrono::Utc;
 use std::env::current_dir;
@@ -7,7 +6,7 @@ use std::fs::{metadata, File};
 use std::io::{BufWriter, Read, Write};
 use std::path::Path;
 
-const SNAPSHOT_SIZE: u64 = 0x10000 + 15;
+const SNAPSHOT_SIZE: u64 = 0x10000 + 23;
 
 #[allow(clippy::many_single_char_names)]
 #[allow(unused)]
@@ -26,13 +25,13 @@ pub fn read_snapshot(path: &Path) -> Result<()> {
     }
 
     let machine_tag = &bytes[4..8];
-
-    let pc = make_word(bytes[9], bytes[8]);
+    let pc = u16::from_le_bytes(<[u8; 2]>::try_from(&bytes[8..10]).unwrap());
     let a = bytes[10];
     let x = bytes[11];
     let y = bytes[12];
     let sp = bytes[13];
     let p = bytes[14];
+    let total_cycles = TotalCycles::from_le_bytes(<[u8; 8]>::try_from(&bytes[15..23]).unwrap());
 
     // etc.
     todo!()
@@ -41,18 +40,17 @@ pub fn read_snapshot(path: &Path) -> Result<()> {
 pub fn write_snapshot(cpu: &Cpu, path: &Path) -> Result<()> {
     let file = File::create(path)?;
     let mut writer = BufWriter::new(file);
-    let (hi, lo) = split_word(cpu.reg.pc);
     writer.write_all(&R6502_DUMP_MAGIC_NUMBERS)?;
     writer.write_all(&cpu.bus.machine_tag().unwrap_or([0x00; 4]))?;
+    writer.write_all(&cpu.reg.pc.to_le_bytes())?;
     writer.write_all(&[
-        lo,
-        hi,
         cpu.reg.a,
         cpu.reg.x,
         cpu.reg.y,
         cpu.reg.sp,
         cpu.reg.p.bits(),
     ])?;
+    writer.write_all(&cpu.total_cycles.to_le_bytes())?;
 
     // There must be a more efficient way of doing this...
     for addr in 0..=0xffff {

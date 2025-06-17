@@ -91,7 +91,7 @@ pub struct RunOptions {
     pub reset: bool,
 
     #[arg(help = "Stop after given number of cycles", long = "stop-after")]
-    pub stop_after: Option<u32>,
+    pub stop_after: Option<u64>,
 
     #[arg(
         help = "Machine hint if machine tag not in image header",
