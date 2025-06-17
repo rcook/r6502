@@ -1,4 +1,4 @@
-use crate::symbols::ExportKind;
+use crate::symbols::{AddressSize, ExportKind};
 use anyhow::{bail, Error, Result};
 use std::iter::Peekable;
 use std::result::Result as StdResult;
@@ -8,18 +8,13 @@ use std::str::FromStr;
 pub struct Export {
     pub name: String,
     pub value: u32,
+    pub referenced: bool,
     pub kind: ExportKind,
+    pub address_size: AddressSize,
 }
 
 impl Export {
     pub fn fetch_all<'a>(lines: &mut Peekable<impl Iterator<Item = &'a str>>) -> Result<Vec<Self>> {
-        fn parse_export(s0: &str, s1: &str, s2: &str) -> Result<Export> {
-            let name = String::from(s0);
-            let value = u32::from_str_radix(s1, 16)?;
-            let kind = s2.parse()?;
-            Ok(Export { name, value, kind })
-        }
-
         if lines.peek() != Some(&"Exports list by name:") {
             bail!("Invalid export list")
         }
@@ -40,9 +35,9 @@ impl Export {
                 bail!("Invalid export list");
             }
 
-            exports.push(parse_export(parts[0], parts[1], parts[2])?);
+            exports.push(Self::parse_export(parts[0], parts[1], parts[2])?);
             if len == 6 {
-                exports.push(parse_export(parts[3], parts[4], parts[5])?);
+                exports.push(Self::parse_export(parts[3], parts[4], parts[5])?);
             }
         }
 
@@ -58,6 +53,44 @@ impl Export {
         exports.sort_by(|a, b| a.name.cmp(&b.name));
 
         Ok(exports)
+    }
+
+    fn parse_export(s0: &str, s1: &str, s2: &str) -> Result<Self> {
+        let name = String::from(s0);
+        let value = u32::from_str_radix(s1, 16)?;
+
+        let (referenced, s3) = match s2.strip_prefix('R') {
+            Some(s) => (true, s),
+            None => (false, s2),
+        };
+
+        if s3.len() != 2 {
+            bail!("Invalid export flags {s2}");
+        }
+
+        let mut i = s3.chars();
+
+        let kind = match i.next() {
+            Some('L') => ExportKind::Label,
+            Some('E') => ExportKind::Constant,
+            _ => bail!("Invalid export flags {s2}"),
+        };
+
+        let address_size = match i.next() {
+            Some('Z') => AddressSize::ZeroPage,
+            Some('A') => AddressSize::Absolute,
+            Some('F') => AddressSize::Far,
+            Some('L') => AddressSize::Long,
+            _ => bail!("Invalid export flags {s2}"),
+        };
+
+        Ok(Self {
+            name,
+            value,
+            referenced,
+            kind,
+            address_size,
+        })
     }
 }
 
