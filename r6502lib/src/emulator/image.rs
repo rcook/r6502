@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 pub struct Image {
     pub format: ImageFormat,
-    pub tag: Option<MachineTag>,
+    pub machine_tag: Option<MachineTag>,
     pub load: u16,
     pub start: u16,
     pub sp: u8,
@@ -86,7 +86,7 @@ impl Image {
         reader.read_to_end(&mut values)?;
         Ok(Self {
             format: header.format,
-            tag: header.tag,
+            machine_tag: header.machine_tag,
             load: header.load,
             start: header.start,
             sp: header.sp,
@@ -112,7 +112,7 @@ impl Image {
 
         Ok(ImageHeader {
             format: ImageFormat::Raw,
-            tag: None,
+            machine_tag: None,
             load: default_load.unwrap_or(DEFAULT_LOAD),
             start: default_start.unwrap_or(DEFAULT_START),
             sp: default_sp.unwrap_or(DEFAULT_SP),
@@ -136,14 +136,14 @@ impl Image {
             return Ok(None);
         }
 
-        let mut tag = [0x00; 4];
-        tag.copy_from_slice(&header[2..6]);
+        let mut machine_tag = MachineTag::default();
+        machine_tag.copy_from_slice(&header[2..6]);
 
         let load = make_word(header[7], header[6]);
         let start = make_word(header[9], header[8]);
         Ok(Some(ImageHeader {
             format: ImageFormat::R6502,
-            tag: Some(tag),
+            machine_tag: Some(machine_tag),
             load,
             start,
             sp: DEFAULT_SP,
@@ -194,7 +194,7 @@ impl Image {
 
         Ok(Some(ImageHeader {
             format: ImageFormat::Sim65,
-            tag: None,
+            machine_tag: None,
             load,
             start,
             sp,
@@ -243,7 +243,7 @@ impl FromStr for Image {
         let Some(line) = i.next() else {
             return Ok(Self {
                 format: ImageFormat::Listing,
-                tag: None,
+                machine_tag: None,
                 load: DEFAULT_LOAD,
                 start: DEFAULT_START,
                 sp: DEFAULT_SP,
@@ -279,7 +279,7 @@ impl FromStr for Image {
         let start = load;
         Ok(Self {
             format: ImageFormat::Listing,
-            tag: None,
+            machine_tag: None,
             load,
             start,
             sp: DEFAULT_SP,
@@ -360,7 +360,7 @@ mod tests {
         let e = AddressRange::new(25, 26).expect("Must be valid");
         let image = Image {
             format: ImageFormat::Raw,
-            tag: None,
+            machine_tag: None,
             load: 0x0005,
             start: 0x0000,
             sp: 0xff,

@@ -94,7 +94,7 @@ impl MachineInfo {
             mappings.push(d.map_memory_device(&images));
         }
 
-        let bus = Bus::new(mappings);
+        let bus = Bus::new(image.machine_tag, mappings);
         Ok((bus, bus_rx))
     }
 

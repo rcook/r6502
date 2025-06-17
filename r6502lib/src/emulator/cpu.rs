@@ -38,8 +38,8 @@ impl<'a> Cpu<'a> {
         let mut writer = BufWriter::new(file);
         let (hi, lo) = split_word(self.reg.pc);
         writer.write_all(&R6502_DUMP_MAGIC_NUMBERS)?;
+        writer.write_all(&self.bus.machine_tag().unwrap_or([0x00; 4]))?;
         writer.write_all(&[
-            0xff, //self.bus.machine_type() as u8,
             lo,
             hi,
             self.reg.a,

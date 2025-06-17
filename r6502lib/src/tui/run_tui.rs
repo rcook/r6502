@@ -28,7 +28,7 @@ impl OutputDevice for TuiOutput {
 
 pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let machine_info = match image.tag {
+    let machine_info = match image.machine_tag {
         Some(tag) => MachineInfo::find_by_tag(tag)?,
         None => MachineInfo::find_by_name(&opts.machine)?,
     };

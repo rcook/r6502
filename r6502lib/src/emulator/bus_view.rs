@@ -1,4 +1,4 @@
-use crate::emulator::Bus;
+use crate::emulator::{Bus, MachineTag};
 
 #[derive(Clone)]
 pub struct BusView<'a> {
@@ -9,6 +9,11 @@ impl<'a> BusView<'a> {
     #[must_use]
     pub const fn new(bus: &'a Bus) -> Self {
         Self { bus }
+    }
+
+    #[must_use]
+    pub const fn machine_tag(&self) -> &Option<MachineTag> {
+        self.bus.machine_tag()
     }
 
     #[must_use]

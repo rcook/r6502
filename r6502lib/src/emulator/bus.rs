@@ -1,6 +1,6 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{
-    AddressRange, BusView, DeviceMapping, Image, Ram, IRQ, MEMORY_SIZE, NMI, RESET,
+    AddressRange, BusView, DeviceMapping, Image, MachineTag, Ram, IRQ, MEMORY_SIZE, NMI, RESET,
 };
 use anyhow::Result;
 
@@ -8,22 +8,26 @@ const UNMAPPED_VALUE: u8 = 0xff;
 
 // Represents the address bus and attached memory-mapped devices including RAM/ROM/PIA
 pub struct Bus {
+    machine_tag: Option<MachineTag>,
     mappings: Vec<DeviceMapping>,
 }
 
 impl Default for Bus {
     fn default() -> Self {
-        Self::new(vec![DeviceMapping {
-            address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
-            device: Box::new(Ram::new(MEMORY_SIZE, &Vec::new())),
-            offset: 0x0000,
-        }])
+        Self::new(
+            None,
+            vec![DeviceMapping {
+                address_range: AddressRange::new(0x0000, 0xffff).expect("Must succeed"),
+                device: Box::new(Ram::new(MEMORY_SIZE, &Vec::new())),
+                offset: 0x0000,
+            }],
+        )
     }
 }
 
 impl Bus {
     #[must_use]
-    pub fn new(mut mappings: Vec<DeviceMapping>) -> Self {
+    pub fn new(machine_tag: Option<MachineTag>, mut mappings: Vec<DeviceMapping>) -> Self {
         assert!(!AddressRange::overlapping(
             &mappings
                 .iter()
@@ -31,7 +35,10 @@ impl Bus {
                 .collect::<Vec<_>>()
         ));
         mappings.sort_by(|a, b| a.address_range.start().cmp(&b.address_range.start()));
-        Self { mappings }
+        Self {
+            machine_tag,
+            mappings,
+        }
     }
 
     #[allow(unused)]
@@ -42,11 +49,19 @@ impl Bus {
             .map(|image| image.slice(&address_range))
             .collect();
         let device = Box::new(Ram::new(MEMORY_SIZE, &image_slices));
-        Ok(Bus::new(vec![DeviceMapping {
-            address_range,
-            device,
-            offset: 0x0000,
-        }]))
+        Ok(Bus::new(
+            image.machine_tag,
+            vec![DeviceMapping {
+                address_range,
+                device,
+                offset: 0x0000,
+            }],
+        ))
+    }
+
+    #[must_use]
+    pub const fn machine_tag(&self) -> &Option<MachineTag> {
+        &self.machine_tag
     }
 
     pub fn start(&self) {
@@ -130,13 +145,13 @@ mod tests {
 
     #[test]
     fn load_no_device() {
-        let bus = Bus::new(Vec::new());
+        let bus = Bus::new(None, Vec::new());
         assert_eq!(UNMAPPED_VALUE, bus.load(0x0000));
     }
 
     #[test]
     fn store_no_device() {
-        let bus = Bus::new(Vec::new());
+        let bus = Bus::new(None, Vec::new());
         bus.store(0x0000, 0x00);
     }
 }
