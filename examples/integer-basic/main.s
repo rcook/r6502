@@ -59,4 +59,4 @@ startup:
 
 .data
 welcome_message:
-    .asciiz "Welcome to r6502 Integer Basic Demo!\rCtrl+C to halt, Ctrl+R to reset, Ctrl+S to save snapshot\rBASIC is at $E000\rwozmon is at $FF00\rStart BASIC with E000R\r\r"
+    .asciiz "Welcome to r6502 Integer Basic Demo!\rCtrl+C to halt, Ctrl+R to reset, Ctrl+S to save snapshot\rBASIC is at $E000\rwozmon is at $FF00\rStart BASIC with E000R\rWarm-start BASIC with E2B3R\r\r"
