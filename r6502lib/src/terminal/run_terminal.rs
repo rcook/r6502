@@ -88,7 +88,7 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
 
     let terminal_channel = TerminalChannel::new();
     let pia_channel = PiaChannel::new();
-    let pia_tx = pia_channel.sender.clone();
+    let pia_tx = pia_channel.tx.clone();
 
     let (bus, bus_rx) = machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
     bus.start();
@@ -147,7 +147,7 @@ struct Runner<'a> {
 impl<'a> Runner<'a> {
     fn run(self) -> Result<()> {
         let handle = spawn(move || {
-            event_loop(&self.terminal_channel.receiver, &self.pia_tx).expect("Must succeed");
+            event_loop(&self.terminal_channel.rx, &self.pia_tx).expect("Must succeed");
         });
 
         let jmp_ind = MOS_6502
@@ -196,7 +196,7 @@ impl<'a> Runner<'a> {
             }
         }
 
-        _ = self.terminal_channel.sender.send(TerminalEvent::Shutdown);
+        _ = self.terminal_channel.tx.send(TerminalEvent::Shutdown);
         _ = handle.join();
 
         self.bus.stop();

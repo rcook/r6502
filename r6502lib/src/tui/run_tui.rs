@@ -42,7 +42,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let tui_output = TuiOutput::new(io_channel.0.clone());
 
     let input_channel = PiaChannel::new();
-    let input_tx = input_channel.sender.clone();
+    let input_tx = input_channel.tx.clone();
 
     spawn(move || {
         let (bus, _) = machine_info

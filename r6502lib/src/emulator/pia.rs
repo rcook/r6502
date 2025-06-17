@@ -58,12 +58,11 @@ impl Pia {
         let state = Arc::new(Mutex::new(PiaState::new()));
         let state_clone = Arc::clone(&state);
         let handle = spawn(move || {
-            Self::event_loop(&state_clone, &pia_channel.receiver, &bus_tx, output)
-                .expect("Must succeed");
+            Self::event_loop(&state_clone, &pia_channel.rx, &bus_tx, output).expect("Must succeed");
         });
         Self {
             state,
-            pia_tx: pia_channel.sender,
+            pia_tx: pia_channel.tx,
             handle: Cell::new(Some(handle)),
         }
     }

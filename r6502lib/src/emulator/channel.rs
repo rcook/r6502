@@ -1,8 +1,8 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub struct Channel<T> {
-    pub sender: Sender<T>,
-    pub receiver: Receiver<T>,
+    pub tx: Sender<T>,
+    pub rx: Receiver<T>,
 }
 
 impl<T> Default for Channel<T> {
@@ -14,7 +14,7 @@ impl<T> Default for Channel<T> {
 impl<T> Channel<T> {
     #[must_use]
     pub fn new() -> Self {
-        let (sender, receiver) = channel();
-        Self { sender, receiver }
+        let (tx, rx) = channel();
+        Self { tx, rx }
     }
 }
