@@ -1,5 +1,5 @@
 use crate::emulator::util::get_brk_addr;
-use crate::emulator::{AddressRange, Bus, Cpu, InstructionInfo, OpInfo, Opcode, MOS_6502};
+use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo, OpInfo, Opcode, MOS_6502};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
@@ -34,11 +34,11 @@ impl TuiHost {
         }
     }
 
-    pub fn run(&self, start: u16) -> Result<()> {
+    pub fn run(&self, image: &Image) -> Result<()> {
         let monitor = Box::new(TuiMonitor::new(self.monitor_tx.clone()));
 
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
-        cpu.reg.pc = start;
+        image.set_initial_cpu_state(&mut cpu);
 
         let rti = MOS_6502
             .get_op_info(&Opcode::Rti)

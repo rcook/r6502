@@ -44,8 +44,6 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let input_channel = PiaChannel::new();
     let input_tx = input_channel.tx.clone();
 
-    let start = image.start().or(opts.start).unwrap_or_default();
-
     spawn(move || {
         let (bus, _) = machine_info
             .create_bus(Box::new(tui_output), input_channel, &image)
@@ -59,7 +57,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
             monitor_channel.0,
             io_channel.0,
         )
-        .run(start)
+        .run(&image)
         .expect("Must succeed");
     });
 
