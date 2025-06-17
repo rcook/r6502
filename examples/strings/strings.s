@@ -2,6 +2,7 @@
 
 .segment "HEADER"
 .dbyt $6502
+.byte $00
 .byte "APL1"
 .addr $8000
 .addr _main
