@@ -3,6 +3,12 @@ use anyhow::Result;
 use num_traits::FromPrimitive;
 use std::io::{ErrorKind, Read, Seek};
 
+pub struct R6502Type0Header {
+    pub machine_tag: MachineTag,
+    pub load: u16,
+    pub start: u16,
+}
+
 pub fn read_r6502_image_header<R: Read + Seek>(reader: &mut R) -> Result<Option<ImageHeader>> {
     macro_rules! fill_buffer {
         ($reader: expr, $buffer: expr) => {
@@ -38,11 +44,11 @@ pub fn read_r6502_image_header<R: Read + Seek>(reader: &mut R) -> Result<Option<
         fill_buffer!(reader, &mut machine_tag);
         let load = read_le_word!(reader);
         let start = read_le_word!(reader);
-        Ok(Some(ImageHeader::R6502Type0 {
+        Ok(Some(ImageHeader::R6502Type0(R6502Type0Header {
             machine_tag,
             load,
             start,
-        }))
+        })))
     }
 
     let magic_number = read_le_word!(reader);

@@ -1,6 +1,6 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{
-    read_r6502_image_header, AddressRange, ImageHeader, ImageSlice, MachineTag,
+    read_r6502_image_header, AddressRange, ImageHeader, ImageSlice, MachineTag, R6502Type0Header,
     SIM6502_MAGIC_NUMBER,
 };
 use anyhow::{bail, Error, Result};
@@ -32,11 +32,11 @@ impl Image {
     #[must_use]
     pub const fn machine_tag(&self) -> Option<MachineTag> {
         match self.header {
-            ImageHeader::R6502Type0 {
+            ImageHeader::R6502Type0(R6502Type0Header {
                 machine_tag,
                 load: _,
                 start: _,
-            } => Some(machine_tag),
+            }) => Some(machine_tag),
             ImageHeader::Sim6502 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => None,
         }
     }
@@ -44,11 +44,11 @@ impl Image {
     #[must_use]
     pub const fn load(&self) -> Option<u16> {
         match self.header {
-            ImageHeader::R6502Type0 {
+            ImageHeader::R6502Type0(R6502Type0Header {
                 machine_tag: _,
                 load,
                 start: _,
-            }
+            })
             | ImageHeader::Sim6502 {
                 load,
                 start: _,
@@ -62,11 +62,11 @@ impl Image {
     #[must_use]
     pub const fn start(&self) -> Option<u16> {
         match self.header {
-            ImageHeader::R6502Type0 {
+            ImageHeader::R6502Type0(R6502Type0Header {
                 machine_tag: _,
                 load: _,
                 start,
-            }
+            })
             | ImageHeader::Sim6502 {
                 load: _,
                 start,
