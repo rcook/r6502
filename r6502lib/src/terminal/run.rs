@@ -6,8 +6,8 @@ use anyhow::Result;
 use std::path::Path;
 
 pub fn run(opts: &RunOptions) -> Result<()> {
-    let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let machine_info = match image.machine_tag {
+    let image = Image::from_file(&opts.path)?;
+    let machine_info = match image.machine_tag() {
         Some(tag) => MachineInfo::find_by_tag(tag)?,
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
@@ -22,7 +22,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
     let start = if opts.reset {
         bus.load_reset_unsafe()
     } else {
-        image.start
+        image.start().or(opts.start).unwrap_or_default()
     };
 
     if opts.trace {

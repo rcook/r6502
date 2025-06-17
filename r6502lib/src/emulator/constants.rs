@@ -9,6 +9,5 @@ pub const IRQ_ADDR: u16 = 0xdeadu16;
 pub const R6502_MAGIC_NUMBER: u16 = 0x0265; // "65 02" in hexdump
 pub const R6502_DUMP_MAGIC_NUMBERS: [u8; 4] = [b'D', b'U', b'M', b'P'];
 pub const SIM6502_MAGIC_NUMBER: &str = "sim65";
-pub const DEFAULT_LOAD: u16 = 0x0000;
-pub const DEFAULT_START: u16 = 0x0000;
+
 pub const DEFAULT_SP: u8 = 0xff;

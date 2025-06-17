@@ -3,6 +3,7 @@
 ; r6502 executable header
 .segment "HEADER"
 .dbyt $6502
+.byte $00
 .byte "ACRN"
 .addr $8000
 .addr RESET

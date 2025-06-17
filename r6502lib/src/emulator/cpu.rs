@@ -347,11 +347,13 @@ mod tests {
  0E0C  12 34                                            |.4              |
 "
         .parse::<Image>()?;
-        assert_eq!(0x0e00, image.load);
+
+        let load = image.load().expect("Must be set");
+        assert_eq!(0x0e00, load);
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
-        cpu.reg.pc = image.load.wrapping_add(1);
+        cpu.reg.pc = load.wrapping_add(1);
         while cpu.step() {}
         assert_eq!(21, cpu.total_cycles);
         assert_eq!(0x46, bus.load(0x0e00));
@@ -371,11 +373,13 @@ mod tests {
  0E15  00        BRK  
  0E16  12 34 56 78                                      |.4Vx            |"
             .parse::<Image>()?;
-        assert_eq!(0x0e00, image.load);
+
+        let load = image.load().expect("Must be set");
+        assert_eq!(0x0e00, load);
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
-        cpu.reg.pc = image.load.wrapping_add(2);
+        cpu.reg.pc = load.wrapping_add(2);
         while cpu.step() {}
         assert_eq!(33, cpu.total_cycles);
         let lo = bus.load(0x0e00);
@@ -413,11 +417,13 @@ mod tests {
  0E33  34 12 0A 00 00 00                                |4.....          |
 "
         .parse::<Image>()?;
-        assert_eq!(0x0e00, image.load);
+
+        let load = image.load().expect("Must be set");
+        assert_eq!(0x0e00, load);
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
-        cpu.reg.pc = image.load.wrapping_add(2);
+        cpu.reg.pc = load.wrapping_add(2);
         while cpu.step() {}
         assert_eq!(893, cpu.total_cycles);
         let lo = bus.load(NUM1);
@@ -444,7 +450,7 @@ mod tests {
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), monitor);
 
-        cpu.reg.pc = image.start;
+        cpu.reg.pc = image.start().unwrap_or_default();
 
         let rts = MOS_6502
             .get_op_info(&Opcode::Rts)

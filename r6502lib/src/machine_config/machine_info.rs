@@ -64,7 +64,7 @@ impl MachineInfo {
                 .absolutize_from(&self.config_dir)
                 .map_err(|e| anyhow!(e))?
                 .to_path_buf();
-            base_image = Some(Image::load(&base_image_path, None, None, None)?);
+            base_image = Some(Image::from_file(&base_image_path)?);
             images.push(base_image.as_ref().expect("Must be valid"));
         }
         images.push(image);
@@ -94,7 +94,7 @@ impl MachineInfo {
             mappings.push(d.map_memory_device(&images));
         }
 
-        let bus = Bus::new(image.machine_tag, mappings);
+        let bus = Bus::new(image.machine_tag(), mappings);
         Ok((bus, bus_rx))
     }
 

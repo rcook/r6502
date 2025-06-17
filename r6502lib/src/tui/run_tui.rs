@@ -27,8 +27,8 @@ impl OutputDevice for TuiOutput {
 }
 
 pub fn run_tui(opts: &DebugOptions) -> Result<()> {
-    let image = Image::load(&opts.path, opts.load, opts.start, None)?;
-    let machine_info = match image.machine_tag {
+    let image = Image::from_file(&opts.path)?;
+    let machine_info = match image.machine_tag() {
         Some(tag) => MachineInfo::find_by_tag(tag)?,
         None => MachineInfo::find_by_name(&opts.machine)?,
     };
@@ -44,6 +44,8 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let input_channel = PiaChannel::new();
     let input_tx = input_channel.tx.clone();
 
+    let start = image.start().or(opts.start).unwrap_or_default();
+
     spawn(move || {
         let (bus, _) = machine_info
             .create_bus(Box::new(tui_output), input_channel, &image)
@@ -57,7 +59,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
             monitor_channel.0,
             io_channel.0,
         )
-        .run(image.start)
+        .run(start)
         .expect("Must succeed");
     });
 

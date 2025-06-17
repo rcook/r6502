@@ -1,7 +1,7 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{
-    AddressRange, ImageFormat, ImageHeader, ImageSlice, MachineTag, R6502ImageType, DEFAULT_LOAD,
-    DEFAULT_SP, DEFAULT_START, R6502_MAGIC_NUMBER, SIM6502_MAGIC_NUMBER,
+    AddressRange, ImageHeader, ImageSlice, MachineTag, R6502ImageType, R6502_MAGIC_NUMBER,
+    SIM6502_MAGIC_NUMBER,
 };
 use anyhow::{bail, Error, Result};
 use num_traits::FromPrimitive;
@@ -11,23 +11,14 @@ use std::path::Path;
 use std::str::FromStr;
 
 pub struct Image {
-    pub format: ImageFormat,
-    pub machine_tag: Option<MachineTag>,
-    pub load: u16,
-    pub start: u16,
-    pub sp: u8,
     pub bytes: Vec<u8>,
+    header: ImageHeader,
 }
 
 impl Image {
-    pub fn load(
-        path: &Path,
-        default_load: Option<u16>,
-        default_start: Option<u16>,
-        default_sp: Option<u8>,
-    ) -> Result<Self> {
+    pub fn from_file(path: &Path) -> Result<Self> {
         match File::open(path) {
-            Ok(f) => Self::read(f, default_load, default_start, default_sp),
+            Ok(f) => Self::from_reader(f),
             Err(e) if e.kind() == ErrorKind::NotFound => {
                 bail!("Could not find file {}", path.display())
             }
@@ -35,18 +26,75 @@ impl Image {
         }
     }
 
-    pub fn from_bytes(
-        bytes: &[u8],
-        default_load: Option<u16>,
-        default_start: Option<u16>,
-        default_sp: Option<u8>,
-    ) -> Result<Self> {
-        Self::read(Cursor::new(bytes), default_load, default_start, default_sp)
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self> {
+        Self::from_reader(Cursor::new(bytes))
+    }
+
+    #[must_use]
+    pub const fn machine_tag(&self) -> Option<MachineTag> {
+        match self.header {
+            ImageHeader::R6502Type0 {
+                machine_tag,
+                load: _,
+                start: _,
+            } => Some(machine_tag),
+            ImageHeader::Sim6502 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn load(&self) -> Option<u16> {
+        match self.header {
+            ImageHeader::R6502Type0 {
+                machine_tag: _,
+                load,
+                start: _,
+            }
+            | ImageHeader::Sim6502 {
+                load,
+                start: _,
+                sp: _,
+            }
+            | ImageHeader::Listing { load, start: _ } => Some(load),
+            ImageHeader::None => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn start(&self) -> Option<u16> {
+        match self.header {
+            ImageHeader::R6502Type0 {
+                machine_tag: _,
+                load: _,
+                start,
+            }
+            | ImageHeader::Sim6502 {
+                load: _,
+                start,
+                sp: _,
+            }
+            | ImageHeader::Listing { load: _, start } => Some(start),
+            ImageHeader::None => None,
+        }
+    }
+
+    #[must_use]
+    pub const fn sp(&self) -> Option<u8> {
+        match self.header {
+            ImageHeader::R6502Type0 { .. } | ImageHeader::Listing { .. } | ImageHeader::None => {
+                None
+            }
+            ImageHeader::Sim6502 {
+                load: _,
+                start: _,
+                sp,
+            } => Some(sp),
+        }
     }
 
     #[must_use]
     pub fn slice(&self, range: &AddressRange) -> ImageSlice {
-        let image_start = self.load as usize;
+        let image_start = self.load().unwrap_or_default() as usize;
         let image_end = image_start + self.bytes.len();
         let range_start = range.start() as usize;
         let range_end = range.end() as usize + 1;
@@ -76,31 +124,14 @@ impl Image {
         }
     }
 
-    fn read<R: Read + Seek>(
-        mut reader: R,
-        default_load: Option<u16>,
-        default_start: Option<u16>,
-        default_sp: Option<u8>,
-    ) -> Result<Self> {
-        let header = Self::read_header(&mut reader, default_load, default_start, default_sp)?;
-        let mut values = Vec::new();
-        reader.read_to_end(&mut values)?;
-        Ok(Self {
-            format: header.format,
-            machine_tag: header.machine_tag,
-            load: header.load,
-            start: header.start,
-            sp: header.sp,
-            bytes: values,
-        })
+    fn from_reader<R: Read + Seek>(mut reader: R) -> Result<Self> {
+        let header = Self::read_header(&mut reader)?;
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes)?;
+        Ok(Self { bytes, header })
     }
 
-    fn read_header<R: Read + Seek>(
-        reader: &mut R,
-        default_load: Option<u16>,
-        default_start: Option<u16>,
-        default_sp: Option<u8>,
-    ) -> Result<ImageHeader> {
+    fn read_header<R: Read + Seek>(reader: &mut R) -> Result<ImageHeader> {
         let header = Self::read_r6502_header(reader)?;
         if let Some(header) = header {
             return Ok(header);
@@ -111,13 +142,7 @@ impl Image {
             return Ok(header);
         }
 
-        Ok(ImageHeader {
-            format: ImageFormat::Raw,
-            machine_tag: None,
-            load: default_load.unwrap_or(DEFAULT_LOAD),
-            start: default_start.unwrap_or(DEFAULT_START),
-            sp: default_sp.unwrap_or(DEFAULT_SP),
-        })
+        Ok(ImageHeader::None)
     }
 
     fn read_r6502_header<R: Read + Seek>(reader: &mut R) -> Result<Option<ImageHeader>> {
@@ -155,12 +180,10 @@ impl Image {
             fill_buffer!(reader, &mut machine_tag);
             let load = read_le_word!(reader);
             let start = read_le_word!(reader);
-            Ok(Some(ImageHeader {
-                format: ImageFormat::R6502,
-                machine_tag: Some(machine_tag),
+            Ok(Some(ImageHeader::R6502Type0 {
+                machine_tag,
                 load,
                 start,
-                sp: DEFAULT_SP,
             }))
         }
 
@@ -223,13 +246,7 @@ impl Image {
         // Start address
         let start = make_word(header[11], header[10]);
 
-        Ok(Some(ImageHeader {
-            format: ImageFormat::Sim65,
-            machine_tag: None,
-            load,
-            start,
-            sp,
-        }))
+        Ok(Some(ImageHeader::Sim6502 { load, start, sp }))
     }
 }
 
@@ -269,20 +286,16 @@ impl FromStr for Image {
             Ok((addr, count))
         }
 
-        let mut values = Vec::new();
+        let mut bytes = Vec::new();
         let mut i = s.lines();
         let Some(line) = i.next() else {
             return Ok(Self {
-                format: ImageFormat::Listing,
-                machine_tag: None,
-                load: DEFAULT_LOAD,
-                start: DEFAULT_START,
-                sp: DEFAULT_SP,
-                bytes: values,
+                header: ImageHeader::None,
+                bytes,
             });
         };
 
-        let (mut pc, count) = read_line(&mut values, line)?;
+        let (mut pc, count) = read_line(&mut bytes, line)?;
 
         let load = pc;
 
@@ -294,7 +307,7 @@ impl FromStr for Image {
         pc = temp_pc;
 
         for line in i {
-            let (addr, count) = read_line(&mut values, line)?;
+            let (addr, count) = read_line(&mut bytes, line)?;
             if addr != pc {
                 bail!("invalid assembly listing")
             }
@@ -309,19 +322,15 @@ impl FromStr for Image {
 
         let start = load;
         Ok(Self {
-            format: ImageFormat::Listing,
-            machine_tag: None,
-            load,
-            start,
-            sp: DEFAULT_SP,
-            bytes: values,
+            header: ImageHeader::Listing { load, start },
+            bytes,
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::{AddressRange, Image, ImageFormat};
+    use crate::emulator::{AddressRange, Image, ImageHeader, DEFAULT_SP};
     use anyhow::Result;
 
     #[test]
@@ -336,7 +345,9 @@ mod tests {
  0E0E  48 45 4C 4C 4F 2C 20 57 4F 52 4C 44 21 00        |HELLO, WORLD!.  |
 ";
         let image = input.parse::<Image>()?;
-        assert_eq!(0x0e00, image.load);
+
+        let load = image.load().expect("Must be set");
+        assert_eq!(0x0e00, load);
         assert_eq!(28, image.bytes.len());
         Ok(())
     }
@@ -344,14 +355,14 @@ mod tests {
     #[test]
     fn r6502() -> Result<()> {
         let bytes = [
-            0x65, 0x02, 0x41, 0x43, 0x52, 0x4e, 0x00, 0x0e, 0x00, 0x0e, 0xa2, 0x00, 0xbd, 0x10,
-            0x0e, 0xf0, 0x06, 0x20, 0xee, 0xff, 0xe8, 0xd0, 0xf5, 0x4c, 0xc0, 0xff, 0x48, 0x45,
-            0x4c, 0x4c, 0x4f, 0x2c, 0x20, 0x57, 0x4f, 0x52, 0x4c, 0x44, 0x21, 0x00,
+            0x65, 0x02, 0x00, 0x41, 0x43, 0x52, 0x4e, 0x00, 0x0e, 0x00, 0x0e, 0xa2, 0x00, 0xbd,
+            0x10, 0x0e, 0xf0, 0x06, 0x20, 0xee, 0xff, 0xe8, 0xd0, 0xf5, 0x4c, 0xc0, 0xff, 0x48,
+            0x45, 0x4c, 0x4c, 0x4f, 0x2c, 0x20, 0x57, 0x4f, 0x52, 0x4c, 0x44, 0x21, 0x00,
         ];
-        let image = Image::from_bytes(&bytes, None, None, None)?;
-        assert_eq!(0x0e00, image.load);
-        assert_eq!(0x0e00, image.start);
-        assert_eq!(0xff, image.sp);
+        let image = Image::from_bytes(&bytes)?;
+        assert_eq!(0x0e00, image.load().unwrap_or_default());
+        assert_eq!(0x0e00, image.start().unwrap_or_default());
+        assert_eq!(0xff, image.sp().unwrap_or(DEFAULT_SP));
         assert_eq!(30, image.bytes.len());
         Ok(())
     }
@@ -369,10 +380,10 @@ mod tests {
             0xad, 0x71, 0x10, 0xed, 0x6f, 0x10, 0x90, 0x09, 0x8d, 0x71, 0x10, 0x8c, 0x70, 0x10,
             0xee, 0x6c, 0x10, 0xca, 0xd0, 0xd8, 0x60, 0x19, 0x35, 0x12, 0x0a, 0x00, 0xff, 0xff,
         ];
-        let image = Image::from_bytes(&bytes, None, None, None)?;
-        assert_eq!(0x1000, image.load);
-        assert_eq!(0x1000, image.start);
-        assert_eq!(0xff, image.sp);
+        let image = Image::from_bytes(&bytes)?;
+        assert_eq!(0x1000, image.load().unwrap_or_default());
+        assert_eq!(0x1000, image.start().unwrap_or_default());
+        assert_eq!(0xff, image.sp().unwrap_or(DEFAULT_SP));
         assert_eq!(114, image.bytes.len());
         Ok(())
     }
@@ -390,11 +401,11 @@ mod tests {
         let d = AddressRange::new(20, 22).expect("Must be valid");
         let e = AddressRange::new(25, 26).expect("Must be valid");
         let image = Image {
-            format: ImageFormat::Raw,
-            machine_tag: None,
-            load: 0x0005,
-            start: 0x0000,
-            sp: 0xff,
+            header: ImageHeader::Sim6502 {
+                load: 0x0005,
+                start: 0x0000,
+                sp: 0xff,
+            },
             bytes: (1..=16).collect(),
         };
 

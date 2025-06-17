@@ -11,13 +11,7 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
         s = image.bytes.len()
     );
 
-    println!(
-        "  {label:<25}: {format:?}",
-        label = "Format",
-        format = image.format
-    );
-
-    match image.machine_tag {
+    match image.machine_tag() {
         Some(tag) => {
             println!(
                 "  {label:<25}: {tag}",
@@ -33,7 +27,7 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     println!(
         "  {label:<25}: ${load:04X}",
         label = "Load address",
-        load = image.load
+        load = image.load().or(opts.load).unwrap_or_default()
     );
 
     if opts.reset {
@@ -41,21 +35,31 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
             "  {label:<25}: ${start:04X} (RESET, overriding ${original_start:04X})",
             label = "Start address",
             start = start,
-            original_start = image.start
+            original_start = image.start().or(opts.start).unwrap_or_default()
         );
     } else {
         println!(
             "  {label:<25}: ${start:04X}",
             label = "Start address",
-            start = image.start
+            start = image.start().or(opts.start).unwrap_or_default()
         );
     }
 
-    println!(
-        "  {label:<25}: ${sp:02X}",
-        label = "Initial stack pointer",
-        sp = image.sp
-    );
+    match image.sp() {
+        Some(sp) => {
+            println!(
+                "  {label:<25}: ${sp:02X}",
+                label = "Initial stack pointer",
+                sp = sp
+            );
+        }
+        None => {
+            println!(
+                "  {label:<25}: (unspecified)",
+                label = "Initial stack pointer",
+            );
+        }
+    }
 
     if let Some(stop_after) = opts.stop_after {
         println!("  {label:<25}: {stop_after} cycles", label = "Stop after");

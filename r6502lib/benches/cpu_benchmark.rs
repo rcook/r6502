@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use r6502lib::_p;
-use r6502lib::emulator::{Bus, Cpu, Image};
+use r6502lib::emulator::{Bus, Cpu, Image, DEFAULT_SP};
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
@@ -16,7 +16,7 @@ fn div16_benchmark(c: &mut Criterion) {
         0x09, 0x8d, 0x71, 0x10, 0x8c, 0x70, 0x10, 0xee, 0x6c, 0x10, 0xca, 0xd0, 0xd8, 0x60, 0x19,
         0x35, 0x12, 0x0a, 0x00, 0xff, 0xff,
     ];
-    let image = Image::from_bytes(&bytes, None, None, None).expect("Must succeed");
+    let image = Image::from_bytes(&bytes).expect("Must succeed");
 
     let bus = Bus::default_with_image(&image).expect("Must succeed");
     let mut cpu = Cpu::new(bus.view(), None);
@@ -30,8 +30,8 @@ fn div16_benchmark(c: &mut Criterion) {
             bus.store(0x106c, 0x35);
             bus.store(0x106d, 0x12);
             cpu.reg.p = _p!(0b00000000);
-            cpu.reg.pc = image.start;
-            cpu.reg.sp = image.sp;
+            cpu.reg.pc = image.start().unwrap_or_default();
+            cpu.reg.sp = image.sp().unwrap_or(DEFAULT_SP);
             let before_total_cycles = cpu.total_cycles;
             while cpu.step() {}
             let after_total_cycles = cpu.total_cycles;

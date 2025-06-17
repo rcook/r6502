@@ -1,6 +1,7 @@
 .import __CODE_LOAD__
 .segment "HEADER"
 .dbyt $6502
+.byte $00
 .byte "ACRN"
 .addr __CODE_LOAD__
 .addr startup

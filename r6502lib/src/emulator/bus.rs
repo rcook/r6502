@@ -50,7 +50,7 @@ impl Bus {
             .collect();
         let device = Box::new(Ram::new(MEMORY_SIZE, &image_slices));
         Ok(Bus::new(
-            image.machine_tag,
+            image.machine_tag(),
             vec![DeviceMapping {
                 address_range,
                 device,
