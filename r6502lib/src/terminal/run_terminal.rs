@@ -1,14 +1,12 @@
 use crate::emulator::{
-    BusEvent, Cpu, Image, Monitor, Opcode, OutputDevice, PiaChannel, PiaEvent, TracingMonitor,
-    MOS_6502, RESET,
+    write_snapshot_with_unique_name, BusEvent, Cpu, Image, Monitor, Opcode, OutputDevice,
+    PiaChannel, PiaEvent, TracingMonitor, MOS_6502, RESET,
 };
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use anyhow::{anyhow, Result};
-use chrono::Utc;
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
 use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use std::env::current_dir;
 use std::io::{stdout, Write};
 use std::process::exit;
 use std::str::from_utf8;
@@ -133,9 +131,7 @@ pub fn run_terminal(opts: &RunOptions) -> Result<()> {
                 Ok(BusEvent::Reset) => {
                     jmp_ind.execute_word(&mut cpu, RESET);
                 }
-                Ok(BusEvent::Snapshot) => {
-                    write_snapshot(&cpu)?;
-                }
+                Ok(BusEvent::Snapshot) => write_snapshot_with_unique_name(&cpu)?,
                 Err(TryRecvError::Disconnected | TryRecvError::Empty) => {}
             }
 
@@ -248,16 +244,4 @@ fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     if let Some(stop_after) = opts.stop_after {
         println!("  {label:<25}: {stop_after} cycles", label = "Stop after");
     }
-}
-
-fn write_snapshot(cpu: &Cpu) -> Result<()> {
-    let now = Utc::now();
-    let file_name = format!(
-        "r6502-snapshot-{timestamp}.bin",
-        timestamp = now.format("%Y%m%d%H%M%S")
-    );
-
-    let path = current_dir()?.join(file_name);
-    cpu.write_snapshot(&path)?;
-    Ok(())
 }

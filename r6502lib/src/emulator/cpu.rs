@@ -1,14 +1,10 @@
 use crate::emulator::util::{make_word, split_word};
 use crate::emulator::{
     BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, Monitor, Reg, TotalCycles,
-    R6502_DUMP_MAGIC_NUMBERS, STACK_BASE,
+    STACK_BASE,
 };
 use crate::p_get;
-use anyhow::Result;
 use log::{debug, log_enabled, Level};
-use std::fs::File;
-use std::io::{BufWriter, Write};
-use std::path::Path;
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
 
@@ -31,30 +27,6 @@ impl<'a> Cpu<'a> {
             total_cycles: 0,
             monitor: monitor.unwrap_or_else(|| Box::new(DummyMonitor)),
         }
-    }
-
-    pub fn write_snapshot(&self, path: &Path) -> Result<()> {
-        let file = File::create(path)?;
-        let mut writer = BufWriter::new(file);
-        let (hi, lo) = split_word(self.reg.pc);
-        writer.write_all(&R6502_DUMP_MAGIC_NUMBERS)?;
-        writer.write_all(&self.bus.machine_tag().unwrap_or([0x00; 4]))?;
-        writer.write_all(&[
-            lo,
-            hi,
-            self.reg.a,
-            self.reg.x,
-            self.reg.y,
-            self.reg.sp,
-            self.reg.p.bits(),
-        ])?;
-
-        // There must be a more efficient way of doing this...
-        for addr in 0..=0xffff {
-            writer.write_all(&[self.bus.load(addr)])?;
-        }
-
-        Ok(())
     }
 
     #[must_use]
