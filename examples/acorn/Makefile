@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean copy default run
+.PHONY: clean copy debug default run user
 
 BINEXT := r6502
 BIN := acorn.$(BINEXT)
@@ -25,7 +25,11 @@ copy: ../../config/$(BIN)
 
 run: copy
 	cargo run -- run $(BIN) --trace
-	make -C ../hello-world
+
+debug: copy
+	cargo run -- debug $(BIN)
+
+user: copy
 	cargo run -- run ../hello-world/hello-world.r6502 --trace
 
 default: copy
