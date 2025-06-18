@@ -5,10 +5,18 @@ use crate::machine_config::MachineInfo;
 use crate::terminal::{RawMode, TerminalChannel, TerminalEvent};
 use anyhow::{anyhow, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
+use log::info;
 use std::process::exit;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::thread::spawn;
 use std::time::Duration;
+
+enum StopReason {
+    UnexpectedInterrupt,
+    UserBreak,
+    RequestedCyclesExecuted,
+    Halt,
+}
 
 // TBD: This is ugly but it'll work for now
 pub struct Runner<'a> {
@@ -28,64 +36,41 @@ impl<'a> Runner<'a> {
             Self::event_loop(&self.terminal_channel.rx, &self.pia_tx).expect("Must succeed");
         });
 
-        let jmp_ind = MOS_6502
-            .get_op_info(&Opcode::JmpInd)
-            .ok_or_else(|| anyhow!("JMP_IND must exist"))?
-            .clone();
-
-        let mut stopped_after_requested_cycles = false;
-        'outer: loop {
-            while self.cpu.step() {
-                match self.bus_rx.try_recv() {
-                    Ok(BusEvent::UserBreak) => {
-                        break 'outer;
-                    }
-                    Ok(BusEvent::Reset) => {
-                        jmp_ind.execute_word(self.cpu, RESET);
-                    }
-                    Ok(BusEvent::Snapshot) => {
-                        let snapshot = Image::new_snapshot(self.cpu);
-                        let snapshot_path = make_unique_snapshot_path()?;
-                        snapshot.write(&snapshot_path)?;
-                    }
-                    Err(TryRecvError::Disconnected | TryRecvError::Empty) => {}
-                }
-
-                if let Some(stop_after) = self.stop_after {
-                    if self.cpu.total_cycles >= stop_after {
-                        stopped_after_requested_cycles = true;
-                        break 'outer;
-                    }
-                }
-
-                if let Some(halt_addr) = self.machine_info.machine.halt_addr {
-                    if self.cpu.reg.pc == halt_addr {
-                        break 'outer;
-                    }
-                }
-            }
-        }
+        let stop_reason =
+            Self::do_steps(self.cpu, &self.bus_rx, self.stop_after, &self.machine_info)?;
 
         _ = self.terminal_channel.tx.send(TerminalEvent::Shutdown);
         _ = handle.join();
 
         self.bus.stop();
 
-        // If program hits BRK return contents of A as exit code, otherwise 0.
-        let code = if stopped_after_requested_cycles {
-            0
-        } else {
-            self.cpu.reg.a as i32
+        let code = match stop_reason {
+            StopReason::UnexpectedInterrupt => {
+                info!("Program stopped due to unexpected interrupt (BRK)");
+                2
+            }
+            StopReason::UserBreak => {
+                info!("Program stopped due to user break (Ctrl+C)");
+                1
+            }
+            StopReason::RequestedCyclesExecuted => {
+                info!("Program stopped after requested cycle count");
+                0
+            }
+            StopReason::Halt => {
+                info!("Program stopped after EXIT instruction");
+                self.cpu.reg.a as i32
+            }
         };
 
         if self.cycles {
-            if stopped_after_requested_cycles {
-                println!(
+            if matches!(stop_reason, StopReason::RequestedCyclesExecuted) {
+                info!(
                     "Stopped after {cycles} cycles with exit code {code}",
                     cycles = self.cpu.total_cycles
                 );
             } else {
-                println!(
+                info!(
                     "Completed after {cycles} total cycles with exit code {code}",
                     cycles = self.cpu.total_cycles
                 );
@@ -93,6 +78,48 @@ impl<'a> Runner<'a> {
         }
 
         exit(code)
+    }
+
+    fn do_steps(
+        cpu: &mut Cpu,
+        bus_rx: &Receiver<BusEvent>,
+        stop_after: Option<u64>,
+        machine_info: &MachineInfo,
+    ) -> Result<StopReason> {
+        let jmp_ind = MOS_6502
+            .get_op_info(&Opcode::JmpInd)
+            .ok_or_else(|| anyhow!("JMP_IND must exist"))?
+            .clone();
+
+        while cpu.step() {
+            match bus_rx.try_recv() {
+                Ok(BusEvent::UserBreak) => return Ok(StopReason::UserBreak),
+                Ok(BusEvent::Reset) => {
+                    jmp_ind.execute_word(cpu, RESET);
+                }
+                Ok(BusEvent::Snapshot) => {
+                    let snapshot = Image::new_snapshot(cpu);
+                    let snapshot_path = make_unique_snapshot_path()?;
+                    snapshot.write(&snapshot_path)?;
+                }
+                Err(TryRecvError::Disconnected | TryRecvError::Empty) => {}
+            }
+
+            if let Some(stop_after) = stop_after {
+                if cpu.total_cycles >= stop_after {
+                    return Ok(StopReason::RequestedCyclesExecuted);
+                }
+            }
+
+            if let Some(halt_addr) = machine_info.machine.halt_addr {
+                if cpu.reg.pc == halt_addr {
+                    return Ok(StopReason::Halt);
+                }
+            }
+        }
+
+        // Terminated due to unexpected software interrupt (BRK)
+        Ok(StopReason::UnexpectedInterrupt)
     }
 
     fn event_loop(terminal_rx: &Receiver<TerminalEvent>, pia_tx: &Sender<PiaEvent>) -> Result<()> {
