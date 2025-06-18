@@ -295,10 +295,12 @@ impl CursiveTui {
         while let Some(message) = self.io_rx.try_iter().next() {
             match message {
                 WriteChar(ch) => {
-                    self.cursive
-                        .find_name::<TextView>(STDOUT_NAME)
-                        .expect("Must exist")
-                        .append(ch);
+                    if ch != '\r' {
+                        self.cursive
+                            .find_name::<TextView>(STDOUT_NAME)
+                            .expect("Must exist")
+                            .append(ch);
+                    }
                 }
             }
         }
