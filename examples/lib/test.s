@@ -17,6 +17,13 @@
     ldy #>welcome
     jsr print_str
 
+    jsr count_up
+    jsr dword_inc
+
+    rts
+.endproc
+
+.proc count_up
     ldx #$00
     stx value
     stx value + 1
@@ -28,6 +35,23 @@
 @outer:
     stx value
 
+    jsr print_value
+
+    pla
+    tax
+    inx
+    cmp #127
+    beq @done
+    txa
+    pha
+    clc
+    bcc @outer
+
+@done:
+    rts
+.endproc
+
+.proc print_value
     lda #$80
     ldx #<value
     ldy #>value
@@ -46,18 +70,46 @@
     jsr print_str
     lda #10
     jsr OSWRCH
+    rts
+.endproc
 
-    pla
-    tax
+.proc dword_inc
+    ldx #$ff
+    stx value
+    stx value + 1
+    stx value + 2
+    stx value + 3
+
+    jsr print_value
+
+    ldx value
     inx
-    cmp #127
-    beq @done
-    txa
-    pha
-    clc
-    bcc @outer
+    stx value
+    bne @skip
 
-@done:
+    ldx value + 1
+    inx
+    stx value + 1
+    bne @skip
+
+    ldx value + 2
+    inx
+    stx value + 2
+    bne @skip
+
+    ldx value + 3
+    inx
+    stx value + 3
+    bne @skip
+
+    ldx #$00
+    stx value
+    stx value + 1
+    stx value + 2
+    stx value + 3
+
+@skip:
+    jsr print_value
     rts
 .endproc
 
@@ -67,7 +119,7 @@ zp_address:
 
 .data
 str:
-    .res 10
+    .res $80
 value:
     .dword 0
 
