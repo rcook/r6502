@@ -3,10 +3,10 @@ use cursive::backends::crossterm::crossterm::event::Event;
 
 #[derive(Debug)]
 pub enum PiaEvent {
-    PaUpdated,
-    PacrUpdated,
-    PbUpdated,
-    PbcrUpdated,
+    PaUpdated(u8),
+    PacrUpdated(u8),
+    PbUpdated(u8),
+    PbcrUpdated(u8),
     Input(Event),
     Shutdown,
 }

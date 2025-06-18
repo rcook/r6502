@@ -76,27 +76,13 @@ impl Pia {
     ) -> Result<()> {
         loop {
             match pia_rx.recv() {
-                Ok(PiaEvent::PaUpdated | PiaEvent::PbcrUpdated) => {}
-                Ok(PiaEvent::PacrUpdated) => state.lock().unwrap().pa_cr = 0x00,
-                Ok(PiaEvent::PbUpdated) => {
-                    let value = {
-                        let mut state = state.lock().unwrap();
-                        let value = state.pb;
-                        state.pb = 0x00;
-                        value
-                    };
-                    let char_value = value & 0x7f;
-                    let ch = char_value as char;
-                    match char_value {
-                        0 => {}
-                        13 => output.write('\n')?,
-                        _ => {
-                            if !ch.is_control() {
-                                output.write(ch)?;
-                            }
-                        }
-                    }
+                Ok(PiaEvent::PaUpdated(value)) => state.lock().unwrap().pa = value,
+                Ok(PiaEvent::PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
+                Ok(PiaEvent::PbUpdated(value)) => {
+                    output.write(value & 0x7f)?;
+                    state.lock().unwrap().pb = 0x00;
                 }
+                Ok(PiaEvent::PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,
                 Ok(PiaEvent::Input(event)) => match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         match (key.modifiers, key.code) {
@@ -178,22 +164,10 @@ impl BusDevice for Pia {
         }
 
         let m = match addr {
-            Self::PA_OFFSET => {
-                self.state.lock().unwrap().pa = value;
-                PiaEvent::PaUpdated
-            }
-            Self::PA_CR_OFFSET => {
-                self.state.lock().unwrap().pa_cr = value;
-                PiaEvent::PacrUpdated
-            }
-            Self::PB_OFFSET => {
-                self.state.lock().unwrap().pb = value;
-                PiaEvent::PbUpdated
-            }
-            Self::PB_CR_OFFSET => {
-                self.state.lock().unwrap().pb_cr = value;
-                PiaEvent::PbcrUpdated
-            }
+            Self::PA_OFFSET => PiaEvent::PaUpdated(value),
+            Self::PA_CR_OFFSET => PiaEvent::PacrUpdated(value),
+            Self::PB_OFFSET => PiaEvent::PbUpdated(value),
+            Self::PB_CR_OFFSET => PiaEvent::PbcrUpdated(value),
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
         _ = self.pia_tx.send(m);
