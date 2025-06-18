@@ -1,4 +1,5 @@
 *.bin
+*.lib
 *.lst
 *.map
 *.o
