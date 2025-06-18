@@ -21,7 +21,7 @@ impl TuiOutput {
 
 impl OutputDevice for TuiOutput {
     fn write(&self, value: u8) -> Result<()> {
-        _ = self.io_tx.send(IoMessage::WriteChar(value as char));
+        self.io_tx.send(IoMessage::WriteChar(value as char))?;
         Ok(())
     }
 }
