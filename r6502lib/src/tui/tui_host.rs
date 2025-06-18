@@ -4,7 +4,6 @@ use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, MonitorMessage, State};
 use crate::p_set;
 use crate::tui::TuiMonitor;
-use anyhow::Result;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -30,7 +29,7 @@ impl TuiHost {
         }
     }
 
-    pub fn run(&self, image: &Image) -> Result<()> {
+    pub fn run(&self, image: &Image) {
         let monitor = Box::new(TuiMonitor::new(self.monitor_tx.clone()));
 
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
@@ -47,8 +46,6 @@ impl TuiHost {
                 Stopped => break,
             }
         }
-
-        Ok(())
     }
 
     fn send_state(&self, state: State) {
