@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.98"
-clap = { version = "4.5.38", features = ["derive"] }
+clap = { version = "4.5.40", features = ["derive"] }
 clap-num = "1.2.0"
 log = "0.4.27"
 log-panics = { version = "2.1.0", features = ["with-backtrace"] }
