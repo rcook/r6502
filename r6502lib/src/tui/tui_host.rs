@@ -1,7 +1,7 @@
 use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
-use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
+use crate::messages::{DebugMessage, MonitorMessage, State};
 use crate::p_set;
 use crate::tui::TuiMonitor;
 use anyhow::Result;
@@ -13,7 +13,6 @@ pub struct TuiHost {
     bus: Bus,
     debug_rx: Receiver<DebugMessage>,
     monitor_tx: Sender<MonitorMessage>,
-    _io_tx: Sender<IoMessage>,
 }
 
 impl TuiHost {
@@ -22,14 +21,12 @@ impl TuiHost {
         bus: Bus,
         debug_rx: Receiver<DebugMessage>,
         monitor_tx: Sender<MonitorMessage>,
-        io_tx: Sender<IoMessage>,
     ) -> Self {
         Self {
             machine_info,
             bus,
             debug_rx,
             monitor_tx,
-            _io_tx: io_tx,
         }
     }
 

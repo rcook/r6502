@@ -50,15 +50,9 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
             .expect("Must succeed");
         bus.start();
 
-        TuiHost::new(
-            machine_info,
-            bus,
-            debug_channel.1,
-            monitor_channel.0,
-            io_channel.0,
-        )
-        .run(&image)
-        .expect("Must succeed");
+        TuiHost::new(machine_info, bus, debug_channel.1, monitor_channel.0)
+            .run(&image)
+            .expect("Must succeed");
     });
 
     let mut ui = CursiveTui::new(
