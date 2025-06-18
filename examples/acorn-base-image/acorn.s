@@ -5,6 +5,7 @@
 ;   https://mdfs.net/Docs/Comp/BBC/OS1-20/
 ;   https://tobylobster.github.io/mos/mos/index.html
 ;   https://www.pa3byb.nl/wp-content/uploads/2017/12/Advance_user_guide_Acorn_electron.pdf
+;   https://archive.org/details/bbc-micro-advanced-user-guide/page/4/mode/2up
 
 .export STARTUP
 
