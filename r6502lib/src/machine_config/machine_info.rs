@@ -111,7 +111,8 @@ impl MachineInfo {
         let p0 = bin_path
             .parent()
             .ok_or_else(|| anyhow!("Cannot get parent directory from {}", bin_path.display()))?;
-        if p0.file_name().and_then(OsStr::to_str) != Some("debug") {
+        let d = p0.file_name().and_then(OsStr::to_str);
+        if d != Some("debug") && d != Some("release") {
             return user_config_dir();
         }
 
