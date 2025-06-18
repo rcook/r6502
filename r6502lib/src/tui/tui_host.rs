@@ -1,4 +1,3 @@
-use crate::emulator::util::get_brk_addr;
 use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo, OpInfo, Opcode, MOS_6502};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
@@ -14,7 +13,7 @@ pub struct TuiHost {
     bus: Bus,
     debug_rx: Receiver<DebugMessage>,
     monitor_tx: Sender<MonitorMessage>,
-    io_tx: Sender<IoMessage>,
+    _io_tx: Sender<IoMessage>,
 }
 
 impl TuiHost {
@@ -30,7 +29,7 @@ impl TuiHost {
             bus,
             debug_rx,
             monitor_tx,
-            io_tx,
+            _io_tx: io_tx,
         }
     }
 
@@ -73,20 +72,9 @@ impl TuiHost {
         });
     }
 
-    fn handle_brk(&self, cpu: &mut Cpu, rti: &OpInfo, state: State) -> State {
-        match (self.machine_info.machine.write_char_addr, get_brk_addr(cpu)) {
-            (Some(write_char_addr), Some(brk_addr)) if brk_addr == write_char_addr => {
-                self.io_tx
-                    .send(IoMessage::WriteChar(cpu.reg.a as char))
-                    .expect("Must succeed");
-                rti.execute_no_operand(cpu);
-                state
-            }
-            _ => {
-                _ = self.monitor_tx.send(MonitorMessage::NotifyInvalidBrk);
-                Halted
-            }
-        }
+    fn handle_brk(&self, _cpu: &mut Cpu, _rti: &OpInfo, _state: State) -> State {
+        _ = self.monitor_tx.send(MonitorMessage::NotifyInvalidBrk);
+        Halted
     }
 
     fn handle_running(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {

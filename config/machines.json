@@ -39,7 +39,6 @@
             "comment": "This will (poorly) emulate the basic character I/O of an Acorn Electron/BBC Micro (i.e. OSRDCH and OSWRCH)",
             "baseImage": "acorn.r6502",
             "haltAddress": "$FFC0",
-            "writeCharAddress": "$FFEE",
             "busDevices": [
                 {
                     "type": "ram",

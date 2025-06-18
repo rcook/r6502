@@ -22,13 +22,6 @@ pub struct Machine {
     )]
     pub halt_addr: Option<u16>,
 
-    #[serde(
-        rename = "writeCharAddress",
-        deserialize_with = "deserialize_word_opt",
-        default
-    )]
-    pub write_char_addr: Option<u16>,
-
     #[serde(rename = "busDevices")]
     pub bus_devices: Vec<BusDevice>,
 }
