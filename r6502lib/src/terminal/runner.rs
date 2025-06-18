@@ -5,6 +5,7 @@ use crate::machine_config::MachineInfo;
 use crate::terminal::{RawMode, TerminalChannel, TerminalEvent};
 use anyhow::{anyhow, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
+use std::io::{stdout, Write};
 use std::process::exit;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::thread::spawn;
@@ -38,6 +39,8 @@ impl<'a> Runner<'a> {
             .ok_or_else(|| anyhow!("RTS must exist"))?
             .clone();
 
+        let mut stdout = stdout();
+
         let mut stopped_after_requested_cycles = false;
         'outer: loop {
             while self.cpu.step() {
@@ -69,9 +72,15 @@ impl<'a> Runner<'a> {
                     }
                 }
 
+                // TBD: Replace this with an emulated bus device such as PIA etc.
                 if let Some(write_char_addr) = self.machine_info.machine.write_char_addr {
                     if self.cpu.reg.pc == write_char_addr {
-                        print!("{}", self.cpu.reg.a as char);
+                        if self.cpu.reg.a as char == '\n' {
+                            stdout.write_all(&[13, 10])?;
+                        } else {
+                            stdout.write_all(&[self.cpu.reg.a])?;
+                        }
+                        stdout.flush()?;
                         rts.execute_no_operand(self.cpu);
                     }
                 }
