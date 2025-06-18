@@ -54,7 +54,8 @@
     beq @done
     txa
     pha
-    jmp @outer
+    clc
+    bcc @outer
 
 @done:
     rts
