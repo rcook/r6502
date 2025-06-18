@@ -77,7 +77,11 @@ pub struct RunOptions {
     #[arg(long = "start", value_parser = maybe_hex::<u16>)]
     pub start: Option<u16>,
 
-    #[arg(help = "Trace execution", long = "trace", default_value_t = false)]
+    #[arg(
+        help = "Trace execution to log",
+        long = "trace",
+        default_value_t = false
+    )]
     pub trace: bool,
 
     #[arg(help = "Report cycles", long = "cycles", default_value_t = false)]
