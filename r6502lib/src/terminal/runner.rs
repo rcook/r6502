@@ -58,7 +58,7 @@ impl<'a> Runner<'a> {
                 0
             }
             StopReason::Halt => {
-                info!("Program stopped after EXIT instruction");
+                info!("Program stopped by call to EXIT");
                 self.cpu.reg.a as i32
             }
         };
