@@ -1,10 +1,10 @@
-use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo, OpInfo, Opcode, MOS_6502};
+use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, IoMessage, MonitorMessage, State};
 use crate::p_set;
 use crate::tui::TuiMonitor;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -39,18 +39,13 @@ impl TuiHost {
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
         image.set_initial_cpu_state(&mut cpu);
 
-        let rti = MOS_6502
-            .get_op_info(&Opcode::Rti)
-            .ok_or_else(|| anyhow!("RTI must exist"))?
-            .clone();
-
         let mut state = Stepping;
         loop {
             self.send_state(state);
 
             match state {
-                Running => state = self.handle_running(&mut cpu, &rti),
-                Stepping => state = self.handle_stepping(&mut cpu, &rti),
+                Running => state = self.handle_running(&mut cpu),
+                Stepping => state = self.handle_stepping(&mut cpu),
                 Halted => state = self.handle_halted(&mut cpu),
                 Stopped => break,
             }
@@ -72,12 +67,12 @@ impl TuiHost {
         });
     }
 
-    fn handle_brk(&self, _cpu: &mut Cpu, _rti: &OpInfo, _state: State) -> State {
+    fn handle_brk(&self) -> State {
         _ = self.monitor_tx.send(MonitorMessage::NotifyInvalidBrk);
         Halted
     }
 
-    fn handle_running(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {
+    fn handle_running(&self, cpu: &mut Cpu) -> State {
         loop {
             match self.debug_rx.try_recv() {
                 Err(TryRecvError::Disconnected) => return Stopped,
@@ -85,7 +80,7 @@ impl TuiHost {
             }
 
             if !cpu.step2(true) {
-                let new_state = self.handle_brk(cpu, rti, Running);
+                let new_state = self.handle_brk();
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }
@@ -99,7 +94,7 @@ impl TuiHost {
         }
     }
 
-    fn handle_stepping(&self, cpu: &mut Cpu, rti: &OpInfo) -> State {
+    fn handle_stepping(&self, cpu: &mut Cpu) -> State {
         loop {
             self.fetch_instruction(cpu);
 
@@ -118,7 +113,7 @@ impl TuiHost {
             }
 
             if !cpu.step() {
-                let new_state = self.handle_brk(cpu, rti, Stepping);
+                let new_state = self.handle_brk();
                 if !matches!(new_state, Stepping) {
                     return new_state;
                 }
