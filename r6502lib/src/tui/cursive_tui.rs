@@ -13,7 +13,6 @@ use cursive::views::{
     EditView, Layer, LinearLayout, NamedView, Panel, ResizedView, ScrollView, TextView,
 };
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
-use log::info;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender};
 
@@ -307,7 +306,6 @@ impl CursiveTui {
         while let Some(message) = self.monitor_rx.try_iter().next() {
             match message {
                 NotifyState(state) => {
-                    info!("NotifyState: state={state:?}");
                     let s = match state {
                         State::Running => "Running",
                         State::Stepping => "Stepping",
