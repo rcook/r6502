@@ -83,7 +83,7 @@ impl CursiveTui {
 
         let state = TextView::new("")
             .with_name(STATE_NAME)
-            .fixed_height(3)
+            .fixed_height(1)
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
