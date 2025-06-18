@@ -41,7 +41,7 @@ impl FromStr for Command {
         // Set program counter, clear B and restart
         if parts[0] == "go" {
             if parts.len() != 2 {
-                bail!("invalid \"pc\" command")
+                bail!("invalid \"go\" command")
             }
 
             let addr = u16::from_str_radix(parts[1].trim(), 16)?;
