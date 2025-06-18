@@ -38,9 +38,15 @@ impl Instruction {
                         ),
                     },
                 },
-                None => unimplemented!("Unsupported opcode ${value:02X}"),
+                None => unimplemented!(
+                    "Unsupported opcode ${value:02X} at ${addr:04X}",
+                    addr = cpu.reg.pc
+                ),
             },
-            None => unimplemented!("Invalid opcode ${value:02X}"),
+            None => unimplemented!(
+                "Invalid opcode ${value:02X} at ${addr:04X}",
+                addr = cpu.reg.pc
+            ),
         }
     }
 
