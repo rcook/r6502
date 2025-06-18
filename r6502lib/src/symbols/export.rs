@@ -1,9 +1,7 @@
 use crate::symbols::{AddressSize, ExportKind};
-use anyhow::{bail, Error, Result};
+use anyhow::{bail, Result};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::iter::Peekable;
-use std::result::Result as StdResult;
-use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub struct Export {

@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 mod address_size;
 mod export;
 mod export_kind;

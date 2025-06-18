@@ -1,6 +1,6 @@
 use crate::symbols::{ModuleName, ModuleSegment};
-use anyhow::{bail, Error, Result};
-use std::{iter::Peekable, path::PathBuf};
+use anyhow::{bail, Result};
+use std::iter::Peekable;
 
 #[derive(Debug)]
 pub struct Module {
@@ -67,7 +67,6 @@ mod tests {
     use crate::symbols::util::iter_map_file_lines;
     use crate::symbols::{Module, ModuleName, ModuleSegment};
     use anyhow::Result;
-    use std::iter::Peekable;
 
     #[test]
     fn fetch_all() -> Result<()> {

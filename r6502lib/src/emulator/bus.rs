@@ -42,7 +42,6 @@ impl Bus {
         }
     }
 
-    #[allow(unused)]
     pub fn default_with_image(image: &Image) -> Result<Self> {
         let address_range = AddressRange::new(0x0000, 0xffff)?;
         let image_slices = [image]

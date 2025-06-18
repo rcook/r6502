@@ -58,7 +58,6 @@ impl MachineInfo {
     ) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
 
-        #[allow(unused_assignments)]
         let mut base_image = None;
 
         if let Some(p) = self.machine.base_image_path.as_ref() {
@@ -95,6 +94,8 @@ impl MachineInfo {
         for d in memory_devices {
             mappings.push(d.map_memory_device(&images));
         }
+
+        drop(base_image);
 
         let bus = Bus::new(image.machine_tag().unwrap_or(NULL_MACHINE_TAG), mappings);
         Ok((bus, bus_rx))

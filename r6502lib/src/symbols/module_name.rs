@@ -1,4 +1,4 @@
-use anyhow::{Error, Result};
+use anyhow::Error;
 use std::path::PathBuf;
 use std::result::Result as StdResult;
 use std::str::FromStr;
@@ -37,7 +37,7 @@ mod tests {
     use crate::symbols::ModuleName;
     use anyhow::Result;
     use rstest::rstest;
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
 
     #[cfg(not(target_os = "windows"))]
     const INPUT: &str = "/bin/cc65/lib/none.lib(copydata.o)";
