@@ -6,6 +6,98 @@
 .addr __DATA_LOAD__
 .addr startup
 
+EXIT = $FFC0
+OSWRCH = $FFEE
+ZPPTR = $80
+MAX_STR_LEN = 33
+
+.code
+startup:
+    ldx #$ff
+    txs
+    cld
+    jsr copydata
+    jsr test_binstr
+    jmp EXIT
+
+.proc test_binstr
+    lda #$00
+    ldx #<value
+    ldy #>value
+    ora #%10000000
+    jsr binstr
+    sta result_str_len
+    stx ZPPTR
+    sty ZPPTR + 1
+    tay
+@loop:
+    lda (ZPPTR),Y
+    sta result_str,Y
+    dey
+    bpl @loop
+
+.proc check_result_str
+    ldx result_str_len
+    cpx expected_str_len
+    bne @failed
+@loop:
+    dex
+    lda result_str,X
+    cmp expected_str,X
+    bne @failed
+    cpx #$00
+    bne @loop
+@success:
+    lda #<success_str
+    sta ZPPTR
+    lda #>success_str
+    sta ZPPTR + 1
+    jsr print_str
+    lda #$00
+    rts
+@failed:
+    lda #<failure_str
+    sta ZPPTR
+    lda #>failure_str
+    sta ZPPTR + 1
+    jsr print_str
+    lda #$01
+    rts
+.endproc
+.endproc
+
+.proc print_str
+    ldy #$00
+@loop:
+    lda (ZPPTR),Y
+    beq @done
+    jsr OSWRCH
+    iny
+    bne @loop
+@done:
+    rts
+.endproc
+
+.data
+value:
+    .dword $12345678
+
+result_str_len:
+    .byte 0
+result_str:
+    .res MAX_STR_LEN
+
+expected_str_len:
+    .byte 9
+expected_str:
+    .asciiz "305419896"
+
+success_str:
+    .asciiz "binstr returned expected string"
+
+failure_str:
+    .asciiz "binstr did not return expected string"
+
 ; Source: http://www.6502.org/source/strings/32bit-to-ascii.html
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;*                                                                             *
@@ -110,6 +202,7 @@ a_hexdec ='A'-'9'-2            ;hex to decimal difference
 m_bits   =32                   ;operand bit size
 m_cbits  =48                   ;workspace bit size
 m_strlen =m_bits+1             ;maximum printable string length
+.assert m_strlen = MAX_STR_LEN, error
 n_radix  =4                    ;number of supported radices
 s_pfac   =m_bits/8             ;primary accumulator size
 s_ptr    =2                    ;pointer size
@@ -144,14 +237,16 @@ stridx   =radix+1              ;string buffer index
 ;	         Refer to the FACBCD subroutine.
 ;	----------------------------------------------------------------
 ;
-         *=_origin_
+;         *=_origin_
 ;
-binstr   stx ptr01             ;operand pointer LSB
+binstr:
+         stx ptr01             ;operand pointer LSB
          sty ptr01+1           ;operand pointer MSB
          tax                   ;protect radix
          ldy #s_pfac-1         ;operand size
 ;
-binstr01 lda (ptr01),y         ;copy operand to...
+binstr01:
+         lda (ptr01),y         ;copy operand to...
          sta pfac,y            ;workspace
          dey
          bpl binstr01
@@ -169,7 +264,8 @@ binstr01 lda (ptr01),y         ;copy operand to...
          lsr                   ;extract radix character
          ldx #n_radix-1        ;total radices
 ;
-binstr03 cmp radxtab,x         ;recognized radix?
+binstr03:
+         cmp radxtab,x         ;recognized radix?
          beq binstr04          ;yes
 ;
          dex
@@ -179,7 +275,8 @@ binstr03 cmp radxtab,x         ;recognized radix?
 ;	radix not recognized, assume decimal
 ;	------------------------------------
 ;
-binstr04 stx radix             ;save radix index for later
+binstr04:
+         stx radix             ;save radix index for later
          txa                   ;converting to decimal?
          bne binstr05          ;no
 ;
@@ -195,17 +292,20 @@ binstr04 stx radix             ;save radix index for later
 ;	prepare for binary, octal or hex conversion
 ;	-------------------------------------------
 ;
-binstr05 bit formflag
+binstr05:
+         bit formflag
          bmi binstr06          ;no radix symbol wanted
 ;
          lda radxtab,x         ;radix table
          sta strbuf            ;prepend to string
          inc stridx            ;bump string index
 ;
-binstr06 ldx #0                ;operand index
+binstr06:
+         ldx #0                ;operand index
          ldy #s_wrkspc-1       ;workspace index
 ;
-binstr07 lda pfac,x            ;copy operand to...
+binstr07:
+         lda pfac,x            ;copy operand to...
          sta wrkspc01,y        ;workspace in...
          dey                   ;big-endian order
          inx
@@ -214,7 +314,8 @@ binstr07 lda pfac,x            ;copy operand to...
 ;
          lda #0
 ;
-binstr08 sta wrkspc01,y        ;pad workspace
+binstr08:
+         sta wrkspc01,y        ;pad workspace
          dey
          bpl binstr08
 ;
@@ -222,7 +323,8 @@ binstr08 sta wrkspc01,y        ;pad workspace
 ;	set up conversion parameters
 ;	----------------------------
 ;
-binstr09 sta wrkspc02          ;initialize byte counter
+binstr09:
+         sta wrkspc02          ;initialize byte counter
          ldy radix             ;radix index
          lda numstab,y         ;numerals in string
          sta wrkspc02+1        ;set remaining numeral count
@@ -235,13 +337,16 @@ binstr09 sta wrkspc02          ;initialize byte counter
 ;	generate conversion string
 ;	--------------------------
 ;
-binstr10 lda #0
+binstr10:
+         lda #0
          ldy wrkspc02+2        ;bits per numeral
 ;
-binstr11 ldx #s_wrkspc-1       ;workspace size
+binstr11:
+         ldx #s_wrkspc-1       ;workspace size
          clc                   ;avoid starting carry
 ;
-binstr12 rol wrkspc01,x        ;shift out a bit...
+binstr12:
+         rol wrkspc01,x        ;shift out a bit...
          dex                   ;from the operand or...
          bpl binstr12          ;BCD conversion result
 ;
@@ -259,18 +364,21 @@ binstr12 rol wrkspc01,x        ;shift out a bit...
          ldx wrkspc02          ;processed byte count
          beq binstr15          ;discard leading zero
 ;
-binstr13 cmp #10               ;check range
+binstr13:
+         cmp #10               ;check range
          bcc binstr14          ;is 0-9
 ;
          adc #a_hexdec         ;apply hex adjust
 ;
-binstr14 adc #'0'              ;change to ASCII
+binstr14:
+         adc #'0'              ;change to ASCII
          ldy stridx            ;string index
          sta strbuf,y          ;save numeral in buffer
          inc stridx            ;next buffer position
          inc wrkspc02          ;bytes=bytes+1
 ;
-binstr15 dec wrkspc02+1        ;numerals=numerals-1
+binstr15:
+         dec wrkspc02+1        ;numerals=numerals-1
          bne binstr10          ;not done
 ;
 ;	-----------------------
@@ -295,9 +403,11 @@ binstr15 dec wrkspc02+1        ;numerals=numerals-1
 ;	NMOS system whose interrupt handlers do not clear decimal mode.
 ;	---------------------------------------------------------------
 ;
-facbcd   ldx #s_pfac-1         ;primary accumulator size -1
+facbcd:
+         ldx #s_pfac-1         ;primary accumulator size -1
 ;
-facbcd01 lda pfac,x            ;value to be converted
+facbcd01:
+         lda pfac,x            ;value to be converted
          pha                   ;protect
          dex
          bpl facbcd01          ;next
@@ -305,7 +415,8 @@ facbcd01 lda pfac,x            ;value to be converted
          lda #0
          ldx #s_wrkspc-1       ;workspace size
 ;
-facbcd02 sta wrkspc01,x        ;clear final result
+facbcd02:
+         sta wrkspc01,x        ;clear final result
          sta wrkspc02,x        ;clear scratchpad
          dex
          bpl facbcd02
@@ -316,10 +427,12 @@ facbcd02 sta wrkspc01,x        ;clear final result
          sed                   ;select decimal mode
          ldy #m_bits-1         ;bits to convert -1
 ;
-facbcd03 ldx #s_pfac-1         ;operand size
+facbcd03:
+         ldx #s_pfac-1         ;operand size
          clc                   ;no carry at start
 ;
-facbcd04 ror pfac,x            ;grab LS bit in operand
+facbcd04:
+         ror pfac,x            ;grab LS bit in operand
          dex
          bpl facbcd04
 ;
@@ -328,7 +441,8 @@ facbcd04 ror pfac,x            ;grab LS bit in operand
          clc
          ldx #s_wrkspc-1
 ;
-facbcd05 lda wrkspc01,x        ;partial result
+facbcd05:
+         lda wrkspc01,x        ;partial result
          adc wrkspc02,x        ;scratchpad
          sta wrkspc01,x        ;new partial result
          dex
@@ -336,9 +450,11 @@ facbcd05 lda wrkspc01,x        ;partial result
 ;
          clc
 ;
-facbcd06 ldx #s_wrkspc-1
+facbcd06:
+         ldx #s_wrkspc-1
 ;
-facbcd07 lda wrkspc02,x        ;scratchpad
+facbcd07:
+         lda wrkspc02,x        ;scratchpad
          adc wrkspc02,x        ;double &...
          sta wrkspc02,x        ;save
          dex
@@ -350,7 +466,8 @@ facbcd07 lda wrkspc02,x        ;scratchpad
          ;plp                   ;!!! uncomment for NMOS MPU !!!
          ldx #0
 ;
-facbcd08 pla                   ;operand
+facbcd08:
+         pla                   ;operand
          sta pfac,x            ;restore
          inx
          cpx #s_pfac
@@ -362,16 +479,19 @@ facbcd08 pla                   ;operand
 ;
 ;PER RADIX CONVERSION TABLES
 ;
-bitstab  .byte 4,1,3,4         ;bits per numeral
-lzsttab  .byte 2,9,2,3         ;leading zero suppression thresholds
-numstab  .byte 12,48,16,12     ;maximum numerals
-radxtab  .byte 0,"%@$"         ;recognized symbols
+bitstab:  .byte 4,1,3,4         ;bits per numeral
+lzsttab:  .byte 2,9,2,3         ;leading zero suppression thresholds
+numstab:  .byte 12,48,16,12     ;maximum numerals
+radxtab:  .byte 0,"%@$"         ;recognized symbols
 ;
 ;================================================================================
 ;
 ;STATIC STORAGE
 ;
-strbuf   *=*+m_strlen+1        ;conversion string buffer
+;strbuf   *=*+m_strlen+1        ;conversion string buffer
+.data
+strbuf:
+    .res m_strlen + 1
 ;
 ;================================================================================
 	.end
