@@ -1,24 +1,24 @@
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := r6502
-PROGRAM := hello-world.$(BINEXT)
-default: $(PROGRAM)
-
 .PHONY: clean default run
 
-SOURCES := hello-world.s
-CFG := $(PROGRAM:.$(BINEXT)=.cfg)
+BINEXT := r6502
+BIN := hello-world.$(BINEXT)
+BINSOURCES := header.s hello-world.s
+CFG := $(BIN:.$(BINEXT)=.cfg)
 TARGET := -C $(CFG)
 LIB := none.lib
 
 %.o: %.s
 	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+$(BIN): $(BINSOURCES:.s=.o) $(CFG)
+	ld65 $(TARGET) -m $(BIN:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(BIN) $(BIN:.$(BINEXT)=.map)
 
-run: $(PROGRAM)
-	cargo run -- run $(PROGRAM) --cycles
+run: $(BIN)
+	cargo run -- run $(BIN) --trace
+
+default: $(BIN)

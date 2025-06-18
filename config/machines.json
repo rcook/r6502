@@ -48,8 +48,18 @@
                 },
                 {
                     "type": "rom",
-                    "addressRange": "$8000:$FFFF",
+                    "addressRange": "$8000:$FBFF",
                     "offset": "$8000"
+                },
+                {
+                    "type": "pia",
+                    "addressRange": "$FC00:$FC03",
+                    "offset": "$FC00"
+                },
+                {
+                    "type": "rom",
+                    "addressRange": "$FC04:$FFFF",
+                    "offset": "$FC04"
                 }
             ]
         },

@@ -1,30 +1,31 @@
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := r6502
-PROGRAM := acorn.$(BINEXT)
-default: copy
-
 .PHONY: clean copy default run
 
-SOURCES := acorn.s os.s main.s vectors.s
-CFG := $(PROGRAM:.$(BINEXT)=.cfg)
+BINEXT := r6502
+BIN := acorn.$(BINEXT)
+BINSOURCES := header.s main.s os.s
+CFG := $(BIN:.$(BINEXT)=.cfg)
 TARGET := -C $(CFG)
 LIB := none.lib
 
 %.o: %.s
 	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+$(BIN): $(BINSOURCES:.s=.o) $(CFG)
+	ld65 $(TARGET) -m $(BIN:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(BIN) $(BIN:.$(BINEXT)=.map)
 
-../../config/$(PROGRAM): $(PROGRAM)
-	cp $(PROGRAM) ../../config/$(PROGRAM)
+../../config/$(BIN): $(BIN)
+	cp $(BIN) ../../config/$(BIN)
 
-copy: ../../config/$(PROGRAM)
+copy: ../../config/$(BIN)
 
 run: copy
+	cargo run -- run $(BIN) --trace
 	make -C ../hello-world
-	cargo run -- run ../hello-world/hello-world.r6502
+	cargo run -- run ../hello-world/hello-world.r6502 --trace
+
+default: copy

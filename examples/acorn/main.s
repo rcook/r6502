@@ -4,15 +4,15 @@
 .code
 MAIN:
     ldx #0
-loop:
+@loop:
     lda str, X
-    beq done
+    beq @done
     jsr OSWRCH
     inx
-    bne loop
-done:
+    bne @loop
+@done:
     rts
 
-.data
+.segment "OSRODATA"
 str:
-.byte "Hello World", 0
+    .byte "Hello World", 13, 10, 0

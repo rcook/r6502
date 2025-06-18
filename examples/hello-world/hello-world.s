@@ -1,26 +1,8 @@
-.import __DATA_LOAD__
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
-.addr __DATA_LOAD__
-.addr startup
-
-.feature string_escapes
-
-EXIT = $FFC0
 OSWRCH = $FFEE
 
 .code
-startup:
-    ldx #$ff
-    txs
-    cld
-    jsr copydata
-    jsr hello_world
-    jmp EXIT
-
-hello_world:
+.export MAIN
+MAIN:
     ldx #$00
 hello_world_loop:
     lda hello_world_string, X
@@ -33,4 +15,4 @@ hello_world_done:
 
 .data
 hello_world_string:
-    .asciiz "HELLO, WORLD!\n"
+    .byte "HELLO, WORLD!", 13, 10, 0
