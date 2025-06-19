@@ -104,17 +104,26 @@ impl CursiveTui {
         let stdout_container = Layer::new(stdout).with_name(STDOUT_CONTAINER_NAME);
         let symbols = TextView::new(s)
             .min_height(10)
+            .full_width()
             .scrollable()
             .scroll_strategy(ScrollStrategy::KeepRow);
-        let help =
-            TextView::new("Q: Quit\nSpace: Step\nR: Run\nB: Break\nC: Command\nEsc: Exit command\nCtrl+P: Toggle between debugger and program input")
-                .scrollable()
-                .scroll_strategy(ScrollStrategy::KeepRow);
+        let help = TextView::new(
+            "Q: Quit\n\
+            Space: Step\n\
+            R: Run\n\
+            B: Break\n\
+            C: Command\n\
+            Esc: Exit command\n\
+            Ctrl+P: Toggle between debugger and program input",
+        )
+        .full_width()
+        .scrollable()
+        .scroll_strategy(ScrollStrategy::KeepRow);
         let d = debug_tx.clone();
         let command_response = TextView::new("")
             .with_name(COMMAND_RESPONSE_NAME)
             .full_width()
-            .full_height()
+            .min_height(5)
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let command = EditView::new()
@@ -155,6 +164,13 @@ impl CursiveTui {
             .with_name(COMMAND_FEEDBACK_NAME)
             .fixed_height(1);
 
+        let layout1 = LinearLayout::horizontal()
+            .child(panel(symbols, "Symbols"))
+            .child(panel(help, "Help"));
+        let layout2 = LinearLayout::vertical()
+            .child(layout1)
+            .child(panel(command_response, "Command Response"));
+
         let left = LinearLayout::new(Orientation::Vertical)
             .child(panel(current, "Current Instruction"))
             .child(panel(registers, "Registers"))
@@ -164,9 +180,7 @@ impl CursiveTui {
 
         let right = LinearLayout::new(Orientation::Vertical)
             .child(panel(stdout_container, "Output"))
-            .child(panel(symbols, "Symbols"))
-            .child(panel(help, "Help"))
-            .child(panel(command_response, "Command Response"))
+            .child(layout2)
             .child(panel(command, "Command"))
             .child(Panel::new(command_feedback))
             .with_name(RIGHT_NAME);
