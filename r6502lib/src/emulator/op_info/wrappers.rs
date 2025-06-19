@@ -10,6 +10,7 @@ pub mod absolute {
 
     macro_rules! wrap_jump {
         ($f: ident, $cycles: expr) => {
+            #[allow(clippy::missing_const_for_fn)]
             pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
                 $crate::emulator::ops::$f(cpu, addr);
                 $cycles
@@ -179,6 +180,7 @@ pub mod immediate {
 pub mod implied {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
+            #[allow(clippy::missing_const_for_fn)]
             pub fn $f(cpu: &mut $crate::emulator::Cpu) -> $crate::emulator::OpCycles {
                 $crate::emulator::ops::$f(cpu);
                 $cycles
@@ -310,7 +312,10 @@ pub mod indirect_indexed_y {
 pub mod relative {
     macro_rules! wrap {
         ($f: ident, $not_taken_cycles: expr, $taken_cycles: expr, $taken_cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, offset: u8) -> $crate::emulator::OpCycles {
+            pub const fn $f(
+                cpu: &mut $crate::emulator::Cpu,
+                offset: u8,
+            ) -> $crate::emulator::OpCycles {
                 match $crate::emulator::ops::$f(cpu, offset) {
                     $crate::emulator::ops::BranchResult::NotTaken => $not_taken_cycles,
                     $crate::emulator::ops::BranchResult::Taken => $not_taken_cycles,

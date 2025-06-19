@@ -3,49 +3,49 @@ use crate::emulator::{Cpu, P};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCC
 // http://www.6502.org/users/obelisk/6502/reference.html#BCC
-pub fn bcc(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bcc(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::C, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCS
 // http://www.6502.org/users/obelisk/6502/reference.html#BCS
-pub fn bcs(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bcs(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::C, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BEQ
 // http://www.6502.org/users/obelisk/6502/reference.html#BEQ
-pub fn beq(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn beq(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::Z, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BMI
 // http://www.6502.org/users/obelisk/6502/reference.html#BMI
-pub fn bmi(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bmi(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::N, true)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BNE
 // http://www.6502.org/users/obelisk/6502/reference.html#BNE
-pub fn bne(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bne(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::Z, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BPL
 // http://www.6502.org/users/obelisk/6502/reference.html#BPL
-pub fn bpl(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bpl(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::N, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVC
 // http://www.6502.org/users/obelisk/6502/reference.html#BVC
-pub fn bvc(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bvc(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::V, false)
 }
 
 // http://www.6502.org/tutorials/6502opcodes.html#BVS
 // http://www.6502.org/users/obelisk/6502/reference.html#BVS
-pub fn bvs(cpu: &mut Cpu, offset: u8) -> BranchResult {
+pub const fn bvs(cpu: &mut Cpu, offset: u8) -> BranchResult {
     BranchResult::compute(cpu, offset, P::V, true)
 }
 

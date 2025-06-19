@@ -67,7 +67,7 @@ pub fn txa(cpu: &mut Cpu) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#TXS
 // http://www.6502.org/users/obelisk/6502/reference.html#TXS
-pub fn txs(cpu: &mut Cpu) {
+pub const fn txs(cpu: &mut Cpu) {
     let value = cpu.reg.x;
     cpu.reg.sp = value;
 }

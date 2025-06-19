@@ -48,7 +48,7 @@ impl<'a> Cpu<'a> {
         }
 
         if log_enabled!(Level::Debug) {
-            debug!("{:?}", instruction_info);
+            debug!("{instruction_info:?}");
         }
 
         let before = Instant::now();

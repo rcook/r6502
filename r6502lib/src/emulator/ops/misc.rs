@@ -20,7 +20,7 @@ pub fn brk(cpu: &mut Cpu) {
 
 // http://www.6502.org/tutorials/6502opcodes.html#NOP
 // http://www.6502.org/users/obelisk/6502/reference.html#NOP
-pub fn nop(_cpu: &mut Cpu) {}
+pub const fn nop(_cpu: &mut Cpu) {}
 
 #[cfg(test)]
 mod tests {

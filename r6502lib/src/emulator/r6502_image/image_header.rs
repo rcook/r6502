@@ -124,7 +124,7 @@ impl ImageHeader {
         }
     }
 
-    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         match self {
             Self::Type0 { start, .. } => cpu.reg.pc = *start,
             Self::Snapshot {

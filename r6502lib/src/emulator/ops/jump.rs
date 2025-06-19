@@ -4,7 +4,7 @@ use crate::p_set;
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
-pub fn jmp(cpu: &mut Cpu, operand: u16) {
+pub const fn jmp(cpu: &mut Cpu, operand: u16) {
     cpu.reg.pc = operand;
 }
 

@@ -12,7 +12,7 @@ impl Module {
     pub fn fetch_all<'a>(lines: &mut Peekable<impl Iterator<Item = &'a str>>) -> Result<Vec<Self>> {
         if lines.peek() != Some(&"Modules list:") {
             bail!("Invalid module list")
-        };
+        }
 
         _ = lines.next();
 

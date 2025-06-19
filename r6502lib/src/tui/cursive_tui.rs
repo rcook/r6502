@@ -13,6 +13,7 @@ use cursive::views::{
     EditView, Layer, LinearLayout, NamedView, Panel, ResizedView, ScrollView, TextView,
 };
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
+use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender};
 
@@ -162,7 +163,7 @@ impl CursiveTui {
                     }
                 }
                 s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
-                    _ = command.set_content("")
+                    _ = command.set_content("");
                 });
                 nasty_hack(s, text, &d);
             })
@@ -396,10 +397,10 @@ impl CursiveTui {
                     let mut s = format!("{address_range}\n");
                     let mut addr = address_range.start() as usize;
                     for chunk in snapshot.chunks(CHUNK_SIZE) {
-                        s.push_str(&format!("{addr:04X} "));
+                        write!(s, "{addr:04X} ").unwrap();
                         let mut chars = String::with_capacity(CHUNK_SIZE);
                         for b in chunk {
-                            s.push_str(&format!(" {b:02X}"));
+                            write!(s, " {b:02X}").unwrap();
                             let c: char = *b as char;
                             if c.is_ascii() && !c.is_ascii_control() {
                                 chars.push(c);
@@ -408,7 +409,7 @@ impl CursiveTui {
                             }
                         }
                         s.push_str(&String::from("   ").repeat(CHUNK_SIZE - chunk.len()));
-                        s.push_str(&format!("  {chars}\n"));
+                        writeln!(s, "  {chars}").unwrap();
                         addr += CHUNK_SIZE;
                     }
                     self.cursive

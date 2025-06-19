@@ -52,7 +52,7 @@ impl Image {
         &self.bytes
     }
 
-    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         self.header.set_initial_cpu_state(cpu);
     }
 

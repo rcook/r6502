@@ -30,7 +30,7 @@ pub struct Runner<'a> {
     pub cycles: bool,
 }
 
-impl<'a> Runner<'a> {
+impl Runner<'_> {
     pub fn run(self) -> Result<()> {
         let handle = spawn(move || {
             Self::event_loop(&self.terminal_channel.rx, &self.pia_tx).expect("Must succeed");

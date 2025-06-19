@@ -39,6 +39,7 @@ impl PiaState {
 
 pub struct Pia {
     state: Arc<Mutex<PiaState>>,
+    #[allow(clippy::struct_field_names)]
     pia_tx: Sender<PiaEvent>,
     handle: Cell<Option<JoinHandle<()>>>,
 }

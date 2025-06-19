@@ -65,7 +65,7 @@ impl Image {
         }
     }
 
-    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         match self {
             Self::R6502(image) => image.set_initial_cpu_state(cpu),
             Self::Other(image) => image.set_initial_cpu_state(cpu),
@@ -108,7 +108,7 @@ impl Image {
     fn from_reader<R: Read + Seek>(mut reader: R) -> Result<Self> {
         if let Some(image) = R6502Image::try_from_reader(&mut reader)? {
             return Ok(Self::R6502(image));
-        };
+        }
         let image = OtherImage::from_reader(&mut reader)?;
         Ok(Self::Other(image))
     }

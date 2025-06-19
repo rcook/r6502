@@ -14,7 +14,7 @@ impl OtherImageHeader {
         Ok(Self::try_read_sim6502(reader)?.unwrap_or(Self::Raw))
     }
 
-    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         match self {
             Self::Sim6502 { start, sp, .. } => {
                 cpu.reg.pc = *start;
