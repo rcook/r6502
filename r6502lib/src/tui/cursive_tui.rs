@@ -1,4 +1,4 @@
-use crate::emulator::{InstructionInfo, PiaEvent};
+use crate::emulator::{AddressRange, InstructionInfo, PiaEvent};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use crate::symbols::{Export, MapFile};
 use cursive::align::HAlign;
@@ -393,25 +393,7 @@ impl CursiveTui {
                     address_range,
                     snapshot,
                 } => {
-                    const CHUNK_SIZE: usize = 16;
-                    let mut s = format!("{address_range}\n");
-                    let mut addr = address_range.start() as usize;
-                    for chunk in snapshot.chunks(CHUNK_SIZE) {
-                        write!(s, "{addr:04X} ").unwrap();
-                        let mut chars = String::with_capacity(CHUNK_SIZE);
-                        for b in chunk {
-                            write!(s, " {b:02X}").unwrap();
-                            let c: char = *b as char;
-                            if c.is_ascii() && !c.is_ascii_control() {
-                                chars.push(c);
-                            } else {
-                                chars.push('.');
-                            }
-                        }
-                        s.push_str(&String::from("   ").repeat(CHUNK_SIZE - chunk.len()));
-                        writeln!(s, "  {chars}").unwrap();
-                        addr += CHUNK_SIZE;
-                    }
+                    let s = Self::format_snapshot(address_range, snapshot);
                     self.cursive
                         .find_name::<TextView>(COMMAND_RESPONSE_NAME)
                         .expect("Must exist")
@@ -452,5 +434,49 @@ impl CursiveTui {
                 .expect("Must exist")
                 .set_content(' ');
         }
+    }
+
+    fn format_snapshot(address_range: AddressRange, bytes: Vec<u8>) -> String {
+        const CHUNK_SIZE: usize = 16;
+        let mut s = format!("{address_range}\n");
+        let mut addr = address_range.start() as usize;
+        for chunk in bytes.chunks(CHUNK_SIZE) {
+            write!(s, "{addr:04X} ").unwrap();
+            let mut chars = String::with_capacity(CHUNK_SIZE);
+            for b in chunk {
+                write!(s, " {b:02X}").unwrap();
+                let c: char = *b as char;
+                if c.is_ascii() && !c.is_ascii_control() {
+                    chars.push(c);
+                } else {
+                    chars.push('.');
+                }
+            }
+            s.push_str(&String::from("   ").repeat(CHUNK_SIZE - chunk.len()));
+            writeln!(s, "  {chars}").unwrap();
+            addr += CHUNK_SIZE;
+        }
+        s
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{emulator::AddressRange, tui::cursive_tui::CursiveTui};
+    use anyhow::Result;
+
+    #[test]
+    fn format_snapshot() -> Result<()> {
+        let address_range = AddressRange::new(0x0e00, 0x0e20)?;
+        let bytes = (0x00..=0x20).collect();
+        let s = CursiveTui::format_snapshot(address_range, bytes);
+        assert_eq!(
+            "$0E00:$0E20\n\
+            0E00  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ................\n\
+            0E10  10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F  ................\n\
+            0E20  20                                                \n",
+            s
+        );
+        Ok(())
     }
 }
