@@ -2,8 +2,14 @@ use crate::emulator::AddressRange;
 use anyhow::{bail, Error};
 use std::str::FromStr;
 
+const HELP: &str = "?/h/help: Show help message\n\
+    m/mem/memory <START>:<END>: Dump block of memory\n\
+    pc <ADDRESS>: Set program counter\n\
+    go <ADDRESS>: Set program counter and start program\n";
+
 #[derive(Debug, PartialEq)]
 pub enum Command {
+    Help(&'static str),
     FetchMemory(AddressRange),
     SetPc(u16),
     Go(u16),
@@ -16,6 +22,11 @@ impl FromStr for Command {
         let parts = s.split_whitespace().collect::<Vec<_>>();
         if parts.is_empty() {
             bail!("invalid command {s}")
+        }
+
+        // Help
+        if parts[0] == "?" || parts[0] == "h" || parts[0] == "help" {
+            return Ok(Self::Help(HELP));
         }
 
         // Fetch snapshot of memory

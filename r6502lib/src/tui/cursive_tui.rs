@@ -131,6 +131,11 @@ impl CursiveTui {
             .on_submit(move |s, text| {
                 fn nasty_hack(s: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
                     match text.parse::<Command>() {
+                        Ok(Command::Help(help)) => {
+                            s.find_name::<TextView>(COMMAND_RESPONSE_NAME)
+                                .expect("Must exist")
+                                .append(help);
+                        }
                         Ok(Command::FetchMemory(address_range)) => {
                             _ = d.send(FetchMemory(address_range));
                             s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
@@ -156,6 +161,9 @@ impl CursiveTui {
                         }
                     }
                 }
+                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                    _ = command.set_content("")
+                });
                 nasty_hack(s, text, &d);
             })
             .with_name(COMMAND_NAME)
