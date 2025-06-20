@@ -8,7 +8,7 @@ use log::{debug, log_enabled, Level};
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
 
-const CPU_FREQUENCY: Frequency = Frequency::MHz(1_000_000);
+const CPU_FREQUENCY: Frequency = Frequency::MHz(3_000_000);
 static CPU_TICK: LazyLock<Duration> = LazyLock::new(|| CPU_FREQUENCY.get_tick());
 
 pub struct Cpu<'a> {
