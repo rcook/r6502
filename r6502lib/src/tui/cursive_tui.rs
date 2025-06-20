@@ -173,12 +173,12 @@ impl CursiveTui {
             .with_name(COMMAND_FEEDBACK_NAME)
             .fixed_height(1);
 
-        let layout1 = LinearLayout::horizontal()
-            .child(panel(symbols, "Symbols"))
-            .child(panel(help, "Help"));
-        let layout2 = LinearLayout::vertical()
-            .child(layout1)
-            .child(panel(command_response, "Command Response"));
+        //let layout1 = LinearLayout::horizontal()
+        //    .child(panel(symbols, "Symbols"))
+        //    .child(panel(help, "Help"));
+        //let layout2 = LinearLayout::vertical()
+        //    .child(layout1)
+        //    .child(panel(command_response, "Command Response"));
 
         let left = LinearLayout::new(Orientation::Vertical)
             .child(panel(current, "Current Instruction"))
@@ -189,7 +189,9 @@ impl CursiveTui {
 
         let right = LinearLayout::new(Orientation::Vertical)
             .child(panel(stdout_container, "Output"))
-            .child(layout2)
+            .child(panel(symbols, "Symbols"))
+            .child(panel(help, "Help"))
+            .child(panel(command_response, "Command Response"))
             .child(panel(command, "Command"))
             .child(Panel::new(command_feedback))
             .with_name(RIGHT_NAME);
