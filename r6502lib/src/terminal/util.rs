@@ -6,7 +6,7 @@ use std::str::from_utf8;
 
 pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     fn log_property<D: Display>(label: &str, value: D) {
-        info!("{label}: {value}")
+        info!("{label}: {value}");
     }
 
     log_property("Image", opts.path.display());
@@ -48,11 +48,11 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     }
 
     match image.sp() {
-        Some(sp) => log_property("Initial stack pointer", format!("${sp:02X}", sp = sp)),
+        Some(sp) => log_property("Initial stack pointer", format!("${sp:02X}")),
         None => log_property("Initial stack pointer", "(unspecified)"),
     }
 
     if let Some(stop_after) = opts.stop_after {
-        log_property("Stop after cycles", stop_after)
+        log_property("Stop after cycles", stop_after);
     }
 }
