@@ -1,4 +1,4 @@
-use crate::emulator::{AddressRange, InstructionInfo, PiaEvent};
+use crate::emulator::{AddressRange, InstructionInfo, PiaEvent, Reg};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use crate::symbols::MapFile;
 use crate::tui::export_list_info::ExportListInfo;
@@ -6,7 +6,6 @@ use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
 };
-use cursive::direction::Orientation;
 use cursive::event::{Callback, Event, EventResult, EventTrigger, Key};
 use cursive::theme::{BaseColor, Color, ColorStyle, ColorType};
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
@@ -52,7 +51,16 @@ impl CursiveTui {
         pia_tx: &Sender<PiaEvent>,
         map_file: MapFile,
     ) -> Self {
-        let cursive = Self::make_ui(&map_file, debug_tx, pia_tx);
+        let export_list_info = ExportListInfo::new(&map_file);
+        let mut cursive = cursive::default().into_runner();
+        cursive.add_fullscreen_layer(
+            LinearLayout::horizontal()
+                .child(Self::make_left())
+                .child(Self::make_right(debug_tx, &export_list_info)),
+        );
+        cursive.set_fps(30);
+        Self::add_global_callbacks(&mut cursive, debug_tx, export_list_info);
+        Self::set_pre_event_inner_handler(&mut cursive, pia_tx);
         Self {
             cursive,
             monitor_rx,
@@ -65,47 +73,185 @@ impl CursiveTui {
         while self.step() {}
     }
 
-    #[allow(clippy::too_many_lines)]
-    fn make_ui(
-        map_file: &MapFile,
-        debug_tx: &Sender<DebugMessage>,
-        pia_tx: &Sender<PiaEvent>,
-    ) -> CursiveRunner<CursiveRunnable> {
-        use crate::messages::DebugMessage::{Break, FetchMemory, Go, Run, SetPc, Step};
+    fn step(&mut self) -> bool {
+        use crate::messages::IoMessage::WriteChar;
+        use crate::messages::MonitorMessage::{
+            AfterExecute, BeforeExecute, FetchMemoryResponse, NotifyInvalidBrk, NotifyState,
+        };
 
-        fn panel<V>(view: V, label: &str) -> Panel<V> {
-            Panel::new(view).title(label).title_position(HAlign::Left)
+        if !self.cursive.is_running() {
+            return false;
         }
 
-        let export_list_info = ExportListInfo::new(map_file);
+        while let Some(message) = self.io_rx.try_iter().next() {
+            match message {
+                WriteChar(ch) => {
+                    if ch != '\r' {
+                        self.cursive
+                            .find_name::<TextView>(STDOUT_NAME)
+                            .expect("Must exist")
+                            .append(ch);
+                    }
+                }
+            }
+        }
 
-        let state = TextView::new("")
-            .with_name(STATE_NAME)
-            .fixed_height(1)
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::StickToBottom);
-        let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
-        let registers = TextView::new("").with_name(REGISTERS_NAME);
-        let cycles = TextView::new("").with_name(CYCLES_NAME);
-        let disassembly = TextView::new("")
-            .with_name(DISASSEMBLY_NAME)
-            .full_height()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::StickToBottom);
-        let stdout = TextView::new("")
-            .style(STDOUT_TEXT_COLOUR_INACTIVE)
-            .with_name(STDOUT_NAME)
-            .full_width()
-            .full_height()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::StickToBottom);
-        let stdout_container = Layer::new(stdout).with_name(STDOUT_CONTAINER_NAME);
-        let symbols = TextView::new(export_list_info.toggle())
-            .with_name(SYMBOLS_NAME)
-            .min_height(10)
-            .full_width()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::KeepRow);
+        while let Some(message) = self.monitor_rx.try_iter().next() {
+            match message {
+                NotifyState(state) => self.on_notify_state(state),
+                NotifyInvalidBrk => self.on_notify_invalid_brk(),
+                BeforeExecute {
+                    total_cycles,
+                    reg,
+                    instruction_info,
+                } => self.on_before_execute(total_cycles, &reg, &instruction_info),
+                AfterExecute {
+                    total_cycles,
+                    reg,
+                    instruction_info,
+                } => self.on_after_execute(total_cycles, &reg, &instruction_info),
+                FetchMemoryResponse {
+                    address_range,
+                    snapshot,
+                } => self.on_fetch_memory_response(&address_range, &snapshot),
+            }
+        }
+
+        self.cursive.step();
+        true
+    }
+
+    fn update_current(&mut self, instruction_info: Option<&InstructionInfo>) {
+        if let Some(instruction_info) = instruction_info {
+            self.cursive
+                .find_name::<TextView>(CURRENT_NAME)
+                .expect("Must exist")
+                .set_content(
+                    instruction_info
+                        .display(&self.map_file)
+                        .expect("Must succeed"),
+                );
+        } else {
+            self.cursive
+                .find_name::<TextView>(CURRENT_NAME)
+                .expect("Must exist")
+                .set_content("(running)");
+            self.cursive
+                .find_name::<TextView>(REGISTERS_NAME)
+                .expect("Must exist")
+                .set_content("(running)");
+            self.cursive
+                .find_name::<TextView>(CYCLES_NAME)
+                .expect("Must exist")
+                .set_content("(running)");
+            self.cursive
+                .find_name::<TextView>(DISASSEMBLY_NAME)
+                .expect("Must exist")
+                .set_content(' ');
+        }
+    }
+
+    fn on_notify_state(&mut self, state: State) {
+        let s = match state {
+            State::Running => "Running",
+            State::Stepping => "Stepping",
+            State::Halted => "Waiting",
+            State::Stopped => "Stopped",
+        };
+        self.cursive
+            .find_name::<TextView>(STATE_NAME)
+            .expect("Must exist")
+            .set_content(s);
+        if matches!(state, State::Halted | State::Running | State::Stopped) {
+            self.update_current(None);
+        }
+    }
+
+    fn on_notify_invalid_brk(&mut self) {
+        self.cursive
+            .find_name::<TextView>(COMMAND_FEEDBACK_NAME)
+            .expect("Must exist")
+            .set_content("Invalid software interrupt");
+    }
+
+    fn on_before_execute(
+        &mut self,
+        total_cycles: u64,
+        reg: &Reg,
+        instruction_info: &InstructionInfo,
+    ) {
+        self.cursive
+            .find_name::<TextView>(REGISTERS_NAME)
+            .expect("Must exist")
+            .set_content(reg.to_string());
+        self.cursive
+            .find_name::<TextView>(CYCLES_NAME)
+            .expect("Must exist")
+            .set_content(format!("{total_cycles}"));
+        self.update_current(Some(instruction_info));
+    }
+
+    fn on_after_execute(
+        &mut self,
+        total_cycles: u64,
+        reg: &Reg,
+        instruction_info: &InstructionInfo,
+    ) {
+        self.cursive
+            .find_name::<TextView>(REGISTERS_NAME)
+            .expect("Must exist")
+            .set_content(reg.to_string());
+        self.cursive
+            .find_name::<TextView>(CYCLES_NAME)
+            .expect("Must exist")
+            .set_content(format!("{total_cycles}"));
+
+        let mut s = instruction_info
+            .disassembly(&self.map_file)
+            .expect("Must succeed");
+        s.push('\n');
+        self.cursive
+            .find_name::<TextView>(DISASSEMBLY_NAME)
+            .expect("Must exist")
+            .append(s);
+    }
+
+    fn on_fetch_memory_response(&mut self, address_range: &AddressRange, snapshot: &[u8]) {
+        let s = Self::format_snapshot(address_range, snapshot);
+        self.cursive
+            .find_name::<TextView>(COMMAND_RESPONSE_NAME)
+            .expect("Must exist")
+            .append(s);
+    }
+
+    fn format_snapshot(address_range: &AddressRange, bytes: &[u8]) -> String {
+        const CHUNK_SIZE: usize = 16;
+        let mut s = format!("{address_range}\n");
+        let mut addr = address_range.start() as usize;
+        for chunk in bytes.chunks(CHUNK_SIZE) {
+            write!(s, "{addr:04X} ").unwrap();
+            let mut chars = String::with_capacity(CHUNK_SIZE);
+            for b in chunk {
+                write!(s, " {b:02X}").unwrap();
+                let c: char = *b as char;
+                if c.is_ascii() && !c.is_ascii_control() {
+                    chars.push(c);
+                } else {
+                    chars.push('.');
+                }
+            }
+            s.push_str(&String::from("   ").repeat(CHUNK_SIZE - chunk.len()));
+            writeln!(s, "  {chars}").unwrap();
+            addr += CHUNK_SIZE;
+        }
+        s
+    }
+
+    fn panel<V>(view: V, label: &str) -> Panel<V> {
+        Panel::new(view).title(label).title_position(HAlign::Left)
+    }
+
+    fn make_help_and_symbols(export_list_info: &ExportListInfo) -> LinearLayout {
         let help = TextView::new(
             "Q: Quit\n\
             Space: Step\n\
@@ -119,6 +265,53 @@ impl CursiveTui {
         .full_width()
         .scrollable()
         .scroll_strategy(ScrollStrategy::KeepRow);
+        let symbols = TextView::new(export_list_info.toggle())
+            .with_name(SYMBOLS_NAME)
+            .min_height(10)
+            .full_width()
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::KeepRow);
+        LinearLayout::horizontal()
+            .child(Self::panel(help, "Help"))
+            .child(Self::panel(symbols, "Symbols"))
+    }
+
+    fn make_left() -> LinearLayout {
+        let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
+        let registers = TextView::new("").with_name(REGISTERS_NAME);
+        let cycles = TextView::new("").with_name(CYCLES_NAME);
+        let disassembly = TextView::new("")
+            .with_name(DISASSEMBLY_NAME)
+            .full_height()
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::StickToBottom);
+        let state = TextView::new("")
+            .with_name(STATE_NAME)
+            .fixed_height(1)
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::StickToBottom);
+
+        LinearLayout::vertical()
+            .child(Self::panel(current, "Current Instruction"))
+            .child(Self::panel(registers, "Registers"))
+            .child(Self::panel(cycles, "Cycles"))
+            .child(Self::panel(disassembly, "Disassembly"))
+            .child(Self::panel(state, "Status"))
+    }
+
+    fn make_right(
+        debug_tx: &Sender<DebugMessage>,
+        export_list_info: &ExportListInfo,
+    ) -> NamedView<LinearLayout> {
+        let stdout = TextView::new("")
+            .style(STDOUT_TEXT_COLOUR_INACTIVE)
+            .with_name(STDOUT_NAME)
+            .full_width()
+            .full_height()
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::StickToBottom);
+        let stdout_container = Layer::new(stdout).with_name(STDOUT_CONTAINER_NAME);
+        let help_and_symbols = Self::make_help_and_symbols(export_list_info);
         let d = debug_tx.clone();
         let command_response = TextView::new("")
             .with_name(COMMAND_RESPONSE_NAME)
@@ -128,43 +321,11 @@ impl CursiveTui {
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let command = EditView::new()
             .disabled()
-            .on_submit(move |s, text| {
-                fn nasty_hack(s: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
-                    match text.parse::<Command>() {
-                        Ok(Command::Help(help)) => {
-                            s.find_name::<TextView>(COMMAND_RESPONSE_NAME)
-                                .expect("Must exist")
-                                .append(help);
-                        }
-                        Ok(Command::FetchMemory(address_range)) => {
-                            _ = d.send(FetchMemory(address_range));
-                            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
-                                command.disable();
-                            });
-                        }
-                        Ok(Command::SetPc(addr)) => {
-                            _ = d.send(SetPc(addr));
-                            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
-                                command.disable();
-                            });
-                        }
-                        Ok(Command::Go(addr)) => {
-                            _ = d.send(Go(addr));
-                            s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
-                                command.disable();
-                            });
-                        }
-                        Err(e) => {
-                            s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
-                                view.set_content(format!("{e}"));
-                            });
-                        }
-                    }
-                }
-                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+            .on_submit(move |c, text| {
+                c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                     _ = command.set_content("");
                 });
-                nasty_hack(s, text, &d);
+                Self::run_command(c, text, &d);
             })
             .with_name(COMMAND_NAME)
             .fixed_height(1);
@@ -172,45 +333,36 @@ impl CursiveTui {
             .with_name(COMMAND_FEEDBACK_NAME)
             .fixed_height(1);
 
-        let left = LinearLayout::new(Orientation::Vertical)
-            .child(panel(current, "Current Instruction"))
-            .child(panel(registers, "Registers"))
-            .child(panel(cycles, "Cycles"))
-            .child(panel(disassembly, "Disassembly"))
-            .child(panel(state, "Status"));
-
-        let right = LinearLayout::new(Orientation::Vertical)
-            .child(panel(stdout_container, "Output"))
-            .child(panel(symbols, "Symbols"))
-            .child(panel(help, "Help"))
-            .child(panel(command_response, "Command Response"))
-            .child(panel(command, "Command"))
+        LinearLayout::vertical()
+            .child(Self::panel(stdout_container, "Output"))
+            .child(help_and_symbols)
+            .child(Self::panel(command_response, "Command Response"))
+            .child(Self::panel(command, "Command"))
             .child(Panel::new(command_feedback))
-            .with_name(RIGHT_NAME);
+            .with_name(RIGHT_NAME)
+    }
 
-        let dashboard = LinearLayout::new(Orientation::Horizontal)
-            .child(left)
-            .child(right);
+    fn add_global_callbacks(
+        c: &mut Cursive,
+        debug_tx: &Sender<DebugMessage>,
+        export_list_info: ExportListInfo,
+    ) {
+        use crate::messages::DebugMessage::{Break, Run, Step};
 
-        let mut cursive = cursive::default().into_runner();
-        cursive.add_fullscreen_layer(dashboard);
-
-        cursive.set_fps(30);
-
-        cursive.add_global_callback('q', Cursive::quit);
-        cursive.add_global_callback('s', move |c| {
+        c.add_global_callback('q', Cursive::quit);
+        c.add_global_callback('s', move |c| {
             c.call_on_name(SYMBOLS_NAME, |view: &mut TextView| {
                 view.set_content(export_list_info.toggle());
             })
             .unwrap();
         });
         let d = debug_tx.clone();
-        cursive.add_global_callback(' ', move |_| _ = d.send(Step));
+        c.add_global_callback(' ', move |_| _ = d.send(Step));
         let d = debug_tx.clone();
-        cursive.add_global_callback('r', move |_| _ = d.send(Run));
+        c.add_global_callback('r', move |_| _ = d.send(Run));
         let d = debug_tx.clone();
-        cursive.add_global_callback('b', move |_| _ = d.send(Break));
-        cursive.add_global_callback('c', move |c| {
+        c.add_global_callback('b', move |_| _ = d.send(Break));
+        c.add_global_callback('c', move |c| {
             c.call_on_name(RIGHT_NAME, |right: &mut LinearLayout| {
                 // https://github.com/gyscos/cursive/discussions/820#discussioncomment-13299361
                 right
@@ -221,15 +373,20 @@ impl CursiveTui {
                     .expect("Must succeed");
             });
         });
-        cursive.add_global_callback(Key::Esc, move |c| {
+        c.add_global_callback(Key::Esc, move |c| {
             c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                 command.disable();
             });
         });
+    }
 
-        let program_gets_input = AtomicBool::new(false);
+    fn set_pre_event_inner_handler(
+        c: &mut CursiveRunner<CursiveRunnable>,
+        pia_tx: &Sender<PiaEvent>,
+    ) {
+        let program_has_input = AtomicBool::new(false);
         let pia_tx_clone = pia_tx.clone();
-        cursive.set_on_pre_event_inner(EventTrigger::any(), move |e| {
+        c.set_on_pre_event_inner(EventTrigger::any(), move |e| {
             fn send_char(pia_tx: &Sender<PiaEvent>, ch: char) {
                 _ = pia_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
                     KeyCode::Char(ch),
@@ -269,10 +426,10 @@ impl CursiveTui {
                 );
             }
 
-            if program_gets_input.load(Ordering::SeqCst) {
+            if program_has_input.load(Ordering::SeqCst) {
                 match e {
                     Event::CtrlChar('p') => {
-                        program_gets_input.store(false, Ordering::SeqCst);
+                        program_has_input.store(false, Ordering::SeqCst);
                         return Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
                             set_stdout_colour(c, false);
                         }))));
@@ -291,7 +448,7 @@ impl CursiveTui {
             } else {
                 match e {
                     Event::CtrlChar('p') => {
-                        program_gets_input.store(true, Ordering::SeqCst);
+                        program_has_input.store(true, Ordering::SeqCst);
                         Some(EventResult::Consumed(Some(Callback::from_fn(|c| {
                             set_stdout_colour(c, true);
                         }))))
@@ -300,163 +457,41 @@ impl CursiveTui {
                 }
             }
         });
-
-        cursive
     }
 
-    #[allow(clippy::too_many_lines)]
-    fn step(&mut self) -> bool {
-        use crate::messages::IoMessage::WriteChar;
-        use crate::messages::MonitorMessage::{
-            AfterExecute, BeforeExecute, FetchMemoryResponse, NotifyInvalidBrk, NotifyState,
-        };
+    fn run_command(s: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
+        use crate::messages::DebugMessage::{FetchMemory, Go, SetPc};
 
-        if !self.cursive.is_running() {
-            return false;
-        }
-
-        while let Some(message) = self.io_rx.try_iter().next() {
-            match message {
-                WriteChar(ch) => {
-                    if ch != '\r' {
-                        self.cursive
-                            .find_name::<TextView>(STDOUT_NAME)
-                            .expect("Must exist")
-                            .append(ch);
-                    }
-                }
+        match text.parse::<Command>() {
+            Ok(Command::Help(help)) => {
+                s.find_name::<TextView>(COMMAND_RESPONSE_NAME)
+                    .expect("Must exist")
+                    .append(help);
+            }
+            Ok(Command::FetchMemory(address_range)) => {
+                _ = d.send(FetchMemory(address_range));
+                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                    command.disable();
+                });
+            }
+            Ok(Command::SetPc(addr)) => {
+                _ = d.send(SetPc(addr));
+                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                    command.disable();
+                });
+            }
+            Ok(Command::Go(addr)) => {
+                _ = d.send(Go(addr));
+                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                    command.disable();
+                });
+            }
+            Err(e) => {
+                s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                    view.set_content(format!("{e}"));
+                });
             }
         }
-
-        while let Some(message) = self.monitor_rx.try_iter().next() {
-            match message {
-                NotifyState(state) => {
-                    let s = match state {
-                        State::Running => "Running",
-                        State::Stepping => "Stepping",
-                        State::Halted => "Waiting",
-                        State::Stopped => "Stopped",
-                    };
-                    self.cursive
-                        .find_name::<TextView>(STATE_NAME)
-                        .expect("Must exist")
-                        .set_content(s);
-                    if matches!(state, State::Halted | State::Running | State::Stopped) {
-                        self.update_current(None);
-                    }
-                }
-                NotifyInvalidBrk => {
-                    self.cursive
-                        .find_name::<TextView>(COMMAND_FEEDBACK_NAME)
-                        .expect("Must exist")
-                        .set_content("Invalid software interrupt");
-                }
-                BeforeExecute {
-                    total_cycles,
-                    reg,
-                    instruction_info,
-                } => {
-                    self.cursive
-                        .find_name::<TextView>(REGISTERS_NAME)
-                        .expect("Must exist")
-                        .set_content(reg.to_string());
-                    self.cursive
-                        .find_name::<TextView>(CYCLES_NAME)
-                        .expect("Must exist")
-                        .set_content(format!("{total_cycles}"));
-                    self.update_current(Some(&instruction_info));
-                }
-                AfterExecute {
-                    total_cycles,
-                    reg,
-                    instruction_info,
-                } => {
-                    self.cursive
-                        .find_name::<TextView>(REGISTERS_NAME)
-                        .expect("Must exist")
-                        .set_content(reg.to_string());
-                    self.cursive
-                        .find_name::<TextView>(CYCLES_NAME)
-                        .expect("Must exist")
-                        .set_content(format!("{total_cycles}"));
-
-                    let mut s = instruction_info
-                        .disassembly(&self.map_file)
-                        .expect("Must succeed");
-                    s.push('\n');
-                    self.cursive
-                        .find_name::<TextView>(DISASSEMBLY_NAME)
-                        .expect("Must exist")
-                        .append(s);
-                }
-                FetchMemoryResponse {
-                    address_range,
-                    snapshot,
-                } => {
-                    let s = Self::format_snapshot(&address_range, &snapshot);
-                    self.cursive
-                        .find_name::<TextView>(COMMAND_RESPONSE_NAME)
-                        .expect("Must exist")
-                        .append(s);
-                }
-            }
-        }
-
-        self.cursive.step();
-        true
-    }
-
-    fn update_current(&mut self, instruction_info: Option<&InstructionInfo>) {
-        if let Some(instruction_info) = instruction_info {
-            self.cursive
-                .find_name::<TextView>(CURRENT_NAME)
-                .expect("Must exist")
-                .set_content(
-                    instruction_info
-                        .display(&self.map_file)
-                        .expect("Must succeed"),
-                );
-        } else {
-            self.cursive
-                .find_name::<TextView>(CURRENT_NAME)
-                .expect("Must exist")
-                .set_content("(running)");
-            self.cursive
-                .find_name::<TextView>(REGISTERS_NAME)
-                .expect("Must exist")
-                .set_content("(running)");
-            self.cursive
-                .find_name::<TextView>(CYCLES_NAME)
-                .expect("Must exist")
-                .set_content("(running)");
-            self.cursive
-                .find_name::<TextView>(DISASSEMBLY_NAME)
-                .expect("Must exist")
-                .set_content(' ');
-        }
-    }
-
-    fn format_snapshot(address_range: &AddressRange, bytes: &[u8]) -> String {
-        const CHUNK_SIZE: usize = 16;
-        let mut s = format!("{address_range}\n");
-        let mut addr = address_range.start() as usize;
-        for chunk in bytes.chunks(CHUNK_SIZE) {
-            write!(s, "{addr:04X} ").unwrap();
-            let mut chars = String::with_capacity(CHUNK_SIZE);
-            for b in chunk {
-                write!(s, " {b:02X}").unwrap();
-                let c: char = *b as char;
-                if c.is_ascii() && !c.is_ascii_control() {
-                    chars.push(c);
-                } else {
-                    chars.push('.');
-                }
-            }
-            s.push_str(&String::from("   ").repeat(CHUNK_SIZE - chunk.len()));
-            writeln!(s, "  {chars}").unwrap();
-            addr += CHUNK_SIZE;
-        }
-        s
     }
 }
 
