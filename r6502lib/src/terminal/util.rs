@@ -1,68 +1,58 @@
 use crate::emulator::Image;
 use crate::run_options::RunOptions;
 use log::info;
+use std::fmt::Display;
 use std::str::from_utf8;
 
 pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
-    info!("Image: {}", opts.path.display());
+    fn log_property<D: Display>(label: &str, value: D) {
+        info!("{label}: {value}")
+    }
 
-    info!(
-        "  {label:<25}: {s} (${s:04X}) bytes",
-        label = "Image size",
-        s = image.bytes().len()
+    log_property("Image", opts.path.display());
+    log_property(
+        "Image size",
+        format!("{size} (${size:04X}) bytes", size = image.bytes().len()),
     );
 
     match image.machine_tag() {
-        Some(tag) => {
-            info!(
-                "  {label:<25}: {tag}",
-                label = "Format",
-                tag = from_utf8(&tag).expect("Must be valid UTF-8")
-            );
-        }
-        None => {
-            info!("  {label:<25}: (unspecified)", label = "Machine tag",);
-        }
+        Some(tag) => log_property("Machine tag", from_utf8(&tag).unwrap()),
+        None => log_property("Machine tag", "(unspecified)"),
     }
 
-    info!(
-        "  {label:<25}: ${load:04X}",
-        label = "Load address",
-        load = image.load().or(opts.load).unwrap_or_default()
+    log_property(
+        "Load address",
+        format!(
+            "${load:04X}",
+            load = image.load().or(opts.load).unwrap_or_default()
+        ),
     );
 
     if opts.reset {
-        info!(
-            "  {label:<25}: ${start:04X} (RESET, overriding ${original_start:04X})",
-            label = "Start address",
-            start = start,
-            original_start = image.start().or(opts.start).unwrap_or_default()
+        log_property(
+            "Start address",
+            format!(
+                "${start:04X} (RESET, overriding ${original_start:04X})",
+                start = start,
+                original_start = image.start().or(opts.start).unwrap_or_default()
+            ),
         );
     } else {
-        info!(
-            "  {label:<25}: ${start:04X}",
-            label = "Start address",
-            start = image.start().or(opts.start).unwrap_or_default()
+        log_property(
+            "Start address",
+            format!(
+                "${start:04X}",
+                start = image.start().or(opts.start).unwrap_or_default()
+            ),
         );
     }
 
     match image.sp() {
-        Some(sp) => {
-            info!(
-                "  {label:<25}: ${sp:02X}",
-                label = "Initial stack pointer",
-                sp = sp
-            );
-        }
-        None => {
-            info!(
-                "  {label:<25}: (unspecified)",
-                label = "Initial stack pointer",
-            );
-        }
+        Some(sp) => log_property("Initial stack pointer", format!("${sp:02X}", sp = sp)),
+        None => log_property("Initial stack pointer", "(unspecified)"),
     }
 
     if let Some(stop_after) = opts.stop_after {
-        info!("  {label:<25}: {stop_after} cycles", label = "Stop after");
+        log_property("Stop after cycles", stop_after)
     }
 }
