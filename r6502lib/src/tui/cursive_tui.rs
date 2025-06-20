@@ -251,31 +251,6 @@ impl CursiveTui {
         Panel::new(view).title(label).title_position(HAlign::Left)
     }
 
-    fn make_help_and_symbols(export_list_info: &ExportListInfo) -> LinearLayout {
-        let help = TextView::new(
-            "Q: Quit\n\
-            Space: Step\n\
-            R: Run\n\
-            B: Break\n\
-            C: Command\n\
-            Esc: Exit command\n\
-            S: Toggle symbol sort order\n\
-            Ctrl+P: Toggle between debugger and program input",
-        )
-        .full_width()
-        .scrollable()
-        .scroll_strategy(ScrollStrategy::KeepRow);
-        let symbols = TextView::new(export_list_info.toggle())
-            .with_name(SYMBOLS_NAME)
-            .min_height(10)
-            .full_width()
-            .scrollable()
-            .scroll_strategy(ScrollStrategy::KeepRow);
-        LinearLayout::horizontal()
-            .child(Self::panel(help, "Help"))
-            .child(Self::panel(symbols, "Symbols"))
-    }
-
     fn make_left() -> LinearLayout {
         let current = TextView::new("").with_name(CURRENT_NAME).fixed_height(1);
         let registers = TextView::new("").with_name(REGISTERS_NAME);
@@ -311,7 +286,25 @@ impl CursiveTui {
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let stdout_container = Layer::new(stdout).with_name(STDOUT_CONTAINER_NAME);
-        let help_and_symbols = Self::make_help_and_symbols(export_list_info);
+        let symbols = TextView::new(export_list_info.toggle())
+            .with_name(SYMBOLS_NAME)
+            .min_height(10)
+            .full_width()
+            .scrollable()
+            .scroll_strategy(ScrollStrategy::KeepRow);
+        let help = TextView::new(
+            "Q: Quit\n\
+            Space: Step\n\
+            R: Run\n\
+            B: Break\n\
+            C: Command\n\
+            Esc: Exit command\n\
+            S: Toggle symbol sort order\n\
+            Ctrl+P: Toggle between debugger and program input",
+        )
+        .full_width()
+        .scrollable()
+        .scroll_strategy(ScrollStrategy::KeepRow);
         let d = debug_tx.clone();
         let command_response = TextView::new("")
             .with_name(COMMAND_RESPONSE_NAME)
@@ -335,7 +328,8 @@ impl CursiveTui {
 
         LinearLayout::vertical()
             .child(Self::panel(stdout_container, "Output"))
-            .child(help_and_symbols)
+            .child(Self::panel(symbols, "Symbols"))
+            .child(Self::panel(help, "Help"))
             .child(Self::panel(command_response, "Command Response"))
             .child(Self::panel(command, "Command"))
             .child(Panel::new(command_feedback))
