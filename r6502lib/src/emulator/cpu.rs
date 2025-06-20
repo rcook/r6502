@@ -234,7 +234,7 @@ mod tests {
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
 
-        let (hi, lo) = split_word(IRQ_ADDR);
+        let (hi, lo) = split_word(0xdead);
         bus.store(IRQ, lo);
         bus.store(IRQ.wrapping_add(1), hi);
 
