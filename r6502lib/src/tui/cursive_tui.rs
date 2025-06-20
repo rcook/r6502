@@ -1,6 +1,7 @@
 use crate::emulator::{AddressRange, InstructionInfo, PiaEvent};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
-use crate::symbols::{Export, MapFile};
+use crate::symbols::MapFile;
+use crate::tui::export_list_info::ExportListInfo;
 use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
@@ -23,6 +24,7 @@ const DISASSEMBLY_NAME: &str = "disassembly";
 const STATE_NAME: &str = "state";
 const STDOUT_NAME: &str = "stdout";
 const STDOUT_CONTAINER_NAME: &str = "stdout-container";
+const SYMBOLS_NAME: &str = "symbols";
 const REGISTERS_NAME: &str = "registers";
 const CYCLES_NAME: &str = "cycles";
 const COMMAND_RESPONSE_NAME: &str = "command-response";
@@ -75,12 +77,7 @@ impl CursiveTui {
             Panel::new(view).title(label).title_position(HAlign::Left)
         }
 
-        let s = map_file
-            .exports
-            .iter()
-            .map(Export::to_string)
-            .collect::<Vec<_>>()
-            .join("\n");
+        let export_list_info = ExportListInfo::new(map_file);
 
         let state = TextView::new("")
             .with_name(STATE_NAME)
@@ -103,7 +100,8 @@ impl CursiveTui {
             .scrollable()
             .scroll_strategy(ScrollStrategy::StickToBottom);
         let stdout_container = Layer::new(stdout).with_name(STDOUT_CONTAINER_NAME);
-        let symbols = TextView::new(s)
+        let symbols = TextView::new(export_list_info.toggle())
+            .with_name(SYMBOLS_NAME)
             .min_height(10)
             .full_width()
             .scrollable()
@@ -115,6 +113,7 @@ impl CursiveTui {
             B: Break\n\
             C: Command\n\
             Esc: Exit command\n\
+            S: Toggle symbol sort order\n\
             Ctrl+P: Toggle between debugger and program input",
         )
         .full_width()
@@ -173,13 +172,6 @@ impl CursiveTui {
             .with_name(COMMAND_FEEDBACK_NAME)
             .fixed_height(1);
 
-        //let layout1 = LinearLayout::horizontal()
-        //    .child(panel(symbols, "Symbols"))
-        //    .child(panel(help, "Help"));
-        //let layout2 = LinearLayout::vertical()
-        //    .child(layout1)
-        //    .child(panel(command_response, "Command Response"));
-
         let left = LinearLayout::new(Orientation::Vertical)
             .child(panel(current, "Current Instruction"))
             .child(panel(registers, "Registers"))
@@ -206,6 +198,12 @@ impl CursiveTui {
         cursive.set_fps(30);
 
         cursive.add_global_callback('q', Cursive::quit);
+        cursive.add_global_callback('s', move |c| {
+            c.call_on_name(SYMBOLS_NAME, |view: &mut TextView| {
+                view.set_content(export_list_info.toggle());
+            })
+            .unwrap();
+        });
         let d = debug_tx.clone();
         cursive.add_global_callback(' ', move |_| _ = d.send(Step));
         let d = debug_tx.clone();
@@ -395,7 +393,7 @@ impl CursiveTui {
                     address_range,
                     snapshot,
                 } => {
-                    let s = Self::format_snapshot(address_range, snapshot);
+                    let s = Self::format_snapshot(&address_range, &snapshot);
                     self.cursive
                         .find_name::<TextView>(COMMAND_RESPONSE_NAME)
                         .expect("Must exist")
@@ -438,7 +436,7 @@ impl CursiveTui {
         }
     }
 
-    fn format_snapshot(address_range: AddressRange, bytes: Vec<u8>) -> String {
+    fn format_snapshot(address_range: &AddressRange, bytes: &[u8]) -> String {
         const CHUNK_SIZE: usize = 16;
         let mut s = format!("{address_range}\n");
         let mut addr = address_range.start() as usize;
@@ -470,8 +468,8 @@ mod tests {
     #[test]
     fn format_snapshot() -> Result<()> {
         let address_range = AddressRange::new(0x0e00, 0x0e20)?;
-        let bytes = (0x00..=0x20).collect();
-        let s = CursiveTui::format_snapshot(address_range, bytes);
+        let bytes = (0x00..=0x20).collect::<Vec<_>>();
+        let s = CursiveTui::format_snapshot(&address_range, &bytes);
         assert_eq!(
             "$0E00:$0E20\n\
             0E00  00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F  ................\n\
