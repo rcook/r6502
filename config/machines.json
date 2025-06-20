@@ -37,6 +37,7 @@
             "name": "Acorn",
             "tag": "ACRN",
             "comment": "This will (poorly) emulate the basic character I/O of an Acorn Electron/BBC Micro (i.e. OSRDCH and OSWRCH)",
+            "charSet": "crlf",
             "baseImage": "acorn.r6502",
             "haltAddress": "$FFC0",
             "busDevices": [
@@ -66,6 +67,7 @@
             "name": "Apple1",
             "tag": "APL1",
             "comment": "This will (poorly) emulate the basic character I/O of an Apple 1 (i.e. the PIA)",
+            "charSet": "highbitcr",
             "haltAddress": "$D014",
             "busDevices": [
                 {

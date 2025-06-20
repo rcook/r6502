@@ -86,11 +86,16 @@ impl CursiveTui {
         while let Some(message) = self.io_rx.try_iter().next() {
             match message {
                 WriteChar(ch) => {
-                    if ch != '\r' {
+                    if ch == '\n' || !ch.is_ascii_control() {
                         self.cursive
                             .find_name::<TextView>(STDOUT_NAME)
                             .expect("Must exist")
                             .append(ch);
+                    } else {
+                        self.cursive
+                            .find_name::<TextView>(STDOUT_NAME)
+                            .expect("Must exist")
+                            .append(format!("[?{}?]", ch as u8));
                     }
                 }
             }

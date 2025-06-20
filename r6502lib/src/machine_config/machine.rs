@@ -1,6 +1,7 @@
 use crate::emulator::deserialization::{deserialize_machine_tag, deserialize_word_opt};
 use crate::emulator::MachineTag;
 use crate::machine_config::bus_device::BusDevice;
+use crate::machine_config::CharSet;
 use serde::Deserialize;
 use std::path::PathBuf;
 
@@ -24,4 +25,7 @@ pub struct Machine {
 
     #[serde(rename = "busDevices")]
     pub bus_devices: Vec<BusDevice>,
+
+    #[serde(rename = "charSet")]
+    pub char_set: Option<CharSet>,
 }

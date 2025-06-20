@@ -4,6 +4,7 @@ use crate::emulator::{
     PiaChannel, Ram, Rom,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
+use crate::machine_config::CharSet;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::sync::mpsc::Sender;
@@ -29,9 +30,12 @@ impl BusDevice {
         output: Box<dyn OutputDevice>,
         input_channel: PiaChannel,
         bus_tx: &Sender<BusEvent>,
+        char_set: Option<CharSet>,
     ) -> DeviceMapping {
         let device: Box<dyn _BusDevice> = match self.r#type {
-            BusDeviceType::Pia => Box::new(Pia::new(output, input_channel, bus_tx.clone())),
+            BusDeviceType::Pia => {
+                Box::new(Pia::new(output, input_channel, bus_tx.clone(), char_set))
+            }
             BusDeviceType::Ram | BusDeviceType::Rom => unimplemented!(),
         };
         DeviceMapping {

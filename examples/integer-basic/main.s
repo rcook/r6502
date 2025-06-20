@@ -1,5 +1,3 @@
-.feature string_escapes
-
 .import __DATA_LOAD__
 .segment "HEADER"
 .dbyt $6502
@@ -59,4 +57,11 @@ startup:
 
 .data
 welcome_message:
-    .asciiz "Welcome to r6502 Integer Basic Demo!\rCtrl+C to halt, Ctrl+R to reset, Ctrl+S to save snapshot\rBASIC is at $E000\rwozmon is at $FF00\rStart BASIC with E000R\rWarm-start BASIC with E2B3R\r\r"
+    .byte "Welcome to r6502 Integer Basic Demo!", 13
+    .byte "Ctrl+C to halt, Ctrl+R to reset, Ctrl+S to save snapshot", 13
+    .byte "BASIC is at $E000", 13
+    .byte "wozmon is at $FF00", 13
+    .byte "Start BASIC with E000R", 13
+    .byte "Warm-start BASIC with E2B3R", 13
+    .byte 13
+    .byte 0

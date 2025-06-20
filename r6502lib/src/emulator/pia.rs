@@ -1,4 +1,5 @@
 use crate::emulator::{BusDevice, BusEvent, OutputDevice, PiaChannel, PiaEvent};
+use crate::machine_config::CharSet;
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
@@ -55,11 +56,13 @@ impl Pia {
         output: Box<dyn OutputDevice>,
         pia_channel: PiaChannel,
         bus_tx: Sender<BusEvent>,
+        char_set: Option<CharSet>,
     ) -> Self {
         let state = Arc::new(Mutex::new(PiaState::new()));
         let state_clone = Arc::clone(&state);
         let handle = spawn(move || {
-            Self::event_loop(&state_clone, &pia_channel.rx, &bus_tx, output).expect("Must succeed");
+            Self::event_loop(&state_clone, &pia_channel.rx, &bus_tx, output, char_set)
+                .expect("Must succeed");
         });
         Self {
             state,
@@ -74,13 +77,14 @@ impl Pia {
         pia_rx: &Receiver<PiaEvent>,
         bus_tx: &Sender<BusEvent>,
         output: Box<dyn OutputDevice>,
+        char_set: Option<CharSet>,
     ) -> Result<()> {
         loop {
             match pia_rx.recv() {
                 Ok(PiaEvent::PaUpdated(value)) => state.lock().unwrap().pa = value,
                 Ok(PiaEvent::PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
                 Ok(PiaEvent::PbUpdated(value)) => {
-                    output.write(value & 0x7f)?;
+                    output.write(char_set.map_or(value, |s| s.translate(value)))?;
                     state.lock().unwrap().pb = 0x00;
                 }
                 Ok(PiaEvent::PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,

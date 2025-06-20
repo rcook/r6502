@@ -88,7 +88,7 @@ impl MachineInfo {
         let mut mappings = Vec::with_capacity(self.machine.bus_devices.len());
 
         if let Some(d) = io_devices.first() {
-            mappings.push(d.map_io_device(output, pia_channel, &bus_tx));
+            mappings.push(d.map_io_device(output, pia_channel, &bus_tx, self.machine.char_set));
         }
 
         for d in memory_devices {
