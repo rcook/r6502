@@ -31,15 +31,16 @@ impl<'a> Cpu<'a> {
 
     #[must_use]
     pub fn step(&mut self) -> bool {
-        self.step2(false)
+        self.step_ex(false)
     }
 
     #[must_use]
-    pub fn step2(&mut self, running: bool) -> bool {
+    pub fn step_ex(&mut self, free_running: bool) -> bool {
         let instruction = Instruction::fetch(self);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
 
-        if !running {
+        if !free_running {
+            // TBD: Move this out of step_ex
             self.monitor.on_before_execute(
                 self.total_cycles,
                 self.reg.clone(),
@@ -65,7 +66,8 @@ impl<'a> Cpu<'a> {
             }
         }
 
-        if !running {
+        if !free_running {
+            // TBD: Move this out of step_ex
             self.monitor.on_after_execute(
                 self.total_cycles,
                 self.reg.clone(),

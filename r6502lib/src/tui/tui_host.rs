@@ -73,7 +73,7 @@ impl TuiHost {
                 Err(TryRecvError::Empty) | Ok(_) => {}
             }
 
-            if !cpu.step2(true) {
+            if !cpu.step_ex(true) {
                 let new_state = self.handle_brk();
                 if !matches!(new_state, Stepping) {
                     return new_state;
