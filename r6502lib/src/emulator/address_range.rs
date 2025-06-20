@@ -16,13 +16,13 @@ impl AddressRange {
     }
 
     pub fn parse_no_sigils(s: &str) -> Result<Self> {
-        match s.split_once(':') {
-            Some((prefix, suffix)) => {
-                let start = u16::from_str_radix(prefix.trim(), 16)?;
-                let end = u16::from_str_radix(suffix.trim(), 16)?;
-                Self::new(start, end)
-            }
-            None => bail!("invalid address range {s}"),
+        if let Some((prefix, suffix)) = s.split_once(':') {
+            let start = u16::from_str_radix(prefix.trim(), 16)?;
+            let end = u16::from_str_radix(suffix.trim(), 16)?;
+            Self::new(start, end)
+        } else {
+            let start_and_end = u16::from_str_radix(s, 16)?;
+            Self::new(start_and_end, start_and_end)
         }
     }
 

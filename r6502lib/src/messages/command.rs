@@ -3,7 +3,7 @@ use anyhow::{bail, Error};
 use std::str::FromStr;
 
 const HELP: &str = "?/h/help: Show help message\n\
-    m/mem/memory <START>:<END>: Dump block of memory\n\
+    m/mem/memory <START>(:<END>): Dump block of memory\n\
     pc <ADDRESS>: Set program counter\n\
     go <ADDRESS>: Set program counter and start program\n";
 
