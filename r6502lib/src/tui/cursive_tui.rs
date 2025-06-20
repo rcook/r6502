@@ -453,35 +453,35 @@ impl CursiveTui {
         });
     }
 
-    fn run_command(s: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
+    fn run_command(c: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
         use crate::messages::DebugMessage::{FetchMemory, Go, SetPc};
 
         match text.parse::<Command>() {
             Ok(Command::Help(help)) => {
-                s.find_name::<TextView>(COMMAND_RESPONSE_NAME)
+                c.find_name::<TextView>(COMMAND_RESPONSE_NAME)
                     .expect("Must exist")
                     .append(help);
             }
             Ok(Command::FetchMemory(address_range)) => {
                 _ = d.send(FetchMemory(address_range));
-                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                     command.disable();
                 });
             }
             Ok(Command::SetPc(addr)) => {
                 _ = d.send(SetPc(addr));
-                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                     command.disable();
                 });
             }
             Ok(Command::Go(addr)) => {
                 _ = d.send(Go(addr));
-                s.call_on_name(COMMAND_NAME, |command: &mut EditView| {
+                c.call_on_name(COMMAND_NAME, |command: &mut EditView| {
                     command.disable();
                 });
             }
             Err(e) => {
-                s.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
+                c.call_on_name(COMMAND_FEEDBACK_NAME, |view: &mut TextView| {
                     view.set_content(format!("{e}"));
                 });
             }
