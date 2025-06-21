@@ -84,7 +84,9 @@ impl Pia {
                 Ok(PiaEvent::PaUpdated(value)) => state.lock().unwrap().pa = value,
                 Ok(PiaEvent::PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
                 Ok(PiaEvent::PbUpdated(value)) => {
-                    output.write(char_set.map_or(value, |s| s.translate(value)))?;
+                    if let Some(value) = char_set.map_or(Some(value), |s| s.translate(value)) {
+                        output.write(value)?;
+                    }
                     state.lock().unwrap().pb = 0x00;
                 }
                 Ok(PiaEvent::PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,

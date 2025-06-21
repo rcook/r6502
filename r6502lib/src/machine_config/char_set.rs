@@ -11,16 +11,23 @@ pub enum CharSet {
 
 impl CharSet {
     #[must_use]
-    pub fn translate(&self, value: u8) -> u8 {
+    pub fn translate(&self, value: u8) -> Option<u8> {
         match self {
-            Self::Crlf => todo!(),
+            Self::Crlf => {
+                if value == 0x0d {
+                    // Swallow CR
+                    None
+                } else {
+                    Some(value)
+                }
+            }
             Self::HighBitCr => {
                 if value == 0x8d {
                     // Translate CR with high bit set to LF
-                    0x0a
+                    Some(0x0a)
                 } else {
                     // Clear the high bit
-                    value & 0x7f
+                    Some(value & 0x7f)
                 }
             }
         }
