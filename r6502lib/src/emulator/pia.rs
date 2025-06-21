@@ -1,4 +1,7 @@
-use crate::emulator::{BusDevice, BusEvent, OutputDevice, PiaChannel, PiaEvent};
+use crate::emulator::PiaEvent::{
+    self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
+};
+use crate::emulator::{BusDevice, BusEvent, OutputDevice, PiaChannel};
 use crate::machine_config::CharSet;
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
@@ -81,16 +84,16 @@ impl Pia {
     ) -> Result<()> {
         loop {
             match pia_rx.recv() {
-                Ok(PiaEvent::PaUpdated(value)) => state.lock().unwrap().pa = value,
-                Ok(PiaEvent::PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
-                Ok(PiaEvent::PbUpdated(value)) => {
+                Ok(PaUpdated(value)) => state.lock().unwrap().pa = value,
+                Ok(PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
+                Ok(PbUpdated(value)) => {
                     if let Some(value) = char_set.map_or(Some(value), |s| s.translate(value)) {
                         output.write(value)?;
                     }
                     state.lock().unwrap().pb = 0x00;
                 }
-                Ok(PiaEvent::PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,
-                Ok(PiaEvent::Input(event)) => match event {
+                Ok(PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,
+                Ok(Input(event)) => match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         match (key.modifiers, key.code) {
                             (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
@@ -123,7 +126,7 @@ impl Pia {
                     }
                     _ => {}
                 },
-                Ok(PiaEvent::Shutdown) | Err(_) => break,
+                Ok(Shutdown) | Err(_) => break,
             }
         }
 
@@ -142,7 +145,7 @@ impl BusDevice for Pia {
     }
 
     fn stop(&self) -> bool {
-        _ = self.pia_tx.send(PiaEvent::Shutdown);
+        _ = self.pia_tx.send(Shutdown);
         if let Some(h) = self.handle.take() {
             h.join().is_ok()
         } else {
@@ -173,10 +176,10 @@ impl BusDevice for Pia {
         }
 
         let m = match addr {
-            Self::PA_OFFSET => PiaEvent::PaUpdated(value),
-            Self::PA_CR_OFFSET => PiaEvent::PacrUpdated(value),
-            Self::PB_OFFSET => PiaEvent::PbUpdated(value),
-            Self::PB_CR_OFFSET => PiaEvent::PbcrUpdated(value),
+            Self::PA_OFFSET => PaUpdated(value),
+            Self::PA_CR_OFFSET => PacrUpdated(value),
+            Self::PB_OFFSET => PbUpdated(value),
+            Self::PB_CR_OFFSET => PbcrUpdated(value),
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
         _ = self.pia_tx.send(m);
