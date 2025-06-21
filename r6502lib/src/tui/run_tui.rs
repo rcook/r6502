@@ -44,7 +44,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let input_channel = PiaChannel::new();
     let input_tx = input_channel.tx.clone();
 
-    spawn(move || {
+    let _handle = spawn(move || {
         let (bus, _) = machine_info
             .create_bus(Box::new(tui_output), input_channel, &image)
             .expect("Must succeed");
@@ -61,5 +61,11 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
         map_file,
     );
     ui.run();
+
+    // TBD: Signal to thread to shut down etc. by extending DebugMessage with a shutdown message
+    //if handle.join().is_err() {
+    //    bail!("Thread panicked: see r6502.log for info")
+    //}
+
     Ok(())
 }
