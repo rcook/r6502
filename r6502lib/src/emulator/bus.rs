@@ -70,10 +70,15 @@ impl Bus {
         }
     }
 
-    pub fn stop(&self) {
+    #[must_use]
+    pub fn stop(&self) -> bool {
+        let mut succeeded = true;
         for mapping in &self.mappings {
-            mapping.device.stop();
+            if !mapping.device.stop() {
+                succeeded = false;
+            }
         }
+        succeeded
     }
 
     // Don't call this when more than one thread is concurrently accessing memory

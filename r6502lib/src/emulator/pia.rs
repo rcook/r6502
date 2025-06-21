@@ -139,10 +139,12 @@ impl BusDevice for Pia {
         self.state.lock().unwrap().started = true;
     }
 
-    fn stop(&self) {
+    fn stop(&self) -> bool {
         _ = self.pia_tx.send(PiaEvent::Shutdown);
         if let Some(h) = self.handle.take() {
-            _ = h.join();
+            h.join().is_ok()
+        } else {
+            true
         }
     }
 

@@ -3,7 +3,7 @@ use crate::emulator::util::make_unique_snapshot_path;
 use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::thread::spawn;
@@ -28,8 +28,12 @@ impl Runner<'_> {
         let stop_reason =
             Self::do_steps(self.cpu, &self.bus_rx, self.stop_after, &self.machine_info)?;
         _ = self.terminal_channel.tx.send(TerminalEvent::Shutdown);
-        _ = handle.join();
-        self.bus.stop();
+        if handle.join().is_err() {
+            bail!("Internal error: most likely a thread panicked; check r6502.log for more info")
+        }
+        if !self.bus.stop() {
+            bail!("Internal error: most likely a thread panicked; check r6502.log for more info")
+        }
         Ok(stop_reason)
     }
 
