@@ -14,20 +14,16 @@ impl CharSet {
     pub fn translate(&self, value: u8) -> Option<u8> {
         match self {
             Self::Crlf => {
-                if value == 0x0d {
-                    // Swallow CR
-                    None
-                } else {
-                    Some(value)
+                match value {
+                    0x0d => None, // Swallow CR
+                    _ => Some(value),
                 }
             }
             Self::HighBitCr => {
-                if value == 0x8d {
-                    // Translate CR with high bit set to LF
-                    Some(0x0a)
-                } else {
-                    // Clear the high bit
-                    Some(value & 0x7f)
+                match value {
+                    0x7f => None,            // Filter out initialization
+                    0x8d => Some(0x0a),      // Translate CR with high bit set to LF
+                    _ => Some(value & 0x7f), // Clear the high bit
                 }
             }
         }
