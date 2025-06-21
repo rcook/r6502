@@ -83,7 +83,7 @@ s_fac    =4                    ;binary accumulator size
 ;
 ptr01    =$00                  ;input string pointer
 stridx   =ptr01+2              ;string index
-pfac     =stridx+1             ;primary accumulator
+.exportzp pfac     =stridx+1             ;primary accumulator
 sfac     =pfac+s_fac           ;secondary accumulator
 ;
 ;	------------------------------------------------------
@@ -98,14 +98,18 @@ sfac     =pfac+s_fac           ;secondary accumulator
 ;
 ;CONVERT NULL-TERMINATED STRING TO 32 BIT BINARY
 ;
-         *=_origin_
+;         *=_origin_
 ;
-strbin   stx ptr01             ;save string pointer LSB
+.code
+.export strbin
+strbin:
+         stx ptr01             ;save string pointer LSB
          sty ptr01+1           ;save string pointer MSB
          lda #0
          ldx #s_fac-1          ;accumulator size
 ;
-strbin01 sta pfac,x            ;clear
+strbin01:
+         sta pfac,x            ;clear
          dex
          bpl strbin01
 ;
@@ -120,9 +124,11 @@ strbin01 sta pfac,x            ;clear
 ;
          rts                   ;null string, so exit
 ;
-strbin02 ldx #n_radix-1
+strbin02:
+         ldx #n_radix-1
 ;
-strbin03 cmp radxtab,x         ;recognized radix?
+strbin03:
+         cmp radxtab,x         ;recognized radix?
          beq strbin04          ;yes
 ;
          dex
@@ -131,7 +137,8 @@ strbin03 cmp radxtab,x         ;recognized radix?
          stx radxflag          ;assuming decimal...
          inx                   ;which might be wrong
 ;
-strbin04 lda basetab,x         ;number bases table
+strbin04:
+         lda basetab,x         ;number bases table
          sta valdnum           ;set valid numeral range
          lda bitstab,x         ;get bits per digit
          sta bitsdig           ;store
@@ -140,13 +147,15 @@ strbin04 lda basetab,x         ;number bases table
 ;
          iny                   ;move past radix
 ;
-strbin05 sty stridx            ;save string index
+strbin05:
+         sty stridx            ;save string index
 ;
 ;	--------------------------------
 ;	process number portion of string
 ;	--------------------------------
 ;
-strbin06 clc                   ;assume no error for now
+strbin06:
+         clc                   ;assume no error for now
          lda (ptr01),y         ;get numeral
          beq strbin17          ;end of string
 ;
@@ -159,9 +168,11 @@ strbin06 clc                   ;assume no error for now
 ;
          and #a_maskuc         ;do case conversion
 ;
-strbin07 sec
+strbin07:
+         sec
 ;
-strbin08 sbc #'0'              ;change numeral to binary
+strbin08:
+         sbc #'0'              ;change numeral to binary
          bcc strbin16          ;numeral > 0
 ;
          cmp #10
@@ -169,7 +180,8 @@ strbin08 sbc #'0'              ;change numeral to binary
 ;
          sbc #a_hexnum         ;do a hex adjust
 ;
-strbin09 cmp valdnum           ;check range
+strbin09:
+         cmp valdnum           ;check range
          bcs strbin17          ;out of range
 ;
          sta curntnum          ;save processed numeral
@@ -191,7 +203,8 @@ strbin09 cmp valdnum           ;check range
          ldy #s_fac            ;accumulator size
          clc
 ;
-strbin10 lda pfac,x            ;N
+strbin10:
+         lda pfac,x            ;N
          rol                   ;N=N*2
          sta sfac,x
          inx
@@ -200,9 +213,11 @@ strbin10 lda pfac,x            ;N
 ;
          bcs strbin17          ;overflow = error
 ;
-strbin11 ldx bitsdig           ;bits per digit
+strbin11:
+         ldx bitsdig           ;bits per digit
 ;
-strbin12 asl pfac              ;compute N*base for binary,...
+strbin12:
+         asl pfac              ;compute N*base for binary,...
          rol pfac+1            ;octal &...
          rol pfac+2            ;hex or...
          rol pfac+3            ;N*8 for decimal
@@ -221,7 +236,8 @@ strbin12 asl pfac              ;compute N*base for binary,...
          ldx #0                ;accumulator index
          ldy #s_fac
 ;
-strbin13 lda pfac,x            ;N*8
+strbin13:
+         lda pfac,x            ;N*8
          adc sfac,x            ;N*2
          sta pfac,x            ;now N*10
          inx
@@ -234,14 +250,16 @@ strbin13 lda pfac,x            ;N*8
 ;	add current numeral to partial result
 ;	-------------------------------------
 ;
-strbin14 clc
+strbin14:
+         clc
          lda pfac              ;N
          adc curntnum          ;N=N+D
          sta pfac
          ldx #1
          ldy #s_fac-1
 ;
-strbin15 lda pfac,x
+strbin15:
+         lda pfac,x
          adc #0                ;account for carry
          sta pfac,x
          inx
@@ -261,26 +279,37 @@ strbin15 lda pfac,x
 ;	if string length > 127 fall through with error
 ;	----------------------------------------------
 ;
-strbin16 sec                   ;flag an error
+strbin16:
+         sec                   ;flag an error
 ;
-strbin17 rts                   ;done
+strbin17:
+         rts                   ;done
 ;
 ;================================================================================
 ;
 ;CONVERSION TABLES
 ;
-basetab  .byte 10,2,8,16       ;number bases per radix
-bitstab  .byte 3,1,3,4         ;bits per digit per radix
-radxtab  .byte " %@$"          ;valid radix symbols
+basetab:  .byte 10,2,8,16       ;number bases per radix
+bitstab:  .byte 3,1,3,4         ;bits per digit per radix
+radxtab:  .byte " %@$"          ;valid radix symbols
 ;
 ;================================================================================
 ;
 ;DYNAMIC STORAGE
 ;
-bitsdig  *=*+1                 ;bits per digit
-curntnum *=*+1                 ;numeral being processed
-radxflag *=*+1                 ;$80 = processing base-10
-valdnum  *=*+1                 ;valid range +1 for selected radix
+;bitsdig  *=*+1                 ;bits per digit
+;curntnum *=*+1                 ;numeral being processed
+;radxflag *=*+1                 ;$80 = processing base-10
+;valdnum  *=*+1                 ;valid range +1 for selected radix
+.data
+bitsdig:
+    .res 1
+curntnum:
+    .res 1
+radxflag:
+    .res 1
+valdnum:
+    .res 1
 ;
 ;================================================================================
 	.end
