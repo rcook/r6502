@@ -1,103 +1,3 @@
-.import __DATA_LOAD__
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
-.addr __DATA_LOAD__
-.addr startup
-
-EXIT = $FFC0
-OSWRCH = $FFEE
-ZPPTR = $80
-MAX_STR_LEN = 33
-
-.code
-startup:
-    ldx #$ff
-    txs
-    cld
-    jsr copydata
-    jsr test_binstr
-    jmp EXIT
-
-.proc test_binstr
-    lda #$00
-    ldx #<value
-    ldy #>value
-    ora #%10000000
-    jsr binstr
-    sta result_str_len
-    stx ZPPTR
-    sty ZPPTR + 1
-    tay
-@loop:
-    lda (ZPPTR),Y
-    sta result_str,Y
-    dey
-    bpl @loop
-
-.proc check_result_str
-    ldx result_str_len
-    cpx expected_str_len
-    bne @failed
-@loop:
-    dex
-    lda result_str,X
-    cmp expected_str,X
-    bne @failed
-    cpx #$00
-    bne @loop
-@success:
-    lda #<success_str
-    sta ZPPTR
-    lda #>success_str
-    sta ZPPTR + 1
-    jsr print_str
-    lda #$00
-    rts
-@failed:
-    lda #<failure_str
-    sta ZPPTR
-    lda #>failure_str
-    sta ZPPTR + 1
-    jsr print_str
-    lda #$01
-    rts
-.endproc
-.endproc
-
-.proc print_str
-    ldy #$00
-@loop:
-    lda (ZPPTR),Y
-    beq @done
-    jsr OSWRCH
-    iny
-    bne @loop
-@done:
-    rts
-.endproc
-
-.data
-value:
-    .dword $12345678
-
-result_str_len:
-    .byte 0
-result_str:
-    .res MAX_STR_LEN
-
-expected_str_len:
-    .byte 9
-expected_str:
-    .asciiz "305419896"
-
-success_str:
-    .asciiz "binstr returned expected string"
-
-failure_str:
-    .asciiz "binstr did not return expected string"
-
 ; Source: http://www.6502.org/source/strings/32bit-to-ascii.html
 ;* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ;*                                                                             *
@@ -202,7 +102,6 @@ a_hexdec ='A'-'9'-2            ;hex to decimal difference
 m_bits   =32                   ;operand bit size
 m_cbits  =48                   ;workspace bit size
 m_strlen =m_bits+1             ;maximum printable string length
-.assert m_strlen = MAX_STR_LEN, error
 n_radix  =4                    ;number of supported radices
 s_pfac   =m_bits/8             ;primary accumulator size
 s_ptr    =2                    ;pointer size
@@ -239,6 +138,8 @@ stridx   =radix+1              ;string buffer index
 ;
 ;         *=_origin_
 ;
+.code
+.export binstr
 binstr:
          stx ptr01             ;operand pointer LSB
          sty ptr01+1           ;operand pointer MSB
