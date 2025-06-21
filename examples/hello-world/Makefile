@@ -4,7 +4,7 @@
 
 BINEXT := r6502
 BIN := hello-world.$(BINEXT)
-BINSOURCES := header.s hello-world.s
+BINSOURCES := acorn.s header.s hello-world.s
 CFG := $(BIN:.$(BINEXT)=.cfg)
 TARGET := -C $(CFG)
 LIB := none.lib

@@ -1,18 +1,17 @@
-OSWRCH = $FFEE
-
 .code
 .export MAIN
-MAIN:
+.proc MAIN
     ldx #$00
-hello_world_loop:
-    lda hello_world_string, X
-    beq hello_world_done
+@loop:
+    lda str, x
+    beq @done
     jsr OSWRCH
     inx
-    bne hello_world_loop
-hello_world_done:
+    bne @loop
+@done:
     rts
+.endproc
 
 .data
-hello_world_string:
-    .byte "HELLO, WORLD!", 13, 10, 0
+str:
+    .byte "Hello World", 13, 10, 0

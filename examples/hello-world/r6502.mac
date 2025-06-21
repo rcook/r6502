@@ -1,0 +1,20 @@
+; Insert r6502 executable header
+.macro r6502_header machine_tag, load_addr, start_addr
+.ifblank machine_tag
+    .error "Must define machine_tag"
+.endif
+.ifblank load_addr
+    .error "Must define load_addr"
+.endif
+.ifblank start_addr
+    .error "Must define start_addr"
+.endif
+
+.segment "HEADER"
+.dbyt $6502
+.byte $00
+.byte machine_tag
+.addr load_addr
+.addr start_addr
+
+.endmacro
