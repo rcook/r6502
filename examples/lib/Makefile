@@ -4,7 +4,7 @@
 .PHONY: clean default run
 
 LIBEXT := lib
-LIBSOURCES := console.s num_to_str.s os.s
+LIBSOURCES := console.s num_to_str.s os.s str_to_num.s
 LIB := lib.$(LIBEXT)
 $(LIB): $(LIBSOURCES:.s=.o)
 	ar65 r $@ $(LIBSOURCES:.s=.o)
