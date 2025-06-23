@@ -33,7 +33,12 @@ $(BIN): $(BINSOURCES:.s=.o) $(BINCFG) $(LIB)
 clean:
 	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(LIB) $(LIB:.$(LIBEXT)=.map) $(BIN) $(BIN:.$(BINEXT)=.map)
 
-default: $(BIN)
-
 run: $(BIN)
 	cargo run -- run $(BIN) --trace
+
+../lib/$(LIB): $(LIB)
+	cp $^ $@
+
+copy: ../lib/$(LIB)
+
+default: copy
