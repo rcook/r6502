@@ -10,7 +10,7 @@ TARGET := -C $(CFG)
 LIB := none.lib
 
 %.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir ../lib -U -l $(@:o=lst) -o $@ $<
 
 $(BIN): $(BINSOURCES:.s=.o) $(CFG)
 	ld65 $(TARGET) -m $(BIN:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)

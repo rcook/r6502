@@ -1,5 +1,3 @@
-.feature string_escapes
-
 .code
 .export startup
 .proc startup
@@ -125,4 +123,4 @@ value:
 
 .rodata
 welcome:
-    .asciiz "Welcome to my program!\n"
+    .byte "Welcome to my program!", 13, 10, 0

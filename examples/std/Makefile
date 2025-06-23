@@ -5,7 +5,7 @@
 
 LIBEXT := lib
 LIBSOURCES := console.s num_to_str.s os.s str_to_num.s
-LIB := lib.$(LIBEXT)
+LIB := stdlib.$(LIBEXT)
 $(LIB): $(LIBSOURCES:.s=.o)
 	ar65 r $@ $(LIBSOURCES:.s=.o)
 
@@ -17,7 +17,7 @@ BINTARGETLIB := none.lib
 ALLSOURCES = $(LIBSOURCES) $(BINSOURCES)
 
 %.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir ../lib -U -l $(@:o=lst) -o $@ $<
 
 LIBS := $(LIB) none.lib
 $(BIN): $(BINSOURCES:.s=.o) $(BINCFG) $(LIB)
@@ -29,4 +29,4 @@ clean:
 default: $(BIN)
 
 run: $(BIN)
-	cargo run -- run $(BIN)
+	cargo run -- run $(BIN) --trace
