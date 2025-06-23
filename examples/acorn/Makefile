@@ -19,7 +19,7 @@ clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(BIN) $(BIN:.$(BINEXT)=.map)
 
 ../../config/$(BIN): $(BIN)
-	cp $(BIN) ../../config/$(BIN)
+	cp $^ $@
 
 copy: ../../config/$(BIN)
 
