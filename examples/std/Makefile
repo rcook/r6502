@@ -1,14 +1,14 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
 
 .PHONY: clean default run
 
-# Probably won't work on Windows
-CC65DIR := $(shell dirname $$(dirname $$(readlink -f $$(which ld65))))
-CC65LIBDIR := $(CC65DIR)/share/cc65/lib
 CC65OBJS := copydata.o zeropage.o
 $(CC65OBJS): $(CC65LIBDIR)/none.lib
 	ar65 x $^ $@
+	touch $@
 
 LIBEXT := lib
 LIBSOURCES := console.s num_to_str.s os.s str_to_num.s
