@@ -11,7 +11,7 @@ pub enum CharSet {
 
 impl CharSet {
     #[must_use]
-    pub fn translate(&self, value: u8) -> Option<u8> {
+    pub const fn translate(&self, value: u8) -> Option<u8> {
         match self {
             Self::Crlf => {
                 match value {
