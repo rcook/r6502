@@ -17,14 +17,6 @@ eventually.
 Note that r6502 does not currently implement any undocumented 6502
 opcodes and will panic if any are encountered.
 
-# r6502
-
-This is the emulator and debugger.
-
-# r6502validation
-
-This runs the 6502 validation suite.
-
 # Licence
 
 [MIT License](LICENSE)
