@@ -119,15 +119,23 @@ impl MachineInfo {
         let p1 = p0
             .parent()
             .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p0.display()))?;
-        if p1.file_name().and_then(OsStr::to_str) != Some("target") {
+        let p2 = if p1.file_name().and_then(OsStr::to_str) == Some(env!("TARGET")) {
+ p1
+            .parent()
+            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p1.display()))?
+        }else {
+            p1
+        };
+
+        if p2.file_name().and_then(OsStr::to_str) != Some("target") {
             return user_config_dir();
         }
 
-        let p2 = p1
+        let p3 = p2
             .parent()
-            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p1.display()))?;
+            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p2.display()))?;
 
-        Ok(p2.join("config"))
+        Ok(p3.join("config"))
     }
 
     fn read_machines() -> Result<(Machines, PathBuf)> {
