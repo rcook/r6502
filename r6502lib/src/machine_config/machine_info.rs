@@ -120,10 +120,9 @@ impl MachineInfo {
             .parent()
             .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p0.display()))?;
         let p2 = if p1.file_name().and_then(OsStr::to_str) == Some(env!("TARGET")) {
- p1
-            .parent()
-            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p1.display()))?
-        }else {
+            p1.parent()
+                .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p1.display()))?
+        } else {
             p1
         };
 
