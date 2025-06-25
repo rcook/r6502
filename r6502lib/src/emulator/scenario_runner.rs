@@ -108,7 +108,8 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
         cpu.bus.store(address_value.address, address_value.value);
     }
 
-    _ = cpu.step();
+    // Don't call back to monitor and don't wait to simulate clock cycles
+    _ = cpu.step_ex(true, false);
 
     let final_state = State {
         pc: cpu.reg.pc,

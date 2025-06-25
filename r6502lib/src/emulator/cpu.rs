@@ -31,11 +31,11 @@ impl<'a> Cpu<'a> {
 
     #[must_use]
     pub fn step(&mut self) -> bool {
-        self.step_ex(false)
+        self.step_ex(false, true)
     }
 
     #[must_use]
-    pub fn step_ex(&mut self, free_running: bool) -> bool {
+    pub fn step_ex(&mut self, free_running: bool, spin: bool) -> bool {
         let instruction = Instruction::fetch(self);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
 
@@ -52,17 +52,20 @@ impl<'a> Cpu<'a> {
             debug!("{instruction_info:?}");
         }
 
-        let before = Instant::now();
         let instruction_cycles = instruction.execute(self);
 
-        let d = *CPU_TICK * instruction_cycles as u32;
+        // TBD: Move this out of step_ex
+        if spin {
+            let before = Instant::now();
+            let d = *CPU_TICK * instruction_cycles as u32;
 
-        // Is there a better way to do this?
-        loop {
-            let now = Instant::now();
-            let elapsed = now - before;
-            if elapsed >= d {
-                break;
+            // Is there a better way to do this?
+            loop {
+                let now = Instant::now();
+                let elapsed = now - before;
+                if elapsed >= d {
+                    break;
+                }
             }
         }
 
