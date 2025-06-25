@@ -1,7 +1,8 @@
 use crate::validation::{Scenario, ScenarioLoader};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::ffi::OsStr;
 use std::fs::read_dir;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
 const SKIPPED_SCENARIO_NAMES: [&str; 0] = [];
@@ -71,14 +72,23 @@ impl ScenarioFilter {
     }
 
     fn get_scenario_files(dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
+        let d = match read_dir(dir) {
+            Ok(d) => d,
+            Err(e) if e.kind() == ErrorKind::NotFound => {
+                bail!("no such directory {dir}", dir = dir.display())
+            }
+            Err(e) => bail!(e),
+        };
+
         let mut paths = Vec::new();
-        for p in read_dir(dir)? {
+        for p in d {
             let p = p?;
             if p.path().extension().and_then(OsStr::to_str) == Some(ext) {
                 paths.push(p.path());
             }
         }
         paths.sort();
+
         Ok(paths)
     }
 }
