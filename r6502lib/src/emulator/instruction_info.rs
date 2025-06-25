@@ -41,14 +41,14 @@ impl InstructionInfo {
     pub fn display(&self, map_file: &MapFile) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
-            .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
+            .ok_or_else(|| anyhow!("unknown opcode {}", self.opcode))?;
         op_info.format_instruction_info(self, map_file)
     }
 
     pub fn disassembly(&self, map_file: &MapFile) -> Result<String> {
         let op_info = MOS_6502
             .get_op_info(&self.opcode)
-            .ok_or_else(|| anyhow!("Unknown opcode {}", self.opcode))?;
+            .ok_or_else(|| anyhow!("unknown opcode {}", self.opcode))?;
         let s = op_info.format_instruction_info(self, map_file)?;
         Ok(match &self.operand {
             Operand::None => format!("{:04X}  {:02X}        {s}", self.pc, self.opcode as u8),

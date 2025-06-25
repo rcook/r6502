@@ -25,7 +25,7 @@ impl MachineInfo {
             .machines
             .iter()
             .find(|m| m.tag == tag)
-            .ok_or_else(|| anyhow!("No such machine"))?
+            .ok_or_else(|| anyhow!("no such machine"))?
             .clone();
 
         Ok(Self {
@@ -41,7 +41,7 @@ impl MachineInfo {
             .machines
             .iter()
             .find(|m| m.name == *name)
-            .ok_or_else(|| anyhow!("No such machine"))?
+            .ok_or_else(|| anyhow!("no such machine"))?
             .clone();
 
         Ok(Self {
@@ -82,7 +82,7 @@ impl MachineInfo {
         }
 
         if io_devices.len() > 1 {
-            bail!("Only one I/O bus device allowed")
+            bail!("only one I/O bus device allowed")
         }
 
         let mut mappings = Vec::with_capacity(self.machine.bus_devices.len());
@@ -104,13 +104,13 @@ impl MachineInfo {
     fn get_config_dir(bin_path: &Path) -> Result<PathBuf> {
         fn user_config_dir() -> Result<PathBuf> {
             Ok(config_dir()
-                .ok_or_else(|| anyhow!("Could not get configuration directory"))?
+                .ok_or_else(|| anyhow!("could not get configuration directory"))?
                 .join("r6502"))
         }
 
         let p0 = bin_path
             .parent()
-            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", bin_path.display()))?;
+            .ok_or_else(|| anyhow!("cannot get parent directory from {}", bin_path.display()))?;
         let d = p0.file_name().and_then(OsStr::to_str);
         if d != Some("debug") && d != Some("release") {
             return user_config_dir();
@@ -118,10 +118,10 @@ impl MachineInfo {
 
         let p1 = p0
             .parent()
-            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p0.display()))?;
+            .ok_or_else(|| anyhow!("cannot get parent directory from {}", p0.display()))?;
         let p2 = if p1.file_name().and_then(OsStr::to_str) == Some(env!("TARGET")) {
             p1.parent()
-                .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p1.display()))?
+                .ok_or_else(|| anyhow!("cannot get parent directory from {}", p1.display()))?
         } else {
             p1
         };
@@ -132,7 +132,7 @@ impl MachineInfo {
 
         let p3 = p2
             .parent()
-            .ok_or_else(|| anyhow!("Cannot get parent directory from {}", p2.display()))?;
+            .ok_or_else(|| anyhow!("cannot get parent directory from {}", p2.display()))?;
 
         Ok(p3.join("config"))
     }
@@ -143,7 +143,7 @@ impl MachineInfo {
         let config_path = config_dir.join("machines.json");
         if !config_path.is_file() {
             bail!(
-                "Could not find configuration file at {}",
+                "could not find configuration file at {}",
                 config_path.display()
             )
         }

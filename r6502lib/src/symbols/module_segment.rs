@@ -16,31 +16,31 @@ impl FromStr for ModuleSegment {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts = s.split_whitespace().collect::<Vec<_>>();
         if parts.len() != 5 {
-            bail!("Invalid segment \"{s}\"")
+            bail!("invalid segment \"{s}\"")
         }
 
         let name = String::from(parts[0]);
 
         let Some(temp) = parts[1].strip_prefix("Offs=") else {
-            bail!("Invalid segment \"{s}\"")
+            bail!("invalid segment \"{s}\"")
         };
 
         let offset = u32::from_str_radix(temp, 16)?;
 
         let Some(temp) = parts[2].strip_prefix("Size=") else {
-            bail!("Invalid segment \"{s}\"")
+            bail!("invalid segment \"{s}\"")
         };
 
         let size = u32::from_str_radix(temp, 16)?;
 
         let Some(temp) = parts[3].strip_prefix("Align=") else {
-            bail!("Invalid segment \"{s}\"")
+            bail!("invalid segment \"{s}\"")
         };
 
         let align = u32::from_str_radix(temp, 16)?;
 
         let Some(temp) = parts[4].strip_prefix("Fill=") else {
-            bail!("Invalid segment \"{s}\"")
+            bail!("invalid segment \"{s}\"")
         };
 
         let fill = u16::from_str_radix(temp, 16)?;

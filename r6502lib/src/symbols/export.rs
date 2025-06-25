@@ -15,7 +15,7 @@ pub struct Export {
 impl Export {
     pub fn fetch_all<'a>(lines: &mut Peekable<impl Iterator<Item = &'a str>>) -> Result<Vec<Self>> {
         if lines.peek() != Some(&"Exports list by name:") {
-            bail!("Invalid export list")
+            bail!("invalid export list")
         }
 
         _ = lines.next();
@@ -31,7 +31,7 @@ impl Export {
             let parts = s.split_whitespace().collect::<Vec<_>>();
             let len = parts.len();
             if len != 3 && len != 6 {
-                bail!("Invalid export list");
+                bail!("invalid export list");
             }
 
             exports.push(Self::parse_export(parts[0], parts[1], parts[2])?);
@@ -64,7 +64,7 @@ impl Export {
         };
 
         if s3.len() != 2 {
-            bail!("Invalid export flags {s2}");
+            bail!("invalid export flags {s2}");
         }
 
         let mut i = s3.chars();
@@ -72,7 +72,7 @@ impl Export {
         let kind = match i.next() {
             Some('L') => ExportKind::Label,
             Some('E') => ExportKind::Constant,
-            _ => bail!("Invalid export flags {s2}"),
+            _ => bail!("invalid export flags {s2}"),
         };
 
         let address_size = match i.next() {
@@ -80,7 +80,7 @@ impl Export {
             Some('A') => AddressSize::Absolute,
             Some('F') => AddressSize::Far,
             Some('L') => AddressSize::Long,
-            _ => bail!("Invalid export flags {s2}"),
+            _ => bail!("invalid export flags {s2}"),
         };
 
         Ok(Self {

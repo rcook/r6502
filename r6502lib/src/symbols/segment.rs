@@ -13,18 +13,18 @@ pub struct Segment {
 impl Segment {
     pub fn fetch_all<'a>(lines: &mut Peekable<impl Iterator<Item = &'a str>>) -> Result<Vec<Self>> {
         if lines.peek() != Some(&"Segment list:") {
-            bail!("Invalid segment list");
+            bail!("invalid segment list");
         }
 
         _ = lines.next();
 
         let Some(s) = lines.next() else {
-            bail!("Invalid segment list");
+            bail!("invalid segment list");
         };
 
         let parts = s.split_whitespace().collect::<Vec<_>>();
         if parts != vec!["Name", "Start", "End", "Size", "Align"] {
-            bail!("Invalid segment list");
+            bail!("invalid segment list");
         }
 
         let mut segments = Vec::new();
@@ -37,7 +37,7 @@ impl Segment {
             let s = lines.next().expect("Peeked previously");
 
             let Ok(segment) = s.parse() else {
-                bail!("Invalid segment list");
+                bail!("invalid segment list");
             };
 
             segments.push(segment);
@@ -53,7 +53,7 @@ impl FromStr for Segment {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts = s.split_whitespace().collect::<Vec<_>>();
         if parts.len() != 5 {
-            bail!("Invalid segment \"{s}\"")
+            bail!("invalid segment \"{s}\"")
         }
 
         let name = String::from(parts[0]);

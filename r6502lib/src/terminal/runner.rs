@@ -29,10 +29,10 @@ impl Runner<'_> {
             Self::do_steps(self.cpu, &self.bus_rx, self.stop_after, &self.machine_info)?;
         _ = self.terminal_channel.tx.send(TerminalEvent::Shutdown);
         if handle.join().is_err() {
-            bail!("Internal error: most likely a thread panicked; check r6502.log for more info")
+            bail!("internal error: most likely a thread panicked; check r6502.log for more info")
         }
         if !self.bus.stop() {
-            bail!("Internal error: most likely a thread panicked; check r6502.log for more info")
+            bail!("internal error: most likely a thread panicked; check r6502.log for more info")
         }
         Ok(stop_reason)
     }

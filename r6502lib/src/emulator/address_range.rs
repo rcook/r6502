@@ -11,7 +11,7 @@ impl AddressRange {
         if end >= start {
             Ok(Self(RangeInclusive::new(start, end)))
         } else {
-            bail!("Invalid address range ${start:02X}:${end:02X}")
+            bail!("invalid address range ${start:02X}:${end:02X}")
         }
     }
 

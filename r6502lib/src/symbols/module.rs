@@ -11,7 +11,7 @@ pub struct Module {
 impl Module {
     pub fn fetch_all<'a>(lines: &mut Peekable<impl Iterator<Item = &'a str>>) -> Result<Vec<Self>> {
         if lines.peek() != Some(&"Modules list:") {
-            bail!("Invalid module list")
+            bail!("invalid module list")
         }
 
         _ = lines.next();
@@ -34,11 +34,11 @@ impl Module {
 
     fn fetch<'a>(lines: &mut Peekable<impl Iterator<Item = &'a str>>) -> Result<Self> {
         let Some(s) = lines.peek() else {
-            bail!("Invalid module")
+            bail!("invalid module")
         };
 
         let Some(s) = s.trim().strip_suffix(':') else {
-            bail!("Invalid module")
+            bail!("invalid module")
         };
 
         let name = s.parse()?;

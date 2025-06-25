@@ -19,7 +19,7 @@ impl ScenarioLoader {
             .join("v1");
 
         let archive_dir = config_dir()
-            .ok_or_else(|| anyhow!("Could not get configuration directory"))?
+            .ok_or_else(|| anyhow!("could not get configuration directory"))?
             .join("r6502")
             .join("scenarios");
 
@@ -47,7 +47,7 @@ impl ScenarioLoader {
     fn strip_parents(path: &Path, n: i32) -> Result<&Path> {
         let mut temp = path;
         for _ in 0..n {
-            temp = temp.parent().ok_or_else(|| anyhow!("Parent must exist"))?;
+            temp = temp.parent().ok_or_else(|| anyhow!("parent must exist"))?;
         }
         Ok(temp)
     }
@@ -68,7 +68,7 @@ impl ScenarioLoader {
         create_dir_all(
             archive_path
                 .parent()
-                .ok_or_else(|| anyhow!("Cannot get directory"))?,
+                .ok_or_else(|| anyhow!("cannot get directory"))?,
         )?;
         let bytes = rkyv::to_bytes::<rancor::Error>(scenarios)?;
         let mut file = File::create(archive_path)?;
@@ -79,7 +79,7 @@ impl ScenarioLoader {
     fn get_archive_path(&self, json_path: &Path) -> Result<PathBuf> {
         let file_name = json_path
             .file_name()
-            .ok_or_else(|| anyhow!("Could not extract file name"))?;
+            .ok_or_else(|| anyhow!("could not extract file name"))?;
         let mut archive_path = self.archive_dir.join(file_name);
         archive_path.set_extension("rkyv");
         Ok(archive_path)

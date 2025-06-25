@@ -16,7 +16,7 @@ impl Image {
         match File::open(path) {
             Ok(f) => Self::from_reader(f),
             Err(e) if e.kind() == ErrorKind::NotFound => {
-                bail!("Could not find image file {path}", path = path.display())
+                bail!("could not find image file {path}", path = path.display())
             }
             Err(e) => bail!(e),
         }

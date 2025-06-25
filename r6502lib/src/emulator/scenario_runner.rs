@@ -24,7 +24,7 @@ pub fn run_scenarios_with_filter(report_path: &Path, filter_str: &Option<String>
         let opcode_value = u8::from_str_radix(
             path.file_stem()
                 .and_then(OsStr::to_str)
-                .ok_or_else(|| anyhow!("Invalid path {}", path.display()))?,
+                .ok_or_else(|| anyhow!("invalid path {}", path.display()))?,
             16,
         )?;
         match Opcode::from_u8(opcode_value) {
