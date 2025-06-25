@@ -13,7 +13,7 @@ pub struct ScenarioLoader {
 
 impl ScenarioLoader {
     pub fn new() -> Result<Self> {
-        let json_dir = Self::strip_parents(&Self::current_source_path()?, 3)?
+        let json_dir = Self::strip_parents(&Self::current_source_path()?, 4)?
             .join("SingleStepTests-65x02")
             .join("6502")
             .join("v1");
