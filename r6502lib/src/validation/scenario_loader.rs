@@ -1,5 +1,5 @@
 use crate::validation::Scenario;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use dirs::config_dir;
 use std::env::current_dir;
 use std::fs::{create_dir_all, File};
@@ -17,11 +17,23 @@ impl ScenarioLoader {
             .join("SingleStepTests-65x02")
             .join("6502")
             .join("v1");
+        if !json_dir.is_dir() {
+            bail!(
+                "path {json_dir} is not a directory or does not exist",
+                json_dir = json_dir.display()
+            )
+        }
 
         let archive_dir = config_dir()
             .ok_or_else(|| anyhow!("could not get configuration directory"))?
             .join("r6502")
             .join("scenarios");
+        if !archive_dir.is_dir() {
+            bail!(
+                "path {archive_dir} is not a directory or does not exist",
+                archive_dir = archive_dir.display()
+            )
+        }
 
         Ok(Self {
             json_dir,
