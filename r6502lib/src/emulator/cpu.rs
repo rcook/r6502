@@ -30,54 +30,41 @@ impl<'a> Cpu<'a> {
     }
 
     #[must_use]
-    pub fn step(&mut self) -> bool {
-        self.step_ex(false, true)
+    pub fn step_with_monitor_callbacks(&mut self) -> bool {
+        let (instruction, instruction_info) = self.decode_next();
+
+        self.monitor.on_before_execute(
+            self.total_cycles,
+            self.reg.clone(),
+            instruction_info.clone(),
+        );
+
+        let instruction_cycles = instruction.execute(self);
+        Self::spin(instruction_cycles);
+
+        self.monitor.on_after_execute(
+            self.total_cycles,
+            self.reg.clone(),
+            instruction_info.clone(),
+        );
+
+        self.total_cycles += instruction_cycles as TotalCycles;
+        !p_get!(self.reg, I)
     }
 
     #[must_use]
-    pub fn step_ex(&mut self, free_running: bool, spin: bool) -> bool {
-        let instruction = Instruction::fetch(self);
-        let instruction_info = InstructionInfo::from_instruction(&instruction);
-
-        if !free_running {
-            // TBD: Move this out of step_ex
-            self.monitor.on_before_execute(
-                self.total_cycles,
-                self.reg.clone(),
-                instruction_info.clone(),
-            );
-        }
-
-        if log_enabled!(Level::Debug) {
-            debug!("{instruction_info:?}");
-        }
-
+    pub fn step(&mut self) -> bool {
+        let (instruction, _) = self.decode_next();
         let instruction_cycles = instruction.execute(self);
+        Self::spin(instruction_cycles);
+        self.total_cycles += instruction_cycles as TotalCycles;
+        !p_get!(self.reg, I)
+    }
 
-        // TBD: Move this out of step_ex
-        if spin {
-            let before = Instant::now();
-            let d = *CPU_TICK * instruction_cycles as u32;
-
-            // Is there a better way to do this?
-            loop {
-                let now = Instant::now();
-                let elapsed = now - before;
-                if elapsed >= d {
-                    break;
-                }
-            }
-        }
-
-        if !free_running {
-            // TBD: Move this out of step_ex
-            self.monitor.on_after_execute(
-                self.total_cycles,
-                self.reg.clone(),
-                instruction_info.clone(),
-            );
-        }
-
+    #[must_use]
+    pub fn step_no_spin(&mut self) -> bool {
+        let (instruction, _) = self.decode_next();
+        let instruction_cycles = instruction.execute(self);
         self.total_cycles += instruction_cycles as TotalCycles;
         !p_get!(self.reg, I)
     }
@@ -120,6 +107,20 @@ impl<'a> Cpu<'a> {
         make_word(hi, lo)
     }
 
+    fn spin(instruction_cycles: u8) {
+        let before = Instant::now();
+        let d = *CPU_TICK * instruction_cycles as u32;
+
+        // Is there a better way to do this?
+        loop {
+            let now = Instant::now();
+            let elapsed = now - before;
+            if elapsed >= d {
+                break;
+            }
+        }
+    }
+
     #[must_use]
     fn get_stack_value(&self) -> u8 {
         self.bus.load(STACK_BASE.wrapping_add(self.reg.sp as u16))
@@ -128,6 +129,16 @@ impl<'a> Cpu<'a> {
     fn set_stack_value(&mut self, value: u8) {
         self.bus
             .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value);
+    }
+
+    fn decode_next(&self) -> (Instruction, InstructionInfo) {
+        let instruction = Instruction::fetch(self);
+        let instruction_info = InstructionInfo::from_instruction(&instruction);
+        if log_enabled!(Level::Debug) {
+            debug!("{instruction_info:?}");
+        }
+
+        (instruction, instruction_info)
     }
 }
 
@@ -145,7 +156,7 @@ mod tests {
         let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::Nop as u8);
-        assert!(cpu.step());
+        assert!(cpu.step_no_spin());
         assert_eq!(2, cpu.total_cycles);
         assert_eq!(0x12, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -159,7 +170,7 @@ mod tests {
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::AdcImm as u8);
         bus.store(0x0001, 0x34);
-        assert!(cpu.step());
+        assert!(cpu.step_no_spin());
         assert_eq!(2, cpu.total_cycles);
         assert_eq!(0x46, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -174,7 +185,7 @@ mod tests {
         bus.store(0x0000, Opcode::AdcZp as u8);
         bus.store(0x0001, 0x34);
         bus.store(0x0034, 0x56);
-        assert!(cpu.step());
+        assert!(cpu.step_no_spin());
         assert_eq!(3, cpu.total_cycles);
         assert_eq!(0x68, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -189,7 +200,7 @@ mod tests {
         bus.store(0x0000, Opcode::JmpAbs as u8);
         bus.store(0x0001, 0x00);
         bus.store(0x0002, 0x10);
-        assert!(cpu.step());
+        assert!(cpu.step_no_spin());
         assert_eq!(3, cpu.total_cycles);
         assert_eq!(0x12, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -205,7 +216,7 @@ mod tests {
         bus.store(0x0001, 0x12);
         bus.store(0x0002, 0x34);
         bus.store(0x3412, 0x13);
-        assert!(cpu.step());
+        assert!(cpu.step_no_spin());
         assert_eq!(4, cpu.total_cycles);
         assert_eq!(0x38, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -221,7 +232,7 @@ mod tests {
         bus.store(IRQ, 0x76);
         bus.store(IRQ + 1, 0x98);
         p_set!(cpu.reg, B, false);
-        assert!(!cpu.step());
+        assert!(!cpu.step_no_spin());
         assert_eq!(7, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(0x9876, cpu.reg.pc);
@@ -250,12 +261,12 @@ mod tests {
         cpu.reg.p = p_test;
         p_set!(cpu.reg, B, false);
 
-        assert!(cpu.step());
+        assert!(cpu.step_no_spin());
         assert_eq!(6, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(JUMP_ADDR, cpu.reg.pc);
 
-        assert!(!cpu.step());
+        assert!(!cpu.step_no_spin());
         assert_eq!(13, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(IRQ_ADDR, cpu.reg.pc);
@@ -359,7 +370,7 @@ mod tests {
         let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.pc = load.wrapping_add(1);
-        while cpu.step() {}
+        while cpu.step_no_spin() {}
         assert_eq!(21, cpu.total_cycles);
         assert_eq!(0x46, bus.load(0x0e00));
         Ok(())
@@ -385,7 +396,7 @@ mod tests {
         let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.pc = load.wrapping_add(2);
-        while cpu.step() {}
+        while cpu.step_no_spin() {}
         assert_eq!(33, cpu.total_cycles);
         let lo = bus.load(0x0e00);
         let hi = bus.load(0x0e01);
@@ -429,7 +440,7 @@ mod tests {
         let mut cpu = Cpu::new(bus.view(), None);
 
         cpu.reg.pc = load.wrapping_add(2);
-        while cpu.step() {}
+        while cpu.step_no_spin() {}
         assert_eq!(893, cpu.total_cycles);
         let lo = bus.load(NUM1);
         let hi = bus.load(NUM1 + 1);
@@ -467,7 +478,7 @@ mod tests {
 
         let mut result = String::new();
         loop {
-            while cpu.step() {}
+            while cpu.step_no_spin() {}
 
             match get_brk_addr(&cpu) {
                 Some(0xffc0) => break,

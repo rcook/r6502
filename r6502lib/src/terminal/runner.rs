@@ -48,7 +48,7 @@ impl Runner<'_> {
             .ok_or_else(|| anyhow!("JMP_IND must exist"))?
             .clone();
 
-        while cpu.step() {
+        while cpu.step_with_monitor_callbacks() {
             match bus_rx.try_recv() {
                 Ok(BusEvent::UserBreak) => {
                     return Ok(StopReason::UserBreak {

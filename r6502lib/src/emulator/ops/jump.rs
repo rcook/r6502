@@ -115,7 +115,7 @@ mod tests {
         bus.store(0x017b, 0x20); // JSR abs
         bus.store(0x017c, 0x55);
         bus.store(0x017d, 0x13);
-        _ = cpu.step();
+        _ = cpu.step_no_spin();
         assert_eq!(0x0155, cpu.reg.pc);
         assert_eq!(0x7b, cpu.reg.sp);
         assert_eq!(0x9e, cpu.reg.a);

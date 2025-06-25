@@ -109,7 +109,7 @@ fn run_inner(scenario: &Scenario) -> (bool, State) {
     }
 
     // Don't call back to monitor and don't wait to simulate clock cycles
-    _ = cpu.step_ex(true, false);
+    _ = cpu.step_no_spin();
 
     let final_state = State {
         pc: cpu.reg.pc,
