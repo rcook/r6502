@@ -7,3 +7,6 @@ CC65LIBDIR := $(CC65DIR)/lib
 else
 CC65LIBDIR := $(CC65DIR)/share/cc65/lib
 endif
+
+SHAREDMKPATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+SHAREDLIBDIR := $(dir $(SHAREDMKPATH))lib

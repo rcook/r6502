@@ -1,0 +1,7 @@
+.macro print_imm addr
+    lda #<addr
+    sta ptr
+    lda #>addr
+    sta ptr + 1
+    jsr print
+.endmacro
