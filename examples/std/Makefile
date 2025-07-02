@@ -9,7 +9,7 @@ $(CC65OBJS): $(CC65LIBDIR)/none.lib
 	ar65 x $^ $@
 	touch $@
 
-STDLIBSOURCES := console.s memcpy.s num_to_str.s os.s str_to_num.s
+STDLIBSOURCES := memcpy.s num_to_str.s print.s os.s str_to_num.s
 STDLIB := std.$(LIBEXT)
 STDLIBMAP := $(STDLIB:.$(LIBEXT)=.map)
 $(STDLIB): $(STDLIBSOURCES:.s=.o) $(CC65OBJS)
