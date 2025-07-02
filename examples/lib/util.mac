@@ -1,40 +1,53 @@
-; stazptr0
-; Stores word in zptr0
+; stzword0
+; Stores word in zword0
 ; params:
 ;   value: 16-bit value
 ; comments:
 ;   Destroys A
-.macro stazptr0 value
+.macro stzword0 value
     lda #<value
-    sta zptr0
+    sta zword0
     lda #>value
-    sta zptr0 + 1
+    sta zword0 + 1
 .endmacro
 
-; stazptr1
-; Stores word in zptr1
+; stzword1
+; Stores word in zword1
 ; params:
 ;   value: 16-bit value
 ; comments:
 ;   Destroys A
-.macro stazptr1 value
+.macro stzword1 value
     lda #<value
-    sta zptr1
+    sta zword1
     lda #>value
-    sta zptr1 + 1
+    sta zword1 + 1
 .endmacro
 
-; stazptr2
-; Stores word in zptr2
+; stzword2
+; Stores word in zword2
 ; params:
 ;   value: 16-bit value
 ; comments:
 ;   Destroys A
-.macro stazptr2 value
+.macro stzword2 value
     lda #<value
-    sta zptr2
+    sta zword2
     lda #>value
-    sta zptr2 + 1
+    sta zword2 + 1
+.endmacro
+
+; stzword3
+; Stores word in zword3
+; params:
+;   value: 16-bit value
+; comments:
+;   Destroys A
+.macro stzword3 value
+    lda #<value
+    sta zword3
+    lda #>value
+    sta zword3 + 1
 .endmacro
 
 ; print_buf
@@ -42,9 +55,9 @@
 ; params:
 ;   addr: address of string
 ; comments:
-;   Destroys P, A, Y, zptr0, zptr0 + 1
+;   Destroys P, A, Y, zword0, zword0 + 1
 .macro print_buf addr
-    stazptr0 addr
+    stzword0 addr
     jsr print
 .endmacro
 
@@ -53,15 +66,15 @@
 ; params:
 ;   addr: address of value
 ; comments:
-;   Destroys P, A, X, Y, zptr0, zptr0 + 1
+;   Destroys P, A, X, Y, zword0, zword0 + 1
 .macro print_int addr
     lda #$00
     ldx #<addr
     ldy #>addr
     ora #%10000000
     jsr num_to_str
-    stx zptr0
-    sty zptr0 + 1
+    stx zword0
+    sty zword0 + 1
     jsr print
     cld
 .endmacro

@@ -1,5 +1,5 @@
 .macpack util
-.exportzp zptr0, zptr1, zptr2
+.exportzp zword0, zword1, zword2
 
 .code
 .export MAIN
@@ -10,9 +10,9 @@
 
     ; Demonstrate memcpy
     print_buf lorem_ipsum
-    stazptr0 lorem_ipsum
-    stazptr1 str
-    stazptr2 (lorem_ipsum_end - lorem_ipsum)
+    stzword0 lorem_ipsum
+    stzword1 str
+    stzword2 (lorem_ipsum_end - lorem_ipsum)
     jsr memcpy
     print_buf str
 
@@ -21,9 +21,9 @@
 .endproc
 
 .zeropage
-zptr0: .word 0
-zptr1: .word 0
-zptr2: .word 0
+zword0: .word 0
+zword1: .word 0
+zword2: .word 0
 
 .data
 result: .dword $FFFFFFFF
