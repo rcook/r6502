@@ -2,43 +2,46 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-
-.PHONY: clean default run
+.PHONY: clean debug default run
 
 CC65OBJS := copydata.o zeropage.o
 $(CC65OBJS): $(CC65LIBDIR)/none.lib
 	ar65 x $^ $@
 	touch $@
 
-LIBEXT := lib
-LIBSOURCES := console.s num_to_str.s os.s str_to_num.s
-LIB := std.$(LIBEXT)
-$(LIB): $(LIBSOURCES:.s=.o) $(CC65OBJS)
+STDLIBSOURCES := console.s num_to_str.s os.s str_to_num.s
+STDLIB := std.$(LIBEXT)
+STDLIBMAP := $(STDLIB:.$(LIBEXT)=.map)
+$(STDLIB): $(STDLIBSOURCES:.s=.o) $(CC65OBJS)
 	ar65 r $@ $^
 
-BINEXT := r6502
 BINSOURCES := header.s test.s
 BIN := test.$(BINEXT)
-BINTARGETLIB := none.lib
+BINCFG := $(BIN:.$(BINEXT)=.cfg)
+BINMAP := $(BIN:.$(BINEXT)=.map)
+BINTARGETLIB :=
 
-ALLSOURCES = $(LIBSOURCES) $(BINSOURCES)
+ALLSOURCES = $(STDLIBSOURCES) $(BINSOURCES)
 
 %.o: %.s
-	ca65 --include-dir ../lib -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir $(SHAREDLIBDIR) -U -l $(@:o=lst) -o $@ $<
 
-LIBS := $(LIB)
-$(BIN): $(BINSOURCES:.s=.o) $(BINCFG) $(LIB)
-	ld65 -C $(BIN:.$(BINEXT)=.cfg) -vm -m $(BIN:.$(BINEXT)=.map) -o $@ $(filter-out $(LIBS),$(filter-out $(BINCFG),$^)) $(patsubst %,--lib %, $(LIBS))
+BINLIBS := $(BINTARGETLIB) $(STDLIB)
+$(BIN): $(BINSOURCES:.s=.o) $(BINCFG) $(BINLIBS)
+	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^)) $(patsubst %,--lib %, $(BINLIBS))
 
 clean:
-	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(LIB) $(LIB:.$(LIBEXT)=.map) $(BIN) $(BIN:.$(BINEXT)=.map)
+	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(STDLIB) $(STDLIBMAP) $(BIN) $(BINMAP)
 
 run: $(BIN)
 	cargo run -- run $(BIN) --trace
 
-../lib/$(LIB): $(LIB)
+debug: $(BIN)
+	cargo run -- debug $(BIN)
+
+$(SHAREDLIBDIR)/$(STDLIB): $(STDLIB)
 	cp $^ $@
 
-copy: ../lib/$(LIB)
+copy: $(SHAREDLIBDIR)/$(STDLIB)
 
 default: copy

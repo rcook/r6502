@@ -10,3 +10,6 @@ endif
 
 SHAREDMKPATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 SHAREDLIBDIR := $(dir $(SHAREDMKPATH))lib
+
+LIBEXT := lib
+BINEXT := r6502
