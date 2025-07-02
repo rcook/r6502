@@ -21,7 +21,7 @@ BINCFG := $(BIN:.$(BINEXT)=.cfg)
 BINMAP := $(BIN:.$(BINEXT)=.map)
 BINTARGETLIB :=
 
-ALLSOURCES = $(STDLIBSOURCES) $(BINSOURCES)
+ALLSOURCES := $(STDLIBSOURCES) $(BINSOURCES)
 
 %.o: %.s
 	ca65 --include-dir $(SHAREDLIBDIR) -U -l $(@:o=lst) -o $@ $<

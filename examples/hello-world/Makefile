@@ -1,24 +1,34 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean default run
+.PHONY: clean debug default run
 
-BINEXT := r6502
+BINSOURCES := header.s main.s
 BIN := hello-world.$(BINEXT)
-BINSOURCES := acorn.s header.s hello-world.s
-CFG := $(BIN:.$(BINEXT)=.cfg)
-TARGET := -C $(CFG)
-LIB := none.lib
+BINCFG := $(BIN:.$(BINEXT)=.cfg)
+BINMAP := $(BIN:.$(BINEXT)=.map)
+BINTARGETLIB := $(SHAREDLIBDIR)/std.lib
+
+ALLSOURCES := $(BINSOURCES)
+
+prereqs:
+	make -C ../std
 
 %.o: %.s
-	ca65 --include-dir ../lib -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir $(SHAREDLIBDIR) -U -l $(@:o=lst) -o $@ $<
 
-$(BIN): $(BINSOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(BIN:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+BINLIBS := $(BINTARGETLIB)
+$(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG)
+	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out prereqs,$(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^))) $(patsubst %,--lib %, $(BINLIBS))
 
 clean:
-	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(BIN) $(BIN:.$(BINEXT)=.map)
+	$(RM) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(BIN) $(BINMAP)
 
 run: $(BIN)
 	cargo run -- run $(BIN) --trace
+
+debug: $(BIN)
+	cargo run -- debug $(BIN)
 
 default: $(BIN)
