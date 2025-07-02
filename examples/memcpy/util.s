@@ -5,7 +5,7 @@
 ; print_impl
 ; Prints zero-terminated string
 ; params:
-;   ptr, ptr + 1:   address of string
+;   ptr, ptr + 1: address of string
 ; returns:
 ;   (nothing)
 ; comments:

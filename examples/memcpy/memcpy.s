@@ -4,20 +4,11 @@
 .code
 .export MAIN
 .proc MAIN
-    print_imm hello
-    print_imm lorem_ipsum
-    print_imm goodbye
-
-    lda #$00
-    ldx #<value
-    ldy #>value
-    ora #%10000000
-    jsr num_to_str
-    stx ptr
-    sty ptr + 1
-    jsr print
-    print_imm line_break
-
+    print_const hello
+    print_const lorem_ipsum
+    print_const goodbye
+    print_int value
+    print_const line_break
     rts
 .endproc
 
