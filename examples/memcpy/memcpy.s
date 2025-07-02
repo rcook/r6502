@@ -25,7 +25,10 @@
 
 .zeropage
 ptr: .word 0
+
+.data
 result: .dword $FFFFFFFF
+str: .res 512
 
 .rodata
 value_a: .word 25
@@ -36,7 +39,6 @@ hello: .byte "Hello", 13, 10, 0
 goodbye: .byte "Goodbye", 13, 10, 0
 lorem_ipsum: .byte "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 13, 10, 0
 lorem_ipsum_end:
-str: .res 512
 
 .data
 temp: .byte "TEMP", 13, 10, 0
