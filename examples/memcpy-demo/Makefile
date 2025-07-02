@@ -4,7 +4,7 @@ include ../shared.mk
 .SUFFIXES:
 .PHONY: clean debug default prereqs run
 
-BINSOURCES := acorn.s header.s main.s
+BINSOURCES := header.s main.s
 BIN := memcpy-demo.$(BINEXT)
 BINCFG := $(BIN:.$(BINEXT)=.cfg)
 BINMAP := $(BIN:.$(BINEXT)=.map)

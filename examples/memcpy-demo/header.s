@@ -7,5 +7,5 @@ r6502_header "ACRN", __RODATA_LOAD__, startup
 .proc startup
     jsr copydata
     jsr MAIN
-    jmp OSHALT
+    jmp OSEXIT
 .endproc
