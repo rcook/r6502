@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean default run
+.PHONY: clean debug default run
 
 BINEXT := r6502
 BINSOURCES := acorn.s header.s memcpy.s util.s
@@ -23,5 +23,8 @@ clean:
 
 run: $(BIN)
 	cargo run -- run $(BIN) --trace
+
+debug: $(BIN)
+	cargo run -- debug $(BIN)
 
 default: $(BIN)

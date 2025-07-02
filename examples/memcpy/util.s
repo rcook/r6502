@@ -6,8 +6,6 @@
 ; Prints zero-terminated string
 ; params:
 ;   ptr, ptr + 1: address of string
-; returns:
-;   (nothing)
 ; comments:
 ;   Destroys P, A, Y, ptr, ptr + 1
 .code

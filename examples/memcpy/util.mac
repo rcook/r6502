@@ -2,8 +2,6 @@
 ; Prints zero-terminated string at given address
 ; params:
 ;   addr: address of string
-; returns:
-;   (nothing)
 ; comments:
 ;   Destroys P, A, Y, ptr, ptr + 1
 .macro print_const addr
@@ -18,8 +16,6 @@
 ; Prints 32-bit integer at given address
 ; params:
 ;   addr: address of value
-; returns:
-;   (nothing)
 ; comments:
 ;   Destroys P, A, X, Y, ptr, ptr + 1
 .macro print_int addr
@@ -31,4 +27,22 @@
     stx ptr
     sty ptr + 1
     jsr print
+.endmacro
+
+; add16
+; Adds two 16-bit integers at given addresses
+; params:
+;   left_addr, left_addr + 1: address of left operand
+;   right_addr, right_addr + 1: address of right operand
+;   result_addr, result_addr + 1: address of result
+; comments:
+;   Destroys P, A, result_addr, result_addr + 1
+.macro add16 left_addr, right_addr, result_addr
+    clc
+    lda left_addr
+    adc right_addr
+    sta result
+    lda left_addr + 1
+    adc right_addr + 1
+    sta result + 1
 .endmacro
