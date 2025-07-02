@@ -4,8 +4,8 @@ include ../shared.mk
 .SUFFIXES:
 .PHONY: clean debug default prereqs run
 
-BINSOURCES := acorn.s header.s main.s memcpy.s print.s
-BIN := memcpy.$(BINEXT)
+BINSOURCES := acorn.s header.s main.s print.s
+BIN := memcpy-demo.$(BINEXT)
 BINCFG := $(BIN:.$(BINEXT)=.cfg)
 BINMAP := $(BIN:.$(BINEXT)=.map)
 BINTARGETLIB := $(SHAREDLIBDIR)/std.lib
