@@ -5,7 +5,7 @@ include ../shared.mk
 .PHONY: clean debug default run
 
 BINEXT := r6502
-BINSOURCES := acorn.s header.s memcpy.s util.s
+BINSOURCES := acorn.s header.s main.s memcpy.s print.s
 BIN := memcpy.$(BINEXT)
 BINCFG := $(BIN:.$(BINEXT)=.cfg)
 BINMAP := $(BIN:.$(BINEXT)=.map)

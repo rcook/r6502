@@ -1,42 +1,46 @@
-.macpack util
-.exportzp zptr0, zptr1, zptr2
+.export memcpy
 
-.code
-.export MAIN
-.proc MAIN
-    print_buf hello
-    print_int value
-    print_buf line_break
+.importzp zptr0, zptr1, zptr2
 
-    ; Demonstrate memcpy
-    print_buf lorem_ipsum
-    stazptr0 lorem_ipsum
-    stazptr1 str
-    stazptr2 (lorem_ipsum_end - lorem_ipsum)
-    jsr memcpy
-    print_buf str
+; memcpy
+; Copy block of memory (must not overlap)
+; params:
+;   zptr0, zptr0 + 1: address of source buffer
+;   zptr1, zptr1 + 1: address of target buffer
+;   zptr2, zptr2 + 1: number of bytes to copy
+; comments:
+;   Destroys P, A, Y, zptr0 + 1, zptr1 + 1
+.proc memcpy
+@copy_whole_pages:
+    ldx zptr2 + 1
+    beq @copy_partial_page
+    ldy #0
+@loop1:
+    lda (zptr0), y
+    sta (zptr1), y
+    iny
+    bne @loop1
+    dex
+    beq @loop1_done
+    txa
+    inc zptr0 + 1
+    inc zptr1 + 1
+    tax
+    bne @loop1
+@loop1_done:
+    inc zptr0 + 1
+    inc zptr1 + 1
 
-    print_buf goodbye
+@copy_partial_page:
+    ldy #$FF
+@loop2:
+    iny
+    cpy zptr2
+    beq @loop2_done
+    lda (zptr0), y
+    sta (zptr1), y
+    lda #0
+    beq @loop2
+@loop2_done:
     rts
 .endproc
-
-.zeropage
-zptr0: .word 0
-zptr1: .word 0
-zptr2: .word 0
-
-.data
-result: .dword $FFFFFFFF
-str: .res 1024
-str_end: .byte 0
-
-.rodata
-value_a: .word 25
-value_b: .word 35
-line_break: .byte 13, 10, 0
-value: .dword 12345678
-hello: .byte "Hello", 13, 10, 0
-goodbye: .byte "Goodbye", 13, 10, 0
-lorem_ipsum: .byte "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 13, 10, 0
-;lorem_ipsum: .byte "Lorem ipsum", 13, 10, 0
-lorem_ipsum_end:
