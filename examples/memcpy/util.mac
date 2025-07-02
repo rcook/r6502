@@ -27,6 +27,7 @@
     stx ptr
     sty ptr + 1
     jsr print
+    cld
 .endmacro
 
 ; add16

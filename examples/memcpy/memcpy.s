@@ -15,7 +15,6 @@
     sta result + 2
     sta result + 3
 
-    ; There appears to be a bug in num_to_str...
     print_int result
     print_const line_break
 
