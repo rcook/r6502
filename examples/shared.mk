@@ -8,7 +8,6 @@ else
 CC65LIBDIR := $(CC65DIR)/share/cc65/lib
 endif
 
-
 LIBEXT := lib
 BINEXT := r6502
 
@@ -24,3 +23,7 @@ $(error Could not determine containing project directory)
 endif
 SHAREDLIBDIR := $(PROJECTDIR)/examples/lib
 CONFIGDIR := $(PROJECTDIR)/config
+
+# Standard rules
+%.o: %.s
+	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
