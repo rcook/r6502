@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean debug default run
+.PHONY: clean debug default prereqs run
 
 BIN := integer-basic.$(BINEXT)
 BINSOURCES := a1basic.s constants.s main.s wozmon.s
