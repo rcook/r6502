@@ -40,11 +40,27 @@ DSPCR = $FC03
 ; TBD
 .segment "OSCLI"
 
-; TBD
 .segment "OSBYTE"
+.export OSBYTE
+.proc OSBYTE
+    jmp osbyte_impl
+.endproc
 
-; TBD
+.segment "ROCODE"
+.proc osbyte_impl
+    rts
+.endproc
+
 .segment "OSWORD"
+.export OSWORD
+.proc OSWORD
+    jmp osword_impl
+.endproc
+
+.segment "ROCODE"
+.proc osword_impl
+    rts
+.endproc
 
 .segment "OSWRCH"
 .export OSWRCH
