@@ -2,28 +2,17 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean debug default run
+.PHONY: clean debug default prereqs run
 
 BIN := brk.$(BINEXT)
-BINSOURCES := header.s brk.s
-BINCFG := $(BIN:.$(BINEXT)=.cfg)
-BINMAP := $(BIN:.$(BINEXT)=.map)
-BINTARGETLIB := $(CC65LIBDIR)/none.lib
-
-ALLSOURCES := $(BINSOURCES)
+BINSOURCES := header.s main.s
 
 prereqs:
-	# None
 
-%.o: %.s
-	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
-
-BINLIBS := $(BINTARGETLIB)
-$(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG)
-	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out prereqs,$(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^))) $(patsubst %,--lib %, $(BINLIBS))
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
 
 clean:
-	$(RM) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(BIN) $(BINMAP)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
 run: $(BIN)
 	cargo run -- run $(BIN) --trace

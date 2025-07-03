@@ -1,27 +1,23 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := r6502
-PROGRAM := integer-basic.$(BINEXT)
-default: $(PROGRAM)
-
 .PHONY: clean debug default run
 
-SOURCES := a1basic.s constants.s main.s wozmon.s
-CFG := $(PROGRAM:.$(BINEXT)=.cfg)
-TARGET := -C $(CFG)
-LIB := none.lib
+BIN := integer-basic.$(BINEXT)
+BINSOURCES := a1basic.s constants.s main.s wozmon.s
 
-%.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
+prereqs:
 
-$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
-run: $(PROGRAM)
-	cargo run -- run $(PROGRAM)
+run: $(BIN)
+	cargo run -- run $(BIN) --trace
 
-debug: $(PROGRAM)
-	cargo run -- debug $(PROGRAM)
+debug: $(BIN)
+	cargo run -- debug $(BIN)
+
+default: $(BIN)

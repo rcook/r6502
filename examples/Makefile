@@ -3,8 +3,8 @@
 default: $(PROGRAM)
 
 MAKEFILES := $(wildcard */Makefile)
-ALL_SUBDIRS := $(MAKEFILES:/Makefile=)
-SUBDIRS := $(patsubst bug%,,$(ALL_SUBDIRS))
+ALLSUBDIRS := $(MAKEFILES:/Makefile=)
+SUBDIRS := $(patsubst bug%,,$(ALLSUBDIRS))
 .PHONY: clean default $(SUBDIRS)
 
 $(SUBDIRS):

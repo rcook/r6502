@@ -1,12 +1,10 @@
+.macpack r6502
+.import copydata
 .import __CODE_LOAD__
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
-.addr __CODE_LOAD__
-.addr startup
 
-EXIT = $FFC0
+r6502_header "ACRN", __CODE_LOAD__, startup
+
+HALT = $FFC0
 
 .code
 startup:
@@ -15,7 +13,7 @@ startup:
     cld
     jsr copydata
     jsr test_add16
-    jmp EXIT
+    jmp HALT
 
 test_add16:
     jsr add16
@@ -28,10 +26,10 @@ test_add16:
     bne failed
 succeeded:
     lda #$00
-    jmp EXIT
+    rts
 failed:
     lda #$01
-    jmp EXIT
+    rts
 
 add16:
     clc

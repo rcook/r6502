@@ -1,24 +1,18 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := bin
-PROGRAM := main.$(BINEXT)
-default: $(PROGRAM)
-
 .PHONY: clean default run
 
-SOURCES := main.s
-CFG := $(PROGRAM:.$(BINEXT)=.cfg)
-TARGET := -C $(CFG)
-LIB := none.lib
+BIN := main.$(BINEXT)
+BINSOURCES := main.s
 
-%.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
-
-$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/none.lib))
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
-run: $(PROGRAM)
-	cargo run -- run $(PROGRAM)
+run: $(BIN)
+	cargo run -- run $(BIN) --trace
+
+default: $(BIN)

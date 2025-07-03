@@ -9,32 +9,23 @@ $(CC65OBJS): $(CC65LIBDIR)/none.lib
 	ar65 x $^ $@
 	touch $@
 
-STDLIBSOURCES := memcpy.s num_to_str.s print.s os.s str_to_num.s
 STDLIB := std.$(LIBEXT)
+STDLIBSOURCES := memcpy.s num_to_str.s print.s os.s str_to_num.s
 STDLIBMAP := $(STDLIB:.$(LIBEXT)=.map)
 $(STDLIB): $(STDLIBSOURCES:.s=.o) $(CC65OBJS)
 	ar65 r $@ $^
 
-BINSOURCES := header.s test.s
 BIN := test.$(BINEXT)
-BINCFG := $(BIN:.$(BINEXT)=.cfg)
-BINMAP := $(BIN:.$(BINEXT)=.map)
-BINTARGETLIB :=
+BINSOURCES := header.s test.s
 
 ALLSOURCES := $(STDLIBSOURCES) $(BINSOURCES)
 
 prereqs:
-	# None
 
-%.o: %.s
-	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
-
-BINLIBS := $(BINTARGETLIB) $(STDLIB)
-$(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG) $(BINLIBS)
-	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out prereqs,$(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^))) $(patsubst %,--lib %, $(BINLIBS))
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(STDLIB)))
 
 clean:
-	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(STDLIB) $(STDLIBMAP) $(BIN) $(BINMAP)
+	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(STDLIB) $(STDLIBMAP) $(ARTIFACTS)
 
 run: $(BIN)
 	cargo run -- run $(BIN) --trace

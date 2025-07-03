@@ -1,10 +1,8 @@
+.macpack r6502
+.import copydata
 .import __DATA_LOAD__
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "APL1"
-.addr __DATA_LOAD__
-.addr startup
+
+r6502_header "APL1", __DATA_LOAD__, startup
 
 ; Make sure these symbols always show up in the map file
 .forceimport DSP

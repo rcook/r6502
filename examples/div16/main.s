@@ -1,12 +1,9 @@
+.macpack r6502
 .import __DATA_LOAD__
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
-.addr __DATA_LOAD__
-.addr startup
 
-EXIT = $FFC0
+r6502_header "ACRN", __DATA_LOAD__, startup
+
+HALT = $FFC0
 
 .code
 startup:
@@ -15,7 +12,7 @@ startup:
     cld
     ;jsr copydata
     jsr test_div16
-    jmp EXIT
+    jmp HALT
 
 test_div16:
         ; Test 16-bit division

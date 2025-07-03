@@ -1,24 +1,29 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := sim65
-PROGRAM := sim65-div16.$(BINEXT)
-default: $(PROGRAM)
+.PHONY: clean default prereqs run
 
-.PHONY: clean default run
+BIN := sim65-div16.$(BINEXT)
+BINSOURCES := main.s
 
-SOURCES := sim65-div16.s
-CFG :=
-TARGET := -t sim6502
-LIB := sim6502.lib
+prereqs:
 
-%.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
 
-$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+$(BIN): prereqs $(BINSOURCES:.s=.o) $(1:.$(BINEXT)=.cfg) $(CC65LIBDIR)/sim6502.lib
+	ld65 \
+		-t sim6502 \
+		-vm \
+		-m $(BIN:.$(BINEXT)=.map) \
+		-o $(BIN) \
+		$(BINSOURCES:.s=.o) \
+		$(patsubst %,--lib %,$(CC65LIBDIR)/sim6502.lib)
+ARTIFACTS := $(ARTIFACTS) $(BIN) $(BIN:.$(BINEXT)=.map)
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
-run: $(PROGRAM)
-	sim65 --verbose --cycles $(PROGRAM) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
+run: $(BIN)
+	sim65 --verbose --cycles $(BIN) && echo "Program succeeded with exit code $$?" || { echo "Program failed with exit code $$?"; exit 1; }
+
+default: $(BIN)

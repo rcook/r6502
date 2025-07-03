@@ -1,3 +1,5 @@
+.import exit
+
         .segment "EXEHDR"
         .export __EXEHDR__
 __EXEHDR__:

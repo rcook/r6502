@@ -1,24 +1,20 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
-BINEXT := r6502
-PROGRAM := add16.$(BINEXT)
-default: $(PROGRAM)
+.PHONY: clean default prereqs run
 
-.PHONY: clean default run
+BIN := add16.$(BINEXT)
+BINSOURCES := main.s
 
-SOURCES := add16.s
-CFG := $(PROGRAM:.$(BINEXT)=.cfg)
-TARGET := -C $(CFG)
-LIB := none.lib
+prereqs:
 
-%.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
-
-$(PROGRAM): $(SOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(PROGRAM:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
 
 clean:
-	$(RM) $(SOURCES:.s=.o) $(SOURCES:.s=.lst) $(PROGRAM) $(PROGRAM:.$(BINEXT)=.map)
+	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
-run: $(PROGRAM)
-	cargo run -- run $(PROGRAM) --trace --cycles
+run: $(BIN)
+	cargo run -- run $(BIN) --trace --cycles
+
+default: $(BIN)
