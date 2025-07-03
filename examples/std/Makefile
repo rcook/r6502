@@ -10,7 +10,7 @@ $(CC65OBJS): $(CC65LIBDIR)/none.lib
 	touch $@
 
 STDLIB := std.$(LIBEXT)
-STDLIBSOURCES := memcpy.s num_to_str.s print.s os.s str_to_num.s
+STDLIBSOURCES := memcpy.s num_to_str.s print.s str_to_num.s
 STDLIBMAP := $(STDLIB:.$(LIBEXT)=.map)
 $(STDLIB): $(STDLIBSOURCES:.s=.o) $(CC65OBJS)
 	ar65 r $@ $^
@@ -22,7 +22,7 @@ ALLSOURCES := $(STDLIBSOURCES) $(BINSOURCES)
 
 prereqs:
 
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(STDLIB)))
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(STDLIB) $(SHAREDLIBDIR)/acorn.lib))
 
 clean:
 	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(STDLIB) $(STDLIBMAP) $(ARTIFACTS)

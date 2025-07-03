@@ -39,7 +39,7 @@
             "comment": "This will emulate enough of the Acorn MOS to host BBC Basic II",
             "charSet": "crlf",
             "baseImage": "acorn.r6502",
-            "haltAddress": "$FFC0",
+            "haltAddress": "$FFA0",
             "busDevices": [
                 {
                     "comment": "16KB RAM",

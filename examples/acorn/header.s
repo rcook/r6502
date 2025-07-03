@@ -11,6 +11,5 @@ r6502_header "ACRN", __ROCODE_LOAD__, startup
     ldx #$ff
     txs
     cld
-    jsr main
     jmp HALT
 .endproc

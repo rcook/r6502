@@ -1,52 +1,22 @@
-.import startup
+; 6502 vectors
+.export NMI = $FFFA
+.export RESET = $FFFC
+.export IRQ = $FFFE
 
-KBD = $FC00
-KBDCR = $FC01
-DSP = $FC02
-DSPCR = $FC03
+; Debugging hooks
+.export HALT = $FFA0
 
-.segment "NMI"
-.export NMI
-.proc NMI
-.addr $0000
-.endproc
-
-.segment "RESET"
-.export RESET
-.proc RESET
-.addr startup
-.endproc
-
-.segment "IRQ"
-.export IRQ
-.proc IRQ
-.addr OSIRQ
-.endproc
-
-.segment "HALT"
-.export HALT
-.proc HALT
-    brk
-    nop
-    rts
-.endproc
-
-.segment "OSIRQ"
-.export OSIRQ
-OSIRQ:
-    brk
-    nop
-
-.segment "OSWRCH"
-.export OSWRCH
-.proc OSWRCH
-    jmp oswrch_impl
-.endproc
-
-.segment "ROCODE"
-.proc oswrch_impl
-    bit DSP
-    bmi oswrch_impl
-    sta DSP
-    rts
-.endproc
+; Acorn MOS operating system routines
+.export OSCLI = $FFF7
+.export OSBYTE = $FFF4
+.export OSWORD = $FFF1
+.export OSWRCH = $FFEE
+.export OSNEWL = $FFE7
+.export OSASCI = $FFE3
+.export OSRDCH = $FFE0
+.export OSFILE = $FFDD
+.export OSARGS = $FFDA
+.export OSBGET = $FFD7
+.export OSBPUT = $FFD4
+.export OSGBPB = $FFD1
+.export OSFIND = $FFCE

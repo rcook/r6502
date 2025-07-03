@@ -1,8 +1,27 @@
+.macpack r6502
+.import HALT
 .import OSWRCH
+.import __SIDEWAYSCODE_LOAD__
 
-.segment "ROCODE"
-.export main
+r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
+
+.segment "SIDEWAYSCODE"
+.export startup
+.proc startup
+    ldx #$ff
+    txs
+    cld
+    jsr main
+    jmp HALT
+.endproc
+
 .proc main
+    jsr test_oswrch
+    lda #$00
+    rts
+.endproc
+
+.proc test_oswrch
     ldx #0
 @loop:
     lda str, x
@@ -14,5 +33,5 @@
     rts
 .endproc
 
-.rodata
-str: .byte "Hello from acorn.r6502!", 13, 10, 0
+.segment "SIDEWAYSDATA"
+str: .byte "Testing OSWRCH", 13, 10, 0

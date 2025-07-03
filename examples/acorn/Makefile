@@ -4,28 +4,42 @@ include ../shared.mk
 .SUFFIXES:
 .PHONY: clean copy debug default prereqs run user
 
-BIN := acorn.$(BINEXT)
-BINSOURCES := header.s main.s os.s
+ACORNLIB := acorn.$(LIBEXT)
+ACORNLIBSOURCES := os.s
+ACORNLIBMAP := $(ACORNLIB:.$(LIBEXT)=.map)
+$(ACORNLIB): $(ACORNLIBSOURCES:.s=.o)
+	ar65 r $@ $^
+
+$(SHAREDLIBDIR)/$(ACORNLIB): $(ACORNLIB)
+	cp $^ $@
+
+IMAGE := acorn.$(BINEXT)
+IMAGESOURCES := header.s os-impl.s
+
+BIN := acorn-test.$(BINEXT)
+BINSOURCES := main.s
+
+ALLSOURCES := $(ACORNLIBSOURCES) $(IMAGESOURCES) $(BINSOURCES)
 
 prereqs:
 
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
+$(eval $(call ld65,$(IMAGE),$(IMAGESOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
 
-clean:
-	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
 
-$(CONFIGDIR)/$(BIN): $(BIN)
+$(CONFIGDIR)/$(IMAGE): $(IMAGE)
 	cp $^ $@
 
-copy: $(CONFIGDIR)/$(BIN)
-
-run: copy
+run: $(CONFIGDIR)/$(IMAGE) $(BIN)
 	cargo run -- run $(BIN) --trace
 
-debug: copy
+debug: $(CONFIGDIR)/$(IMAGE) $(BIN)
 	cargo run -- debug $(BIN)
 
-user: copy
+user: $(CONFIGDIR)/$(IMAGE)
 	cargo run -- run $(PROJECTDIR)/examples/hello-world/hello-world.r6502 --trace
 
-default: copy
+clean:
+	$(RM) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(ACORNLIB) $(ACORNLIBMAP) $(ARTIFACTS)
+
+default: $(CONFIGDIR)/$(IMAGE) $(BIN)
