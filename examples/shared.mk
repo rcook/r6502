@@ -8,8 +8,19 @@ else
 CC65LIBDIR := $(CC65DIR)/share/cc65/lib
 endif
 
-SHAREDMKPATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-SHAREDLIBDIR := $(dir $(SHAREDMKPATH))lib
 
 LIBEXT := lib
 BINEXT := r6502
+
+ifneq ($(notdir $(lastword $(MAKEFILE_LIST))), shared.mk)
+$(error Could not determine path to shared.mk)
+endif
+SHAREDMKPATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+PROJECTDIR := $(dir $(SHAREDMKPATH))
+PROJECTDIR := $(dir $(PROJECTDIR:/=))
+PROJECTDIR := $(PROJECTDIR:/=)
+ifeq ($(wildcard $(PROJECTDIR)/.gitignore),)
+$(error Could not determine containing project directory)
+endif
+SHAREDLIBDIR := $(PROJECTDIR)/examples/lib
+CONFIGDIR := $(PROJECTDIR)/config

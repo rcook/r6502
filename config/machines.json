@@ -64,6 +64,46 @@
             ]
         },
         {
+            "name": "Acorn v2",
+            "tag": "ACN2",
+            "comment": "This will emulate enough of the Acorn MOS to host BBC Basic II",
+            "charSet": "crlf",
+            "baseImage": "acorn2.r6502",
+            "haltAddress": "$FFC0",
+            "busDevices": [
+                {
+                    "comment": "16KB RAM",
+                    "type": "ram",
+                    "addressRange": "$0000:$7FFF",
+                    "offset": "$0000"
+                },
+                {
+                    "comment": "16KB Sideways ROM/RAM",
+                    "type": "rom",
+                    "addressRange": "$8000:$BFFF",
+                    "offset": "$8000"
+                },
+                {
+                    "comment": "Start of upper ROM including MOS and memory-mapped I/O",
+                    "type": "rom",
+                    "addressRange": "$C000:$FBFF",
+                    "offset": "$C000"
+                },
+                {
+                    "comment": "PIA for console I/O",
+                    "type": "pia",
+                    "addressRange": "$FC00:$FC03",
+                    "offset": "$FC00"
+                },
+                {
+                    "comment": "Remainder of MOS ROM and 6502 vectors",
+                    "type": "rom",
+                    "addressRange": "$FC04:$FFFF",
+                    "offset": "$FC04"
+                }
+            ]
+        },
+        {
             "name": "Apple1",
             "tag": "APL1",
             "comment": "This will (poorly) emulate the basic character I/O of an Apple 1 (i.e. the PIA)",
