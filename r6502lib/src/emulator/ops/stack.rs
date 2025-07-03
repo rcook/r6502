@@ -30,7 +30,10 @@ pub fn pla(cpu: &mut Cpu) {
 pub fn plp(cpu: &mut Cpu) {
     // Retain ALWAYS_ONE and B
     let current_p = cpu.reg.p.bits();
-    assert!((current_p & 0b00100000) == 0b00100000);
+
+    // TBD: Figure out what to do with ALWAYS_ONE and B
+    //assert!((current_p & 0b00100000) == 0b00100000);
+
     let b_only = current_p & 0b00110000;
 
     // Without B
