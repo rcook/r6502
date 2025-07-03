@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean debug default run
+.PHONY: clean debug default prereqs run
 
 CC65OBJS := copydata.o zeropage.o
 $(CC65OBJS): $(CC65LIBDIR)/none.lib
@@ -23,12 +23,15 @@ BINTARGETLIB :=
 
 ALLSOURCES := $(STDLIBSOURCES) $(BINSOURCES)
 
+prereqs:
+	# None
+
 %.o: %.s
-	ca65 --include-dir $(SHAREDLIBDIR) -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
 
 BINLIBS := $(BINTARGETLIB) $(STDLIB)
-$(BIN): $(BINSOURCES:.s=.o) $(BINCFG) $(BINLIBS)
-	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^)) $(patsubst %,--lib %, $(BINLIBS))
+$(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG) $(BINLIBS)
+	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out prereqs,$(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^))) $(patsubst %,--lib %, $(BINLIBS))
 
 clean:
 	$(RM) $(CC65OBJS) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(STDLIB) $(STDLIBMAP) $(BIN) $(BINMAP)
@@ -44,4 +47,4 @@ $(SHAREDLIBDIR)/$(STDLIB): $(STDLIB)
 
 copy: $(SHAREDLIBDIR)/$(STDLIB)
 
-default: copy
+default: $(BIN) copy

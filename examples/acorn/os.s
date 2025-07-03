@@ -1,3 +1,5 @@
+.import startup
+
 KBD = $FC00
 KBDCR = $FC01
 DSP = $FC02
@@ -5,40 +7,47 @@ DSPCR = $FC03
 
 .segment "NMI"
 .export NMI
-NMI:
+.proc NMI
 .addr $0000
+.endproc
 
 .segment "RESET"
 .export RESET
-RESET:
-.addr STARTUP
+.proc RESET
+.addr startup
+.endproc
 
 .segment "IRQ"
 .export IRQ
-IRQ:
+.proc IRQ
 .addr OSIRQ
+.endproc
 
-.segment "OSHALT"
-.export OSHALT
-OSHALT:
+.segment "HALT"
+.export HALT
+.proc HALT
     brk
     nop
     rts
+.endproc
 
 .segment "OSIRQ"
 .export OSIRQ
-OSIRQ:
+.proc OSIRQ
     brk
     nop
+.endproc
 
 .segment "OSWRCH"
 .export OSWRCH
-OSWRCH:
+.proc OSWRCH
     jmp oswrch_impl
+.endproc
 
 .code
-oswrch_impl:
+.proc oswrch_impl
     bit DSP
     bmi oswrch_impl
     sta DSP
     rts
+.endproc

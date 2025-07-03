@@ -1,3 +1,7 @@
+.import HALT
+.import OSWRCH
+.import copydata
+.import strbin
 .importzp pfac
 
 ZPPTR = $80
@@ -10,7 +14,7 @@ startup:
     cld
     jsr copydata
     jsr test_strbin
-    jmp OSHALT
+    jmp HALT
 
 .proc test_strbin
     ldx #<str

@@ -1,2 +1,2 @@
-.export OSEXIT = $FFC0
+.export HALT = $FFC0
 .export OSWRCH = $FFEE

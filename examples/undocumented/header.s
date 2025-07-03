@@ -1,19 +1,15 @@
-.export STARTUP
-
-; r6502 executable header
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
+.macpack r6502
+.import copydata
+.import main
 .import __DATA_LOAD__
-.addr __DATA_LOAD__
-.addr STARTUP
 
-OSHALT = $FFC0
+r6502_header "ACRN", __DATA_LOAD__, startup
 
-; Standard startup code
+HALT = $FFC0
+
 .code
-STARTUP:
+.proc startup
     jsr copydata
-    jsr MAIN
-    jmp OSHALT
+    jsr main
+    jmp HALT
+.endproc

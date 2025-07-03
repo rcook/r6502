@@ -1,10 +1,10 @@
 .macpack util
-
+.import print
 .exportzp zword0
 
 .code
-.export MAIN
-.proc MAIN
+.export main
+.proc main
     print_buf hello
 
     lda #$11
@@ -32,12 +32,12 @@
 @passed:
     print_buf passed
     lda #0
-    jmp OSEXIT
+    rts
 
 @failed:
     print_buf failed
     lda #1
-    jmp OSEXIT
+    rts
 .endproc
 
 .proc test
@@ -58,9 +58,6 @@ zx: .byte 0
 zy: .byte 0
 
 .data
-hello:
-    .byte "REGISTER PRESERVATION TEST", 13, 10, 0
-passed:
-    .byte "Registers successfully preserved", 13, 10, 0
-failed:
-    .byte "Registers not preserved", 13, 10, 0
+hello: .byte "REGISTER PRESERVATION TEST", 13, 10, 0
+passed: .byte "Registers successfully preserved", 13, 10, 0
+failed: .byte "Registers not preserved", 13, 10, 0

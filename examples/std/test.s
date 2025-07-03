@@ -1,3 +1,11 @@
+.macpack util
+.import HALT
+.import OSWRCH
+.import copydata
+.import print
+.import num_to_str
+.exportzp zword0
+
 .code
 .export startup
 .proc startup
@@ -7,17 +15,13 @@
     jsr copydata
     jsr main
     lda #$00
-    jmp OSEXIT
+    jmp HALT
 .endproc
 
 .proc main
-    ldx #<welcome
-    ldy #>welcome
-    jsr print_str
-
+    print_buf welcome
     jsr count_up
     jsr dword_inc
-
     rts
 .endproc
 
@@ -54,18 +58,16 @@
     ldx #<value
     ldy #>value
     jsr num_to_str
-    stx zp_address
-    sty zp_address + 1
+    stx zptr
+    sty zptr + 1
     tay
 @loop:
-    lda (zp_address),Y
+    lda (zptr),Y
     sta str,Y
     dey
     bpl @loop
 
-    ldx #<str
-    ldy #>str
-    jsr print_str
+    print_buf str
     lda #10
     jsr OSWRCH
     rts
@@ -112,8 +114,8 @@
 .endproc
 
 .zeropage
-zp_address:
-    .addr $0000
+zword0: .word $0000
+zptr: .addr $0000
 
 .data
 str:
@@ -122,5 +124,4 @@ value:
     .dword 0
 
 .rodata
-welcome:
-    .byte "Welcome to my program!", 13, 10, 0
+welcome: .byte "Welcome to my program!", 13, 10, 0

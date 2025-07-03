@@ -23,9 +23,9 @@ DSPCR = $FC03
 .addr OSIRQ
 .endproc
 
-.segment "OSHALT"
-.export OSHALT
-.proc OSHALT
+.segment "HALT"
+.export HALT
+.proc HALT
     brk
     nop
     rts

@@ -1,11 +1,8 @@
-; r6502 executable header
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
+.macpack r6502
+.import startup
 .import __DATA_LOAD__
-.addr __DATA_LOAD__
-.addr startup
 
-.export OSHALT = $FFC0
+r6502_header "ACRN", __DATA_LOAD__, startup
+
+.export HALT = $FFC0
 .export OSWRCH = $FFEE

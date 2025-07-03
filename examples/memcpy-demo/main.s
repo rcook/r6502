@@ -1,9 +1,12 @@
 .macpack util
+.import memcpy
+.import num_to_str
+.import print
 .exportzp zword0, zword1, zword2
 
 .code
-.export MAIN
-.proc MAIN
+.export main
+.proc main
     print_buf hello
     print_int value
     print_buf line_break

@@ -1,8 +1,9 @@
-.export MAIN
+.import OSWRCH
 
 ; The user program
 .code
-MAIN:
+.export main
+.proc main
     ldx #0
 @loop:
     lda str, X
@@ -12,7 +13,7 @@ MAIN:
     bne @loop
 @done:
     rts
+.endproc
 
 .segment "OSRODATA"
-str:
-    .byte "Hello World", 13, 10, 0
+str: .byte "Hello World", 13, 10, 0

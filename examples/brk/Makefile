@@ -1,22 +1,29 @@
+include ../shared.mk
+
 .DEFAULT_GOAL := default
 .SUFFIXES:
 .PHONY: clean debug default run
 
-BINEXT := r6502
 BIN := brk.$(BINEXT)
 BINSOURCES := header.s brk.s
-CFG := $(BIN:.$(BINEXT)=.cfg)
-TARGET := -C $(CFG)
-LIB := none.lib
+BINCFG := $(BIN:.$(BINEXT)=.cfg)
+BINMAP := $(BIN:.$(BINEXT)=.map)
+BINTARGETLIB := $(CC65LIBDIR)/none.lib
+
+ALLSOURCES := $(BINSOURCES)
+
+prereqs:
+	# None
 
 %.o: %.s
-	ca65 -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
 
-$(BIN): $(BINSOURCES:.s=.o) $(CFG)
-	ld65 $(TARGET) -m $(BIN:.$(BINEXT)=.map) -o $@ $(filter-out $(CFG),$^) $(LIB)
+BINLIBS := $(BINTARGETLIB)
+$(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG)
+	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out prereqs,$(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^))) $(patsubst %,--lib %, $(BINLIBS))
 
 clean:
-	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(BIN) $(BIN:.$(BINEXT)=.map)
+	$(RM) $(ALLSOURCES:.s=.o) $(ALLSOURCES:.s=.lst) $(BIN) $(BINMAP)
 
 run: $(BIN)
 	cargo run -- run $(BIN) --trace

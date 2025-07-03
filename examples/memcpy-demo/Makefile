@@ -13,10 +13,10 @@ BINTARGETLIB := $(SHAREDLIBDIR)/std.lib
 ALLSOURCES := $(BINSOURCES)
 
 prereqs:
-	make -C ../std
+	make -C $(PROJECTDIR)/examples/std
 
 %.o: %.s
-	ca65 --include-dir $(SHAREDLIBDIR) -U -l $(@:o=lst) -o $@ $<
+	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
 
 BINLIBS := $(BINTARGETLIB)
 $(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG) $(BINLIBS)

@@ -1,5 +1,5 @@
 .export print
-
+.import OSWRCH
 .importzp zword0
 
 ; print

@@ -1,4 +1,5 @@
 .code
-.export MAIN
-MAIN:
-.byte $EB
+.export main
+.proc main
+    .byte $EB
+.endproc

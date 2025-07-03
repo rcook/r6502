@@ -1,3 +1,7 @@
+.import HALT
+.import OSWRCH
+.import binstr
+.import copydata
 .exportzp MAX_STR_LEN = 33
 
 ZPPTR = $80
@@ -10,7 +14,7 @@ startup:
     cld
     jsr copydata
     jsr test_binstr
-    jmp OSHALT
+    jmp HALT
 
 .proc test_binstr
     lda #$00

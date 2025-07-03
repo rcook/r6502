@@ -7,22 +7,21 @@
 ;   https://www.pa3byb.nl/wp-content/uploads/2017/12/Advance_user_guide_Acorn_electron.pdf
 ;   https://archive.org/details/bbc-micro-advanced-user-guide/page/4/mode/2up
 
-; r6502 executable header
-.segment "HEADER"
-.dbyt $6502
-.byte $00
-.byte "ACRN"
+.macpack r6502
+.import HALT
+.import copydata
+.import main
 .import __OSRODATA_LOAD__
-.addr __OSRODATA_LOAD__
-.addr STARTUP
 
-; Standard startup code
+r6502_header "ACRN", __OSRODATA_LOAD__, startup
+
 .code
-.export STARTUP
-STARTUP:
+.export startup
+.proc startup
     ldx #$ff
     txs
     cld
     jsr copydata
-    jsr MAIN
-    jmp OSHALT
+    jsr main
+    jmp HALT
+.endproc

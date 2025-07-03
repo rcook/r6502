@@ -19,7 +19,7 @@ prereqs:
 	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
 
 BINLIBS := $(BINTARGETLIB)
-$(BIN): $(BINSOURCES:.s=.o) $(BINCFG)
+$(BIN): prereqs $(BINSOURCES:.s=.o) $(BINCFG) $(BINLIBS)
 	ld65 -C $(BINCFG) -vm -m $(BINMAP) -o $@ $(filter-out prereqs,$(filter-out $(BINLIBS),$(filter-out $(BINCFG),$^))) $(patsubst %,--lib %, $(BINLIBS))
 
 clean:

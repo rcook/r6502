@@ -1,5 +1,5 @@
 .macpack r6502
-.import OSHALT
+.import HALT
 .import main
 .import __ROCODE_LOAD__
 
@@ -12,5 +12,5 @@ r6502_header "ACN2", __ROCODE_LOAD__, startup
     txs
     cld
     jsr main
-    jmp OSHALT
+    jmp HALT
 .endproc

@@ -1,4 +1,5 @@
 .code
-.export MAIN
-MAIN:
+.export main
+.proc main
     brk
+.endproc

@@ -1,6 +1,8 @@
+.import OSWRCH
+
 .code
-.export MAIN
-.proc MAIN
+.export main
+.proc main
     ldx #$00
 @loop:
     lda str, x
@@ -13,5 +15,4 @@
 .endproc
 
 .data
-str:
-    .byte "Hello World", 13, 10, 0
+str: .byte "Hello World", 13, 10, 0
