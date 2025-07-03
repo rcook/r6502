@@ -1,6 +1,8 @@
 .macpack r6502
 .import HALT
+.import OSASCI
 .import OSBYTE
+.import OSNEWL
 .import OSWORD
 .import OSWRCH
 .import __SIDEWAYSCODE_LOAD__
@@ -26,16 +28,33 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .endproc
 
 .proc main
+    jsr test_osasci
     jsr test_osbyte
+    jsr test_osnewl
     jsr test_osword
     jsr test_oswrch
     lda #$00
     rts
 .endproc
 
+.proc test_osasci
+    print_str test_osasci_str
+    lda #65
+    jsr OSASCI
+    lda #13
+    jsr OSASCI
+    rts
+.endproc
+
 .proc test_osbyte
     print_str test_osbyte_str
     jsr OSBYTE
+    rts
+.endproc
+
+.proc test_osnewl
+    print_str test_osnewl_str
+    jsr OSNEWL
     rts
 .endproc
 
@@ -68,6 +87,8 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 zword0: .word $0000
 
 .segment "SIDEWAYSDATA"
+test_osasci_str: .byte "Testing OSASCI", 13, 10, 0
 test_osbyte_str: .byte "Testing OSBYTE", 13, 10, 0
+test_osnewl_str: .byte "Testing OSNEWL", 13, 10, 0
 test_osword_str: .byte "Testing OSWORD", 13, 10, 0
 test_oswrch_str: .byte "Testing OSWRCH", 13, 10, 0

@@ -14,6 +14,8 @@
 
 .import startup
 
+LF = 10
+CR = 13
 KBD = $FC00
 KBDCR = $FC01
 DSP = $FC02
@@ -76,11 +78,47 @@ DSPCR = $FC03
     rts
 .endproc
 
-; TBD
 .segment "OSNEWL"
+.export OSNEWL
+.proc OSNEWL
+    jmp osnewl_impl
+.endproc
 
-; TBD
+.segment "ROCODE"
+.proc osnewl_impl
+    php
+    pha
+    lda #LF
+    jsr OSWRCH
+    lda #CR
+    jsr OSWRCH
+    pla
+    plp
+    rts
+.endproc
+
 .segment "OSASCI"
+.export OSASCI
+.proc OSASCI
+    jmp osasci_impl
+.endproc
+
+.segment "ROCODE"
+.proc osasci_impl
+    php
+    pha
+    cmp #CR
+    beq @line_break
+    jsr OSWRCH
+    pla
+    plp
+    rts
+@line_break:
+    jsr OSNEWL
+    pla
+    plp
+    rts
+.endproc
 
 ; TBD
 .segment "OSRDCH"
