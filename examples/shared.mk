@@ -23,7 +23,21 @@ $(error Could not determine containing project directory)
 endif
 SHAREDLIBDIR := $(PROJECTDIR)/examples/lib
 CONFIGDIR := $(PROJECTDIR)/config
+ARTIFACTS :=
 
 # Standard rules
 %.o: %.s
 	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
+
+# ld65 rule
+define ld65
+$(1): prereqs $(2) $(1:.$(BINEXT)=.cfg) $(3)
+	ld65 \
+		-C $(1:.$(BINEXT)=.cfg) \
+		-vm \
+		-m $(1:.$(BINEXT)=.map) \
+		-o $(1) \
+		$(2) \
+		$(patsubst %,--lib %,$(3))
+ARTIFACTS := $$(ARTIFACTS) $(1) $(1:.$(BINEXT)=.map)
+endef
