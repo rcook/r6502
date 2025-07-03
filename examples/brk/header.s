@@ -1,16 +1,13 @@
 .macpack r6502
-.import copydata
+.import HALT
 .import main
-.import __DATA_LOAD__
+.import __SIDEWAYSCODE_LOAD__
 
-r6502_header "ACRN", __DATA_LOAD__, startup
+r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 
-HALT = $FFC0
-
-.code
+.segment "SIDEWAYSCODE"
 .export startup
 .proc startup
-    jsr copydata
     jsr main
     jmp HALT
 .endproc

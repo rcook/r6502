@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean copy debug default prereq run user
+.PHONY: clean copy debug default prereqs run user
 
 BIN := acorn.$(BINEXT)
 BINSOURCES := header.s main.s os.s

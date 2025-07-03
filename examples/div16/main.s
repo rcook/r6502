@@ -1,92 +1,107 @@
 .macpack r6502
-.import __DATA_LOAD__
+.macpack util
+.import HALT
+.import copydata
+.import print
+.import __CODE_LOAD__
+.exportzp zword0
 
-r6502_header "ACRN", __DATA_LOAD__, startup
-
-HALT = $FFC0
+r6502_header "ACRN", __CODE_LOAD__, startup
 
 .code
-startup:
+.proc startup
     ldx #$ff
     txs
     cld
-    ;jsr copydata
+    jsr copydata
     jsr test_div16
     jmp HALT
+.endproc
 
-test_div16:
+.proc test_div16
+        print_buf welcome
         ; Test 16-bit division
         ; Reference: https://www.llx.com/Neil/a2/mult.html
-        ; WORD_REG_0 = $1235 (4661) (dividend)
-        ; WORD_REG_1 = $000a (10) (divisor)
+        ; word0 = $1235 (4661) (dividend)
+        ; word1 = $000a (10) (divisor)
         ; Result should be:
-        ; WORD_REG_0 = 0x01d2 (466) (quotient)
-        ; WORD_REG_2 = 0x0001 (1) (remainder)
+        ; word0 = 0x01d2 (466) (quotient)
+        ; word2 = 0x0001 (1) (remainder)
         ;
         ; Total cycle count = 958 (920 for div16 and JSR + 38 for checks)
         jsr     div16
 
-        ; Quotient stored in WORD_REG_0
-check_quotient_lo:
-        lda     WORD_REG_0      ; Load low byte of quotient
+        ; Quotient stored in word0
+@check_quotient_lo:
+        lda     word0      ; Load low byte of quotient
         cmp     #$d2            ; Must be $d2
-        beq     check_quotient_hi
+        beq     @check_quotient_hi
+        print_buf failed
         lda     #$01            ; Failure
         rts
-check_quotient_hi:
-        lda     WORD_REG_0 + 1  ; Low high byte of quotient
+@check_quotient_hi:
+        lda     word0 + 1  ; Low high byte of quotient
         cmp     #$01            ; Must be $01
-        beq     check_remainder_lo
+        beq     @check_remainder_lo
+        print_buf failed
         lda     #$02            ; Failure
         rts
 
-        ; Remainder stored in WORD_REG_2
-check_remainder_lo:
-        lda     WORD_REG_2      ; Load low byte of remainder
+        ; Remainder stored in word2
+@check_remainder_lo:
+        lda     word2      ; Load low byte of remainder
         cmp     #$01            ; Must be $01
-        beq     check_remainder_hi
+        beq     @check_remainder_hi
+        print_buf failed
         lda     #$03            ; Failure
         rts
-check_remainder_hi:
-        lda     WORD_REG_2 + 1  ; Low high byte of remainder
+@check_remainder_hi:
+        lda     word2 + 1  ; Low high byte of remainder
         cmp     #$00            ; Must be $01
-        beq     done
+        beq     @done
+        print_buf failed
         lda     #$04            ; Failure
         rts
 
-done:
+@done:
+        print_buf succeeded
         lda     #$00            ; Success
         rts
+.endproc
 
-div16:
+.proc div16
         lda     #0
-        sta     WORD_REG_2
-        sta     WORD_REG_2 + 1
+        sta     word2
+        sta     word2 + 1
         ldx     #16
-l1:
-        asl     WORD_REG_0
-        rol     WORD_REG_0 + 1
-        rol     WORD_REG_2
-        rol     WORD_REG_2 + 1
-        lda     WORD_REG_2
+@l1:
+        asl     word0
+        rol     word0 + 1
+        rol     word2
+        rol     word2 + 1
+        lda     word2
         sec
-        sbc     WORD_REG_1
+        sbc     word1
         tay
-        lda     WORD_REG_2 + 1
-        sbc     WORD_REG_1 + 1
-        bcc     l2
-        sta     WORD_REG_2 + 1
-        sty     WORD_REG_2
-        inc     WORD_REG_0
-l2:
+        lda     word2 + 1
+        sbc     word1 + 1
+        bcc     @l2
+        sta     word2 + 1
+        sty     word2
+        inc     word0
+@l2:
         dex
-        bne     l1
+        bne     @l1
         rts
+.endproc
+
+.zeropage
+zword0: .word $0000
 
 .data
-WORD_REG_0:
-        .word   $1235
-WORD_REG_1:
-        .word   $000a
-WORD_REG_2:
-        .word   $ffff
+welcome: .byte "DIV16 TEST", 13, 10, 0
+succeeded: .byte "Test passed", 13, 10, 0
+failed: .byte "Test failed", 13, 10, 0
+word0: .word $1235
+word1: .word $000a
+word2: .word $ffff

@@ -36,39 +36,9 @@
         {
             "name": "Acorn",
             "tag": "ACRN",
-            "comment": "This will (poorly) emulate the basic character I/O of an Acorn Electron/BBC Micro (i.e. OSRDCH and OSWRCH)",
-            "charSet": "crlf",
-            "baseImage": "acorn.r6502",
-            "haltAddress": "$FFC0",
-            "busDevices": [
-                {
-                    "type": "ram",
-                    "addressRange": "$0000:$7FFF",
-                    "offset": "$0000"
-                },
-                {
-                    "type": "rom",
-                    "addressRange": "$8000:$FBFF",
-                    "offset": "$8000"
-                },
-                {
-                    "type": "pia",
-                    "addressRange": "$FC00:$FC03",
-                    "offset": "$FC00"
-                },
-                {
-                    "type": "rom",
-                    "addressRange": "$FC04:$FFFF",
-                    "offset": "$FC04"
-                }
-            ]
-        },
-        {
-            "name": "Acorn v2",
-            "tag": "ACN2",
             "comment": "This will emulate enough of the Acorn MOS to host BBC Basic II",
             "charSet": "crlf",
-            "baseImage": "acorn2.r6502",
+            "baseImage": "acorn.r6502",
             "haltAddress": "$FFC0",
             "busDevices": [
                 {

@@ -2,11 +2,11 @@
 .import HALT
 .import copydata
 .import main
-.import __DATA_LOAD__
+.import __SIDEWAYSCODE_LOAD__
 
-r6502_header "ACRN", __DATA_LOAD__, startup
+r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 
-.code
+.segment "SIDEWAYSCODE"
 .proc startup
     jsr copydata
     jsr main

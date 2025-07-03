@@ -8,8 +8,9 @@ BIN := add16.$(BINEXT)
 BINSOURCES := main.s
 
 prereqs:
+	make -C $(PROJECTDIR)/examples/std
 
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/std.lib))
 
 clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)

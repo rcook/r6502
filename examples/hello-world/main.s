@@ -1,6 +1,6 @@
 .import OSWRCH
 
-.code
+.segment "SIDEWAYSCODE"
 .export main
 .proc main
     ldx #$00
@@ -14,5 +14,5 @@
     rts
 .endproc
 
-.data
-str: .byte "Hello World", 13, 10, 0
+.segment "SIDEWAYSDATA"
+str: .byte "Hello World!", 13, 10, 0

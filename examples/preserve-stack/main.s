@@ -2,7 +2,7 @@
 .import print
 .exportzp zword0
 
-.code
+.segment "SIDEWAYSCODE"
 .export main
 .proc main
     print_buf hello
@@ -57,7 +57,7 @@ za: .byte 0
 zx: .byte 0
 zy: .byte 0
 
-.data
+.segment "SIDEWAYSDATA"
 hello: .byte "REGISTER PRESERVATION TEST", 13, 10, 0
 passed: .byte "Registers successfully preserved", 13, 10, 0
 failed: .byte "Registers not preserved", 13, 10, 0

@@ -6,7 +6,7 @@
 .import num_to_str
 .exportzp zword0
 
-.code
+.segment "SIDEWAYSCODE"
 .export startup
 .proc startup
     ldx #$ff
@@ -118,10 +118,8 @@ zword0: .word $0000
 zptr: .addr $0000
 
 .data
-str:
-    .res $80
-value:
-    .dword 0
+str: .res $80
+value: .dword 0
 
-.rodata
+.segment "SIDEWAYSDATA"
 welcome: .byte "Welcome to my program!", 13, 10, 0

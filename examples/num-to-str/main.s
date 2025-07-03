@@ -1,22 +1,18 @@
+.macpack util
 .import HALT
 .import OSWRCH
 .import binstr
 .import copydata
+.import print
+.export main
 .exportzp MAX_STR_LEN = 33
+.exportzp zword0
 
 ZPPTR = $80
 
-.code
-.export startup
-startup:
-    ldx #$ff
-    txs
-    cld
-    jsr copydata
-    jsr test_binstr
-    jmp HALT
-
-.proc test_binstr
+.segment "SIDEWAYSCODE"
+.proc main
+    print_buf welcome
     lda #$00
     ldx #<value
     ldy #>value
@@ -74,22 +70,17 @@ startup:
     rts
 .endproc
 
+.zeropage
+zword0: .word $0000
+
 .data
-value:
-    .dword $12345678
+result_str_len: .byte 0
+result_str: .res MAX_STR_LEN
 
-result_str_len:
-    .byte 0
-result_str:
-    .res MAX_STR_LEN
-
-expected_str_len:
-    .byte 9
-expected_str:
-    .byte "305419896", 0
-
-success_str:
-    .byte "binstr returned expected string", 13, 10, 0
-
-failure_str:
-    .byte "binstr did not return expected string", 13, 10, 0
+.segment "SIDEWAYSDATA"
+value: .dword $12345678
+expected_str_len: .byte 9
+expected_str: .byte "305419896", 0
+welcome: .byte "Welcome", 13, 10, 0
+success_str: .byte "binstr returned expected string", 13, 10, 0
+failure_str: .byte "binstr did not return expected string", 13, 10, 0

@@ -5,11 +5,11 @@ include ../shared.mk
 .PHONY: clean default prereqs run
 
 BIN := num-to-str.$(BINEXT)
-BINSOURCES := header.s num-to-str.s test.s
+BINSOURCES := header.s main.s num-to-str.s
 
 prereqs:
 
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
+$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/std.lib))
 
 clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)

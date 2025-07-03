@@ -1,12 +1,11 @@
 .import OSWRCH
 
-; The user program
-.code
+.segment "ROCODE"
 .export main
 .proc main
     ldx #0
 @loop:
-    lda str, X
+    lda str, x
     beq @done
     jsr OSWRCH
     inx
@@ -15,5 +14,5 @@
     rts
 .endproc
 
-.segment "OSRODATA"
-str: .byte "Hello World", 13, 10, 0
+.rodata
+str: .byte "Hello from acorn.r6502!", 13, 10, 0

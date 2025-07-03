@@ -16,7 +16,7 @@ $(STDLIB): $(STDLIBSOURCES:.s=.o) $(CC65OBJS)
 	ar65 r $@ $^
 
 BIN := test.$(BINEXT)
-BINSOURCES := header.s test.s
+BINSOURCES := header.s main.s
 
 ALLSOURCES := $(STDLIBSOURCES) $(BINSOURCES)
 

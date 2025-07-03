@@ -33,10 +33,9 @@ DSPCR = $FC03
 
 .segment "OSIRQ"
 .export OSIRQ
-.proc OSIRQ
+OSIRQ:
     brk
     nop
-.endproc
 
 .segment "OSWRCH"
 .export OSWRCH
@@ -44,7 +43,7 @@ DSPCR = $FC03
     jmp oswrch_impl
 .endproc
 
-.code
+.segment "ROCODE"
 .proc oswrch_impl
     bit DSP
     bmi oswrch_impl

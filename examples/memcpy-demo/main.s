@@ -4,7 +4,7 @@
 .import print
 .exportzp zword0, zword1, zword2
 
-.code
+.segment "SIDEWAYSCODE"
 .export main
 .proc main
     print_buf hello
@@ -24,16 +24,16 @@
 .endproc
 
 .zeropage
-zword0: .word 0
-zword1: .word 0
-zword2: .word 0
+zword0: .word $0000
+zword1: .word $0000
+zword2: .word $0000
 
 .data
 result: .dword $FFFFFFFF
 str: .res 1024
 str_end: .byte 0
 
-.rodata
+.segment "SIDEWAYSDATA"
 value_a: .word 25
 value_b: .word 35
 line_break: .byte 13, 10, 0
