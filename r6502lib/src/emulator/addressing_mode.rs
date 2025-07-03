@@ -77,10 +77,10 @@ impl AddressingMode {
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
             Self::Indirect => match instruction_info.operand {
-                Operand::Byte(value) => Ok(format!(
+                Operand::Word(value) => Ok(format!(
                     "{} ({})",
                     instruction_info.opcode.mnemonic(),
-                    Self::format_zero_page_addr(map_file, value)
+                    Self::format_addr(map_file, value)
                 )),
                 _ => bail!("invalid addressing mode for {}", instruction_info.opcode),
             },
