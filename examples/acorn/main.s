@@ -10,6 +10,8 @@
 
 r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 
+STRING_BUFFER_LEN = 10
+
 .zeropage
 zword0: .word $0000
 
@@ -87,20 +89,14 @@ zword0: .word $0000
 
 .proc test_osword
     raw_write_str test_osword_str
-
     raw_write_str line_prompt_str
 
-    ; Make sure first character in buffer is zero
-    lda #$00
-    sta buffer
-    sta buffer + 1
-
     ; Set up parameter block
-    lda #<buffer
+    lda #<string_buffer
     sta osword_print_line_params
-    lda #>buffer
+    lda #>string_buffer
     sta osword_print_line_params + 1
-    lda #buffer_end - buffer
+    lda #STRING_BUFFER_LEN - 1          ; OSWORD $00 returns extra CR character at end
     sta osword_print_line_params + 2
     lda #$00
     sta osword_print_line_params + 3
@@ -120,9 +116,9 @@ zword0: .word $0000
 
     raw_write_str line_result_str
 
-    lda #<buffer
+    lda #<string_buffer
     sta zword0
-    lda #>buffer
+    lda #>string_buffer
     sta zword0 + 1
 
     cpx #$00
@@ -172,6 +168,5 @@ line_prompt_str: .byte "Enter some text followed by Enter: ", 0
 line_result_str: .byte "You typed: ", 0
 
 .segment "USERDATA"
-buffer: .res 10
-buffer_end:
+string_buffer: .res STRING_BUFFER_LEN
 osword_print_line_params: .res 5

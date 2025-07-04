@@ -88,7 +88,7 @@
     sta zword1 + 1  ; MSB of buffer
     iny
     lda (zword0), y
-    tax                 ; Buffer length
+    tax             ; Buffer length (caller must allocate buffer length + 1 to include CR)
     iny
     lda (zword0), y
     sta zbyte0      ; Minimum character value
@@ -139,6 +139,10 @@
     bne @loop
 
 @done:
+    ; Terminate string with CR
+    lda #CR
+    sta (zword1), y
+
     raw_write_new_line
 
     pla
