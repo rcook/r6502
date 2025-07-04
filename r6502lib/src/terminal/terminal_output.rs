@@ -7,10 +7,10 @@ pub struct TerminalOutput;
 impl OutputDevice for TerminalOutput {
     fn write(&self, value: u8) -> Result<()> {
         let mut stdout = stdout();
-        if value == 0x0a {
-            stdout.write_all(&[13, 10])?;
-        } else {
-            stdout.write_all(&[value])?;
+        match value {
+            0x0a => stdout.write_all(&[13, 10])?,
+            127 => stdout.write_all(&[65, 66])?,
+            _ => stdout.write_all(&[value])?,
         }
         stdout.flush()?;
         Ok(())
