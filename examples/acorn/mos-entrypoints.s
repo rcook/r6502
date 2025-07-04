@@ -16,35 +16,30 @@
 .export userv_entrypoint
 .proc userv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: userv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export brkv_entrypoint
 .proc brkv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: brkv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export irq1v_entrypoint
 .proc irq1v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: irq1v"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export irq2v_entrypoint
 .proc irq2v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: irq2v"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export cliv_entrypoint
 .proc cliv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: cliv"
-    brk
 .endproc
 
 .segment "ROCODE"
@@ -179,21 +174,18 @@
 .export filev_entrypoint
 .proc filev_entrypoint
     raw_not_impl "NOT IMPLEMENTED: filev"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export argsv_entrypoint
 .proc argsv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: argsv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export bgetv_entrypoint
 .proc bgetv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: bgetv"
-    brk
 .endproc
 
 .segment "ROCODE"
@@ -207,96 +199,82 @@
 .export gbpbv_entrypoint
 .proc gbpbv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: gbpbv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export findv_entrypoint
 .proc findv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: findv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export fscv_entrypoint
 .proc fscv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: fscv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export evntv_entrypoint
 .proc evntv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: evntv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export uptv_entrypoint
 .proc uptv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: uptv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export netv_entrypoint
 .proc netv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: netv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export vduv_entrypoint
 .proc vduv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: vduv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export keyv_entrypoint
 .proc keyv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: keyv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export insv_entrypoint
 .proc insv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: insv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export remv_entrypoint
 .proc remv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: remv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export cnpv_entrypoint
 .proc cnpv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: cnpv"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export ind1v_entrypoint
 .proc ind1v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: ind1v"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export ind2v_entrypoint
 .proc ind2v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: ind2v"
-    brk
 .endproc
 
 .segment "ROCODE"
 .export ind3v_entrypoint
 .proc ind3v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: ind3v"
-    brk
 .endproc

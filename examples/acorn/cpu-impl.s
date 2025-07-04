@@ -25,8 +25,6 @@
     ; For the time being, we'll just handle BRK: for everything else,
     ; we'll halt the system
     ; https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
-    lda #$78
-
     sta OSINTA          ; Save A for later
     pla                 ; Get the status register: IRQ/BRK puts it on the stack
     pha                 ; Keep the status register on the stack for later
@@ -34,7 +32,6 @@
     bne handle_brk      ; If it's BRK, that's an error: go to the BRK vector
     jmp HALT            ; Otherwise, halt the CPU for time being
 .endproc
-
 
 ; https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
 ; Handler for interrupts that we know were called by the BRK instruction.
