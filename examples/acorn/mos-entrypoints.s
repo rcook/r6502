@@ -45,11 +45,6 @@
 .segment "ROCODE"
 .export bytev_entrypoint
 .proc bytev_entrypoint
-    lda #65
-    raw_write_char_from_a
-    lda #66
-    raw_write_char_from_a
-    raw_not_impl "NOT IMPLEMENTED: bytev"
     php
     cmp #$83
     beq @osbyte_131_oshwm
@@ -72,7 +67,6 @@
 .segment "ROCODE"
 .export wordv_entrypoint
 .proc wordv_entrypoint
-    raw_not_impl "NOT IMPLEMENTED: wordv"
     php
     cmp #$00
     beq @osword_00
@@ -157,7 +151,6 @@
 .segment "ROCODE"
 .export wrchv_entrypoint
 .proc wrchv_entrypoint
-    raw_not_impl "NOT IMPLEMENTED: wrchv"
     raw_write_char_from_a
     rts
 .endproc
