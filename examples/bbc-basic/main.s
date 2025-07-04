@@ -42,6 +42,8 @@ zptr: .addr $0000
 @banner_loop_done:
     jsr $FFE7           ; OSNEWL
     jsr $FFE7           ; OSNEWL
+    lda #$07
+    jsr OSWRCH          ; BEL
 
     ; Jump to BBC BASIC entrypoint $8000 with A = 1
     lda #$01
