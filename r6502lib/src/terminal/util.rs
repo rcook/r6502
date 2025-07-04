@@ -4,7 +4,13 @@ use log::info;
 use std::fmt::Display;
 use std::str::from_utf8;
 
-pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
+pub struct Vectors {
+    pub nmi: u16,
+    pub reset: u16,
+    pub irq: u16,
+}
+
+pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16, vectors: &Vectors) {
     fn log_property<D: Display>(label: &str, value: D) {
         info!("{label}: {value}");
     }
@@ -55,4 +61,8 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16) {
     if let Some(stop_after) = opts.stop_after {
         log_property("Stop after cycles", stop_after);
     }
+
+    log_property("NMI", format!("${:04X}", vectors.nmi));
+    log_property("RESET", format!("${:04X}", vectors.reset));
+    log_property("IRQ", format!("${:04X}", vectors.irq));
 }

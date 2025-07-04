@@ -1,3 +1,5 @@
+.export STACKBASE = $0100
+
 ; MOS initialization routine
 .export MOSINIT = $D000
 

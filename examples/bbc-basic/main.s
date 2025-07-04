@@ -10,6 +10,7 @@ MOS0_START = $C000
 MOS0_SIZE = $3000
 MOS1_START = $FC04
 MOS1_SIZE = $010000 - MOS1_START
+VECTORS_SIZE = 6
 
 ; Patch in parts of OS image
 .segment "MOS0"
@@ -17,7 +18,7 @@ MOS1_SIZE = $010000 - MOS1_START
 
 ; Patch in parts of OS image
 .segment "MOS1"
-.incbin "../../config/acorn.r6502", HEADER_SIZE + ROM_SIZE - MOS1_SIZE, MOS1_SIZE
+.incbin "../../config/acorn.r6502", HEADER_SIZE + ROM_SIZE - MOS1_SIZE, MOS1_SIZE - VECTORS_SIZE
 
 .zeropage
 zptr: .addr $0000

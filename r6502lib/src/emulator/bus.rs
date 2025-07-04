@@ -85,7 +85,7 @@ impl Bus {
     #[must_use]
     pub fn load_nmi_unsafe(&self) -> u16 {
         let lo = self.load(NMI);
-        let hi = self.load(NMI + 1);
+        let hi = self.load(NMI.wrapping_add(1));
         make_word(hi, lo)
     }
 
@@ -93,7 +93,7 @@ impl Bus {
     #[must_use]
     pub fn load_reset_unsafe(&self) -> u16 {
         let lo = self.load(RESET);
-        let hi = self.load(RESET + 1);
+        let hi = self.load(RESET.wrapping_add(1));
         make_word(hi, lo)
     }
 
@@ -101,7 +101,7 @@ impl Bus {
     #[must_use]
     pub fn load_irq_unsafe(&self) -> u16 {
         let lo = self.load(IRQ);
-        let hi = self.load(IRQ + 1);
+        let hi = self.load(IRQ.wrapping_add(1));
         make_word(hi, lo)
     }
 

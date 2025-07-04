@@ -5,7 +5,7 @@ include ../shared.mk
 .PHONY: clean copy debug default prereqs run user
 
 ACORNLIB := acorn.$(LIBEXT)
-ACORNLIBSOURCES := ascii.s cpu.s misc.s mos-routines.s mos-vectors.s
+ACORNLIBSOURCES := ascii.s cpu.s misc.s mos-routines.s mos-vectors.s mos-zp.s
 ACORNLIBMAP := $(ACORNLIB:.$(LIBEXT)=.map)
 $(ACORNLIB): $(ACORNLIBSOURCES:.s=.o)
 	ar65 r $@ $^

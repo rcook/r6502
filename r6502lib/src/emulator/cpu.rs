@@ -3,7 +3,7 @@ use crate::emulator::{
     BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, Monitor, Reg, TotalCycles,
     STACK_BASE,
 };
-use crate::p_get;
+//use crate::p_get;
 use log::{debug, log_enabled, Level};
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
@@ -49,7 +49,10 @@ impl<'a> Cpu<'a> {
         );
 
         self.total_cycles += instruction_cycles as TotalCycles;
-        !p_get!(self.reg, I)
+
+        // TBD: Don't return anything from this and check I flag externally!
+        // !p_get!(self.reg, I)
+        true
     }
 
     #[must_use]
@@ -58,7 +61,10 @@ impl<'a> Cpu<'a> {
         let instruction_cycles = instruction.execute(self);
         Self::spin(instruction_cycles);
         self.total_cycles += instruction_cycles as TotalCycles;
-        !p_get!(self.reg, I)
+
+        // TBD: Don't return anything from this and check I flag externally!
+        // !p_get!(self.reg, I)
+        true
     }
 
     #[must_use]
@@ -66,7 +72,10 @@ impl<'a> Cpu<'a> {
         let (instruction, _) = self.decode_next();
         let instruction_cycles = instruction.execute(self);
         self.total_cycles += instruction_cycles as TotalCycles;
-        !p_get!(self.reg, I)
+
+        // TBD: Don't return anything from this and check I flag externally!
+        // !p_get!(self.reg, I)
+        true
     }
 
     pub fn push(&mut self, value: u8) {

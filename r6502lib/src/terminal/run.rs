@@ -1,7 +1,9 @@
 use crate::emulator::{Cpu, Image, Monitor, PiaChannel, TracingMonitor};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
-use crate::terminal::{show_image_info, Runner, StopReason, TerminalChannel, TerminalOutput};
+use crate::terminal::{
+    show_image_info, Runner, StopReason, TerminalChannel, TerminalOutput, Vectors,
+};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use log::info;
@@ -39,6 +41,11 @@ pub fn run(opts: &RunOptions) -> Result<()> {
             machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
         bus.start();
 
+        let nmi = bus.load_nmi_unsafe();
+        let reset = bus.load_reset_unsafe();
+        let irq = bus.load_irq_unsafe();
+        let vectors = Vectors { nmi, reset, irq };
+
         let start = if opts.reset {
             bus.load_reset_unsafe()
         } else {
@@ -46,7 +53,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         };
 
         if opts.trace {
-            show_image_info(opts, &image, start);
+            show_image_info(opts, &image, start, &vectors);
         }
 
         let monitor: Option<Box<dyn Monitor>> = if opts.trace {
