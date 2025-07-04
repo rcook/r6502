@@ -52,3 +52,31 @@
     verify op, condition, message
 .endif
 .endmacro
+
+.macro read_char
+.local @loop
+@loop:
+    lda KBDCR
+    bpl @loop
+    lda KBD
+    and #$7F
+.endmacro
+
+.macro write_char
+.local @loop
+@loop:
+    bit DSP
+    bmi @loop
+    sta DSP
+.endmacro
+
+.macro new_line
+    php
+    pha
+    lda #LF
+    write_char
+    lda #CR
+    write_char
+    pla
+    plp
+.endmacro

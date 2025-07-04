@@ -1,15 +1,19 @@
+; https://github.com/chelsea6502/BeebEater
+; https://hackaday.io/project/177384-w65c816sxb-investigation/log/189547-porting-bbc-basic
+; https://mdfs.net/Software/BBCBasic/Porting/Porting.htm
+;
+; The bare minimum your MOS needs to do is:
+; BRKV, WRCHV:    vectors for BRK and WRCH [TBD]
+; BRK:            point &FD/E to error message, jump via BRKV [TBD]
+; OSWRCH/WRCHV:   print characters [IMPLEMENTED]
+; OSWORD 0:       read input line [IMPLEMENTED]
+; OSBYTE &83/&84: read bottom of memory/top of memory [IMPLEMENTED]
+; &0000-&005F:    zero page workspace for BASIC [IMPLEMENTED]
+; &0400-&07FF:    fixed workspace for BASIC [IMPLEMENTED]
+; Enter BASIC at its entry point with A=1
+
 .macpack r6502
-.import HALT
-.import main
+.import MOSINIT
 .import __ROCODE_LOAD__
 
-r6502_header "ACRN", __ROCODE_LOAD__, startup
-
-.segment "ROCODE"
-.export startup
-.proc startup
-    ldx #$ff
-    txs
-    cld
-    jmp HALT
-.endproc
+r6502_header "ACRN", __ROCODE_LOAD__, MOSINIT

@@ -1,6 +1,7 @@
 .macpack helpers
 .macpack r6502
 .import HALT
+.import MOSINIT
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
@@ -17,17 +18,18 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     ldx #$ff
     txs
     cld
+    jsr MOSINIT
     jsr main
     jmp HALT
 .endproc
 
 .proc main
-    jsr test_osasci
-    jsr test_osbyte
-    jsr test_osnewl
-    jsr test_osrdch
+    ;jsr test_osasci
+    ;jsr test_osbyte
+    ;jsr test_osnewl
+    ;jsr test_osrdch
     jsr test_osword
-    jsr test_oswrch
+    ;jsr test_oswrch
     lda #$00
     rts
 .endproc
@@ -88,6 +90,8 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .proc test_osword
     print_str test_osword_str
 
+    print_str line_prompt_str
+
     ; Make sure first character in buffer is zero
     lda #$00
     sta buffer
@@ -112,9 +116,11 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     jsr OSWORD
 
     ; Y contains number of characters read
-    ; Move this in X
+    ; Move this to X
     tya
     tax
+
+    print_str line_result_str
 
     lda #<buffer
     sta zword0
@@ -167,8 +173,10 @@ test_oswrch_str: .byte "Testing OSWRCH", 13, 10, 0
 prompt_str: .byte "Press a key: ", 0
 you_pressed_str: .byte "You pressed: ", 0
 failed_str: .byte "Failed", 13, 10, 0
+line_prompt_str: .byte "Enter some text followed by Enter: ", 0
+line_result_str: .byte "You typed: ", 0
 
-.data
+.segment "USERDATA"
 buffer: .res 10
 buffer_end:
 osword_print_line_params: .res 5

@@ -1,12 +1,3 @@
-; 6502 vectors
-.export NMI = $FFFA
-.export RESET = $FFFC
-.export IRQ = $FFFE
-
-; Debugging hooks
-.export HALT = $FFA0
-
-; Acorn MOS operating system routines
 .export OSCLI = $FFF7
 .export OSBYTE = $FFF4
 .export OSWORD = $FFF1
