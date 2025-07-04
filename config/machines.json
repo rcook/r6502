@@ -37,7 +37,7 @@
             "name": "Acorn",
             "tag": "ACRN",
             "comment": "This will emulate enough of the Acorn MOS to host BBC Basic II",
-            "charSet": "crlf",
+            "charSet": "acorn",
             "baseImage": "acorn.r6502",
             "haltAddress": "$FFA0",
             "busDevices": [
@@ -77,7 +77,7 @@
             "name": "Apple1",
             "tag": "APL1",
             "comment": "This will (poorly) emulate the basic character I/O of an Apple 1 (i.e. the PIA)",
-            "charSet": "highbitcr",
+            "charSet": "apple1",
             "haltAddress": "$D014",
             "busDevices": [
                 {

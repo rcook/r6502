@@ -31,12 +31,8 @@ impl PiaState {
         }
     }
 
-    fn set_key(&mut self, c: char) {
-        let c = c.to_ascii_uppercase();
-        if c as u8 == 0 {
-            todo!();
-        }
-        self.pa = (c as u8) | 0x80;
+    fn set_key(&mut self, value: u8) {
+        self.pa = value;
         self.pa_cr |= 0x80;
     }
 }
@@ -59,7 +55,7 @@ impl Pia {
         output: Box<dyn OutputDevice>,
         pia_channel: PiaChannel,
         bus_tx: Sender<BusEvent>,
-        char_set: Option<CharSet>,
+        char_set: CharSet,
     ) -> Self {
         let state = Arc::new(Mutex::new(PiaState::new()));
         let state_clone = Arc::clone(&state);
@@ -80,14 +76,14 @@ impl Pia {
         pia_rx: &Receiver<PiaEvent>,
         bus_tx: &Sender<BusEvent>,
         output: Box<dyn OutputDevice>,
-        char_set: Option<CharSet>,
+        char_set: CharSet,
     ) -> Result<()> {
         loop {
             match pia_rx.recv() {
                 Ok(PaUpdated(value)) => state.lock().unwrap().pa = value,
                 Ok(PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
                 Ok(PbUpdated(value)) => {
-                    if let Some(value) = char_set.map_or(Some(value), |s| s.translate(value)) {
+                    if let Some(value) = char_set.translate_out(value) {
                         output.write(value)?;
                     }
                     state.lock().unwrap().pb = 0x00;
@@ -109,19 +105,13 @@ impl Pia {
                                 // Save snapshot of memory to disc
                                 _ = bus_tx.send(BusEvent::Snapshot);
                             }
-                            (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => {
-                                state.lock().unwrap().set_key(c);
+                            _ => {
+                                if let Some(c) = char_set.translate_in(&key) {
+                                    state.lock().unwrap().set_key(c);
+                                } else {
+                                    todo!("{key:?}")
+                                }
                             }
-                            (KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => {
-                                state.lock().unwrap().set_key('_');
-                            }
-                            (KeyModifiers::NONE, KeyCode::Enter) => {
-                                state.lock().unwrap().set_key(0x0d as char);
-                            }
-                            (KeyModifiers::NONE, KeyCode::Esc) => {
-                                state.lock().unwrap().set_key(0x1b as char);
-                            }
-                            _ => todo!("{key:?}"),
                         }
                     }
                     _ => {}

@@ -26,6 +26,6 @@ pub struct Machine {
     #[serde(rename = "busDevices")]
     pub bus_devices: Vec<BusDevice>,
 
-    #[serde(rename = "charSet")]
-    pub char_set: Option<CharSet>,
+    #[serde(rename = "charSet", default)]
+    pub char_set: CharSet,
 }

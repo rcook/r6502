@@ -1,31 +1,60 @@
+use cursive::backends::crossterm::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use serde::Deserialize;
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize)]
 pub enum CharSet {
-    #[serde(rename = "crlf")]
-    Crlf,
+    #[default]
+    #[serde(rename = "default")]
+    Default,
 
-    #[serde(rename = "highbitcr")]
-    HighBitCr,
+    #[serde(rename = "acorn")]
+    Acorn,
+
+    #[serde(rename = "apple1")]
+    Apple1,
 }
 
 impl CharSet {
     #[must_use]
-    pub const fn translate(&self, value: u8) -> Option<u8> {
+    pub fn translate_in(&self, key: &KeyEvent) -> Option<u8> {
+        let c = match (self, key.modifiers, key.code) {
+            (_, KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => c,
+            (_, KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => '_',
+            (_, KeyModifiers::NONE, KeyCode::Enter) => 0x0d as char,
+            (_, KeyModifiers::NONE, KeyCode::Esc) => 0x1b as char,
+            _ => return None,
+        };
+        Some(self.to_byte(c))
+    }
+
+    #[must_use]
+    pub const fn translate_out(&self, value: u8) -> Option<u8> {
         match self {
-            Self::Crlf => {
+            Self::Default => Some(value),
+            Self::Acorn => {
                 match value {
                     0x0d => None, // Swallow CR
                     _ => Some(value),
                 }
             }
-            Self::HighBitCr => {
+            Self::Apple1 => {
                 match value {
                     0x7f => None,            // Filter out initialization
                     0x8d => Some(0x0a),      // Translate CR with high bit set to LF
                     _ => Some(value & 0x7f), // Clear the high bit
                 }
             }
+        }
+    }
+
+    fn to_byte(&self, c: char) -> u8 {
+        match self {
+            Self::Apple1 => {
+                let value = c.to_ascii_uppercase() as u8;
+                assert_ne!(0, value);
+                value | 0x80
+            }
+            _ => c as u8,
         }
     }
 }

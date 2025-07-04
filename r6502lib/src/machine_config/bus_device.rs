@@ -30,7 +30,7 @@ impl BusDevice {
         output: Box<dyn OutputDevice>,
         input_channel: PiaChannel,
         bus_tx: &Sender<BusEvent>,
-        char_set: Option<CharSet>,
+        char_set: CharSet,
     ) -> DeviceMapping {
         let device: Box<dyn _BusDevice> = match self.r#type {
             BusDeviceType::Pia => {
