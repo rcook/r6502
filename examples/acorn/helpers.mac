@@ -29,7 +29,7 @@
     beq @ok
     print_str @m
     lda #$01
-    jmp HALT
+    syshalt
 @m:
 .byte "Assertion failed: ", message, 13, 10, 0
 @ok:

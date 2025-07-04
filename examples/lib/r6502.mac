@@ -20,3 +20,20 @@
 .assert * = $000B, error, "Header must end at $000B"
 
 .endmacro
+
+; sysinit
+; Initialize the system
+.macro sysinit
+    ldx #$ff
+    txs
+    cld
+.import MOSINIT
+    jsr MOSINIT
+.endmacro
+
+; syshalt
+; Initialize the system
+.macro syshalt
+.import HALT
+    jmp HALT
+.endmacro

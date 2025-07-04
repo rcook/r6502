@@ -1,6 +1,5 @@
 .macpack r6502
 .macpack util
-.import HALT
 .import copydata
 .import print
 .import __CODE_LOAD__
@@ -10,12 +9,10 @@ r6502_header "ACRN", __CODE_LOAD__, startup
 
 .code
 .proc startup
-    ldx #$ff
-    txs
-    cld
+    sysinit
     jsr copydata
     jsr test_add16
-    jmp HALT
+    syshalt
 .endproc
 
 .proc test_add16

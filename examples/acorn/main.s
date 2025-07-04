@@ -1,7 +1,5 @@
 .macpack helpers
 .macpack r6502
-.import HALT
-.import MOSINIT
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
@@ -15,12 +13,9 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .segment "SIDEWAYSCODE"
 .export startup
 .proc startup
-    ldx #$ff
-    txs
-    cld
-    jsr MOSINIT
+    sysinit
     jsr main
-    jmp HALT
+    syshalt
 .endproc
 
 .proc main
@@ -65,7 +60,7 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 @failed:
     lda #$01
     print_str failed_str
-    jmp HALT
+    syshalt
 .endproc
 
 .proc test_osnewl

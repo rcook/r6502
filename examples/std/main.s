@@ -1,5 +1,5 @@
+.macpack r6502
 .macpack util
-.import HALT
 .import OSWRCH
 .import copydata
 .import print
@@ -9,13 +9,11 @@
 .segment "SIDEWAYSCODE"
 .export startup
 .proc startup
-    ldx #$ff
-    txs
-    cld
+    sysinit
     jsr copydata
     jsr main
     lda #$00
-    jmp HALT
+    syshalt
 .endproc
 
 .proc main
