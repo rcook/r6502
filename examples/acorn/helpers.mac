@@ -10,6 +10,7 @@
     jsr print
 .endmacro
 
+; Example: verify lda buffer, cmp #'A', "character not A"
 .macro verify op, condition, message
 .ifblank op
     .error "Must define op"

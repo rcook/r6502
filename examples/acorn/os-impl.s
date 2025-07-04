@@ -11,15 +11,49 @@
 ; &0000-&005F:    zero page workspace for BASIC
 ; &0400-&07FF:    fixed workspace for BASIC
 ; Enter BASIC at its entry point with A=1
-
+.macpack generic
+.macpack helpers
 .import startup
+
+.macro read_char
+.local @loop
+@loop:
+    lda KBDCR
+    bpl @loop
+    lda KBD
+    and #$7F
+.endmacro
+
+.macro write_char
+.local @loop
+@loop:
+    bit DSP
+    bmi @loop
+    sta DSP
+.endmacro
+
+.macro new_line
+    php
+    pha
+    lda #LF
+    write_char
+    lda #CR
+    write_char
+    pla
+    plp
+.endmacro
 
 .zeropage
 ztempword0: .word $0000
 ztempword1: .word $0000
+ztempbyte0: .byte $00
+ztempbyte1: .byte $00
 
+; ASCII control characters
 LF = 10
 CR = 13
+DEL = 127
+
 KBD = $FC00
 KBDCR = $FC01
 DSP = $FC02
@@ -89,9 +123,8 @@ HIMEM = $8000
     plp
     rts
 @osword_read_line:
-    txa
     pha
-    tya
+    txa
     pha
 
     stx ztempword0      ; LSB of parameter block address
@@ -103,19 +136,64 @@ HIMEM = $8000
     iny
     lda (ztempword0), y
     sta ztempword1 + 1  ; MSB of buffer
-
-    ldy #$00
-    lda #'A'
-    sta (ztempword1), y
-
     iny
-    lda #'B'
-    sta (ztempword1), y
+    lda (ztempword0), y
+    tax                 ; Buffer length
+    iny
+    lda (ztempword0), y
+    sta ztempbyte0      ; Minimum character value
+    iny
+    lda (ztempword0), y
+    sta ztempbyte1      ; Maximum character value    
 
-    pla
-    tay
+@loop:
+    read_char
+    cmp #DEL
+    bne @check_cr
+
+    ; Backspace
+    cpy #$00
+    beq @loop
+    dey
+
+    write_char
+
+    ; Overwrite last character
+    lda #' '
+    write_char
+    lda #DEL
+    write_char
+    lda #$00
+    beq @loop
+
+@check_cr:
+    cmp #CR
+    beq @done
+
+    ; Check that we haven't exceeded buffer length
+    cpx #$00
+    bne @cont
+    lda #$07            ; BEL
+    write_char
+    bne @loop
+
+@cont:
+    write_char
+    cmp ztempbyte0
+    blt @loop
+    cmp ztempbyte1
+    bgt @loop
+    sta (ztempword1), y
+    dex
+    iny
+    bne @loop
+
+@done:
+    new_line
+
     pla
     tax
+    pla
     plp
     rts
 .endproc
@@ -128,9 +206,7 @@ HIMEM = $8000
 
 .segment "ROCODE"
 .proc oswrch_impl
-    bit DSP
-    bmi oswrch_impl
-    sta DSP
+    write_char
     rts
 .endproc
 
@@ -142,14 +218,7 @@ HIMEM = $8000
 
 .segment "ROCODE"
 .proc osnewl_impl
-    php
-    pha
-    lda #LF
-    jsr OSWRCH
-    lda #CR
-    jsr OSWRCH
-    pla
-    plp
+    new_line
     rts
 .endproc
 
@@ -176,8 +245,18 @@ HIMEM = $8000
     rts
 .endproc
 
-; TBD
 .segment "OSRDCH"
+.export OSRDCH
+.proc OSRDCH
+    jmp osrdch_impl
+.endproc
+
+.segment "ROCODE"
+.proc osrdch_impl
+@loop:
+    read_char
+    rts
+.endproc
 
 ; TBD
 .segment "OSFILE"

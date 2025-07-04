@@ -4,6 +4,7 @@
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
+.import OSRDCH
 .import OSWORD
 .import OSWRCH
 .import __SIDEWAYSCODE_LOAD__
@@ -24,6 +25,7 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     jsr test_osasci
     jsr test_osbyte
     jsr test_osnewl
+    jsr test_osrdch
     jsr test_osword
     jsr test_oswrch
     lda #$00
@@ -70,6 +72,19 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     rts
 .endproc
 
+.proc test_osrdch
+    print_str test_osrdch_str
+    print_str prompt_str
+    jsr OSRDCH
+    pha
+    jsr OSNEWL
+    print_str you_pressed_str
+    pla
+    jsr OSWRCH
+    jsr OSNEWL
+    rts
+.endproc
+
 .proc test_osword
     print_str test_osword_str
 
@@ -85,9 +100,9 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     sta osword_print_line_params + 1
     lda #buffer_end - buffer
     sta osword_print_line_params + 2
-    lda #'A'
+    lda #$00
     sta osword_print_line_params + 3
-    lda #'Z'
+    lda #$FF
     sta osword_print_line_params + 4
 
     ; Call OSWORD $00 (read line)
@@ -96,8 +111,26 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     ldy #>osword_print_line_params
     jsr OSWORD
 
-    assert lda buffer, cmp #'A', "character not A"
-    assert lda buffer + 1, cmp #'B', "character not B"
+    ; Y contains number of characters read
+    ; Move this in X
+    tya
+    tax
+
+    lda #<buffer
+    sta zword0
+    lda #>buffer
+    sta zword0 + 1
+
+    cpx #$00
+    beq @done
+    ldy #$00
+@loop:
+    lda (zword0), y
+    jsr OSWRCH
+    iny
+    dex
+    bne @loop
+@done:
 
     rts
 .endproc
@@ -128,8 +161,11 @@ zword0: .word $0000
 test_osasci_str: .byte "Testing OSASCI", 13, 10, 0
 test_osbyte_str: .byte "Testing OSBYTE", 13, 10, 0
 test_osnewl_str: .byte "Testing OSNEWL", 13, 10, 0
+test_osrdch_str: .byte "Testing OSRDCH", 13, 10, 0
 test_osword_str: .byte "Testing OSWORD", 13, 10, 0
 test_oswrch_str: .byte "Testing OSWRCH", 13, 10, 0
+prompt_str: .byte "Press a key: ", 0
+you_pressed_str: .byte "You pressed: ", 0
 failed_str: .byte "Failed", 13, 10, 0
 
 .data
