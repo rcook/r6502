@@ -59,6 +59,7 @@
     lda KBDCR
     bpl @loop
     lda KBD
+    clc         ; No Escape
 .endmacro
 
 .macro write_char
