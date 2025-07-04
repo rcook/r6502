@@ -59,7 +59,6 @@
     lda KBDCR
     bpl @loop
     lda KBD
-    and #$7F
 .endmacro
 
 .macro write_char
