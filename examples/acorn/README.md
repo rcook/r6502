@@ -4,7 +4,7 @@ https://mdfs.net/Software/BBCBasic/Porting/Porting.htm
 
 The bare minimum your MOS needs to do is:
 BRKV, WRCHV:    vectors for BRK and WRCH [IMPLEMENTED]
-BRK:            point &FD/E to error message, jump via BRKV [IMPLEMENTED]
+BRK:            point &FD/E to error message, jump via BRKV [TBD]
 OSWRCH/WRCHV:   print characters [IMPLEMENTED]
 OSWORD 0:       read input line [IMPLEMENTED]
 OSBYTE &83/&84: read bottom of memory/top of memory [IMPLEMENTED]
