@@ -1,0 +1,53 @@
+.macro print_str addr
+.ifblank addr
+    .error "Must define addr"
+.endif
+
+    lda #<addr
+    sta zword0
+    lda #>addr
+    sta zword0 + 1
+    jsr print
+.endmacro
+
+.macro verify op, condition, message
+.ifblank op
+    .error "Must define op"
+.endif
+.ifblank condition
+    .error "Must define condition"
+.endif
+.ifblank message
+    .error "Must define message"
+.endif
+
+.scope
+    php
+    op
+    condition
+    beq @ok
+    print_str @m
+    lda #$01
+    jmp HALT
+@m:
+.byte "Assertion failed: ", message, 13, 10, 0
+@ok:
+    plp
+.endscope
+.endmacro
+
+.macro assert op, condition, message
+.ifblank op
+    .error "Must define op"
+.endif
+.ifblank condition
+    .error "Must define condition"
+.endif
+.ifblank message
+    .error "Must define message"
+.endif
+
+.ifdef DEBUG
+    verify op, condition, message
+.endif
+.endmacro

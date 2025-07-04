@@ -18,6 +18,7 @@ IMAGESOURCES := header.s os-impl.s
 
 BIN := acorn-test.$(BINEXT)
 BINSOURCES := main.s
+main.o: main.s helpers.mac
 
 ALLSOURCES := $(ACORNLIBSOURCES) $(IMAGESOURCES) $(BINSOURCES)
 

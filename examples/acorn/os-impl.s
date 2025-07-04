@@ -14,12 +14,18 @@
 
 .import startup
 
+.zeropage
+ztempword0: .word $0000
+ztempword1: .word $0000
+
 LF = 10
 CR = 13
 KBD = $FC00
 KBDCR = $FC01
 DSP = $FC02
 DSPCR = $FC03
+OSHWM = $0E00
+HIMEM = $8000
 
 .segment "NMI"
 .export NMI
@@ -50,6 +56,22 @@ DSPCR = $FC03
 
 .segment "ROCODE"
 .proc osbyte_impl
+    php
+    cmp #$83
+    beq @osbyte_131_oshwm
+    cmp #$84
+    beq @osbyte_132_himem
+    plp
+    rts
+@osbyte_131_oshwm:
+    ldx #<OSHWM
+    ldy #>OSHWM
+    plp
+    rts
+@osbyte_132_himem:
+    ldx #<HIMEM
+    ldy #>HIMEM
+    plp
     rts
 .endproc
 
@@ -61,6 +83,40 @@ DSPCR = $FC03
 
 .segment "ROCODE"
 .proc osword_impl
+    php
+    cmp #$00
+    beq @osword_read_line
+    plp
+    rts
+@osword_read_line:
+    txa
+    pha
+    tya
+    pha
+
+    stx ztempword0      ; LSB of parameter block address
+    sty ztempword0 + 1  ; MSB of parameter block address
+
+    ldy #$00
+    lda (ztempword0), y
+    sta ztempword1      ; LSB of buffer
+    iny
+    lda (ztempword0), y
+    sta ztempword1 + 1  ; MSB of buffer
+
+    ldy #$00
+    lda #'A'
+    sta (ztempword1), y
+
+    iny
+    lda #'B'
+    sta (ztempword1), y
+
+    pla
+    tay
+    pla
+    tax
+    plp
     rts
 .endproc
 

@@ -25,13 +25,19 @@ SHAREDLIBDIR := $(PROJECTDIR)/examples/lib
 CONFIGDIR := $(PROJECTDIR)/config
 ARTIFACTS :=
 
+ifdef DEBUG
+	DEBUGARG := -DDEBUG
+else
+	DEBUGARG :=
+endif
+
 # Standard rules
 %.o: %.s
-	ca65 --include-dir $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
+	ca65 $(DEBUGARG) -I $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
 
 # ld65 rule
 define ld65
-$(1): prereqs $(2) $(1:.$(BINEXT)=.cfg) $(3)
+$(1): $(4) prereqs $(1:.$(BINEXT)=.cfg) $(2) $(3) $(4)
 	ld65 \
 		-C $(1:.$(BINEXT)=.cfg) \
 		-vm \
