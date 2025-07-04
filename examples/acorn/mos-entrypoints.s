@@ -1,18 +1,13 @@
 .macpack generic
-.macpack helpers
+.macpack r6502
+.macpack raw
 
-.importzp ztempbyte0
-.importzp ztempbyte1
-.importzp ztempword0
-.importzp ztempword1
+.importzp zbyte0
+.importzp zbyte1
+.importzp zword0
+.importzp zword1
 
-.importzp CR
 .importzp DEL
-.importzp LF
-
-.import DSP
-.import KBD
-.import KBDCR
 
 .import HIMEM
 .import OSHWM
@@ -20,36 +15,46 @@
 .segment "ROCODE"
 .export userv_entrypoint
 .proc userv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: userv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export brkv_entrypoint
 .proc brkv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: brkv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export irq1v_entrypoint
 .proc irq1v_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: irq1v"
     brk
 .endproc
 
 .segment "ROCODE"
 .export irq2v_entrypoint
 .proc irq2v_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: irq2v"
     brk
 .endproc
 
 .segment "ROCODE"
 .export cliv_entrypoint
 .proc cliv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: cliv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export bytev_entrypoint
 .proc bytev_entrypoint
+    lda #65
+    raw_write_char_from_a
+    lda #66
+    raw_write_char_from_a
+    raw_not_impl "NOT IMPLEMENTED: bytev"
     php
     cmp #$83
     beq @osbyte_131_oshwm
@@ -72,6 +77,7 @@
 .segment "ROCODE"
 .export wordv_entrypoint
 .proc wordv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: wordv"
     php
     cmp #$00
     beq @osword_00
@@ -82,27 +88,27 @@
     txa
     pha
 
-    stx ztempword0      ; LSB of parameter block address
-    sty ztempword0 + 1  ; MSB of parameter block address
+    stx zword0      ; LSB of parameter block address
+    sty zword0 + 1  ; MSB of parameter block address
 
     ldy #$00
-    lda (ztempword0), y
-    sta ztempword1      ; LSB of buffer
+    lda (zword0), y
+    sta zword1      ; LSB of buffer
     iny
-    lda (ztempword0), y
-    sta ztempword1 + 1  ; MSB of buffer
+    lda (zword0), y
+    sta zword1 + 1  ; MSB of buffer
     iny
-    lda (ztempword0), y
+    lda (zword0), y
     tax                 ; Buffer length
     iny
-    lda (ztempword0), y
-    sta ztempbyte0      ; Minimum character value
+    lda (zword0), y
+    sta zbyte0      ; Minimum character value
     iny
-    lda (ztempword0), y
-    sta ztempbyte1      ; Maximum character value
+    lda (zword0), y
+    sta zbyte1      ; Maximum character value
 
 @loop:
-    read_char
+    raw_read_char_to_a
     cmp #DEL
     bne @check_cr
 
@@ -111,13 +117,13 @@
     beq @loop
     dey
 
-    write_char
+    raw_write_char_from_a
 
     ; Overwrite last character
     lda #' '
-    write_char
+    raw_write_char_from_a
     lda #DEL
-    write_char
+    raw_write_char_from_a
     lda #$00
     beq @loop
 
@@ -129,22 +135,22 @@
     cpx #$00
     bne @cont
     lda #$07            ; BEL
-    write_char
+    raw_write_char_from_a
     bne @loop
 
 @cont:
-    write_char
-    cmp ztempbyte0
+    raw_write_char_from_a
+    cmp zbyte0
     blt @loop
-    cmp ztempbyte1
+    cmp zbyte1
     bgt @loop
-    sta (ztempword1), y
+    sta (zword1), y
     dex
     iny
     bne @loop
 
 @done:
-    new_line
+    raw_write_new_line
 
     pla
     tax
@@ -156,121 +162,141 @@
 .segment "ROCODE"
 .export wrchv_entrypoint
 .proc wrchv_entrypoint
-    write_char
+    raw_not_impl "NOT IMPLEMENTED: wrchv"
+    raw_write_char_from_a
     rts
 .endproc
 
 .segment "ROCODE"
 .export rdchv_entrypoint
 .proc rdchv_entrypoint
-    read_char
+    raw_not_impl "NOT IMPLEMENTED: rdchv"
+    raw_read_char_to_a
     rts
 .endproc
 
 .segment "ROCODE"
 .export filev_entrypoint
 .proc filev_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: filev"
     brk
 .endproc
 
 .segment "ROCODE"
 .export argsv_entrypoint
 .proc argsv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: argsv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export bgetv_entrypoint
 .proc bgetv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: bgetv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export bputv_entrypoint
 .proc bputv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: bputv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export gbpbv_entrypoint
 .proc gbpbv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: gbpbv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export findv_entrypoint
 .proc findv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: findv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export fscv_entrypoint
 .proc fscv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: fscv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export evntv_entrypoint
 .proc evntv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: evntv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export uptv_entrypoint
 .proc uptv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: uptv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export netv_entrypoint
 .proc netv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: netv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export vduv_entrypoint
 .proc vduv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: vduv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export keyv_entrypoint
 .proc keyv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: keyv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export insv_entrypoint
 .proc insv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: insv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export remv_entrypoint
 .proc remv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: remv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export cnpv_entrypoint
 .proc cnpv_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: cnpv"
     brk
 .endproc
 
 .segment "ROCODE"
 .export ind1v_entrypoint
 .proc ind1v_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: ind1v"
     brk
 .endproc
 
 .segment "ROCODE"
 .export ind2v_entrypoint
 .proc ind2v_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: ind2v"
     brk
 .endproc
 
 .segment "ROCODE"
 .export ind3v_entrypoint
 .proc ind3v_entrypoint
+    raw_not_impl "NOT IMPLEMENTED: ind3v"
     brk
 .endproc

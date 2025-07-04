@@ -1,10 +1,12 @@
-.exportzp ztempbyte0
-.exportzp ztempbyte1
-.exportzp ztempword0
-.exportzp ztempword1
+.exportzp zbyte0
+.exportzp zbyte1
+.exportzp zword0
+.exportzp zword1
+.exportzp zword2
 
 .zeropage
-ztempbyte0: .byte $00
-ztempbyte1: .byte $00
-ztempword0: .word $0000
-ztempword1: .word $0000
+zbyte0: .byte $00
+zbyte1: .byte $00
+zword0: .word $0000
+zword1: .word $0000
+zword2: .word $0000

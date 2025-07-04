@@ -1,5 +1,5 @@
-.macpack helpers
 .macpack r6502
+.macpack raw
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
@@ -9,6 +9,9 @@
 .import __SIDEWAYSCODE_LOAD__
 
 r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
+
+.zeropage
+zword0: .word $0000
 
 .segment "SIDEWAYSCODE"
 .export startup
@@ -30,7 +33,7 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .endproc
 
 .proc test_osasci
-    print_str test_osasci_str
+    raw_write_str test_osasci_str
     lda #65
     jsr OSASCI
     lda #13
@@ -39,7 +42,7 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .endproc
 
 .proc test_osbyte
-    print_str test_osbyte_str
+    raw_write_str test_osbyte_str
 
     lda #$83
     jsr OSBYTE
@@ -59,23 +62,23 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 
 @failed:
     lda #$01
-    print_str failed_str
+    raw_write_str failed_str
     syshalt
 .endproc
 
 .proc test_osnewl
-    print_str test_osnewl_str
+    raw_write_str test_osnewl_str
     jsr OSNEWL
     rts
 .endproc
 
 .proc test_osrdch
-    print_str test_osrdch_str
-    print_str prompt_str
+    raw_write_str test_osrdch_str
+    raw_write_str prompt_str
     jsr OSRDCH
     pha
     jsr OSNEWL
-    print_str you_pressed_str
+    raw_write_str you_pressed_str
     pla
     jsr OSWRCH
     jsr OSNEWL
@@ -83,9 +86,9 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .endproc
 
 .proc test_osword
-    print_str test_osword_str
+    raw_write_str test_osword_str
 
-    print_str line_prompt_str
+    raw_write_str line_prompt_str
 
     ; Make sure first character in buffer is zero
     lda #$00
@@ -115,7 +118,7 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
     tya
     tax
 
-    print_str line_result_str
+    raw_write_str line_result_str
 
     lda #<buffer
     sta zword0
@@ -137,7 +140,7 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 .endproc
 
 .proc test_oswrch
-    print_str test_oswrch_str
+    raw_write_str test_oswrch_str
     lda #65
     jsr OSWRCH
     rts
@@ -154,9 +157,6 @@ r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
 @done:
     rts
 .endproc
-
-.zeropage
-zword0: .word $0000
 
 .segment "SIDEWAYSDATA"
 test_osasci_str: .byte "Testing OSASCI", 13, 10, 0

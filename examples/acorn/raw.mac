@@ -1,0 +1,74 @@
+.macro raw_read_char_to_a
+.import HALT
+.import KBD
+.import KBDCR
+.local @loop
+@loop:
+    lda KBDCR
+    bpl @loop
+    lda KBD
+.endmacro
+
+.macro raw_write_char_from_a
+.import DSP
+.local @loop
+@loop:
+    bit DSP
+    bmi @loop
+    sta DSP
+.endmacro
+
+.macro raw_write_new_line
+.importzp CR
+.importzp LF
+    lda #LF
+    raw_write_char_from_a
+    lda #CR
+    raw_write_char_from_a
+.endmacro
+
+.macro raw_write_str s
+.local @done
+.local @loop
+.ifblank s
+    .error "Must pass string"
+.endif
+    lda #<s
+    sta zword0
+    lda #>s
+    sta zword0 + 1
+    ldy #$00
+@loop:
+    lda (zword0), y
+    beq @done
+    raw_write_char_from_a
+    iny
+    bne @loop
+@done:
+.endmacro
+
+.macro raw_abort s
+.local @s
+.ifblank s
+    .error "Must pass string"
+.endif
+    raw_write_str @s
+    raw_write_new_line
+    lda #$01
+    syshalt
+@s:
+    .byte s, 0
+.endmacro
+
+.macro raw_not_impl s
+.local @s
+.ifblank s
+    .error "Must pass string"
+.endif
+    raw_write_str @s
+    raw_write_new_line
+    lda #$01
+    syshalt
+@s:
+    .byte s, 0
+.endmacro

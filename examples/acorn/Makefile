@@ -15,15 +15,17 @@ $(SHAREDLIBDIR)/$(ACORNLIB): $(ACORNLIB)
 
 IMAGE := acorn.$(BINEXT)
 IMAGESOURCES := header.s cpu-impl.s mos-entrypoints.s mos-init.s mos-routines-impl.s zp.s
+mos-entrypoints.o: mos-entrypoints.s raw.mac
 
 BIN := acorn-test.$(BINEXT)
 BINSOURCES := main.s
-main.o: main.s helpers.mac
+main.o: main.s raw.mac
 
 ALLSOURCES := $(ACORNLIBSOURCES) $(IMAGESOURCES) $(BINSOURCES)
 
 prereqs:
 
+$(info $(call ld65,$(IMAGE),$(IMAGESOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
 $(eval $(call ld65,$(IMAGE),$(IMAGESOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
 
 $(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
