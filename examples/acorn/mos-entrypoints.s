@@ -145,6 +145,7 @@
     tax
     pla
     plp
+    clc                 ; C = 1 indicates Escape, C = 0 otherwise
     rts
 .endproc
 
