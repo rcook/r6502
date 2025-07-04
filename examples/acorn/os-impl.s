@@ -3,13 +3,13 @@
 ; https://mdfs.net/Software/BBCBasic/Porting/Porting.htm
 ;
 ; The bare minimum your MOS needs to do is:
-; BRKV, WRCHV:    vectors for BRK and WRCH
-; BRK:            point &FD/E to error message, jump via BRKV
-; OSWRCH/WRCHV:   print characters
-; OSWORD 0:       read input line
-; OSBYTE &83/&84: read bottom of memory/top of memory
-; &0000-&005F:    zero page workspace for BASIC
-; &0400-&07FF:    fixed workspace for BASIC
+; BRKV, WRCHV:    vectors for BRK and WRCH [TBD]
+; BRK:            point &FD/E to error message, jump via BRKV [TBD]
+; OSWRCH/WRCHV:   print characters [IMPLEMENTED]
+; OSWORD 0:       read input line [IMPLEMENTED]
+; OSBYTE &83/&84: read bottom of memory/top of memory [IMPLEMENTED]
+; &0000-&005F:    zero page workspace for BASIC [IMPLEMENTED]
+; &0400-&07FF:    fixed workspace for BASIC [IMPLEMENTED]
 ; Enter BASIC at its entry point with A=1
 .macpack generic
 .macpack helpers
