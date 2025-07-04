@@ -40,10 +40,6 @@ zptr: .addr $0000
     iny
     bne @banner_loop
 @banner_loop_done:
-    jsr $FFE7           ; OSNEWL
-    jsr $FFE7           ; OSNEWL
-    lda #$07
-    jsr OSWRCH          ; BEL
 
     ; Jump to BBC BASIC entrypoint $8000 with A = 1
     lda #$01
@@ -53,4 +49,4 @@ zptr: .addr $0000
 .endproc
 
 .segment "STARTUPDATA"
-banner: .byte "r6502 Microcomputer 32K"
+banner: .byte "r6502 Microcomputer 32K", 13, 10, 13, 10, "BASIC", 13, 10, 13, 10, 7, 0
