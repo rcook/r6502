@@ -2,6 +2,10 @@
 .macpack r6502
 .macpack raw
 
+.importzp OSAREG
+.importzp OSXREG
+.importzp OSYREG
+
 .importzp zbyte0
 .importzp zbyte1
 .importzp zword0
@@ -64,19 +68,21 @@
     rts
 .endproc
 
+; Inspired by https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
 .segment "ROCODE"
 .export wordv_entrypoint
 .proc wordv_entrypoint
     php
+    sta OSAREG
+    stx OSXREG
+    sty OSYREG
+
     cmp #$00
     beq @osword_00
+
     plp
     rts
 @osword_00:
-    pha
-    txa
-    pha
-
     stx zword0      ; LSB of parameter block address
     sty zword0 + 1  ; MSB of parameter block address
 
@@ -145,9 +151,9 @@
 
     raw_write_new_line
 
-    pla
-    tax
-    pla
+    lda OSAREG
+    ldx OSXREG
+    ldy OSYREG
     plp
     clc                 ; C = 1 indicates Escape, C = 0 otherwise
     rts
