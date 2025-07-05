@@ -124,6 +124,9 @@ impl Runner<'_> {
                 name = machine_info.machine.name
             )
         }
-        handle_host_hook(cpu)
+        handle_host_hook(cpu)?;
+        let return_addr = cpu.pull_word().wrapping_add(1);
+        cpu.reg.pc = return_addr;
+        Ok(())
     }
 }

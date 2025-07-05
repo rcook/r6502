@@ -1,8 +1,12 @@
 use crate::ascii::CR;
 use crate::emulator::util::make_word;
 use crate::emulator::Cpu;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
+use std::env::current_dir;
+use std::fs::read_dir;
 
+const HOOK_OK: u8 = 0;
+const HOOK_BRK: u8 = 1;
 const CLIV_HOST_HOOK: u8 = 100;
 const FILEV_HOST_HOOK: u8 = 101;
 
@@ -24,9 +28,31 @@ fn handle_cliv(cpu: &mut Cpu) -> Result<()> {
         }
         s.push(byte as char);
     }
-    todo!("command line: [{s}]")
+
+    match s.as_str() {
+        "*." | "*CAT" => {
+            show_catalogue()?;
+            cpu.reg.a = HOOK_OK;
+        }
+        _ => cpu.reg.a = HOOK_BRK, // "Bad command"
+    }
+    Ok(())
 }
 
 fn handle_filev(_cpu: &mut Cpu) -> Result<()> {
     todo!()
+}
+
+fn show_catalogue() -> Result<()> {
+    let d = current_dir()?;
+    println!("Directory: {dir}", dir = d.display());
+    for entry in read_dir(d)? {
+        let entry = entry?;
+        let f = entry.file_name();
+        let file_name = f
+            .to_str()
+            .ok_or_else(|| anyhow!("could not convert file name {f:?}"))?;
+        println!("  {f}", f = file_name);
+    }
+    Ok(())
 }

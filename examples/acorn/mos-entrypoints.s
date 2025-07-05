@@ -49,8 +49,15 @@
 .export cliv_entrypoint
 .proc cliv_entrypoint
     lda #CLIVHOSTHOOK
-    jmp HOSTHOOK
-    raw_not_impl "NOT IMPLEMENTED: cliv"
+    jsr HOSTHOOK
+    cmp #$00
+    beq @done
+    brk
+.byte $FE
+.byte "Bad command"
+.byte $00
+@done:
+    rts
 .endproc
 
 .segment "ROCODE"
