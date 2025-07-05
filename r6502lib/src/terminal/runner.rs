@@ -2,7 +2,6 @@ use crate::emulator::r6502_image::Image;
 use crate::emulator::util::make_unique_snapshot_path;
 use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
-use crate::p_get;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{anyhow, bail, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
@@ -51,9 +50,6 @@ impl Runner<'_> {
 
         loop {
             cpu.step_with_monitor_callbacks();
-            if p_get!(cpu.reg, I) {
-                break;
-            }
 
             match bus_rx.try_recv() {
                 Ok(BusEvent::UserBreak) => {
@@ -89,11 +85,6 @@ impl Runner<'_> {
                 }
             }
         }
-
-        // Terminated due to unexpected software interrupt (BRK)
-        Ok(StopReason::UnexpectedInterrupt {
-            total_cycles: cpu.total_cycles,
-        })
     }
 
     fn event_loop(terminal_rx: &Receiver<TerminalEvent>, pia_tx: &Sender<PiaEvent>) -> Result<()> {
