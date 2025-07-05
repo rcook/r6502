@@ -72,3 +72,26 @@
 @s:
     .byte s, 0
 .endmacro
+
+; Example: raw_verify lda buffer, cmp #'A', "character not A"
+.macro raw_verify op, condition, s
+.local @s
+.local @done
+;.ifblank op
+;    .error "Must define op"
+;.endif
+.ifblank condition
+    .error "Must define condition"
+.endif
+.ifblank s
+    .error "Must define s"
+.endif
+
+    php
+    op
+    condition
+    beq @done
+    raw_abort s
+@done:
+    plp
+.endmacro

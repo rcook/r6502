@@ -88,10 +88,10 @@
 
     ldy #$00
     lda (zword0), y
-    sta zword1      ; LSB of buffer
+    sta zword1      ; LSB of buffer address
     iny
     lda (zword0), y
-    sta zword1 + 1  ; MSB of buffer
+    sta zword1 + 1  ; MSB of buffer address
     iny
     lda (zword0), y
     tax             ; Buffer length (caller must allocate buffer length + 1 to include CR)
