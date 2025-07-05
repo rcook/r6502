@@ -1,10 +1,13 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use r6502lib::emulator::{Bus, Cpu, Image, DEFAULT_SP};
+use r6502lib::emulator::util::split_word;
+use r6502lib::emulator::{Bus, Cpu, Image, DEFAULT_SP, IRQ};
 use r6502lib::{_p, p_get};
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
 fn div16_benchmark(c: &mut Criterion) {
+    const IRQ_ADDR: u16 = 0x2000;
+
     let bytes = [
         0x73, 0x69, 0x6d, 0x36, 0x35, 0x02, 0x00, 0xff, 0x00, 0x10, 0x00, 0x10, 0x20, 0x38, 0x10,
         0xad, 0x6c, 0x10, 0xc9, 0xd2, 0xf0, 0x05, 0xa9, 0x01, 0x4c, 0xf9, 0xff, 0xad, 0x6d, 0x10,
@@ -21,6 +24,11 @@ fn div16_benchmark(c: &mut Criterion) {
     let bus = Bus::default_with_image(&image).expect("Must succeed");
     let mut cpu = Cpu::new(bus.view(), None);
     image.set_initial_cpu_state(&mut cpu);
+
+    cpu.bus.store(IRQ_ADDR, 0x40);
+    let (hi, lo) = split_word(IRQ_ADDR);
+    bus.store(IRQ, lo);
+    bus.store(IRQ.wrapping_add(1), hi);
 
     assert_eq!(0x35, bus.load(0x106c));
     assert_eq!(0x12, bus.load(0x106d));
