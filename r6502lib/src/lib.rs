@@ -12,6 +12,7 @@
 #![allow(clippy::verbose_bit_mask)]
 #![allow(missing_docs)]
 
+pub mod ascii;
 pub mod debug_options;
 pub mod emulator;
 pub mod machine_config;

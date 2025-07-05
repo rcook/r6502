@@ -17,6 +17,10 @@
 .import HIMEM
 .import OSHWM
 
+.import HOSTHOOK
+.importzp CLIVHOSTHOOK
+.importzp FILEVHOSTHOOK
+
 .segment "ROCODE"
 .export userv_entrypoint
 .proc userv_entrypoint
@@ -44,6 +48,8 @@
 .segment "ROCODE"
 .export cliv_entrypoint
 .proc cliv_entrypoint
+    lda #CLIVHOSTHOOK
+    jmp HOSTHOOK
     raw_not_impl "NOT IMPLEMENTED: cliv"
 .endproc
 
@@ -195,6 +201,8 @@
 .segment "ROCODE"
 .export filev_entrypoint
 .proc filev_entrypoint
+    lda #FILEVHOSTHOOK
+    jmp HOSTHOOK
     raw_not_impl "NOT IMPLEMENTED: filev"
 .endproc
 

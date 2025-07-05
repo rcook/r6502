@@ -8,5 +8,8 @@
 .export RESET = $FFFC
 .export IRQ = $FFFE
 
-; Debugging hooks
+; Debugging and host communication hooks
 .export HALT = $FFA0
+.export HOSTHOOK = $FFA2
+.exportzp CLIVHOSTHOOK = 100
+.exportzp FILEVHOSTHOOK = 101

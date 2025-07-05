@@ -2,6 +2,7 @@ use crate::emulator::r6502_image::Image;
 use crate::emulator::util::make_unique_snapshot_path;
 use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
+use crate::terminal::acorn_host_hooks::handle_host_hook;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{anyhow, bail, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
@@ -84,6 +85,12 @@ impl Runner<'_> {
                     });
                 }
             }
+
+            if let Some(host_addr) = machine_info.machine.hook_addr {
+                if cpu.reg.pc == host_addr {
+                    Self::handle_host_hook(cpu, machine_info)?;
+                }
+            }
         }
     }
 
@@ -108,5 +115,15 @@ impl Runner<'_> {
         }
 
         Ok(())
+    }
+
+    fn handle_host_hook(cpu: &mut Cpu, machine_info: &MachineInfo) -> Result<()> {
+        if machine_info.machine.tag != [b'A', b'C', b'R', b'N'] {
+            bail!(
+                "host hooks not implemented for {name}",
+                name = machine_info.machine.name
+            )
+        }
+        handle_host_hook(cpu)
     }
 }
