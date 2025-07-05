@@ -75,7 +75,7 @@ fn lsr_helper(cpu: &mut Cpu, operand: u8) -> u8 {
 fn rol_helper(cpu: &mut Cpu, operand: u8) -> u8 {
     let old_carry = p_get!(cpu.reg, C);
     p_set!(cpu.reg, C, sign(operand));
-    let new_value = (operand << 1) | (if old_carry { 0x01 } else { 0x00 });
+    let new_value = (operand << 1) | u8::from(old_carry);
     set_flags_on_value(cpu, new_value);
     new_value
 }

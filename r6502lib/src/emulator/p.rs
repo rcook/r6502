@@ -8,14 +8,14 @@ const P_STR: &str = "NV-BDIZC";
 bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct P: u8 {
-        const N =           0b10000000; // Negative
-        const V =           0b01000000; // Overflow
-        const ALWAYS_ONE =  0b00100000; // Always 1
-        const B =           0b00010000; // B
-        const D =           0b00001000; // Decimal
-        const I =           0b00000100; // Interrupt Disable
-        const Z =           0b00000010; // Zero
-        const C =           0b00000001; // Carry
+        const N =           0b1000_0000; // Negative
+        const V =           0b0100_0000; // Overflow
+        const ALWAYS_ONE =  0b0010_0000; // Always 1
+        const B =           0b0001_0000; // B
+        const D =           0b0000_1000; // Decimal
+        const I =           0b0000_0100; // Interrupt Disable
+        const Z =           0b0000_0010; // Zero
+        const C =           0b0000_0001; // Carry
     }
 }
 
@@ -28,7 +28,7 @@ impl Default for P {
 
 impl Display for P {
     fn fmt(&self, f: &mut Formatter<'_>) -> StdResult {
-        let mut mask = 0b10000000;
+        let mut mask = 0b1000_0000;
         let value = self.bits();
         write!(f, "[")?;
         for c in P_STR.chars() {
@@ -97,10 +97,10 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case("[..-.....]", _p!(0b00000000))]
-    #[case("[NV-BDIZC]", _p!(0b11111111))]
-    #[case("[NV-BDIZC]", _p!(0b11011111))]
-    #[case("[NV-BD..C]", _p!(0b11011001))]
+    #[case("[..-.....]", _p!(0b0000_0000))]
+    #[case("[NV-BDIZC]", _p!(0b1111_1111))]
+    #[case("[NV-BDIZC]", _p!(0b1101_1111))]
+    #[case("[NV-BD..C]", _p!(0b1101_1001))]
     fn display(#[case] expected: &str, #[case] input: P) {
         assert_eq!(expected, input.to_string());
     }
@@ -117,7 +117,7 @@ mod tests {
     fn from_bits() {
         assert_eq!(
             Some(P::N | P::V | P::ALWAYS_ONE | P::D | P::I | P::C),
-            P::from_bits(0b11101101)
+            P::from_bits(0b1110_1101)
         );
     }
 }

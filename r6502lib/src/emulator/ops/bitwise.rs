@@ -13,8 +13,8 @@ pub fn and(cpu: &mut Cpu, operand: u8) {
 // http://www.6502.org/users/obelisk/6502/reference.html#BIT
 pub fn bit(cpu: &mut Cpu, operand: u8) {
     let value = cpu.reg.a & operand;
-    p_set!(cpu.reg, N, (operand & 0b10000000) != 0);
-    p_set!(cpu.reg, V, (operand & 0b01000000) != 0);
+    p_set!(cpu.reg, N, (operand & 0b1000_0000) != 0);
+    p_set!(cpu.reg, V, (operand & 0b0100_0000) != 0);
     p_set!(cpu.reg, Z, value == 0);
 }
 

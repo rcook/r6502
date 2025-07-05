@@ -34,10 +34,10 @@ pub fn plp(cpu: &mut Cpu) {
     // TBD: Figure out what to do with ALWAYS_ONE and B
     //assert!((current_p & 0b00100000) == 0b00100000);
 
-    let b_only = current_p & 0b00110000;
+    let b_only = current_p & 0b0011_0000;
 
     // Without B
-    let value = cpu.pull() & 0b11101111;
+    let value = cpu.pull() & 0b111_01111;
 
     cpu.reg.p = _p!(b_only | value);
 }
@@ -71,11 +71,11 @@ mod tests {
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
             cpu.reg.a = value;
-            cpu.bus.store(STACK_BASE + 0x00ff - value as u16, 0x00);
+            cpu.bus.store(STACK_BASE + 0x00ff - u16::from(value), 0x00);
             assert_eq!(current_s, cpu.reg.sp);
             pha(&mut cpu);
             assert_eq!(current_s.wrapping_sub(1), cpu.reg.sp);
-            assert_eq!(value, cpu.bus.load(STACK_BASE + 0x00ff - value as u16));
+            assert_eq!(value, cpu.bus.load(STACK_BASE + 0x00ff - u16::from(value)));
         }
     }
 
@@ -154,14 +154,14 @@ mod tests {
     fn p_flag_basics() {
         fn do_test(expected_p: u8, cpu: &mut Cpu, start: u16, value: u8) {
             cpu.bus.store(start + 1, value); // the test value
-            cpu.reg.p = _p!(0b00110000);
+            cpu.reg.p = _p!(0b0011_0000);
             cpu.reg.pc = start;
             cpu.step_no_spin(); // LDA #value
             assert_eq!(start + 2, cpu.reg.pc);
             assert_eq!(value, cpu.reg.a);
             cpu.step_no_spin(); // PHA
             assert_eq!(start + 3, cpu.reg.pc);
-            assert_eq!(value, cpu.bus.load(STACK_BASE + cpu.reg.sp as u16 + 1));
+            assert_eq!(value, cpu.bus.load(STACK_BASE + u16::from(cpu.reg.sp) + 1));
             cpu.step_no_spin(); // PLP
             assert_eq!(_p!(expected_p), cpu.reg.p);
         }
@@ -174,10 +174,10 @@ mod tests {
         bus.store(START + 2, 0x48); // PHA
         bus.store(START + 3, 0x28); // PLP
 
-        do_test(0b11111111, &mut cpu, START, 0b11111111);
-        do_test(0b00110000, &mut cpu, START, 0b00000000);
-        do_test(0b00110000, &mut cpu, START, 0b00110000);
-        do_test(0b00110001, &mut cpu, START, 0b00110001);
-        do_test(0b10110001, &mut cpu, START, 0b10110001);
+        do_test(0b1111_1111, &mut cpu, START, 0b1111_1111);
+        do_test(0b0011_0000, &mut cpu, START, 0b0000_0000);
+        do_test(0b0011_0000, &mut cpu, START, 0b0011_0000);
+        do_test(0b0011_0001, &mut cpu, START, 0b0011_0001);
+        do_test(0b1011_0001, &mut cpu, START, 0b1011_0001);
     }
 }

@@ -1,8 +1,8 @@
 use num_derive::FromPrimitive;
 
-const TYPE0: u8 = 0b00000000;
-const SNAPSHOT: u8 = 0b00000001;
-const RLE: u8 = 0b10000000; // TBD: run-length encoding
+const TYPE0: u8 = 0b0000_0000;
+const SNAPSHOT: u8 = 0b0000_0001;
+const RLE: u8 = 0b1000_0000; // TBD: run-length encoding
 
 #[derive(Debug, FromPrimitive)]
 #[repr(u8)]

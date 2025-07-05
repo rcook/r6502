@@ -33,7 +33,7 @@ mod tests {
     use rstest::rstest;
 
     #[rstest]
-    #[case(0x1234, 0xfc, 0b10101110, 0x0100, 0xff, 0b10101010, 0x1234)]
+    #[case(0x1234, 0xfc, 0b1010_1110, 0x0100, 0xff, 0b1010_1010, 0x1234)]
     // cargo run -- validate-json '{ "name": "00 3f f7", "initial": { "pc": 35714, "s": 81, "a": 203, "x": 117, "y": 162, "p": 106, "ram": [ [35714, 0], [35715, 63], [35716, 247], [65534, 212], [65535, 37], [9684, 237]]}, "final": { "pc": 9684, "s": 78, "a": 203, "x": 117, "y": 162, "p": 110, "ram": [ [335, 122], [336, 132], [337, 139], [9684, 237], [35714, 0], [35715, 63], [35716, 247], [65534, 212], [65535, 37]]}, "cycles": [ [35714, 0, "read"], [35715, 63, "read"], [337, 139, "write"], [336, 132, "write"], [335, 122, "write"], [65534, 212, "read"], [65535, 37, "read"]] }'
     #[case(0x25d4, 78, 110, 0x8b82, 81, 106, 0x25d4)]
     fn brk_basics(
@@ -59,9 +59,12 @@ mod tests {
         assert_eq!(expected_pc, cpu.reg.pc);
         assert_eq!(expected_s, cpu.reg.sp);
         assert_eq!(
-            p | 0b00010000,
-            cpu.bus
-                .load(STACK_BASE.wrapping_add(expected_s as u16).wrapping_add(1))
+            p | 0b0001_0000,
+            cpu.bus.load(
+                STACK_BASE
+                    .wrapping_add(u16::from(expected_s))
+                    .wrapping_add(1)
+            )
         ); // P with B flag set
     }
 }

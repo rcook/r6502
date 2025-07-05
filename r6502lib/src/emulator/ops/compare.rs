@@ -38,8 +38,8 @@ mod tests {
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x10;
-        cpu.reg.p = _p!(0b10101111);
+        cpu.reg.p = _p!(0b1010_1111);
         cmp(&mut cpu, 0xbb);
-        assert_eq!(_p!(0b00101100), cpu.reg.p);
+        assert_eq!(_p!(0b0010_1100), cpu.reg.p);
     }
 }

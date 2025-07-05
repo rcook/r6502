@@ -32,19 +32,19 @@ pub const fn crosses_page_boundary(addr: u16) -> bool {
 
 // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502
 pub fn compute_effective_addr_indirect_indexed_y(cpu: &mut Cpu, addr: u8) -> u16 {
-    let (lo, carry) = cpu.bus.load(addr as u16).overflowing_add(cpu.reg.y);
+    let (lo, carry) = cpu.bus.load(u16::from(addr)).overflowing_add(cpu.reg.y);
     let next_addr = addr.wrapping_add(1);
     let hi = cpu
         .bus
-        .load(next_addr as u16)
-        .wrapping_add(if carry { 1 } else { 0 });
+        .load(u16::from(next_addr))
+        .wrapping_add(u8::from(carry));
     make_word(hi, lo)
 }
 
 pub fn compute_effective_addr_indexed_indirect_x(cpu: &mut Cpu, addr: u8) -> u16 {
     let addr_with_index = addr.wrapping_add(cpu.reg.x);
-    let lo = cpu.bus.load(addr_with_index as u16);
-    let hi = cpu.bus.load(addr_with_index.wrapping_add(1) as u16);
+    let lo = cpu.bus.load(u16::from(addr_with_index));
+    let hi = cpu.bus.load(u16::from(addr_with_index.wrapping_add(1)));
     make_word(hi, lo)
 }
 

@@ -65,9 +65,9 @@ mod tests {
         let segment = "    DATA              Offs=000000  Size=00009C  Align=00001  Fill=0000"
             .parse::<ModuleSegment>()?;
         assert_eq!("DATA", segment.name);
-        assert_eq!(0x000000, segment.offset);
-        assert_eq!(0x00009c, segment.size);
-        assert_eq!(0x00001, segment.align);
+        assert_eq!(0x00_0000, segment.offset);
+        assert_eq!(0x00_009c, segment.size);
+        assert_eq!(0x0_0001, segment.align);
         assert_eq!(0x0000, segment.fill);
         Ok(())
     }

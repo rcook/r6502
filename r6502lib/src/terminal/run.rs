@@ -91,7 +91,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
             }
             StopReason::Halt { total_cycles, a } => {
                 info!("Program stopped by call to EXIT");
-                (total_cycles, a as i32)
+                (total_cycles, i32::from(a))
             }
         };
 

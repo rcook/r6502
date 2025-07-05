@@ -134,7 +134,7 @@ impl AddressingMode {
     }
 
     fn find_name(map_file: &MapFile, value: u16) -> Option<String> {
-        let temp = value as u32;
+        let temp = u32::from(value);
         for export in &map_file.exports {
             if export.value == temp {
                 return Some(export.name.clone());
@@ -158,6 +158,6 @@ impl AddressingMode {
     }
 
     fn format_zero_page_addr(map_file: &MapFile, value: u8) -> String {
-        Self::find_name(map_file, value as u16).unwrap_or_else(|| format!("${value:02X}"))
+        Self::find_name(map_file, u16::from(value)).unwrap_or_else(|| format!("${value:02X}"))
     }
 }

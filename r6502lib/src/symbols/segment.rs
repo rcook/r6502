@@ -172,10 +172,10 @@ tmp1 (zeropage.o):
     fn parse() -> Result<()> {
         let segment = "HEADER                000000  000009  00000A  00001".parse::<Segment>()?;
         assert_eq!("HEADER", segment.name);
-        assert_eq!(0x000000, segment.start);
-        assert_eq!(0x000009, segment.end);
-        assert_eq!(0x00000a, segment.size);
-        assert_eq!(0x00001, segment.align);
+        assert_eq!(0x00_0000, segment.start);
+        assert_eq!(0x00_0009, segment.end);
+        assert_eq!(0x00_000a, segment.size);
+        assert_eq!(0x0_0001, segment.align);
         Ok(())
     }
 }

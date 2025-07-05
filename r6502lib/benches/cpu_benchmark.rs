@@ -31,7 +31,7 @@ fn div16_benchmark(c: &mut Criterion) {
             bus.store(0x106c, 0x35);
             bus.store(0x106d, 0x12);
             // image.set_initial_cpu_state(&mut cpu);
-            cpu.reg.p = _p!(0b00000000);
+            cpu.reg.p = _p!(0b0000_0000);
             cpu.reg.pc = image.start().unwrap_or_default();
             cpu.reg.sp = image.sp().unwrap_or(DEFAULT_SP);
             let before_total_cycles = cpu.total_cycles;
@@ -44,7 +44,7 @@ fn div16_benchmark(c: &mut Criterion) {
             let after_total_cycles = cpu.total_cycles;
             assert_eq!(0, cpu.reg.a);
             assert_eq!(938, after_total_cycles - before_total_cycles);
-        })
+        });
     });
 }
 

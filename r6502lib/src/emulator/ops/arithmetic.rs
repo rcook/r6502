@@ -7,8 +7,8 @@ use crate::{p_get, p_set, p_value};
 // https://stackoverflow.com/questions/29193303/6502-emulation-proper-way-to-implement-adc-and-sbc
 pub fn adc(cpu: &mut Cpu, operand: u8) {
     if p_get!(cpu.reg, D) {
-        let a = cpu.reg.a as i32;
-        let value = operand as i32;
+        let a = i32::from(cpu.reg.a);
+        let value = i32::from(operand);
         let carry = p_value!(cpu.reg, C);
 
         let mut ah = 0;
@@ -38,7 +38,7 @@ pub fn adc(cpu: &mut Cpu, operand: u8) {
         let lhs = cpu.reg.a;
         let rhs = operand;
 
-        let result_word = lhs as u16 + rhs as u16 + p_value!(cpu.reg, C);
+        let result_word = u16::from(lhs) + u16::from(rhs) + p_value!(cpu.reg, C);
         let result = result_word as u8;
 
         cpu.reg.a = result;
@@ -116,10 +116,10 @@ Final:
 // https://github.com/mattgodbolt/jsbeeb/blob/main/src/6502.js
 pub fn sbc(cpu: &mut Cpu, operand: u8) {
     if p_get!(cpu.reg, D) {
-        let carry = if p_get!(cpu.reg, C) { 0 } else { 1 };
+        let carry = i32::from(!p_get!(cpu.reg, C));
 
-        let a = cpu.reg.a as i32;
-        let value = operand as i32;
+        let a = i32::from(cpu.reg.a);
+        let value = i32::from(operand);
 
         let mut al = (a & 0xf) - (value & 0xf) - carry;
         let mut ah = (a >> 4) - (value >> 4);
@@ -133,7 +133,7 @@ pub fn sbc(cpu: &mut Cpu, operand: u8) {
 
         let result = a - value - carry;
         p_set!(cpu.reg, N, (result & 0x80) != 0);
-        p_set!(cpu.reg, Z, (result & 0xff) == 0);
+        p_set!(cpu.reg, Z, result.trailing_zeros() >= 8);
         p_set!(cpu.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
         p_set!(cpu.reg, C, (result & 0x100) == 0);
         cpu.reg.a = (al as u8) | ((ah as u8) << 4);
@@ -232,7 +232,7 @@ mod tests {
     }
 
     #[rstest]
-    #[case(0x00, 0b10101001, 0xe3, 0b00101000, 0xb7)]
+    #[case(0x00, 0b1010_1001, 0xe3, 0b0010_1000, 0xb7)]
     fn adc_scenarios(
         #[case] expected_a: u8,
         #[case] expected_p: u8,
@@ -250,8 +250,8 @@ mod tests {
     }
 
     #[rstest]
-    #[case(0x78, 0b10101100, 0x9c, 0b01101101, 0xc4)]
-    #[case(0x2d, 0b11101000, 0x50, 0b11101010, 0xcc)]
+    #[case(0x78, 0b1010_1100, 0x9c, 0b0110_1101, 0xc4)]
+    #[case(0x2d, 0b1110_1000, 0x50, 0b1110_1010, 0xcc)]
     fn sbc_scenarios(
         #[case] expected_a: u8,
         #[case] expected_p: u8,

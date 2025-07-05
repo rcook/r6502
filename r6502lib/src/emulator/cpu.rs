@@ -46,20 +46,20 @@ impl<'a> Cpu<'a> {
             instruction_info.clone(),
         );
 
-        self.total_cycles += instruction_cycles as TotalCycles;
+        self.total_cycles += TotalCycles::from(instruction_cycles);
     }
 
     pub fn step(&mut self) {
         let (instruction, _) = self.decode_next();
         let instruction_cycles = instruction.execute(self);
         Self::spin(instruction_cycles);
-        self.total_cycles += instruction_cycles as TotalCycles;
+        self.total_cycles += TotalCycles::from(instruction_cycles);
     }
 
     pub fn step_no_spin(&mut self) {
         let (instruction, _) = self.decode_next();
         let instruction_cycles = instruction.execute(self);
-        self.total_cycles += instruction_cycles as TotalCycles;
+        self.total_cycles += TotalCycles::from(instruction_cycles);
     }
 
     pub fn push(&mut self, value: u8) {
@@ -94,7 +94,7 @@ impl<'a> Cpu<'a> {
 
     #[must_use]
     pub fn peek_back_word(&self, offset: u8) -> u16 {
-        let stack_addr = (STACK_BASE + self.reg.sp as u16).wrapping_add(offset as u16);
+        let stack_addr = (STACK_BASE + u16::from(self.reg.sp)).wrapping_add(u16::from(offset));
         let hi = self.bus.load(stack_addr.wrapping_add(2));
         let lo = self.bus.load(stack_addr.wrapping_add(1));
         make_word(hi, lo)
@@ -102,7 +102,7 @@ impl<'a> Cpu<'a> {
 
     fn spin(instruction_cycles: u8) {
         let before = Instant::now();
-        let d = *CPU_TICK * instruction_cycles as u32;
+        let d = *CPU_TICK * u32::from(instruction_cycles);
 
         // Is there a better way to do this?
         loop {
@@ -116,12 +116,12 @@ impl<'a> Cpu<'a> {
 
     #[must_use]
     fn get_stack_value(&self) -> u8 {
-        self.bus.load(STACK_BASE.wrapping_add(self.reg.sp as u16))
+        self.bus.load(STACK_BASE.wrapping_add(u16::from(self.reg.sp)))
     }
 
     fn set_stack_value(&mut self, value: u8) {
         self.bus
-            .store(STACK_BASE.wrapping_add(self.reg.sp as u16), value);
+            .store(STACK_BASE.wrapping_add(u16::from(self.reg.sp)), value);
     }
 
     fn decode_next(&self) -> (Instruction, InstructionInfo) {

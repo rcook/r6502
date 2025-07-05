@@ -15,3 +15,5 @@ simple-logging = "2.0.2"
 
 [dev-dependencies]
 rstest = "0.25.0"
+
+[lints.clippy]

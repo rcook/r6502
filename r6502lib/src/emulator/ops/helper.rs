@@ -2,7 +2,7 @@ use crate::emulator::Cpu;
 use crate::p_set;
 
 pub const fn sign(value: u8) -> bool {
-    (value & 0b10000000) != 0
+    (value & 0b1000_0000) != 0
 }
 
 pub const fn is_neg(value: u8) -> bool {

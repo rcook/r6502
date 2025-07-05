@@ -248,10 +248,10 @@ fn read_dword(cpu: &mut Cpu, base_addr: u16, offset: u16) -> u32 {
     let b1_addr = b0_addr.wrapping_add(1);
     let b2_addr = b1_addr.wrapping_add(1);
     let b3_addr = b2_addr.wrapping_add(1);
-    let b0 = cpu.bus.load(b0_addr) as u32;
-    let b1 = cpu.bus.load(b1_addr) as u32;
-    let b2 = cpu.bus.load(b2_addr) as u32;
-    let b3 = cpu.bus.load(b3_addr) as u32;
+    let b0 = u32::from(cpu.bus.load(b0_addr));
+    let b1 = u32::from(cpu.bus.load(b1_addr));
+    let b2 = u32::from(cpu.bus.load(b2_addr));
+    let b3 = u32::from(cpu.bus.load(b3_addr));
     (b3 << 24) + (b2 << 16) + (b1 << 8) + b0
 }
 

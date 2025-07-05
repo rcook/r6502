@@ -211,9 +211,9 @@ C:\bin\cc65\lib/none.lib(zeropage.o):
         assert_eq!(
             vec![ModuleSegment {
                 name: String::from("A1BASIC"),
-                offset: 0x000000,
-                size: 0x001000,
-                align: 0x00001,
+                offset: 0x00_0000,
+                size: 0x00_1000,
+                align: 0x0_0001,
                 fill: 0x0000
             }],
             module.segments

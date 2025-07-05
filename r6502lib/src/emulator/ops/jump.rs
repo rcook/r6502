@@ -110,7 +110,7 @@ mod tests {
         cpu.reg.a = 0x9e; // Probably irrelevant
         cpu.reg.x = 0x89; // Probably irrelevant
         cpu.reg.y = 0x34; // Probably irrelevant
-        cpu.reg.p = _p!(0b11100110); // Probably irrelevant
+        cpu.reg.p = _p!(0b1110_0110); // Probably irrelevant
         bus.store(0x0155, 0xad);
         bus.store(0x017b, 0x20); // JSR abs
         bus.store(0x017c, 0x55);
@@ -121,7 +121,7 @@ mod tests {
         assert_eq!(0x9e, cpu.reg.a);
         assert_eq!(0x89, cpu.reg.x);
         assert_eq!(0x34, cpu.reg.y);
-        assert_eq!(_p!(0b11100110), cpu.reg.p);
+        assert_eq!(_p!(0b1110_0110), cpu.reg.p);
         assert_eq!(0xad, bus.load(0x0155));
         assert_eq!(0x20, bus.load(0x017b));
         assert_eq!(0x7d, bus.load(0x017c));
@@ -137,10 +137,10 @@ mod tests {
         let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.p = _p!(0x63);
         cpu.reg.sp = INITIAL_SP;
-        bus.store(0x0100 + INITIAL_SP as u16, 0x98);
-        bus.store(0x0100 + INITIAL_SP as u16 + 1, 0x9c); // P
-        bus.store(0x0100 + INITIAL_SP as u16 + 2, 0xaa); // lo(return_attr)
-        bus.store(0x0100 + INITIAL_SP as u16 + 3, 0x65); // hi(return_attr)
+        bus.store(0x0100 + u16::from(INITIAL_SP), 0x98);
+        bus.store(0x0100 + u16::from(INITIAL_SP) + 1, 0x9c); // P
+        bus.store(0x0100 + u16::from(INITIAL_SP) + 2, 0xaa); // lo(return_attr)
+        bus.store(0x0100 + u16::from(INITIAL_SP) + 3, 0x65); // hi(return_attr)
         cpu.reg.pc = 0x8771 + 1;
         rti(&mut cpu);
         assert_eq!(0x65aa, cpu.reg.pc);
