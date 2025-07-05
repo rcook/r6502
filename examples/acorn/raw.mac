@@ -50,14 +50,16 @@
 .macro raw_abort s
 .local @s
 .ifblank s
-    .error "Must pass string"
-.endif
+    lda #$01
+    syshalt
+.else
     raw_write_str @s
     raw_write_new_line
     lda #$01
     syshalt
 @s:
     .byte s, 0
+.endif
 .endmacro
 
 .macro raw_not_impl s
@@ -83,10 +85,6 @@
 .ifblank condition
     .error "Must define condition"
 .endif
-.ifblank s
-    .error "Must define s"
-.endif
-
     php
     op
     condition

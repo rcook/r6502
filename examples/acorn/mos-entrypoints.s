@@ -102,13 +102,15 @@
     lda (zword0), y
     sta zbyte1      ; Maximum character value
 
+    ldy #$00
+
 @loop:
     raw_read_char_to_a
     cmp #DEL
     bne @check_cr
 
     ; Backspace
-    cpy #$00
+    cpy #$00        ; Don't delete beyond start of buffer!
     beq @loop
     dey
 
