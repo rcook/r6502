@@ -12,6 +12,7 @@
 .importzp zword1
 
 .importzp DEL
+.importzp ESC
 
 .import HIMEM
 .import OSHWM
@@ -106,6 +107,17 @@
 
 @loop:
     raw_read_char_to_a
+@check_esc:
+    cmp #ESC
+    bne @check_del
+
+    lda OSAREG
+    ldx OSXREG
+    plp
+    sec                 ; C = 1 indicates Escape, C = 0 otherwise
+    rts
+
+@check_del:
     cmp #DEL
     bne @check_cr
 

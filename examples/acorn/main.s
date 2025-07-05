@@ -109,8 +109,15 @@ zword0: .word $0000
     ldy #>osword_print_line_params
     jsr OSWORD
 
+    ; C = 1 if Esc was pressed
+    bcc @display_str
+    raw_write_new_line
+    raw_write_str you_escaped_str
+    rts
+
     ; Y contains number of characters read not including the CR
     ; Move this to X
+@display_str:
     tya
     tax
 
@@ -121,6 +128,7 @@ zword0: .word $0000
     lda #>string_buffer
     sta zword0 + 1
 
+@print_message:
     cpx #$00
     beq @done
     ldy #$00
@@ -166,6 +174,7 @@ you_pressed_str: .byte "You pressed: ", 0
 failed_str: .byte "Failed", 13, 10, 0
 line_prompt_str: .byte "Enter some text followed by Enter: ", 0
 line_result_str: .byte "You typed: ", 0
+you_escaped_str: .byte "You pressed Esc", 0
 
 .segment "USERDATA"
 string_buffer: .res STRING_BUFFER_LEN
