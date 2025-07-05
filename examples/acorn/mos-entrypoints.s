@@ -155,7 +155,11 @@
 
     lda OSAREG
     ldx OSXREG
-    ldy OSYREG
+    ;ldy OSYREG         ; Document (Advanced User Guide etc.)
+                        ; says "Y contains line length, including
+                        ; carriage return if used". However, my experiments
+                        ; on an emulator demonstrate that Y should not
+                        ; include the CR.
     plp
     clc                 ; C = 1 indicates Escape, C = 0 otherwise
     rts

@@ -109,7 +109,7 @@ zword0: .word $0000
     ldy #>osword_print_line_params
     jsr OSWORD
 
-    ; Y contains number of characters read
+    ; Y contains number of characters read not including the CR
     ; Move this to X
     tya
     tax
