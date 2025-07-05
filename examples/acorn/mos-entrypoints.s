@@ -49,6 +49,7 @@
 .export cliv_entrypoint
 .proc cliv_entrypoint
     lda #CLIVHOSTHOOK
+    sta OSAREG
     jsr HOSTHOOK
     cmp #$00
     beq @done
@@ -208,9 +209,19 @@
 .segment "ROCODE"
 .export filev_entrypoint
 .proc filev_entrypoint
+    pha
     lda #FILEVHOSTHOOK
-    jmp HOSTHOOK
-    raw_not_impl "NOT IMPLEMENTED: filev"
+    sta OSAREG
+    pla
+    jsr HOSTHOOK
+    cmp #$00
+    beq @done
+    brk
+.byte $FE
+.byte "File I/O error"
+.byte $00
+@done:
+    rts
 .endproc
 
 .segment "ROCODE"

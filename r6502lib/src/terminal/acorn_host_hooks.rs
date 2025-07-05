@@ -2,16 +2,20 @@ use crate::ascii::CR;
 use crate::emulator::util::make_word;
 use crate::emulator::Cpu;
 use anyhow::{anyhow, bail, Result};
+use log::info;
 use std::env::current_dir;
-use std::fs::read_dir;
+use std::fs::{read_dir, File};
+use std::io::{BufWriter, ErrorKind, Write};
 
+const OSAREG: u16 = 0x00ef; // BASIC zero-page workspace value
 const HOOK_OK: u8 = 0;
 const HOOK_BRK: u8 = 1;
 const CLIV_HOST_HOOK: u8 = 100;
 const FILEV_HOST_HOOK: u8 = 101;
 
 pub fn handle_host_hook(cpu: &mut Cpu) -> Result<()> {
-    match cpu.reg.a {
+    let hook = cpu.bus.load(OSAREG);
+    match hook {
         CLIV_HOST_HOOK => handle_cliv(cpu),
         FILEV_HOST_HOOK => handle_filev(cpu),
         _ => bail!("unsupported host hook ${:02X}", cpu.reg.a),
@@ -19,31 +23,31 @@ pub fn handle_host_hook(cpu: &mut Cpu) -> Result<()> {
 }
 
 fn handle_cliv(cpu: &mut Cpu) -> Result<()> {
-    let command_line_addr = make_word(cpu.reg.y, cpu.reg.x);
-    let mut s = String::with_capacity(200);
-    for addr in command_line_addr.. {
-        let byte = cpu.bus.load(addr);
-        if byte == CR {
-            break;
+    let xy_addr = make_word(cpu.reg.y, cpu.reg.x);
+    let command_line = read_cr_terminated_string(cpu, xy_addr)?;
+    let result = match command_line.as_str() {
+        "*." | "*CAT" => show_catalogue()?,
+        _ => {
+            info!("OSCLI command {command_line} not implemented");
+            false
         }
-        s.push(byte as char);
-    }
-
-    match s.as_str() {
-        "*." | "*CAT" => {
-            show_catalogue()?;
-            cpu.reg.a = HOOK_OK;
-        }
-        _ => cpu.reg.a = HOOK_BRK, // "Bad command"
-    }
+    };
+    cpu.reg.a = if result { HOOK_OK } else { HOOK_BRK };
     Ok(())
 }
 
-fn handle_filev(_cpu: &mut Cpu) -> Result<()> {
-    todo!()
+fn handle_filev(cpu: &mut Cpu) -> Result<()> {
+    let result = if cpu.reg.a == 0 {
+        save_memory(cpu)?
+    } else {
+        info!("OSFILE operation ${a:02X} not implemented", a = cpu.reg.a);
+        false
+    };
+    cpu.reg.a = if result { HOOK_OK } else { HOOK_BRK };
+    Ok(())
 }
 
-fn show_catalogue() -> Result<()> {
+fn show_catalogue() -> Result<bool> {
     let d = current_dir()?;
     println!("Directory: {dir}", dir = d.display());
     for entry in read_dir(d)? {
@@ -52,7 +56,108 @@ fn show_catalogue() -> Result<()> {
         let file_name = f
             .to_str()
             .ok_or_else(|| anyhow!("could not convert file name {f:?}"))?;
-        println!("  {f}", f = file_name);
+        println!("  {file_name}");
     }
-    Ok(())
+    Ok(true)
+}
+
+fn save_memory(cpu: &mut Cpu) -> Result<bool> {
+    fn read_word(cpu: &mut Cpu, base_addr: u16, offset: u16) -> u16 {
+        let lo_addr = base_addr.wrapping_add(offset);
+        let hi_addr = lo_addr.wrapping_add(1);
+        make_word(cpu.bus.load(hi_addr), cpu.bus.load(lo_addr))
+    }
+
+    fn read_dword(cpu: &mut Cpu, base_addr: u16, offset: u16) -> u32 {
+        let b0_addr = base_addr.wrapping_add(offset);
+        let b1_addr = b0_addr.wrapping_add(1);
+        let b2_addr = b1_addr.wrapping_add(1);
+        let b3_addr = b2_addr.wrapping_add(1);
+        let b0 = cpu.bus.load(b0_addr) as u32;
+        let b1 = cpu.bus.load(b1_addr) as u32;
+        let b2 = cpu.bus.load(b2_addr) as u32;
+        let b3 = cpu.bus.load(b3_addr) as u32;
+        (b3 << 24) + (b2 << 16) + (b1 << 8) + b0
+    }
+
+    let xy_addr = make_word(cpu.reg.y, cpu.reg.x);
+    let file_name_addr = read_word(cpu, xy_addr, 0);
+    let load_addr = read_dword(cpu, xy_addr, 2);
+    let execution_addr = read_dword(cpu, xy_addr, 6);
+    let start_addr = read_dword(cpu, xy_addr, 10);
+    let end_addr = read_dword(cpu, xy_addr, 14);
+    let file_name = read_cr_terminated_string(cpu, file_name_addr)?;
+
+    info!(
+        "Saving to {file_name} {load_addr:08X} {execution_addr:08X} {start_addr:08X} {end_addr:08X}",
+    );
+
+    let start_addr = u16::try_from(start_addr & 0xffff).unwrap();
+    let end_addr = u16::try_from(end_addr & 0xffff).unwrap();
+
+    let d = current_dir()?;
+    let p = d.join(&file_name);
+
+    let f = match File::create_new(&p) {
+        Ok(f) => f,
+        Err(e) => {
+            if e.kind() == ErrorKind::AlreadyExists {
+                info!("File {path} already exists", path = p.display());
+            } else {
+                info!(
+                    "Error occurred while attempting to save to {path}: {e}",
+                    path = p.display()
+                );
+            }
+            return Ok(false);
+        }
+    };
+    let mut writer = BufWriter::new(f);
+    for addr in start_addr..end_addr {
+        let byte = cpu.bus.load(addr);
+        writer.write_all(&[byte])?;
+    }
+
+    let length = end_addr - start_addr;
+
+    // TBD: Use my spiffy .inf file writer
+    // See https://github.com/rcook/dfstool/blob/main/src/metadata/inf.rs
+    let inf_path = d.join(format!("{file_name}.inf"));
+    let mut f = match File::create_new(&inf_path) {
+        Ok(f) => f,
+        Err(e) => {
+            if e.kind() == ErrorKind::AlreadyExists {
+                info!("File {path} already exists", path = inf_path.display());
+            } else {
+                info!(
+                    "Error occurred while attempting to save to {path}: {e}",
+                    path = inf_path.display()
+                );
+            }
+            return Ok(false);
+        }
+    };
+    writeln!(
+        f,
+        "\"{file_name}\" {load_addr:08X} {execution_addr:08X} {length:08X} {access:02X}",
+        access = 0
+    )?;
+
+    info!(
+        "Successfully saved to {file_name} {load_addr:08X} {execution_addr:08X} {start_addr:08X} {end_addr:08X}"
+    );
+
+    Ok(true)
+}
+
+fn read_cr_terminated_string(cpu: &Cpu, start_addr: u16) -> Result<String> {
+    let mut s = String::with_capacity(200);
+    for addr in start_addr.. {
+        let byte = cpu.bus.load(addr);
+        if byte == CR {
+            return Ok(s);
+        }
+        s.push(byte as char);
+    }
+    bail!("string at ${:04X} is too long", start_addr)
 }
