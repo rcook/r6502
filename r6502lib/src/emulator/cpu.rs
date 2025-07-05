@@ -3,7 +3,6 @@ use crate::emulator::{
     BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, Monitor, Reg, TotalCycles,
     STACK_BASE,
 };
-//use crate::p_get;
 use log::{debug, log_enabled, Level};
 use std::sync::LazyLock;
 use std::time::{Duration, Instant};
@@ -29,8 +28,7 @@ impl<'a> Cpu<'a> {
         }
     }
 
-    #[must_use]
-    pub fn step_with_monitor_callbacks(&mut self) -> bool {
+    pub fn step_with_monitor_callbacks(&mut self) {
         let (instruction, instruction_info) = self.decode_next();
 
         self.monitor.on_before_execute(
@@ -49,33 +47,19 @@ impl<'a> Cpu<'a> {
         );
 
         self.total_cycles += instruction_cycles as TotalCycles;
-
-        // TBD: Don't return anything from this and check I flag externally!
-        // !p_get!(self.reg, I)
-        true
     }
 
-    #[must_use]
-    pub fn step(&mut self) -> bool {
+    pub fn step(&mut self) {
         let (instruction, _) = self.decode_next();
         let instruction_cycles = instruction.execute(self);
         Self::spin(instruction_cycles);
         self.total_cycles += instruction_cycles as TotalCycles;
-
-        // TBD: Don't return anything from this and check I flag externally!
-        // !p_get!(self.reg, I)
-        true
     }
 
-    #[must_use]
-    pub fn step_no_spin(&mut self) -> bool {
+    pub fn step_no_spin(&mut self) {
         let (instruction, _) = self.decode_next();
         let instruction_cycles = instruction.execute(self);
         self.total_cycles += instruction_cycles as TotalCycles;
-
-        // TBD: Don't return anything from this and check I flag externally!
-        // !p_get!(self.reg, I)
-        true
     }
 
     pub fn push(&mut self, value: u8) {
@@ -165,7 +149,8 @@ mod tests {
         let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::Nop as u8);
-        assert!(cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(!p_get!(cpu.reg, I));
         assert_eq!(2, cpu.total_cycles);
         assert_eq!(0x12, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -179,7 +164,8 @@ mod tests {
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::AdcImm as u8);
         bus.store(0x0001, 0x34);
-        assert!(cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(!p_get!(cpu.reg, I));
         assert_eq!(2, cpu.total_cycles);
         assert_eq!(0x46, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -194,7 +180,8 @@ mod tests {
         bus.store(0x0000, Opcode::AdcZp as u8);
         bus.store(0x0001, 0x34);
         bus.store(0x0034, 0x56);
-        assert!(cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(!p_get!(cpu.reg, I));
         assert_eq!(3, cpu.total_cycles);
         assert_eq!(0x68, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -209,7 +196,8 @@ mod tests {
         bus.store(0x0000, Opcode::JmpAbs as u8);
         bus.store(0x0001, 0x00);
         bus.store(0x0002, 0x10);
-        assert!(cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(!p_get!(cpu.reg, I));
         assert_eq!(3, cpu.total_cycles);
         assert_eq!(0x12, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -225,7 +213,8 @@ mod tests {
         bus.store(0x0001, 0x12);
         bus.store(0x0002, 0x34);
         bus.store(0x3412, 0x13);
-        assert!(cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(!p_get!(cpu.reg, I));
         assert_eq!(4, cpu.total_cycles);
         assert_eq!(0x38, cpu.reg.a);
         assert_eq!(p!(), cpu.reg.p);
@@ -234,14 +223,18 @@ mod tests {
 
     #[test]
     fn brk() {
+        const IRQ_ADDR: u16 = 0x9876;
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
         cpu.reg.pc = 0x1000;
         bus.store(0x1000, Opcode::Brk as u8);
-        bus.store(IRQ, 0x76);
-        bus.store(IRQ + 1, 0x98);
+        bus.store(IRQ_ADDR, 0xea);
+        let (hi, lo) = split_word(IRQ_ADDR);
+        bus.store(IRQ, lo);
+        bus.store(IRQ.wrapping_add(1), hi);
         p_set!(cpu.reg, B, false);
-        assert!(!cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(p_get!(cpu.reg, I));
         assert_eq!(7, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(0x9876, cpu.reg.pc);
@@ -257,7 +250,8 @@ mod tests {
         let bus = Bus::default();
         let mut cpu = Cpu::new(bus.view(), None);
 
-        let (hi, lo) = split_word(0xdead);
+        bus.store(IRQ_ADDR, 0xea);
+        let (hi, lo) = split_word(IRQ_ADDR);
         bus.store(IRQ, lo);
         bus.store(IRQ.wrapping_add(1), hi);
 
@@ -270,12 +264,14 @@ mod tests {
         cpu.reg.p = p_test;
         p_set!(cpu.reg, B, false);
 
-        assert!(cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(!p_get!(cpu.reg, I));
         assert_eq!(6, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(JUMP_ADDR, cpu.reg.pc);
 
-        assert!(!cpu.step_no_spin());
+        cpu.step_no_spin();
+        assert!(p_get!(cpu.reg, I));
         assert_eq!(13, cpu.total_cycles);
         assert!(!p_get!(cpu.reg, B));
         assert_eq!(IRQ_ADDR, cpu.reg.pc);
@@ -378,8 +374,16 @@ mod tests {
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
+        let irq_addr = bus.load_irq_unsafe();
+        cpu.bus.store(irq_addr, 0xea);
+
         cpu.reg.pc = load.wrapping_add(1);
-        while cpu.step_no_spin() {}
+        loop {
+            cpu.step_no_spin();
+            if p_get!(cpu.reg, I) {
+                break;
+            }
+        }
         assert_eq!(21, cpu.total_cycles);
         assert_eq!(0x46, bus.load(0x0e00));
         Ok(())
@@ -404,8 +408,16 @@ mod tests {
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
+        let irq_addr = bus.load_irq_unsafe();
+        cpu.bus.store(irq_addr, 0xea);
+
         cpu.reg.pc = load.wrapping_add(2);
-        while cpu.step_no_spin() {}
+        loop {
+            cpu.step_no_spin();
+            if p_get!(cpu.reg, I) {
+                break;
+            }
+        }
         assert_eq!(33, cpu.total_cycles);
         let lo = bus.load(0x0e00);
         let hi = bus.load(0x0e01);
@@ -448,8 +460,16 @@ mod tests {
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), None);
 
+        let irq_addr = bus.load_irq_unsafe();
+        cpu.bus.store(irq_addr, 0xea);
+
         cpu.reg.pc = load.wrapping_add(2);
-        while cpu.step_no_spin() {}
+        loop {
+            cpu.step_no_spin();
+            if p_get!(cpu.reg, I) {
+                break;
+            }
+        }
         assert_eq!(893, cpu.total_cycles);
         let lo = bus.load(NUM1);
         let hi = bus.load(NUM1 + 1);
@@ -475,6 +495,9 @@ mod tests {
         let bus = Bus::default_with_image(&image)?;
         let mut cpu = Cpu::new(bus.view(), monitor);
 
+        let irq_addr = bus.load_irq_unsafe();
+        cpu.bus.store(irq_addr, 0xea);
+
         cpu.reg.pc = image.start().unwrap_or_default();
 
         let rts = MOS_6502
@@ -487,7 +510,12 @@ mod tests {
 
         let mut result = String::new();
         loop {
-            while cpu.step_no_spin() {}
+            loop {
+                cpu.step_no_spin();
+                if p_get!(cpu.reg, I) {
+                    break;
+                }
+            }
 
             match get_brk_addr(&cpu) {
                 Some(0xffc0) => break,

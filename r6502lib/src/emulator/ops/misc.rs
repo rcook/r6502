@@ -52,6 +52,7 @@ mod tests {
         cpu.reg.p = _p!(p);
         cpu.reg.pc = pc + 1;
         cpu.reg.sp = sp;
+        cpu.bus.store(irq_addr, 0xea);
         let (hi, lo) = split_word(irq_addr);
         cpu.bus.store(IRQ, lo);
         cpu.bus.store(IRQ.wrapping_add(1), hi);

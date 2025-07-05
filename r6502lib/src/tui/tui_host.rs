@@ -2,8 +2,8 @@ use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, MonitorMessage, State};
-use crate::p_set;
 use crate::tui::TuiMonitor;
+use crate::{p_get, p_set};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -73,7 +73,8 @@ impl TuiHost {
                 Err(TryRecvError::Empty) | Ok(_) => {}
             }
 
-            if !cpu.step() {
+            cpu.step();
+            if p_get!(cpu.reg, I) {
                 let new_state = self.handle_brk();
                 if !matches!(new_state, Stepping) {
                     return new_state;
@@ -106,7 +107,8 @@ impl TuiHost {
                 },
             }
 
-            if !cpu.step_with_monitor_callbacks() {
+            cpu.step_with_monitor_callbacks();
+            if p_get!(cpu.reg, I) {
                 let new_state = self.handle_brk();
                 if !matches!(new_state, Stepping) {
                     return new_state;

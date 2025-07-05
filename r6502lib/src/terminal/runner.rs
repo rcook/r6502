@@ -2,6 +2,7 @@ use crate::emulator::r6502_image::Image;
 use crate::emulator::util::make_unique_snapshot_path;
 use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
+use crate::p_get;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{anyhow, bail, Result};
 use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
@@ -48,7 +49,12 @@ impl Runner<'_> {
             .ok_or_else(|| anyhow!("JMP_IND must exist"))?
             .clone();
 
-        while cpu.step_with_monitor_callbacks() {
+        loop {
+            cpu.step_with_monitor_callbacks();
+            if p_get!(cpu.reg, I) {
+                break;
+            }
+
             match bus_rx.try_recv() {
                 Ok(BusEvent::UserBreak) => {
                     return Ok(StopReason::UserBreak {
