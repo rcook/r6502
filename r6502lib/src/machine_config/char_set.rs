@@ -52,7 +52,7 @@ impl CharSet {
         }
     }
 
-    fn to_byte(&self, c: char) -> u8 {
+    fn to_byte(self, c: char) -> u8 {
         match self {
             Self::Apple1 => {
                 let value = c.to_ascii_uppercase() as u8;

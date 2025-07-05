@@ -15,9 +15,7 @@ pub fn brk(cpu: &mut Cpu) {
     cpu.push_word(cpu.reg.pc + 1);
     cpu.push((cpu.reg.p | P::B).bits());
     let new_pc = make_word(cpu.bus.load(IRQ.wrapping_add(1)), cpu.bus.load(IRQ));
-    if cpu.bus.load(new_pc) == 0x00 {
-        panic!("CPU is circling the drain!");
-    }
+    assert!((cpu.bus.load(new_pc) != 0x00), "CPU is circling the drain!");
     cpu.reg.pc = new_pc;
     p_set!(cpu.reg, I, true);
 }

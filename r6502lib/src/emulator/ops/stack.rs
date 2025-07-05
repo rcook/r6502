@@ -156,13 +156,13 @@ mod tests {
             cpu.bus.store(start + 1, value); // the test value
             cpu.reg.p = _p!(0b00110000);
             cpu.reg.pc = start;
-            _ = cpu.step_no_spin(); // LDA #value
+            cpu.step_no_spin(); // LDA #value
             assert_eq!(start + 2, cpu.reg.pc);
             assert_eq!(value, cpu.reg.a);
-            _ = cpu.step_no_spin(); // PHA
+            cpu.step_no_spin(); // PHA
             assert_eq!(start + 3, cpu.reg.pc);
             assert_eq!(value, cpu.bus.load(STACK_BASE + cpu.reg.sp as u16 + 1));
-            _ = cpu.step_no_spin(); // PLP
+            cpu.step_no_spin(); // PLP
             assert_eq!(_p!(expected_p), cpu.reg.p);
         }
         const START: u16 = 0x1000;

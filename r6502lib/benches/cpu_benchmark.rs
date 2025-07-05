@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use r6502lib::_p;
 use r6502lib::emulator::{Bus, Cpu, Image, DEFAULT_SP};
+use r6502lib::{_p, p_get};
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
@@ -35,7 +35,12 @@ fn div16_benchmark(c: &mut Criterion) {
             cpu.reg.pc = image.start().unwrap_or_default();
             cpu.reg.sp = image.sp().unwrap_or(DEFAULT_SP);
             let before_total_cycles = cpu.total_cycles;
-            while cpu.step() {}
+            loop {
+                cpu.step();
+                if p_get!(cpu.reg, I) {
+                    break;
+                }
+            }
             let after_total_cycles = cpu.total_cycles;
             assert_eq!(0, cpu.reg.a);
             assert_eq!(938, after_total_cycles - before_total_cycles);

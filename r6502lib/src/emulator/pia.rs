@@ -32,7 +32,7 @@ impl PiaState {
         }
     }
 
-    fn set_key(&mut self, value: u8) {
+    const fn set_key(&mut self, value: u8) {
         self.pa = value;
         self.pa_cr |= 0x80;
     }
@@ -110,7 +110,7 @@ impl Pia {
                                 if let Some(c) = char_set.translate_in(&key) {
                                     state.lock().unwrap().set_key(c);
                                 } else {
-                                    info!("Unimplemented: {key:?}")
+                                    info!("Unimplemented: {key:?}");
                                 }
                             }
                         }
