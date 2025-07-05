@@ -7,6 +7,7 @@ use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
+use log::info;
 use std::cell::Cell;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
@@ -109,7 +110,7 @@ impl Pia {
                                 if let Some(c) = char_set.translate_in(&key) {
                                     state.lock().unwrap().set_key(c);
                                 } else {
-                                    todo!("{key:?}")
+                                    info!("Unimplemented: {key:?}")
                                 }
                             }
                         }
