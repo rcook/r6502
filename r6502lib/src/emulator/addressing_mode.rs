@@ -1,7 +1,6 @@
-use crate::{
-    emulator::{InstructionInfo, Operand},
-    symbols::MapFile,
-};
+use crate::emulator::{InstructionInfo, Operand};
+use crate::num::{Truncate, Wrap};
+use crate::symbols::MapFile;
 use anyhow::{bail, Result};
 
 #[derive(Clone)]
@@ -127,10 +126,10 @@ impl AddressingMode {
         }
     }
 
-    const fn compute_branch(pc: u16, operand: u8) -> u16 {
-        let lhs = pc as i32;
-        let rhs = (operand as i8) as i32;
-        (lhs + rhs) as u16
+    fn compute_branch(pc: u16, operand: u8) -> u16 {
+        let lhs = i32::from(pc);
+        let rhs = i32::from(i8::wrap(operand));
+        u16::truncate(lhs + rhs)
     }
 
     fn find_name(map_file: &MapFile, value: u16) -> Option<String> {

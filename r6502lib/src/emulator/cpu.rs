@@ -116,7 +116,8 @@ impl<'a> Cpu<'a> {
 
     #[must_use]
     fn get_stack_value(&self) -> u8 {
-        self.bus.load(STACK_BASE.wrapping_add(u16::from(self.reg.sp)))
+        self.bus
+            .load(STACK_BASE.wrapping_add(u16::from(self.reg.sp)))
     }
 
     fn set_stack_value(&mut self, value: u8) {

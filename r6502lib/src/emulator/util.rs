@@ -1,7 +1,9 @@
 use crate::emulator::{Cpu, IRQ};
+use crate::num::Truncate;
 use anyhow::Result;
 use chrono::Utc;
-use std::{env::current_dir, path::PathBuf};
+use std::env::current_dir;
+use std::path::PathBuf;
 
 pub fn make_unique_snapshot_path() -> Result<PathBuf> {
     let now = Utc::now();
@@ -19,9 +21,9 @@ pub const fn make_word(hi: u8, lo: u8) -> u16 {
 }
 
 #[must_use]
-pub const fn split_word(value: u16) -> (u8, u8) {
+pub fn split_word(value: u16) -> (u8, u8) {
     let hi = (value >> 8) as u8;
-    let lo = value as u8;
+    let lo = u8::truncate(value);
     (hi, lo)
 }
 

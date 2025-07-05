@@ -94,7 +94,7 @@ impl Image {
         let bytes_end = effective_end - image_start;
 
         let load = if range_start < image_start {
-            (image_start - range_start) as u16
+            u16::try_from(image_start - range_start).unwrap()
         } else {
             0
         };

@@ -312,10 +312,7 @@ pub mod indirect_indexed_y {
 pub mod relative {
     macro_rules! wrap {
         ($f: ident, $not_taken_cycles: expr, $taken_cycles: expr, $taken_cross_page_cycles: expr) => {
-            pub const fn $f(
-                cpu: &mut $crate::emulator::Cpu,
-                offset: u8,
-            ) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, offset: u8) -> $crate::emulator::OpCycles {
                 match $crate::emulator::ops::$f(cpu, offset) {
                     $crate::emulator::ops::BranchResult::NotTaken => $not_taken_cycles,
                     $crate::emulator::ops::BranchResult::Taken => $not_taken_cycles,

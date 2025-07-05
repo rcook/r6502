@@ -1,5 +1,6 @@
 use crate::emulator::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
 use crate::emulator::Cpu;
+use crate::num::Truncate;
 use crate::{p_get, p_set, p_value};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
@@ -33,13 +34,13 @@ pub fn adc(cpu: &mut Cpu, operand: u8) {
             ah -= 10;
             ah &= 0xf;
         }
-        cpu.reg.a = ((al as u8) & 0xf) | ((ah as u8) << 4);
+        cpu.reg.a = (u8::truncate(al) & 0xf) | (u8::truncate(ah) << 4);
     } else {
         let lhs = cpu.reg.a;
         let rhs = operand;
 
         let result_word = u16::from(lhs) + u16::from(rhs) + p_value!(cpu.reg, C);
-        let result = result_word as u8;
+        let result = u8::truncate(result_word);
 
         cpu.reg.a = result;
         p_set!(cpu.reg, N, is_neg(result));
@@ -136,7 +137,7 @@ pub fn sbc(cpu: &mut Cpu, operand: u8) {
         p_set!(cpu.reg, Z, result.trailing_zeros() >= 8);
         p_set!(cpu.reg, V, ((a ^ result) & (value ^ a) & 0x80) != 0);
         p_set!(cpu.reg, C, (result & 0x100) == 0);
-        cpu.reg.a = (al as u8) | ((ah as u8) << 4);
+        cpu.reg.a = u8::truncate(al) | (u8::truncate(ah) << 4);
     } else {
         adc(cpu, !operand);
     }
