@@ -49,4 +49,4 @@ zptr: .addr $0000
 .endproc
 
 .segment "STARTUPDATA"
-banner: .byte "r6502 Microcomputer 32K", 13, 10, 13, 10, "BASIC", 13, 10, 13, 10, 7, 0
+banner: .byte "r6502 Emulator 32K", 13, 10, 13, 10, "BASIC", 13, 10, 13, 10, 7, 0
