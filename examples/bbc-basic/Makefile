@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean debug default prereqs run
+.PHONY: clean debug default prereqs run trace
 
 BIN := bbc-basic.$(BINEXT)
 BINSOURCES := header.s main.s
@@ -18,6 +18,9 @@ clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
 run: $(BIN)
+	cargo run -- run $(BIN)
+
+trace: $(BIN)
 	cargo run -- run $(BIN) --trace
 
 debug: $(BIN)
