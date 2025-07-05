@@ -3,9 +3,11 @@ use crate::emulator::util::make_word;
 use crate::emulator::Cpu;
 use anyhow::{anyhow, bail, Result};
 use log::info;
-use std::env::current_dir;
+use path_absolutize::Absolutize;
+use std::env::{current_dir, set_current_dir};
 use std::fs::{read_dir, File};
 use std::io::{BufReader, BufWriter, ErrorKind, Read, Write};
+use std::path::Path;
 
 const OSAREG: u16 = 0x00ef; // BASIC zero-page workspace value
 const HOOK_OK: u8 = 0;
@@ -25,8 +27,15 @@ pub fn handle_host_hook(cpu: &mut Cpu) -> Result<()> {
 fn handle_cliv(cpu: &mut Cpu) -> Result<()> {
     let xy_addr = make_word(cpu.reg.y, cpu.reg.x);
     let command_line = read_cr_terminated_string(cpu, xy_addr)?;
-    let result = match command_line.as_str() {
-        "*." | "*CAT" => show_catalogue()?,
+
+    let (command, arg) = match command_line.split_once(' ') {
+        Some((c, a)) => (c.trim(), Some(a.trim())),
+        None => (command_line.trim(), None),
+    };
+
+    let result = match command {
+        "*." | "*CAT" => show_catalogue(arg)?,
+        "*DIR" => change_working_dir(arg)?,
         _ => {
             info!("OSCLI command {command_line} not implemented");
             false
@@ -49,16 +58,36 @@ fn handle_filev(cpu: &mut Cpu) -> Result<()> {
     Ok(())
 }
 
-fn show_catalogue() -> Result<bool> {
+fn show_catalogue(arg: Option<&str>) -> Result<bool> {
     let d = current_dir()?;
+    let d = match arg {
+        Some(s) => Path::new(s).absolutize_from(&d)?.to_path_buf(),
+        None => d,
+    };
+
+    let Ok(dir) = read_dir(&d) else {
+        return Ok(false);
+    };
+
     println!("Directory: {dir}", dir = d.display());
-    for entry in read_dir(d)? {
+    for entry in dir {
         let entry = entry?;
         let f = entry.file_name();
         let file_name = f
             .to_str()
             .ok_or_else(|| anyhow!("could not convert file name {f:?}"))?;
         println!("  {file_name}");
+    }
+    Ok(true)
+}
+
+fn change_working_dir(arg: Option<&str>) -> Result<bool> {
+    let d = current_dir()?;
+    match arg {
+        Some(s) => set_current_dir(Path::new(s).absolutize_from(&d)?)?,
+        None => {
+            println!("{d}", d = d.display());
+        }
     }
     Ok(true)
 }
