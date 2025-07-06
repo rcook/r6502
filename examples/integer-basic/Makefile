@@ -2,14 +2,13 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean debug default prereqs run
+.PHONY: clean debug default run
 
 BIN := integer-basic.$(BINEXT)
 BINSOURCES := a1basic.s constants.s main.s wozmon.s
+main.o: main.s $(SHAREDLIBDIR)/r6502.mac
 
-prereqs:
-
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
+$(eval $(call ld65v2,$(BIN),$(BIN:.$(BINEXT)=.cfg),$(BINSOURCES:.s=.o),$(CC65LIBDIR)/none.lib))
 
 clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)

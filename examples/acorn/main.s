@@ -1,5 +1,6 @@
 .macpack r6502
 .macpack raw
+.importzp OSAREG
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
@@ -12,12 +13,7 @@ r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
 
 STRING_BUFFER_LEN = 10
 
-.zeropage
-zword0: .word $0000
-
 .segment "SIDEWAYSCODE"
-; Sideways ROM header (partial)
-.export entrypoint
 .proc entrypoint
     sideways_rom_header @go, , , , "TEST", "1.0", "2025 Richard Cook"
 @go:
@@ -121,16 +117,16 @@ zword0: .word $0000
     raw_write_str line_result_str
 
     lda #<string_buffer
-    sta zword0
+    sta OSAREG
     lda #>string_buffer
-    sta zword0 + 1
+    sta OSAREG + 1
 
 @print_message:
     cpx #$00
     beq @done
     ldy #$00
 @loop:
-    lda (zword0), y
+    lda (OSAREG), y
     jsr OSWRCH
     iny
     dex
@@ -150,7 +146,7 @@ zword0: .word $0000
 .proc print
     ldy #0
 @loop:
-    lda (zword0), y
+    lda (OSAREG), y
     beq @done
     jsr OSWRCH
     iny
@@ -173,6 +169,6 @@ line_prompt_str: .byte "Enter some text followed by Enter: ", 0
 line_result_str: .byte "You typed: ", 0
 you_escaped_str: .byte "You pressed Esc", 0
 
-.segment "USERDATA"
+.data
 string_buffer: .res STRING_BUFFER_LEN
 osword_print_line_params: .res 5

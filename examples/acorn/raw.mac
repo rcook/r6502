@@ -28,18 +28,19 @@
 .endmacro
 
 .macro raw_write_str s
+.importzp OSAREG
 .local @done
 .local @loop
 .ifblank s
     .error "Must pass string"
 .endif
     lda #<s
-    sta zword0
+    sta OSAREG
     lda #>s
-    sta zword0 + 1
+    sta OSAREG + 1
     ldy #$00
 @loop:
-    lda (zword0), y
+    lda (OSAREG), y
     beq @done
     raw_write_char_from_a
     iny

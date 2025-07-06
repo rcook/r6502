@@ -1,8 +1,13 @@
+.macpack r6502
 .import OSWRCH
+.import __SIDEWAYSCODE_LOAD__
+
+r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
 
 .segment "SIDEWAYSCODE"
-.export main
-.proc main
+.proc entrypoint
+    sideways_rom_header @go, , , , "TEST", "1.0", "2025 Richard Cook"
+@go:
     ldx #$00
 @loop:
     lda str, x
@@ -11,7 +16,7 @@
     inx
     bne @loop
 @done:
-    rts
+    syshalt
 .endproc
 
 .segment "SIDEWAYSDATA"

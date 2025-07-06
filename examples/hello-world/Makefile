@@ -5,12 +5,14 @@ include ../shared.mk
 .PHONY: clean debug default prereqs run
 
 BIN := hello-world.$(BINEXT)
-BINSOURCES := header.s main.s
+BINSOURCES := main.s
+main.o: main.s $(SHAREDLIBDIR)/r6502.mac
 
 prereqs:
+	make -C $(PROJECTDIR)/examples/acorn
 	make -C $(PROJECTDIR)/examples/std
 
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/std.lib $(SHAREDLIBDIR)/acorn.lib))
+$(eval $(call ld65v2,$(BIN),$(SHAREDLIBDIR)/sideways.cfg,$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/std.lib $(SHAREDLIBDIR)/acorn.lib,prereqs $(CONFIGDIR)/acorn.r6502))
 
 clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)

@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean copy debug default prereqs run user
+.PHONY: clean copy debug default run user
 
 ACORNLIB := acorn.$(LIBEXT)
 ACORNLIBSOURCES := \
@@ -29,19 +29,17 @@ IMAGESOURCES := \
 	mos-routines-impl.s \
 	os-impl.s \
 	zp.s
-mos-entrypoints.o: mos-entrypoints.s raw.mac
+header.o: header.s $(SHAREDLIBDIR)/r6502.mac
+mos-entrypoints.o: mos-entrypoints.s raw.mac $(SHAREDLIBDIR)/r6502.mac
 
 BIN := acorn-test.$(BINEXT)
 BINSOURCES := main.s
-main.o: main.s raw.mac
+main.o: main.s raw.mac $(SHAREDLIBDIR)/r6502.mac
 
 ALLSOURCES := $(ACORNLIBSOURCES) $(IMAGESOURCES) $(BINSOURCES)
 
-prereqs:
-
-$(eval $(call ld65,$(IMAGE),$(IMAGESOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
-
-$(eval $(call ld65,$(BIN),$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
+$(eval $(call ld65v2,$(IMAGE),$(IMAGE:.$(BINEXT)=.cfg),$(IMAGESOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
+$(eval $(call ld65v2,$(BIN),$(SHAREDLIBDIR)/sideways.cfg,$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/$(ACORNLIB)))
 
 $(CONFIGDIR)/$(IMAGE): $(IMAGE)
 	cp $^ $@
