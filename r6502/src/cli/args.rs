@@ -87,13 +87,6 @@ pub struct RunOptions {
     #[arg(help = "Report cycles", long = "cycles", default_value_t = false)]
     pub cycles: bool,
 
-    #[arg(
-        help = "Start execution from RESET vector",
-        long = "reset",
-        default_value_t = false
-    )]
-    pub reset: bool,
-
     #[arg(help = "Stop after given number of cycles", long = "stop-after")]
     pub stop_after: Option<u64>,
 
@@ -113,7 +106,6 @@ impl From<RunOptions> for r6502lib::run_options::RunOptions {
             start: value.start,
             trace: value.trace,
             cycles: value.cycles,
-            reset: value.reset,
             stop_after: value.stop_after,
             machine: value.machine,
         }

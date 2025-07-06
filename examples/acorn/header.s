@@ -16,4 +16,4 @@
 .import MOSINIT
 .import __ROCODE_LOAD__
 
-r6502_header "ACRN", __ROCODE_LOAD__, MOSINIT
+r6502_module "ACRN", __ROCODE_LOAD__, MOSINIT

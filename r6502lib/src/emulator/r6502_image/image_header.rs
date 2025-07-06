@@ -1,16 +1,24 @@
 use crate::_p;
 use crate::emulator::r6502_image::R6502ImageType;
-use crate::emulator::{Cpu, MachineTag, TotalCycles, R6502_MAGIC_NUMBER};
-use anyhow::Result;
+use crate::emulator::util::make_word;
+use crate::emulator::{Cpu, MachineTag, TotalCycles, R6502_MAGIC_NUMBER, RESET};
+use anyhow::{bail, Result};
 use num_traits::FromPrimitive;
 use std::io::{ErrorKind, Read, Seek, Write};
 
 pub enum ImageHeader {
-    Type0 {
+    // A module represents a program or subroutine that runs independently
+    // of an operating system. The module will be loaded at the load address
+    // and execution will begin at the start address.
+    Module {
         machine_tag: MachineTag,
         load: u16,
         start: u16,
     },
+
+    // A snapshot captures the full state of execution of the machine
+    // at a point in time including all addressable memory and all CPU
+    // registers.
     Snapshot {
         machine_tag: MachineTag,
         pc: u16,
@@ -20,6 +28,18 @@ pub enum ImageHeader {
         sp: u8,
         p: u8,
         total_cycles: TotalCycles,
+    },
+
+    // A system snapshot captures the full initial state of the
+    // machine and is useful for providing a system's operating
+    // system in ROM. The system snapshot will be loaded at the
+    // specified load address and will be stared from the 6502
+    // RESET vector. It's important that the system snapshot
+    // include valid NMI, RESET and IRQ vectors at the top of
+    // memory.
+    System {
+        machine_tag: MachineTag,
+        load: u16,
     },
 }
 
@@ -62,6 +82,9 @@ macro_rules! read_le_quad_word {
 
 impl ImageHeader {
     pub fn try_from_reader<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {
+        let pos = reader.stream_position()?;
+        assert_eq!(0, pos);
+
         let magic_number = read_le_word!(reader);
         if magic_number != R6502_MAGIC_NUMBER {
             reader.rewind()?;
@@ -73,11 +96,20 @@ impl ImageHeader {
             return Ok(None);
         };
 
-        Ok(match image_type {
-            R6502ImageType::Type0 => Self::try_read_type0(reader)?,
+        let result = match image_type {
+            R6502ImageType::Module => Self::try_read_module(reader)?,
             R6502ImageType::Snapshot => Self::try_read_snapshot(reader)?,
-            _ => todo!(),
-        })
+            R6502ImageType::System => Self::try_read_system(reader)?,
+        };
+
+        if result.is_some() {
+            let header_len = reader.stream_position()? - pos;
+            if header_len != image_type.header_len() {
+                bail!("invalid header")
+            }
+        }
+
+        Ok(result)
     }
 
     #[must_use]
@@ -97,36 +129,39 @@ impl ImageHeader {
     #[must_use]
     pub const fn machine_tag(&self) -> MachineTag {
         match self {
-            Self::Type0 { machine_tag, .. } | Self::Snapshot { machine_tag, .. } => *machine_tag,
+            Self::Module { machine_tag, .. }
+            | Self::Snapshot { machine_tag, .. }
+            | Self::System { machine_tag, .. } => *machine_tag,
         }
     }
 
     #[must_use]
     pub const fn load(&self) -> Option<u16> {
         match self {
-            Self::Type0 { load, .. } => Some(*load),
+            Self::Module { load, .. } | Self::System { load, .. } => Some(*load),
             Self::Snapshot { .. } => None,
         }
     }
 
     #[must_use]
-    pub const fn start(&self) -> u16 {
+    pub const fn start(&self) -> Option<u16> {
         match self {
-            Self::Type0 { start, .. } | Self::Snapshot { pc: start, .. } => *start,
+            Self::Module { start, .. } | Self::Snapshot { pc: start, .. } => Some(*start),
+            Self::System { .. } => None,
         }
     }
 
     #[must_use]
     pub const fn sp(&self) -> Option<u8> {
         match self {
-            Self::Type0 { .. } => None,
+            Self::Module { .. } | Self::System { .. } => None,
             Self::Snapshot { sp, .. } => Some(*sp),
         }
     }
 
-    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         match self {
-            Self::Type0 { start, .. } => cpu.reg.pc = *start,
+            Self::Module { start, .. } => cpu.reg.pc = *start,
             Self::Snapshot {
                 pc,
                 a,
@@ -144,6 +179,12 @@ impl ImageHeader {
                 cpu.reg.sp = *sp;
                 cpu.reg.p = _p!(*p);
                 cpu.total_cycles = *total_cycles;
+            }
+            Self::System { .. } => {
+                let reset_lo = cpu.bus.load(RESET);
+                let reset_hi = cpu.bus.load(RESET.wrapping_add(1));
+                let reset = make_word(reset_hi, reset_lo);
+                cpu.reg.pc = reset;
             }
         }
     }
@@ -170,12 +211,12 @@ impl ImageHeader {
         Ok(())
     }
 
-    fn try_read_type0<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {
+    fn try_read_module<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {
         let mut machine_tag = MachineTag::default();
         fill_buffer!(reader, &mut machine_tag);
         let load = read_le_word!(reader);
         let start = read_le_word!(reader);
-        Ok(Some(Self::Type0 {
+        Ok(Some(Self::Module {
             machine_tag,
             load,
             start,
@@ -191,7 +232,7 @@ impl ImageHeader {
         let y = read_byte!(reader);
         let sp = read_byte!(reader);
         let p = read_byte!(reader);
-        let total_cycles = read_le_quad_word!(reader);
+        let total_cycles: u64 = read_le_quad_word!(reader);
         Ok(Some(Self::Snapshot {
             machine_tag,
             pc,
@@ -202,5 +243,12 @@ impl ImageHeader {
             p,
             total_cycles,
         }))
+    }
+
+    fn try_read_system<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {
+        let mut machine_tag = MachineTag::default();
+        fill_buffer!(reader, &mut machine_tag);
+        let load = read_le_word!(reader);
+        Ok(Some(Self::System { machine_tag, load }))
     }
 }

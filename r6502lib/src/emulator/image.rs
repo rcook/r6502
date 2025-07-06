@@ -45,18 +45,19 @@ impl Image {
     #[must_use]
     pub const fn start(&self) -> Option<u16> {
         match self {
-            Self::R6502(image) => Some(image.start()),
+            Self::R6502(image) => image.start(),
             Self::Other(other) => other.start(),
         }
     }
 
     #[must_use]
-    pub const fn sp(&self) -> Option<u8> {
+    pub fn sp(&self) -> Option<u8> {
         match self {
             Self::R6502(image) => image.sp(),
             Self::Other(other) => other.sp(),
         }
     }
+
     #[must_use]
     pub const fn bytes(&self) -> &Vec<u8> {
         match self {
@@ -65,7 +66,7 @@ impl Image {
         }
     }
 
-    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         match self {
             Self::R6502(image) => image.set_initial_cpu_state(cpu),
             Self::Other(image) => image.set_initial_cpu_state(cpu),

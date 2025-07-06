@@ -1,14 +1,20 @@
 use num_derive::FromPrimitive;
 
-const TYPE0: u8 = 0b0000_0000;
-const SNAPSHOT: u8 = 0b0000_0001;
-const RLE: u8 = 0b1000_0000; // TBD: run-length encoding
-
 #[derive(Debug, FromPrimitive)]
 #[repr(u8)]
 pub enum R6502ImageType {
-    Type0 = TYPE0,
-    Type0Rle = TYPE0 | RLE, // Not implemented yet!
-    Snapshot = SNAPSHOT,
-    SnapshotRle = SNAPSHOT | RLE, // Not implemented yet!
+    Module = 0,
+    Snapshot = 1,
+    System = 2,
+}
+
+impl R6502ImageType {
+    #[must_use]
+    pub const fn header_len(&self) -> u64 {
+        match self {
+            Self::Module => 11,
+            Self::Snapshot => 22,
+            Self::System => 9,
+        }
+    }
 }

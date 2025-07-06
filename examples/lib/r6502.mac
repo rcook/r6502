@@ -1,5 +1,13 @@
-; Insert r6502 executable header (exactly 11 bytes)
-.macro r6502_header machine_tag, load_addr, start_addr
+R6502_MODULE = 0
+R6502_SNAPSHOT = 1
+R6502_SYSTEM = 2
+
+; Insert r6502 module header
+; Length: 11 bytes
+; A module represents a program or subroutine that runs independently
+; of an operating system. The module will be loaded at the load address
+; and execution will begin at the start address.
+.macro r6502_module machine_tag, load_addr, start_addr
 .ifblank machine_tag
     .error "Must define machine_tag"
 .endif
@@ -9,16 +17,73 @@
 .ifblank start_addr
     .error "Must define start_addr"
 .endif
-
 .segment "HEADER"
 .assert * = $0000, error, "Header must be at $0000"
 .dbyt $6502
-.byte $00
+.byte R6502_MODULE
 .byte machine_tag
+.assert * = $0007, error, "Machine tag must end at $0007"
 .addr load_addr
 .addr start_addr
-.assert * = $000B, error, "Header must end at $000B"
+.assert * = $000B, error, "Header must end at $000B (11 bytes)"
+.endmacro
 
+; Insert r6502 snapshot header
+; Length: 22 bytes
+; A snapshot captures the full state of execution of the machine
+; at a point in time including all addressable memory and all CPU
+; registers.
+.macro r6502_snapshot machine_tag
+.ifblank machine_tag
+    .error "Must define machine_tag"
+.endif
+.ifblank load_addr
+    .error "Must define load_addr"
+.endif
+.ifblank start_addr
+    .error "Must define start_addr"
+.endif
+.segment "HEADER"
+.assert * = $0000, error, "Header must be at $0000"
+.dbyt $6502
+.byte R6502_SNAPSHOT
+.byte machine_tag
+.assert * = $0007, error, "Machine tag must end at $0007"
+.addr $0000             ; PC
+.byte $00               ; A
+.byte $00               ; X
+.byte $00               ; Y
+.byte $00               ; SP
+.byte $00               ; P
+.dword $00000000        ; lo(total_cycles)
+.dword $00000000        ; hi(total_cycles)
+.assert * = $0016, error, "Header must end at $0016 (22 bytes)"
+.endmacro
+
+; Insert r6502 system header
+; Length: 9 bytes
+; A system snapshot captures the full initial state of the
+; machine and is useful for providing a system's operating
+; system in ROM. The system snapshot will be loaded at the
+; specified load address and will be stared from the 6502
+; RESET vector. It's important that the system snapshot
+; include valid NMI, RESET and IRQ vectors at the top of
+; memory.
+.macro r6502_system machine_tag, load_addr
+.ifblank machine_tag
+    .error "Must define machine_tag"
+.endif
+.ifblank load_addr
+    .error "Must define load_addr"
+.endif
+.segment "HEADER"
+.assert * = $0000, error, "Header must be at $0000"
+.dbyt $6502
+.byte R6502_SYSTEM
+.byte machine_tag
+.assert * = $0007, error, "Machine tag must end at $0007"
+.addr load_addr
+.assert * = $0009, error, "Header must end at $0009 (9 bytes)"
 .endmacro
 
 ; sysinit

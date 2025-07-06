@@ -2,7 +2,7 @@
 .import copydata
 .import __DATA_LOAD__
 
-r6502_header "APL1", __DATA_LOAD__, startup
+r6502_module "APL1", __DATA_LOAD__, startup
 
 ; Make sure these symbols always show up in the map file
 .forceimport DSP

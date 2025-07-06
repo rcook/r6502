@@ -46,16 +46,6 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         let irq = bus.load_irq_unsafe();
         let vectors = Vectors { nmi, reset, irq };
 
-        let start = if opts.reset {
-            bus.load_reset_unsafe()
-        } else {
-            image.start().or(opts.start).unwrap_or_default()
-        };
-
-        if opts.trace {
-            show_image_info(opts, &image, start, &vectors);
-        }
-
         let monitor: Option<Box<dyn Monitor>> = if opts.trace {
             Some(Box::new(TracingMonitor::default()))
         } else {
@@ -64,6 +54,8 @@ pub fn run(opts: &RunOptions) -> Result<()> {
 
         let mut cpu = Cpu::new(bus.view(), monitor);
         image.set_initial_cpu_state(&mut cpu);
+
+        show_image_info(opts, &image, cpu.reg.pc, &vectors);
 
         let stop_reason = Runner {
             cpu: &mut cpu,

@@ -6,7 +6,6 @@ pub struct RunOptions {
     pub start: Option<u16>,
     pub trace: bool,
     pub cycles: bool,
-    pub reset: bool,
     pub stop_after: Option<u64>,
     pub machine: Option<String>,
 }

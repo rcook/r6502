@@ -38,7 +38,7 @@ impl Image {
     }
 
     #[must_use]
-    pub const fn start(&self) -> u16 {
+    pub const fn start(&self) -> Option<u16> {
         self.header.start()
     }
 
@@ -52,7 +52,7 @@ impl Image {
         &self.bytes
     }
 
-    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
         self.header.set_initial_cpu_state(cpu);
     }
 

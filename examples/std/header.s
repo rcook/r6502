@@ -2,4 +2,4 @@
 .import startup
 .import __SIDEWAYSCODE_LOAD__
 
-r6502_header "ACRN", __SIDEWAYSCODE_LOAD__, startup
+r6502_module "ACRN", __SIDEWAYSCODE_LOAD__, startup

@@ -5,7 +5,7 @@
 .import __CODE_LOAD__
 .exportzp zword0
 
-r6502_header "ACRN", __CODE_LOAD__, startup
+r6502_module "ACRN", __CODE_LOAD__, startup
 
 .code
 .proc startup
