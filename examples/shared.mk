@@ -57,9 +57,9 @@ endef
 # $(2): configuration file
 # $(3): object files
 # $(4): libraries
-# $(5): additional dependencies
+# $(5): prerequisites (dependencies that must be built first)
 define ld65v2
-$(1): $(2) $(3) $(4) $(5)
+$(1): $(5) $(2) $(3) $(4)
 	ld65 \
 		-C $(2) \
 		-vm \
