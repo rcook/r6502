@@ -15,7 +15,7 @@ STRING_BUFFER_LEN = 10
 
 .segment "SIDEWAYSCODE"
 .proc entrypoint
-    sideways_rom_header @go, , , , "TEST", "1.0", "2025 Richard Cook"
+    sideways_rom_header @go, , , , "acorn-test", "1.0", "2025 Richard Cook"
 @go:
     ;jsr test_osasci
     ;jsr test_osbyte

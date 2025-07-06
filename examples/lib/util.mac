@@ -5,6 +5,9 @@
 ; comments:
 ;   Destroys A
 .macro stzword0 value
+.ifblank value
+    .error "value undefined"
+.endif
     lda #<value
     sta zword0
     lda #>value
@@ -18,6 +21,9 @@
 ; comments:
 ;   Destroys A
 .macro stzword1 value
+.ifblank value
+    .error "value undefined"
+.endif
     lda #<value
     sta zword1
     lda #>value
@@ -31,6 +37,9 @@
 ; comments:
 ;   Destroys A
 .macro stzword2 value
+.ifblank value
+    .error "value undefined"
+.endif
     lda #<value
     sta zword2
     lda #>value
@@ -44,6 +53,9 @@
 ; comments:
 ;   Destroys A
 .macro stzword3 value
+.ifblank value
+    .error "value undefined"
+.endif
     lda #<value
     sta zword3
     lda #>value
@@ -57,6 +69,9 @@
 ; comments:
 ;   Destroys P, A, Y, zword0, zword0 + 1
 .macro print_buf addr
+.ifblank value
+    .error "addr undefined"
+.endif
     stzword0 addr
     jsr print
 .endmacro
@@ -68,6 +83,9 @@
 ; comments:
 ;   Destroys P, A, X, Y, zword0, zword0 + 1
 .macro print_int addr
+.ifblank value
+    .error "addr undefined"
+.endif
     lda #$00
     ldx #<addr
     ldy #>addr
@@ -82,18 +100,27 @@
 ; add16
 ; Adds two 16-bit integers at given addresses
 ; params:
-;   left_addr, left_addr + 1: address of left operand
-;   right_addr, right_addr + 1: address of right operand
-;   result_addr, result_addr + 1: address of result
+;   left, left + 1: address of left operand
+;   right, right + 1: address of right operand
+;   result, result + 1: address of result
 ; comments:
-;   Destroys P, A, result_addr, result_addr + 1
-.macro add16 left_addr, right_addr, result_addr
+;   Destroys P, A, result, result + 1
+.macro add16 left, right, result
+.ifblank left
+    .error "left undefined"
+.endif
+.ifblank right
+    .error "right undefined"
+.endif
+.ifblank result
+    .error "result undefined"
+.endif
     clc
-    lda left_addr
-    adc right_addr
+    lda left
+    adc right
     sta result
-    lda left_addr + 1
-    adc right_addr + 1
+    lda left + 1
+    adc right + 1
     sta result + 1
 .endmacro
 

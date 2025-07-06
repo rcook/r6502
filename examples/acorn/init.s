@@ -60,8 +60,8 @@
     jsr OSNEWL
 
     ; Annoying beep
-    lda #$07
-    jsr OSWRCH
+    ;lda #$07
+    ;jsr OSWRCH
 
     ; Check that we have a language ROM
     lda #<SIDEWAYS_ROM_START

@@ -10,15 +10,15 @@ R6502_SYSTEM_HEADER_LEN = 9
 ; A module represents a program or subroutine that runs independently
 ; of an operating system. The module will be loaded at the load address
 ; and execution will begin at the start address.
-.macro r6502_module machine_tag, load_addr, start_addr
+.macro r6502_module machine_tag, load, start
 .ifblank machine_tag
-    .error "Must define machine_tag"
+    .error "machine_tag undefined"
 .endif
-.ifblank load_addr
-    .error "Must define load_addr"
+.ifblank load
+    .error "load undefined"
 .endif
-.ifblank start_addr
-    .error "Must define start_addr"
+.ifblank start
+    .error "start undefined"
 .endif
 .segment "HEADER"
 .assert * = $0000, error, "Header must be at $0000"
@@ -26,8 +26,8 @@ R6502_SYSTEM_HEADER_LEN = 9
 .byte R6502_MODULE
 .byte machine_tag
 .assert * = $0007, error, "Machine tag must end at $0007"
-.addr load_addr
-.addr start_addr
+.addr load
+.addr start
 .assert * = R6502_MODULE_HEADER_LEN, error, "Header must end at $000B (11 bytes)"
 .endmacro
 
@@ -38,13 +38,7 @@ R6502_SYSTEM_HEADER_LEN = 9
 ; registers.
 .macro r6502_snapshot machine_tag
 .ifblank machine_tag
-    .error "Must define machine_tag"
-.endif
-.ifblank load_addr
-    .error "Must define load_addr"
-.endif
-.ifblank start_addr
-    .error "Must define start_addr"
+    .error "machine_tag undefined"
 .endif
 .segment "HEADER"
 .assert * = $0000, error, "Header must be at $0000"
@@ -72,12 +66,12 @@ R6502_SYSTEM_HEADER_LEN = 9
 ; RESET vector. It's important that the system snapshot
 ; include valid NMI, RESET and IRQ vectors at the top of
 ; memory.
-.macro r6502_system machine_tag, load_addr
+.macro r6502_system machine_tag, load
 .ifblank machine_tag
-    .error "Must define machine_tag"
+    .error "machine_tag undefined"
 .endif
-.ifblank load_addr
-    .error "Must define load_addr"
+.ifblank load
+    .error "load undefined"
 .endif
 .segment "HEADER"
 .assert * = $0000, error, "Header must be at $0000"
@@ -85,7 +79,7 @@ R6502_SYSTEM_HEADER_LEN = 9
 .byte R6502_SYSTEM
 .byte machine_tag
 .assert * = $0007, error, "Machine tag must end at $0007"
-.addr load_addr
+.addr load
 .assert * = R6502_SYSTEM_HEADER_LEN, error, "Header must end at $0009 (9 bytes)"
 .endmacro
 

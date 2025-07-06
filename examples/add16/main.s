@@ -2,24 +2,27 @@
 .macpack util
 .import copydata
 .import print
-.import __CODE_LOAD__
+.import __SIDEWAYSCODE_LOAD__
 .exportzp zword0
 
-r6502_module "ACRN", __CODE_LOAD__, startup
+r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
 
-.code
-.proc startup
-    sysinit
+.zeropage
+zword0: .word $0000
+
+.data
+left: .word $3412
+right: .word $7856
+result: .word $0000
+
+.segment "SIDEWAYSCODE"
+.proc entrypoint
+    sideways_rom_header @go, , , , "add16", "1.0", "2025 Richard Cook"
+@go:
     jsr copydata
-    jsr test_add16
-    syshalt
-.endproc
-
-.proc test_add16
-    print_buf welcome
-    add16 left, right
-    lda result
+    add16 left, right, result
     bcs @failed
+    lda result
     cmp #$68
     bne @failed
     lda result + 1
@@ -28,20 +31,13 @@ r6502_module "ACRN", __CODE_LOAD__, startup
 @succeeded:
     print_buf succeeded
     lda #$00
-    rts
+    syshalt
 @failed:
     print_buf failed
     lda #$01
-    rts
+    syshalt
 .endproc
 
-.zeropage
-zword0: .word $0000
-
-.data
-welcome: .byte "ADD16 TEST", 13, 10, 0
+.segment "SIDEWAYSDATA"
 succeeded: .byte "Test passed", 13, 10, 0
 failed: .byte "Test failed", 13, 10, 0
-left: .word $3412
-right: .word $7856
-result: .word $0000
