@@ -1,5 +1,7 @@
-.import LANGUAGE_ROM_TITLE
-.import LANGUAGE_ROM_START
+.import HALT
+.import SIDEWAYS_ROM_OFFSET
+.import SIDEWAYS_ROM_START
+.import SIDEWAYS_ROM_TITLE
 .importzp OSAREG
 .import OSNEWL
 .import OSWRCH
@@ -54,17 +56,81 @@
     lda #>mos_banner
     sta OSAREG + 1
     jsr print_banner
+    jsr OSNEWL
+    jsr OSNEWL
 
     ; Annoying beep
     lda #$07
     jsr OSWRCH
 
-    ; Display name of language ROM
-    lda #<LANGUAGE_ROM_TITLE
+    ; Check that we have a language ROM
+    lda #<SIDEWAYS_ROM_START
     sta OSAREG
-    lda #>LANGUAGE_ROM_TITLE
+    lda #>SIDEWAYS_ROM_START
+    sta OSAREG + 1
+    ldy #$00
+    lda (OSAREG), y
+    cmp #$4C ; opcode for JMP direct (well-formed language ROMS start with this)
+    beq @continue
+    cmp #$C9 ; opcode for CMP immediate (BBC BASIC 2 starts with this)
+    beq @continue
+
+@no_language:
+    lda #<no_language
+    sta OSAREG
+    lda #>no_language
     sta OSAREG + 1
     jsr print_banner
+    lda #$01
+    jmp HALT
+
+@continue:
+    ; Check copyright is valid
+    lda #<SIDEWAYS_ROM_START
+    clc
+    adc SIDEWAYS_ROM_OFFSET
+    sta OSAREG
+    lda #>SIDEWAYS_ROM_START
+    sta OSAREG + 1
+
+    ldy #$00
+    lda (OSAREG), y
+    bne @no_language
+
+    iny
+    lda (OSAREG), y
+    cmp #'('
+    bne @no_language
+
+    iny
+    lda (OSAREG), y
+    cmp #'C'
+    bne @no_language
+
+    iny
+    lda (OSAREG), y
+    cmp #')'
+    bne @no_language
+
+    ; Display sideways ROM title
+    lda #<SIDEWAYS_ROM_TITLE
+    sta OSAREG
+    lda #>SIDEWAYS_ROM_TITLE
+    sta OSAREG + 1
+    jsr print_banner
+    lda #' '
+    jsr OSWRCH
+
+    ; Display sideways ROM copyright
+    lda #<SIDEWAYS_ROM_START
+    clc
+    adc SIDEWAYS_ROM_OFFSET
+    adc #$01
+    sta OSAREG
+    lda #>SIDEWAYS_ROM_START
+    sta OSAREG + 1
+    jsr print_banner
+    jsr OSNEWL
 
     ; Initialize stack pointer and set binary mode
     ldx #$ff
@@ -73,7 +139,7 @@
 
     ; Jump to language entrypoint $8000 with A=1
     lda #$01
-    jmp LANGUAGE_ROM_START
+    jmp SIDEWAYS_ROM_START
 .endproc
 
 .proc print_banner
@@ -85,10 +151,9 @@
     iny
     bne @banner_loop
 @banner_loop_done:
-    jsr OSNEWL
-    jsr OSNEWL
     rts
 .endproc
 
 .segment "MOSDATA"
 mos_banner: .byte "r6502 Emulator 32K", 0
+no_language: .byte "Language?", 0

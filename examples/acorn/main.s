@@ -1,7 +1,5 @@
 .macpack r6502
 .macpack raw
-.import LANGUAGE_ROM_START
-.import LANGUAGE_ROM_TITLE
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
@@ -21,16 +19,7 @@ zword0: .word $0000
 ; Sideways ROM header (partial)
 .export entrypoint
 .proc entrypoint
-.assert * = LANGUAGE_ROM_START, error, "Header must be at $8000"
-    jmp @go
-    .byte $00
-    .byte $00
-    .byte $00
-    .byte $00
-    .byte $00
-    .byte $00
-.assert * = LANGUAGE_ROM_TITLE, error, "Language ROM title"
-    .byte "TEST", 0
+    sideways_rom_header @go, , , , "TEST", "1.0", "2025 Richard Cook"
 @go:
     ;jsr test_osasci
     ;jsr test_osbyte

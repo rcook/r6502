@@ -100,3 +100,50 @@ R6502_SYSTEM_HEADER_LEN = 9
 .import HALT
     jmp HALT
 .endmacro
+
+; Sideways ROM header
+.macro sideways_rom_header language, service, rom_type, version, title, version_str, copyright
+.local @offset
+.importzp CR
+.importzp LF
+.import SIDEWAYS_ROM_OFFSET
+.import SIDEWAYS_ROM_START
+.import SIDEWAYS_ROM_TITLE
+.assert * = SIDEWAYS_ROM_START, error, "header at expected address"
+.ifblank language
+    .byte $00, $00, $00
+.else
+    jmp language
+.endif
+.ifblank service
+    .byte $00, $00, $00
+.else
+    jmp service
+.endif
+.ifblank rom_type
+    .byte $00
+.else
+    .byte rom_type
+.endif
+.assert * = SIDEWAYS_ROM_OFFSET, error, "offset at expected address"
+    .byte <@offset
+.ifblank version
+    .byte $00
+.else
+    .byte version
+.endif
+.assert * = SIDEWAYS_ROM_TITLE, error, "title at expected address"
+.ifnblank title
+    .byte title
+.endif
+    .byte $00
+.ifnblank version_str
+    .byte version_str
+.endif
+@offset:
+    .byte $00, "(C)"
+.ifnblank copyright
+    .byte copyright
+.endif
+    .byte LF, CR, $00
+.endmacro
