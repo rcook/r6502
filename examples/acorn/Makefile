@@ -5,7 +5,13 @@ include ../shared.mk
 .PHONY: clean copy debug default prereqs run user
 
 ACORNLIB := acorn.$(LIBEXT)
-ACORNLIBSOURCES := ascii.s cpu.s misc.s mos-routines.s mos-vectors.s mos-zp.s
+ACORNLIBSOURCES := \
+	ascii.s \
+	cpu.s \
+	misc.s \
+	mos-routines.s \
+	mos-vectors.s \
+	mos-zp.s
 ACORNLIBMAP := $(ACORNLIB:.$(LIBEXT)=.map)
 $(ACORNLIB): $(ACORNLIBSOURCES:.s=.o)
 	ar65 r $@ $^
@@ -14,7 +20,13 @@ $(SHAREDLIBDIR)/$(ACORNLIB): $(ACORNLIB)
 	cp $^ $@
 
 IMAGE := acorn.$(BINEXT)
-IMAGESOURCES := header.s cpu-impl.s mos-entrypoints.s mos-init.s mos-routines-impl.s zp.s
+IMAGESOURCES := \
+	header.s \
+	cpu-impl.s \
+	mos-entrypoints.s \
+	mos-init.s \
+	mos-routines-impl.s \
+	zp.s
 mos-entrypoints.o: mos-entrypoints.s raw.mac
 
 BIN := acorn-test.$(BINEXT)
