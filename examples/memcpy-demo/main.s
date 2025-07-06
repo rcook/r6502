@@ -1,12 +1,25 @@
+.macpack r6502
 .macpack util
+.import OSWRCH
 .import memcpy
 .import num_to_str
 .import print
-.exportzp zword0, zword1, zword2
+.import __SIDEWAYSCODE_LOAD__
+.exportzp zword0
+.exportzp zword1
+.exportzp zword2
+
+r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
+
+.zeropage
+zword0: .word $0000
+zword1: .word $0000
+zword2: .word $0000
 
 .segment "SIDEWAYSCODE"
-.export main
-.proc main
+.proc entrypoint
+    sideways_rom_header @go, , , , "TEST", "1.0", "2025 Richard Cook"
+@go:
     print_buf hello
     print_int value
     print_buf line_break
@@ -20,13 +33,8 @@
     print_buf str
 
     print_buf goodbye
-    rts
+    syshalt
 .endproc
-
-.zeropage
-zword0: .word $0000
-zword1: .word $0000
-zword2: .word $0000
 
 .data
 result: .dword $FFFFFFFF
