@@ -1,5 +1,6 @@
 use crate::ascii::{BS, CR, DEL, ESC, LF};
 use cursive::backends::crossterm::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use log::info;
 use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
@@ -32,14 +33,18 @@ impl CharSet {
     }
 
     #[must_use]
-    pub const fn translate_out(&self, value: u8) -> Option<u8> {
+    pub fn translate_out(&self, value: u8) -> Option<u8> {
         match self {
             Self::Default => Some(value),
             Self::Acorn => {
                 match value {
                     CR => None, // Swallow CR
                     DEL => Some(BS),
-                    _ => Some(value),
+                    10 | 32..=126 => Some(value),
+                    _ => {
+                        info!("nonprinting VDU code: {value:>3} ${value:02X}");
+                        Some(value)
+                    }
                 }
             }
             Self::Apple1 => {
