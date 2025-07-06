@@ -1,5 +1,7 @@
 .macpack r6502
 .macpack raw
+.import LANGUAGE_ROM_START
+.import LANGUAGE_ROM_TITLE
 .import OSASCI
 .import OSBYTE
 .import OSNEWL
@@ -8,7 +10,7 @@
 .import OSWRCH
 .import __SIDEWAYSCODE_LOAD__
 
-r6502_module "ACRN", __SIDEWAYSCODE_LOAD__, startup
+r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
 
 STRING_BUFFER_LEN = 10
 
@@ -16,14 +18,20 @@ STRING_BUFFER_LEN = 10
 zword0: .word $0000
 
 .segment "SIDEWAYSCODE"
-.export startup
-.proc startup
-    sysinit
-    jsr main
-    syshalt
-.endproc
-
-.proc main
+; Sideways ROM header (partial)
+.export entrypoint
+.proc entrypoint
+.assert * = LANGUAGE_ROM_START, error, "Header must be at $8000"
+    jmp @go
+    .byte $00
+    .byte $00
+    .byte $00
+    .byte $00
+    .byte $00
+    .byte $00
+.assert * = LANGUAGE_ROM_TITLE, error, "Language ROM title"
+    .byte "TEST", 0
+@go:
     ;jsr test_osasci
     ;jsr test_osbyte
     ;jsr test_osnewl
@@ -31,7 +39,7 @@ zword0: .word $0000
     jsr test_osword
     ;jsr test_oswrch
     lda #$00
-    rts
+    syshalt
 .endproc
 
 .proc test_osasci

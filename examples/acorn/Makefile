@@ -11,7 +11,8 @@ ACORNLIBSOURCES := \
 	misc.s \
 	mos-routines.s \
 	mos-vectors.s \
-	mos-zp.s
+	mos-zp.s \
+	os.s
 ACORNLIBMAP := $(ACORNLIB:.$(LIBEXT)=.map)
 $(ACORNLIB): $(ACORNLIBSOURCES:.s=.o)
 	ar65 r $@ $^
@@ -21,11 +22,12 @@ $(SHAREDLIBDIR)/$(ACORNLIB): $(ACORNLIB)
 
 IMAGE := acorn.$(BINEXT)
 IMAGESOURCES := \
-	header.s \
 	cpu-impl.s \
+	header.s \
+	init.s \
 	mos-entrypoints.s \
-	mos-init.s \
 	mos-routines-impl.s \
+	os-impl.s \
 	zp.s
 mos-entrypoints.o: mos-entrypoints.s raw.mac
 

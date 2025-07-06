@@ -21,31 +21,31 @@
 .importzp CLIVHOSTHOOK
 .importzp FILEVHOSTHOOK
 
-.segment "ROCODE"
+.segment "MOS"
 .export userv_entrypoint
 .proc userv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: userv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export brkv_entrypoint
 .proc brkv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: brkv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export irq1v_entrypoint
 .proc irq1v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: irq1v"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export irq2v_entrypoint
 .proc irq2v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: irq2v"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export cliv_entrypoint
 .proc cliv_entrypoint
     lda #CLIVHOSTHOOK
@@ -61,7 +61,7 @@
     rts
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export bytev_entrypoint
 .proc bytev_entrypoint
     php
@@ -84,7 +84,7 @@
 .endproc
 
 ; Inspired by https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
-.segment "ROCODE"
+.segment "MOS"
 .export wordv_entrypoint
 .proc wordv_entrypoint
     php
@@ -191,14 +191,14 @@
     rts
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export wrchv_entrypoint
 .proc wrchv_entrypoint
     raw_write_char_from_a
     rts
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export rdchv_entrypoint
 .proc rdchv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: rdchv"
@@ -206,7 +206,7 @@
     rts
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export filev_entrypoint
 .proc filev_entrypoint
     pha
@@ -224,104 +224,104 @@
     rts
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export argsv_entrypoint
 .proc argsv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: argsv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export bgetv_entrypoint
 .proc bgetv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: bgetv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export bputv_entrypoint
 .proc bputv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: bputv"
     brk
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export gbpbv_entrypoint
 .proc gbpbv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: gbpbv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export findv_entrypoint
 .proc findv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: findv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export fscv_entrypoint
 .proc fscv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: fscv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export evntv_entrypoint
 .proc evntv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: evntv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export uptv_entrypoint
 .proc uptv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: uptv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export netv_entrypoint
 .proc netv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: netv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export vduv_entrypoint
 .proc vduv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: vduv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export keyv_entrypoint
 .proc keyv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: keyv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export insv_entrypoint
 .proc insv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: insv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export remv_entrypoint
 .proc remv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: remv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export cnpv_entrypoint
 .proc cnpv_entrypoint
     raw_not_impl "NOT IMPLEMENTED: cnpv"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export ind1v_entrypoint
 .proc ind1v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: ind1v"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export ind2v_entrypoint
 .proc ind2v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: ind2v"
 .endproc
 
-.segment "ROCODE"
+.segment "MOS"
 .export ind3v_entrypoint
 .proc ind3v_entrypoint
     raw_not_impl "NOT IMPLEMENTED: ind3v"

@@ -1,3 +1,9 @@
+.import LANGUAGE_ROM_TITLE
+.import LANGUAGE_ROM_START
+.importzp OSAREG
+.import OSNEWL
+.import OSWRCH
+
 .macro init_vector vec, entrypoint
     .import vec
     .import entrypoint
@@ -38,7 +44,51 @@
 .endmacro
 
 .segment "MOSINIT"
-.proc MOSINIT
+.export MOS_INIT
+.proc MOS_INIT
     init_vectors
+
+    ; Display startup banner
+    lda #<mos_banner
+    sta OSAREG
+    lda #>mos_banner
+    sta OSAREG + 1
+    jsr print_banner
+
+    ; Annoying beep
+    lda #$07
+    jsr OSWRCH
+
+    ; Display name of language ROM
+    lda #<LANGUAGE_ROM_TITLE
+    sta OSAREG
+    lda #>LANGUAGE_ROM_TITLE
+    sta OSAREG + 1
+    jsr print_banner
+
+    ; Initialize stack pointer and set binary mode
+    ldx #$ff
+    txs
+    cld
+
+    ; Jump to language entrypoint $8000 with A=1
+    lda #$01
+    jmp LANGUAGE_ROM_START
+.endproc
+
+.proc print_banner
+    ldy #$00
+@banner_loop:
+    lda (OSAREG), y
+    beq @banner_loop_done
+    jsr OSWRCH
+    iny
+    bne @banner_loop
+@banner_loop_done:
+    jsr OSNEWL
+    jsr OSNEWL
     rts
 .endproc
+
+.segment "MOSDATA"
+mos_banner: .byte "r6502 Emulator 32K", 0

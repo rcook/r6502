@@ -5,7 +5,7 @@ include ../shared.mk
 .PHONY: clean debug default prereqs run trace
 
 BIN := bbc-basic.$(BINEXT)
-BINSOURCES := header.s main.s
+BINSOURCES := main.s
 main.o: main.s $(CONFIGDIR)/acorn.r6502
 
 prereqs:

@@ -1,6 +1,9 @@
 R6502_MODULE = 0
+R6502_MODULE_HEADER_LEN = 11
 R6502_SNAPSHOT = 1
+R6502_SNAPSHOT_HEADER_LEN = 22
 R6502_SYSTEM = 2
+R6502_SYSTEM_HEADER_LEN = 9
 
 ; Insert r6502 module header
 ; Length: 11 bytes
@@ -25,7 +28,7 @@ R6502_SYSTEM = 2
 .assert * = $0007, error, "Machine tag must end at $0007"
 .addr load_addr
 .addr start_addr
-.assert * = $000B, error, "Header must end at $000B (11 bytes)"
+.assert * = R6502_MODULE_HEADER_LEN, error, "Header must end at $000B (11 bytes)"
 .endmacro
 
 ; Insert r6502 snapshot header
@@ -57,7 +60,7 @@ R6502_SYSTEM = 2
 .byte $00               ; P
 .dword $00000000        ; lo(total_cycles)
 .dword $00000000        ; hi(total_cycles)
-.assert * = $0016, error, "Header must end at $0016 (22 bytes)"
+.assert * = R6502_SNAPSHOT_HEADER_LEN, error, "Header must end at $0016 (22 bytes)"
 .endmacro
 
 ; Insert r6502 system header
@@ -83,21 +86,16 @@ R6502_SYSTEM = 2
 .byte machine_tag
 .assert * = $0007, error, "Machine tag must end at $0007"
 .addr load_addr
-.assert * = $0009, error, "Header must end at $0009 (9 bytes)"
+.assert * = R6502_SYSTEM_HEADER_LEN, error, "Header must end at $0009 (9 bytes)"
 .endmacro
 
 ; sysinit
 ; Initialize the system
 .macro sysinit
-    ldx #$ff
-    txs
-    cld
-.import MOSINIT
-    jsr MOSINIT
 .endmacro
 
 ; syshalt
-; Initialize the system
+; Halt the system
 .macro syshalt
 .import HALT
     jmp HALT
