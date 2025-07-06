@@ -1,3 +1,4 @@
+pub const BEL: u8 = 0x07;
 pub const BS: u8 = 0x08;
 pub const LF: u8 = 0x0a;
 pub const CR: u8 = 0x0d;

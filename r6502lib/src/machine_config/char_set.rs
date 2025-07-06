@@ -1,4 +1,4 @@
-use crate::ascii::{BS, CR, DEL, ESC, LF};
+use crate::ascii::{BEL, BS, CR, DEL, ESC, LF};
 use cursive::backends::crossterm::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use log::info;
 use serde::Deserialize;
@@ -40,7 +40,7 @@ impl CharSet {
                 match value {
                     CR => None, // Swallow CR
                     DEL => Some(BS),
-                    10 | 32..=126 => Some(value),
+                    BEL | LF | 32..=126 => Some(value),
                     _ => {
                         info!("nonprinting VDU code: {value:>3} (${value:02X})");
                         Some(value)
