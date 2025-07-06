@@ -110,7 +110,7 @@ impl Pia {
                                 if let Some(c) = char_set.translate_in(&key) {
                                     state.lock().unwrap().set_key(c);
                                 } else {
-                                    info!("Unimplemented: {key:?}");
+                                    info!("unimplemented: {key:?}");
                                 }
                             }
                         }

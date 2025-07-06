@@ -42,7 +42,7 @@ impl CharSet {
                     DEL => Some(BS),
                     10 | 32..=126 => Some(value),
                     _ => {
-                        info!("nonprinting VDU code: {value:>3} ${value:02X}");
+                        info!("nonprinting VDU code: {value:>3} (${value:02X})");
                         Some(value)
                     }
                 }
