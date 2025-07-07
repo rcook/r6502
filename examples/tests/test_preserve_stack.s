@@ -1,12 +1,10 @@
 .macpack util
-.import print
-.exportzp zword0
+.importzp OSAREG
+.import OSWRCH
 
 .segment "SIDEWAYSCODE"
-.export main
-.proc main
-    print_buf hello
-
+.export test_preserve_stack
+.proc test_preserve_stack
     lda #$11
     ldx #$22
     ldy #$33
@@ -30,13 +28,21 @@
     bne @failed
 
 @passed:
-    print_buf passed
-    lda #0
+    lda #<succeeded
+    sta OSAREG
+    lda #>succeeded
+    sta OSAREG + 1
+    jsr print_str
+    lda #$00
     rts
 
 @failed:
-    print_buf failed
-    lda #1
+    lda #<failed
+    sta OSAREG
+    lda #>failed
+    sta OSAREG + 1
+    jsr print_str
+    lda #$01
     rts
 .endproc
 
@@ -51,6 +57,18 @@
     restore_registers
 .endproc
 
+.proc print_str
+    ldy #$00
+@loop:
+    lda (OSAREG),Y
+    beq @done
+    jsr OSWRCH
+    iny
+    bne @loop
+@done:
+    rts
+.endproc
+
 .zeropage
 zword0: .byte 0
 za: .byte 0
@@ -58,6 +76,5 @@ zx: .byte 0
 zy: .byte 0
 
 .segment "SIDEWAYSDATA"
-hello: .byte "REGISTER PRESERVATION TEST", 13, 10, 0
-passed: .byte "Registers successfully preserved", 13, 10, 0
-failed: .byte "Registers not preserved", 13, 10, 0
+succeeded: .byte "test_preserve_stack passed", 13, 10, 0
+failed: .byte "test_preserve_stack failed", 13, 10, 0

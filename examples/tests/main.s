@@ -2,6 +2,7 @@
 .import test_add16
 .import test_div16
 .import test_num_to_str
+.import test_preserve_stack
 .import test_str_to_num
 .import copydata
 .import __SIDEWAYSHEADER_LOAD__
@@ -21,6 +22,8 @@ sideways_rom_header entrypoint, , , , "tests", "1.0", "2025 Richard Cook"
     jsr test_num_to_str
     bne @failed
     jsr test_str_to_num
+    bne @failed
+    jsr test_preserve_stack
     bne @failed
 
     syshalt $00

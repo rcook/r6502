@@ -5,11 +5,18 @@ include ../shared.mk
 .PHONY: clean default prereqs run trace
 
 BIN := tests.$(BINEXT)
-BINSOURCES := main.s test_add16.s test_div16.s test_num_to_str.s test_str_to_num.s
+BINSOURCES := \
+	main.s \
+	test_add16.s \
+	test_div16.s \
+	test_num_to_str.s \
+	test_preserve_stack.s \
+	test_str_to_num.s
 main.o: main.s $(SHAREDLIBDIR)/r6502.mac
 test_add16.o: test_add16.s $(SHAREDLIBDIR)/r6502.mac $(SHAREDLIBDIR)/util.mac
 test_div16.o: test_div16.s $(SHAREDLIBDIR)/r6502.mac $(SHAREDLIBDIR)/util.mac
 test_num_to_str.o: test_num_to_str.s $(SHAREDLIBDIR)/util.mac
+test_preserve_stack.o: test_preserve_stack.s $(SHAREDLIBDIR)/util.mac
 test_str_to_num.o: test_str_to_num.s $(SHAREDLIBDIR)/util.mac
 
 prereqs:
