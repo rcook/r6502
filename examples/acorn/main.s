@@ -12,7 +12,7 @@
 r6502_system "ACRN", __SIDEWAYSHEADER_LOAD__
 sideways_rom_header entrypoint, , , , "acorn-test", "1.0", "2025 Richard Cook"
 
-STRING_BUFFER_LEN = 10
+BUFFER_LEN = 10
 
 .segment "SIDEWAYSCODE"
 .proc entrypoint
@@ -26,16 +26,18 @@ STRING_BUFFER_LEN = 10
 .endproc
 
 .proc test_osasci
-    raw_write_str test_osasci_str
+    raw_write_str test_osasci_banner
+
     lda #65
     jsr OSASCI
     lda #13
     jsr OSASCI
+
     rts
 .endproc
 
 .proc test_osbyte
-    raw_write_str test_osbyte_str
+    raw_write_str test_osbyte_banner
 
     lda #$83
     jsr OSBYTE
@@ -54,55 +56,61 @@ STRING_BUFFER_LEN = 10
     rts
 
 @failed:
-    raw_write_str failed_str
+    raw_write_str failed
     syshalt $01
 .endproc
 
 .proc test_osnewl
-    raw_write_str test_osnewl_str
+    raw_write_str test_osnewl_banner
+
     jsr OSNEWL
+
     rts
 .endproc
 
 .proc test_osrdch
-    raw_write_str test_osrdch_str
-    raw_write_str prompt_str
+    raw_write_str test_osrdch_banner
+
+    raw_write_str key_prompt
     jsr OSRDCH
     pha
     jsr OSNEWL
-    raw_write_str you_pressed_str
+    raw_write_str key_result
     pla
     jsr OSWRCH
     jsr OSNEWL
+
     rts
 .endproc
 
 .proc test_osword
-    raw_write_str test_osword_str
-    raw_write_str line_prompt_str
+    raw_write_str test_osword_banner
+
+    raw_write_str line_prompt
 
     ; Set up parameter block
-    lda #<string_buffer
-    sta osword_print_line_params
-    lda #>string_buffer
-    sta osword_print_line_params + 1
-    lda #STRING_BUFFER_LEN - 1          ; OSWORD $00 returns extra CR character at end
-    sta osword_print_line_params + 2
+    lda #<buffer
+    sta param_block
+    lda #>buffer
+    sta param_block + 1
+    lda #BUFFER_LEN - 1          ; OSWORD $00 returns extra CR character at end
+    sta param_block + 2
     lda #$00
-    sta osword_print_line_params + 3
+    sta param_block + 3
     lda #$FF
-    sta osword_print_line_params + 4
+    sta param_block + 4
 
     ; Call OSWORD $00 (read line)
     lda #$00
-    ldx #<osword_print_line_params
-    ldy #>osword_print_line_params
+    ldx #<param_block
+    ldy #>param_block
     jsr OSWORD
 
     ; C = 1 if Esc was pressed
     bcc @display_str
     raw_write_new_line
-    raw_write_str you_escaped_str
+    raw_write_str escaped
+
     rts
 
     ; Y contains number of characters read not including the CR
@@ -111,61 +119,34 @@ STRING_BUFFER_LEN = 10
     tya
     tax
 
-    raw_write_str line_result_str
-
-    lda #<string_buffer
-    sta OSAREG
-    lda #>string_buffer
-    sta OSAREG + 1
-
-@print_message:
-    cpx #$00
-    beq @done
-    ldy #$00
-@loop:
-    lda (OSAREG), y
-    jsr OSWRCH
-    iny
-    dex
-    bne @loop
-@done:
-
+    raw_write_str line_result
+    raw_write_str buffer
     rts
 .endproc
 
 .proc test_oswrch
-    raw_write_str test_oswrch_str
+    raw_write_str test_oswrch_banner
+
     lda #65
     jsr OSWRCH
-    rts
-.endproc
 
-.proc print
-    ldy #0
-@loop:
-    lda (OSAREG), y
-    beq @done
-    jsr OSWRCH
-    iny
-    bne @loop
-@done:
     rts
 .endproc
 
 .segment "SIDEWAYSDATA"
-test_osasci_str: .byte "Testing OSASCI", 13, 10, 0
-test_osbyte_str: .byte "Testing OSBYTE", 13, 10, 0
-test_osnewl_str: .byte "Testing OSNEWL", 13, 10, 0
-test_osrdch_str: .byte "Testing OSRDCH", 13, 10, 0
-test_osword_str: .byte "Testing OSWORD", 13, 10, 0
-test_oswrch_str: .byte "Testing OSWRCH", 13, 10, 0
-prompt_str: .byte "Press a key: ", 0
-you_pressed_str: .byte "You pressed: ", 0
-failed_str: .byte "Failed", 13, 10, 0
-line_prompt_str: .byte "Enter some text followed by Enter: ", 0
-line_result_str: .byte "You typed: ", 0
-you_escaped_str: .byte "You pressed Esc", 0
+test_osasci_banner: .byte "Testing OSASCI", 13, 10, 0
+test_osbyte_banner: .byte "Testing OSBYTE", 13, 10, 0
+test_osnewl_banner: .byte "Testing OSNEWL", 13, 10, 0
+test_osrdch_banner: .byte "Testing OSRDCH", 13, 10, 0
+test_osword_banner: .byte "Testing OSWORD", 13, 10, 0
+test_oswrch_banner: .byte "Testing OSWRCH", 13, 10, 0
+failed: .byte "Failed", 13, 10, 0
+key_prompt: .byte "Press a key: ", 0
+key_result: .byte "You pressed: ", 0
+line_prompt: .byte "Enter some text followed by Enter: ", 0
+line_result: .byte "You typed: ", 0
+escaped: .byte "You pressed Esc", 0
 
 .data
-string_buffer: .res STRING_BUFFER_LEN
-osword_print_line_params: .res 5
+buffer: .res BUFFER_LEN
+param_block: .res 5
