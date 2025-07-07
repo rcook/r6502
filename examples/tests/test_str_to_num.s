@@ -1,5 +1,4 @@
-.importzp OSAREG
-.import OSWRCH
+.macpack helpers
 .import str_to_num
 .importzp pfac
 
@@ -11,13 +10,7 @@
     jsr str_to_num
     bcc @continue
 
-    lda #<failed_due_to_overflow
-    sta OSAREG
-    lda #>failed_due_to_overflow
-    sta OSAREG + 1
-    jsr print_str
-    lda #$02
-    rts
+    return failed_due_to_overflow, $02
 
 @continue:
     .repeat 4, I
@@ -26,34 +19,10 @@
     bne @failed
     .endrepeat
 
-    lda #<succeeded
-    sta OSAREG
-    lda #>succeeded
-    sta OSAREG + 1
-    jsr print_str
-    lda #$00
-    rts
+    return succeeded, $00
 
 @failed:
-    lda #<failed
-    sta OSAREG
-    lda #>failed
-    sta OSAREG + 1
-    jsr print_str
-    lda #$01
-    rts
-.endproc
-
-.proc print_str
-    ldy #$00
-@loop:
-    lda (OSAREG),Y
-    beq @done
-    jsr OSWRCH
-    iny
-    bne @loop
-@done:
-    rts
+    return failed, $01
 .endproc
 
 .segment "SIDEWAYSDATA"

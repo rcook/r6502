@@ -1,0 +1,17 @@
+.macro return message, exit_code
+.importzp OSAREG
+.import print_str
+.ifblank message
+    .error "message undefined"
+.endif
+.ifblank exit_code
+    .error "exit_code undefined"
+.endif
+    lda #<message
+    sta OSAREG
+    lda #>message
+    sta OSAREG + 1
+    jsr print_str
+    lda #exit_code
+    rts
+.endmacro

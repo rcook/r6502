@@ -1,6 +1,12 @@
+.macpack helpers
 .macpack util
 .importzp OSAREG
-.import OSWRCH
+.importzp OSXREG
+.importzp OSYREG
+
+za = OSAREG
+zx = OSXREG
+zy = OSYREG
 
 .segment "SIDEWAYSCODE"
 .export test_preserve_stack
@@ -28,22 +34,9 @@
     bne @failed
 
 @passed:
-    lda #<succeeded
-    sta OSAREG
-    lda #>succeeded
-    sta OSAREG + 1
-    jsr print_str
-    lda #$00
-    rts
-
+    return succeeded, $00
 @failed:
-    lda #<failed
-    sta OSAREG
-    lda #>failed
-    sta OSAREG + 1
-    jsr print_str
-    lda #$01
-    rts
+    return failed, $01
 .endproc
 
 .proc test
@@ -56,24 +49,6 @@
     ldy #0
     restore_registers
 .endproc
-
-.proc print_str
-    ldy #$00
-@loop:
-    lda (OSAREG),Y
-    beq @done
-    jsr OSWRCH
-    iny
-    bne @loop
-@done:
-    rts
-.endproc
-
-.zeropage
-zword0: .byte 0
-za: .byte 0
-zx: .byte 0
-zy: .byte 0
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_preserve_stack passed", 13, 10, 0

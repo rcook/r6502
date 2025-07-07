@@ -1,6 +1,10 @@
+.macpack helpers
 .macpack util
-.import print
-.importzp zword0
+
+.data
+left: .word $3412
+right: .word $7856
+result: .word $0000
 
 .segment "SIDEWAYSCODE"
 .export test_add16
@@ -14,19 +18,10 @@
     cmp #$ac
     bne @failed
 @succeeded:
-    print_buf succeeded
-    lda #$00
-    rts
+    return succeeded, $00
 @failed:
-    print_buf failed
-    lda #$01
-    rts
+    return failed, $01
 .endproc
-
-.data
-left: .word $3412
-right: .word $7856
-result: .word $0000
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_add16 passed", 13, 10, 0

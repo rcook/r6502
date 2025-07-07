@@ -1,9 +1,9 @@
-.macpack r6502
-.macpack util
-.import copydata
-.import print
-.import __SIDEWAYSCODE_LOAD__
-.importzp zword0
+.macpack helpers
+
+.data
+word0: .word $1235
+word1: .word $000a
+word2: .word $ffff
 
 .segment "SIDEWAYSCODE"
 .export test_div16
@@ -24,37 +24,27 @@
     lda word0      ; Load low byte of quotient
     cmp #$d2            ; Must be $d2
     beq @check_quotient_hi
-    print_buf failed
-    lda #$01            ; Failure
-    rts
+    return failed, $01
 @check_quotient_hi:
     lda word0 + 1  ; Low high byte of quotient
     cmp #$01            ; Must be $01
     beq @check_remainder_lo
-    print_buf failed
-    lda #$02            ; Failure
-    rts
+    return failed, $02
 
     ; Remainder stored in word2
 @check_remainder_lo:
     lda word2      ; Load low byte of remainder
     cmp #$01            ; Must be $01
     beq @check_remainder_hi
-    print_buf failed
-    lda #$03            ; Failure
-    rts
+    return failed, $03
 @check_remainder_hi:
     lda word2 + 1  ; Low high byte of remainder
     cmp #$00            ; Must be $01
     beq @done
-    print_buf failed
-    lda #$04            ; Failure
-    rts
+    return failed, $04
 
 @done:
-    print_buf succeeded
-    lda #$00            ; Success
-    rts
+    return succeeded, $00
 .endproc
 
 .proc div16
@@ -82,11 +72,6 @@
     bne @l1
     rts
 .endproc
-
-.data
-word0: .word $1235
-word1: .word $000a
-word2: .word $ffff
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_div16 passed", 13, 10, 0
