@@ -1,6 +1,8 @@
 use crate::emulator::deserialization::{deserialize_machine_tag, deserialize_word_opt};
 use crate::emulator::MachineTag;
 use crate::machine_config::bus_device::BusDevice;
+use crate::machine_config::host_hook::HostHook;
+use crate::machine_config::output_device_type::OutputDeviceType;
 use crate::machine_config::CharSet;
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -23,12 +25,11 @@ pub struct Machine {
     )]
     pub halt_addr: Option<u16>,
 
-    #[serde(
-        rename = "hookAddress",
-        deserialize_with = "deserialize_word_opt",
-        default
-    )]
-    pub hook_addr: Option<u16>,
+    #[serde(rename = "hostHook")]
+    pub host_hook: Option<HostHook>,
+
+    #[serde(rename = "outputDeviceType", default)]
+    pub output_device_type: OutputDeviceType,
 
     #[serde(rename = "busDevices")]
     pub bus_devices: Vec<BusDevice>,

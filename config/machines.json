@@ -40,7 +40,11 @@
             "charSet": "acorn",
             "baseImage": "acorn.r6502",
             "haltAddress": "$FFA0",
-            "hookAddress": "$FFA2",
+            "hostHook": {
+                "type": "acorn",
+                "address": "$FFA2"
+            },
+            "outputDeviceType": "vdu-driver",
             "busDevices": [
                 {
                     "comment": "16KB RAM",

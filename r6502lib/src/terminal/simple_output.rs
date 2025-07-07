@@ -1,23 +1,12 @@
-use crate::emulator::{OutputDevice, VduDriver};
+use crate::emulator::OutputDevice;
 use crate::machine_config::CharSet;
 use anyhow::Result;
 use std::io::{stdout, Write};
 
-#[derive(Default)]
-pub struct TerminalOutput {
-    vdu_driver: VduDriver,
-}
+pub struct SimpleOutput;
 
-impl OutputDevice for TerminalOutput {
+impl OutputDevice for SimpleOutput {
     fn write(&mut self, char_set: &CharSet, value: u8) -> Result<()> {
-        let value = match char_set {
-            CharSet::Acorn => match self.vdu_driver.process(value)? {
-                Some(value) => value,
-                None => return Ok(()),
-            },
-            _ => value,
-        };
-
         if let Some(value) = char_set.translate_out(value) {
             let mut stdout = stdout();
             match value {

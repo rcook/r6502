@@ -1,7 +1,7 @@
 use crate::emulator::r6502_image::Snapshot;
 use crate::emulator::util::make_unique_snapshot_path;
 use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
-use crate::machine_config::MachineInfo;
+use crate::machine_config::{HostHookType, MachineInfo};
 use crate::terminal::acorn_host_hooks::handle_host_hook;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{anyhow, bail, Result};
@@ -86,9 +86,15 @@ impl Runner<'_> {
                 }
             }
 
-            if let Some(host_addr) = machine_info.machine.hook_addr {
-                if cpu.reg.pc == host_addr {
-                    Self::handle_host_hook(cpu, machine_info)?;
+            if let Some(host_hook) = &machine_info.machine.host_hook {
+                if cpu.reg.pc == host_hook.addr {
+                    match host_hook.r#type {
+                        HostHookType::Acorn => {
+                            handle_host_hook(cpu)?;
+                            let return_addr = cpu.pull_word().wrapping_add(1);
+                            cpu.reg.pc = return_addr;
+                        }
+                    }
                 }
             }
         }
@@ -114,19 +120,6 @@ impl Runner<'_> {
             }
         }
 
-        Ok(())
-    }
-
-    fn handle_host_hook(cpu: &mut Cpu, machine_info: &MachineInfo) -> Result<()> {
-        if machine_info.machine.tag != [b'A', b'C', b'R', b'N'] {
-            bail!(
-                "host hooks not implemented for {name}",
-                name = machine_info.machine.name
-            )
-        }
-        handle_host_hook(cpu)?;
-        let return_addr = cpu.pull_word().wrapping_add(1);
-        cpu.reg.pc = return_addr;
         Ok(())
     }
 }

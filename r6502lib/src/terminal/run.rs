@@ -2,9 +2,7 @@ use crate::emulator::{Cpu, Image, Monitor, PiaChannel, TracingMonitor};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use crate::terminal::raw_mode::RawMode;
-use crate::terminal::{
-    show_run_info, Runner, StopReason, TerminalChannel, TerminalOutput, Vectors,
-};
+use crate::terminal::{show_run_info, Runner, StopReason, TerminalChannel, Vectors};
 use anyhow::Result;
 use log::info;
 use std::process::exit;
@@ -21,8 +19,11 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         let pia_channel = PiaChannel::new();
         let pia_tx = pia_channel.tx.clone();
 
-        let (bus, bus_rx) =
-            machine_info.create_bus(Box::new(TerminalOutput::default()), pia_channel, &image)?;
+        let output = machine_info
+            .machine
+            .output_device_type
+            .create_output_device();
+        let (bus, bus_rx) = machine_info.create_bus(output, pia_channel, &image)?;
         bus.start();
 
         let nmi = bus.load_nmi_unsafe();
