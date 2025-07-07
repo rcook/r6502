@@ -119,7 +119,7 @@
 
     ldy #$00
 
-@loop:
+loop:
     raw_read_char_to_a
 @check_esc:
     cmp #ESC
@@ -137,7 +137,7 @@
 
     ; Backspace
     cpy #$00        ; Don't delete beyond start of buffer!
-    beq @loop
+    beq loop
     dey
 
     raw_write_char_from_a
@@ -148,31 +148,31 @@
     lda #DEL
     raw_write_char_from_a
     lda #$00
-    beq @loop
+    beq loop
 
 @check_cr:
     cmp #CR
-    beq @done
+    beq done
 
     ; Check that we haven't exceeded buffer length
     cpx #$00
     bne @cont
     lda #$07            ; BEL
     raw_write_char_from_a
-    bne @loop
+    bne loop
 
 @cont:
     raw_write_char_from_a
     cmp zbyte0
-    blt @loop
+    blt loop
     cmp zbyte1
-    bgt @loop
+    bgt loop
     sta (zword1), y
     dex
     iny
-    bne @loop
+    bne loop
 
-@done:
+done:
     ; Terminate string with CR
     lda #CR
     sta (zword1), y
