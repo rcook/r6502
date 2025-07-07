@@ -1,6 +1,7 @@
 use crate::ascii::CR;
 use crate::emulator::util::make_word;
 use crate::emulator::Cpu;
+use crate::terminal::RawMode;
 use anyhow::{anyhow, bail, Result};
 use log::info;
 use path_absolutize::Absolutize;
@@ -69,6 +70,7 @@ fn show_catalogue(arg: Option<&str>) -> Result<bool> {
         return Ok(false);
     };
 
+    let raw_mode = RawMode::disable()?;
     println!("Directory: {dir}", dir = d.display());
     for entry in dir {
         let entry = entry?;
@@ -78,16 +80,18 @@ fn show_catalogue(arg: Option<&str>) -> Result<bool> {
             .ok_or_else(|| anyhow!("could not convert file name {f:?}"))?;
         println!("  {file_name}");
     }
+    drop(raw_mode);
     Ok(true)
 }
 
 fn change_working_dir(arg: Option<&str>) -> Result<bool> {
     let d = current_dir()?;
-    match arg {
-        Some(s) => set_current_dir(Path::new(s).absolutize_from(&d)?)?,
-        None => {
-            println!("{d}", d = d.display());
-        }
+    if let Some(s) = arg {
+        set_current_dir(Path::new(s).absolutize_from(&d)?)?
+    } else {
+        let raw_mode = RawMode::disable()?;
+        println!("{d}", d = d.display());
+        drop(raw_mode);
     }
     Ok(true)
 }

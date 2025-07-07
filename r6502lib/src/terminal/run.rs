@@ -1,31 +1,15 @@
 use crate::emulator::{Cpu, Image, Monitor, PiaChannel, TracingMonitor};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
+use crate::terminal::raw_mode::RawMode;
 use crate::terminal::{
     show_image_info, Runner, StopReason, TerminalChannel, TerminalOutput, Vectors,
 };
 use anyhow::Result;
-use cursive::backends::crossterm::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use log::info;
 use std::process::exit;
 
 pub fn run(opts: &RunOptions) -> Result<()> {
-    #[allow(unused)]
-    struct RawMode(i32);
-
-    impl RawMode {
-        fn new() -> Result<Self> {
-            enable_raw_mode()?;
-            Ok(Self(0))
-        }
-    }
-
-    impl Drop for RawMode {
-        fn drop(&mut self) {
-            _ = disable_raw_mode();
-        }
-    }
-
     fn run_inner(opts: &RunOptions) -> Result<i32> {
         let image = Image::from_file(&opts.path)?;
         let machine_info = match image.machine_tag() {
@@ -98,7 +82,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         Ok(code)
     }
 
-    let raw_mode = RawMode::new()?;
+    let raw_mode = RawMode::enable()?;
     let code = run_inner(opts)?;
     drop(raw_mode);
 
