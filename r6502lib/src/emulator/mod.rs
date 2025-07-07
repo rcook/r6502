@@ -44,6 +44,7 @@ mod scenario_runner;
 mod test_scenarios;
 mod total_cycles;
 mod vdu;
+mod vdu_driver;
 mod word_op;
 
 pub use address_range::*;
@@ -85,6 +86,6 @@ pub use reg::*;
 pub use rom::*;
 pub use scenario_runner::*;
 pub use total_cycles::*;
-#[allow(unused)]
 pub use vdu::*;
+pub use vdu_driver::*;
 pub use word_op::*;

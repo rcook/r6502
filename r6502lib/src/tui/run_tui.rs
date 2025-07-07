@@ -1,6 +1,6 @@
 use crate::debug_options::DebugOptions;
 use crate::emulator::{Image, OutputDevice, PiaChannel};
-use crate::machine_config::MachineInfo;
+use crate::machine_config::{CharSet, MachineInfo};
 use crate::messages::IoMessage;
 use crate::symbols::MapFile;
 use crate::tui::cursive_tui::CursiveTui;
@@ -20,8 +20,10 @@ impl TuiOutput {
 }
 
 impl OutputDevice for TuiOutput {
-    fn write(&self, value: u8) -> Result<()> {
-        self.io_tx.send(IoMessage::WriteChar(value as char))?;
+    fn write(&mut self, char_set: &CharSet, value: u8) -> Result<()> {
+        if let Some(value) = char_set.translate_out(value) {
+            self.io_tx.send(IoMessage::WriteChar(value as char))?;
+        }
         Ok(())
     }
 }

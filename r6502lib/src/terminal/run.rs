@@ -22,7 +22,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         let pia_tx = pia_channel.tx.clone();
 
         let (bus, bus_rx) =
-            machine_info.create_bus(Box::new(TerminalOutput), pia_channel, &image)?;
+            machine_info.create_bus(Box::new(TerminalOutput::default()), pia_channel, &image)?;
         bus.start();
 
         let nmi = bus.load_nmi_unsafe();
