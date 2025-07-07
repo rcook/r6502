@@ -36,17 +36,16 @@ impl CharSet {
     pub fn translate_out(&self, value: u8) -> Option<u8> {
         match self {
             Self::Default => Some(value),
-            Self::Acorn => {
-                match value {
-                    CR => None, // Swallow CR
-                    DEL => Some(BS),
-                    BEL | LF | 32..=126 => Some(value),
-                    _ => {
-                        info!("nonprinting VDU code: {value:>3} (${value:02X})");
-                        Some(value)
-                    }
+            Self::Acorn => match value {
+                CR => Some(LF),
+                DEL => Some(BS),
+                BEL | 32..=126 => Some(value),
+                LF => None,
+                _ => {
+                    info!("nonprinting VDU code: {value:>3} (${value:02X})");
+                    Some(value)
                 }
-            }
+            },
             Self::Apple1 => {
                 match value {
                     0x7f => None,            // Filter out initialization
