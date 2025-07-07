@@ -81,10 +81,13 @@ s_fac    =4                    ;binary accumulator size
 ;
 ;ZERO PAGE STORAGE
 ;
-ptr01    =$00                  ;input string pointer
-stridx   =ptr01+2              ;string index
-.exportzp pfac     =stridx+1             ;primary accumulator
-sfac     =pfac+s_fac           ;secondary accumulator
+.zeropage
+ptr01: .word $0000              ; input string pointer
+stridx: .byte $00               ; string index
+.exportzp pfac
+pfac: .dword $00000000          ; primary accumulator
+.exportzp sfac
+sfac: .dword $00000000          ; secondary accumulator
 ;
 ;	------------------------------------------------------
 ;	Define the above to suit your application.  Moving the
@@ -103,6 +106,7 @@ sfac     =pfac+s_fac           ;secondary accumulator
 .code
 .export str_to_num
 str_to_num:
+         cld
          stx ptr01             ;save string pointer LSB
          sty ptr01+1           ;save string pointer MSB
          lda #0

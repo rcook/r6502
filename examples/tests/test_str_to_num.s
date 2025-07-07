@@ -40,7 +40,7 @@
     lda #>failed
     sta OSAREG + 1
     jsr print_str
-    lda #$00
+    lda #$01
     rts
 .endproc
 

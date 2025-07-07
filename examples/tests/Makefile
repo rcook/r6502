@@ -2,7 +2,7 @@ include ../shared.mk
 
 .DEFAULT_GOAL := default
 .SUFFIXES:
-.PHONY: clean default prereqs run
+.PHONY: clean default prereqs run trace
 
 BIN := tests.$(BINEXT)
 BINSOURCES := main.s test_add16.s test_div16.s test_num_to_str.s test_str_to_num.s
@@ -22,6 +22,9 @@ clean:
 	$(RM) $(BINSOURCES:.s=.o) $(BINSOURCES:.s=.lst) $(ARTIFACTS)
 
 run: $(BIN)
-	cargo run -- run $(BIN) --trace --cycles
+	cargo run -- run $(BIN)
+
+trace: $(BIN)
+	cargo run -- run $(BIN) --trace
 
 default: $(BIN)
