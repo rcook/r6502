@@ -1,8 +1,9 @@
 use crate::emulator::PiaEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
 };
-use crate::emulator::{BusDevice, BusEvent, OutputDevice, PiaChannel};
+use crate::emulator::{BusDevice, BusEvent, OutputDevice, PiaChannel, VduCode, VDU_CODES_BY_CODE};
 use crate::machine_config::CharSet;
+use crate::terminal::RawMode;
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
@@ -79,15 +80,52 @@ impl Pia {
         output: Box<dyn OutputDevice>,
         char_set: CharSet,
     ) -> Result<()> {
+        let mut current_vdu_code: Option<&VduCode> = None;
+        let mut vdu_buffer: Vec<u8> = Vec::with_capacity(9);
         loop {
             match pia_rx.recv() {
                 Ok(PaUpdated(value)) => state.lock().unwrap().pa = value,
                 Ok(PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
                 Ok(PbUpdated(value)) => {
-                    if let Some(value) = char_set.translate_out(value) {
-                        output.write(value)?;
+                    if let Some(temp) = current_vdu_code {
+                        vdu_buffer.push(value);
+                        let count = vdu_buffer.len();
+                        let arg_count = usize::from(temp.2);
+                        assert!(count <= arg_count);
+                        if count == arg_count {
+                            let s = vdu_buffer
+                                .drain(0..)
+                                .map(|x| x.to_string())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            let raw_mode = RawMode::disable()?;
+                            println!(
+                                "[VDU {code}, {args} ({description}) unimplemented]",
+                                code = temp.0,
+                                args = s,
+                                description = temp.3
+                            );
+                            drop(raw_mode);
+                            current_vdu_code = None;
+                            vdu_buffer.clear();
+                        }
+                    } else {
+                        let c = match VDU_CODES_BY_CODE.get(&value) {
+                            Some((_, _, arg_count, _)) if *arg_count == 0 => Some(value),
+                            Some(vdu_code) => {
+                                current_vdu_code = Some(vdu_code);
+                                None
+                            }
+                            None => Some(value),
+                        };
+
+                        if let Some(c) = c {
+                            if let Some(value) = char_set.translate_out(c) {
+                                output.write(value)?;
+                            }
+                            state.lock().unwrap().pb = 0x00;
+                        }
                     }
-                    state.lock().unwrap().pb = 0x00;
                 }
                 Ok(PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,
                 Ok(Input(event)) => match event {

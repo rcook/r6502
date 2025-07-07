@@ -1,6 +1,8 @@
 #![allow(unused)]
+use std::collections::HashMap;
+use std::sync::LazyLock;
 
-type VduCode = (u8, &'static str, u8, &'static str);
+pub type VduCode = (u8, &'static str, u8, &'static str);
 
 const VDU_CODES: [VduCode; 33] = [
     (0, "@", 0, "Does nothing"),
@@ -42,3 +44,6 @@ const VDU_CODES: [VduCode; 33] = [
     (31, "_", 2, "Move text cursor to x, y"),
     (127, "del", 0, "Backspace and delete"),
 ];
+
+pub static VDU_CODES_BY_CODE: LazyLock<HashMap<u8, VduCode>> =
+    LazyLock::new(|| VDU_CODES.into_iter().map(|c| (c.0, c)).collect());
