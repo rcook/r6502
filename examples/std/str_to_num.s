@@ -101,8 +101,8 @@ sfac     =pfac+s_fac           ;secondary accumulator
 ;         *=_origin_
 ;
 .code
-.export strbin
-strbin:
+.export str_to_num
+str_to_num:
          stx ptr01             ;save string pointer LSB
          sty ptr01+1           ;save string pointer MSB
          lda #0

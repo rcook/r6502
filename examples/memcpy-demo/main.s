@@ -4,12 +4,13 @@
 .import memcpy
 .import num_to_str
 .import print
-.import __SIDEWAYSCODE_LOAD__
+.import __SIDEWAYSHEADER_LOAD__
 .exportzp zword0
 .exportzp zword1
 .exportzp zword2
 
-r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
+r6502_system "ACRN", __SIDEWAYSHEADER_LOAD__
+sideways_rom_header entrypoint, , , , "TEST", "1.0", "2025 Richard Cook"
 
 .zeropage
 zword0: .word $0000
@@ -18,8 +19,6 @@ zword2: .word $0000
 
 .segment "SIDEWAYSCODE"
 .proc entrypoint
-    sideways_rom_header @go, , , , "TEST", "1.0", "2025 Richard Cook"
-@go:
     print_buf hello
     print_int value
     print_buf line_break

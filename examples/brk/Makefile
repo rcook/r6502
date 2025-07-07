@@ -12,7 +12,6 @@ prereqs:
 	make -C $(PROJECTDIR)/examples/acorn
 	make -C $(PROJECTDIR)/examples/std
 
-$(info $(call ld65v2,$(BIN),$(SHAREDLIBDIR)/sideways-with-code.cfg,$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/std.lib $(SHAREDLIBDIR)/acorn.lib,prereqs $(CONFIGDIR)/acorn.r6502))
 $(eval $(call ld65v2,$(BIN),$(SHAREDLIBDIR)/sideways-with-code.cfg,$(BINSOURCES:.s=.o),$(SHAREDLIBDIR)/std.lib $(SHAREDLIBDIR)/acorn.lib,prereqs $(CONFIGDIR)/acorn.r6502))
 
 clean:

@@ -1,13 +1,12 @@
 .macpack r6502
 .import OSWRCH
-.import __SIDEWAYSCODE_LOAD__
+.import __SIDEWAYSHEADER_LOAD__
 
-r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
+r6502_system "ACRN", __SIDEWAYSHEADER_LOAD__
+sideways_rom_header entrypoint, , , , "hello-world", "1.0", "2025 Richard Cook"
 
 .segment "SIDEWAYSCODE"
 .proc entrypoint
-    sideways_rom_header @go, , , , "hello-world", "1.0", "2025 Richard Cook"
-@go:
     ldx #$00
 @loop:
     lda str, x

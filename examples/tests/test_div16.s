@@ -3,24 +3,11 @@
 .import copydata
 .import print
 .import __SIDEWAYSCODE_LOAD__
-.exportzp zword0
-
-r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
-
-.zeropage
-zword0: .word $0000
-
-.data
-word0: .word $1235
-word1: .word $000a
-word2: .word $ffff
+.importzp zword0
 
 .segment "SIDEWAYSCODE"
-.proc entrypoint
-    sideways_rom_header @go, , , , "div16", "1.0", "2025 Richard Cook"
-@go:
-    jsr copydata
-
+.export test_div16
+.proc test_div16
     ; Test 16-bit division
     ; Reference: https://www.llx.com/Neil/a2/mult.html
     ; word0 = $1235 (4661) (dividend)
@@ -32,21 +19,21 @@ word2: .word $ffff
     ; Total cycle count = 958 (920 for div16 and JSR + 38 for checks)
     jsr div16
 
-        ; Quotient stored in word0
+    ; Quotient stored in word0
 @check_quotient_lo:
     lda word0      ; Load low byte of quotient
     cmp #$d2            ; Must be $d2
     beq @check_quotient_hi
     print_buf failed
     lda #$01            ; Failure
-    syshalt
+    rts
 @check_quotient_hi:
     lda word0 + 1  ; Low high byte of quotient
     cmp #$01            ; Must be $01
     beq @check_remainder_lo
     print_buf failed
     lda #$02            ; Failure
-    syshalt
+    rts
 
     ; Remainder stored in word2
 @check_remainder_lo:
@@ -55,19 +42,19 @@ word2: .word $ffff
     beq @check_remainder_hi
     print_buf failed
     lda #$03            ; Failure
-    syshalt
+    rts
 @check_remainder_hi:
     lda word2 + 1  ; Low high byte of remainder
     cmp #$00            ; Must be $01
     beq @done
     print_buf failed
     lda #$04            ; Failure
-    syshalt
+    rts
 
 @done:
     print_buf succeeded
     lda #$00            ; Success
-    syshalt
+    rts
 .endproc
 
 .proc div16
@@ -96,6 +83,11 @@ word2: .word $ffff
     rts
 .endproc
 
+.data
+word0: .word $1235
+word1: .word $000a
+word2: .word $ffff
+
 .segment "SIDEWAYSDATA"
-succeeded: .byte "Test passed", 13, 10, 0
-failed: .byte "Test failed", 13, 10, 0
+succeeded: .byte "test_div16 passed", 13, 10, 0
+failed: .byte "test_div16 failed", 13, 10, 0

@@ -9,9 +9,9 @@ ACORNLIBSOURCES := \
 	ascii.s \
 	cpu.s \
 	misc.s \
-	mos-routines.s \
-	mos-vectors.s \
-	mos-zp.s \
+	mos_routines.s \
+	mos_vectors.s \
+	mos_zp.s \
 	os.s
 ACORNLIBMAP := $(ACORNLIB:.$(LIBEXT)=.map)
 $(ACORNLIB): $(ACORNLIBSOURCES:.s=.o)
@@ -22,15 +22,15 @@ $(SHAREDLIBDIR)/$(ACORNLIB): $(ACORNLIB)
 
 IMAGE := acorn.$(BINEXT)
 IMAGESOURCES := \
-	cpu-impl.s \
+	cpu_impl.s \
 	header.s \
 	init.s \
-	mos-entrypoints.s \
-	mos-routines-impl.s \
-	os-impl.s \
+	mos_entrypoints.s \
+	mos_routines_impl.s \
+	os_impl.s \
 	zp.s
 header.o: header.s $(SHAREDLIBDIR)/r6502.mac
-mos-entrypoints.o: mos-entrypoints.s raw.mac $(SHAREDLIBDIR)/r6502.mac
+mos-entrypoints.o: mos_entrypoints.s raw.mac $(SHAREDLIBDIR)/r6502.mac
 
 BIN := acorn-test.$(BINEXT)
 BINSOURCES := main.s

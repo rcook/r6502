@@ -1,29 +1,25 @@
 .macpack util
-.import HALT
+.importzp OSAREG
 .import OSWRCH
-.import binstr
-.import copydata
+.import num_to_str
 .import print
-.export main
-.exportzp MAX_STR_LEN = 33
-.exportzp zword0
 
-ZPPTR = $80
+MAX_STR_LEN = 33
 
 .segment "SIDEWAYSCODE"
-.proc main
-    print_buf welcome
+.export test_num_to_str
+.proc test_num_to_str
     lda #$00
     ldx #<value
     ldy #>value
     ora #%10000000
-    jsr binstr
+    jsr num_to_str
     sta result_str_len
-    stx ZPPTR
-    sty ZPPTR + 1
+    stx OSAREG
+    sty OSAREG + 1
     tay
 @loop:
-    lda (ZPPTR),Y
+    lda (OSAREG),Y
     sta result_str,Y
     dey
     bpl @loop
@@ -40,18 +36,18 @@ ZPPTR = $80
     cpx #$00
     bne @loop
 @success:
-    lda #<success_str
-    sta ZPPTR
-    lda #>success_str
-    sta ZPPTR + 1
+    lda #<succeeded
+    sta OSAREG
+    lda #>succeeded
+    sta OSAREG + 1
     jsr print_str
     lda #$00
     rts
 @failed:
-    lda #<failure_str
-    sta ZPPTR
-    lda #>failure_str
-    sta ZPPTR + 1
+    lda #<failed
+    sta OSAREG
+    lda #>failed
+    sta OSAREG + 1
     jsr print_str
     lda #$01
     rts
@@ -61,7 +57,7 @@ ZPPTR = $80
 .proc print_str
     ldy #$00
 @loop:
-    lda (ZPPTR),Y
+    lda (OSAREG),Y
     beq @done
     jsr OSWRCH
     iny
@@ -70,17 +66,13 @@ ZPPTR = $80
     rts
 .endproc
 
-.zeropage
-zword0: .word $0000
-
 .data
 result_str_len: .byte 0
 result_str: .res MAX_STR_LEN
 
 .segment "SIDEWAYSDATA"
+succeeded: .byte "test_num_to_str passed", 13, 10, 0
+failed: .byte "test_num_to_str failed", 13, 10, 0
 value: .dword $12345678
 expected_str_len: .byte 9
 expected_str: .byte "305419896", 0
-welcome: .byte "Welcome", 13, 10, 0
-success_str: .byte "binstr returned expected string", 13, 10, 0
-failure_str: .byte "binstr did not return expected string", 13, 10, 0

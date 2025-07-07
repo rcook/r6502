@@ -7,24 +7,22 @@
 .import OSRDCH
 .import OSWORD
 .import OSWRCH
-.import __SIDEWAYSCODE_LOAD__
+.import __SIDEWAYSHEADER_LOAD__
 
-r6502_system "ACRN", __SIDEWAYSCODE_LOAD__
+r6502_system "ACRN", __SIDEWAYSHEADER_LOAD__
+sideways_rom_header entrypoint, , , , "acorn-test", "1.0", "2025 Richard Cook"
 
 STRING_BUFFER_LEN = 10
 
 .segment "SIDEWAYSCODE"
 .proc entrypoint
-    sideways_rom_header @go, , , , "acorn-test", "1.0", "2025 Richard Cook"
-@go:
     ;jsr test_osasci
     ;jsr test_osbyte
     ;jsr test_osnewl
     ;jsr test_osrdch
     jsr test_osword
     ;jsr test_oswrch
-    lda #$00
-    syshalt
+    syshalt $00
 .endproc
 
 .proc test_osasci
@@ -56,9 +54,8 @@ STRING_BUFFER_LEN = 10
     rts
 
 @failed:
-    lda #$01
     raw_write_str failed_str
-    syshalt
+    syshalt $01
 .endproc
 
 .proc test_osnewl

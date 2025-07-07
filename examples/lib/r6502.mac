@@ -21,14 +21,14 @@ R6502_SYSTEM_HEADER_LEN = 9
     .error "start undefined"
 .endif
 .segment "HEADER"
-.assert * = $0000, error, "Header must be at $0000"
+.assert * = $0000, error, "header must start at $0000"
 .dbyt $6502
 .byte R6502_MODULE
 .byte machine_tag
-.assert * = $0007, error, "Machine tag must end at $0007"
+.assert * = $0007, error, "machine tag must end at $0007"
 .addr load
 .addr start
-.assert * = R6502_MODULE_HEADER_LEN, error, "Header must end at $000B (11 bytes)"
+.assert * = R6502_MODULE_HEADER_LEN, error, "header must end at $000B (11 bytes)"
 .endmacro
 
 ; Insert r6502 snapshot header
@@ -41,11 +41,11 @@ R6502_SYSTEM_HEADER_LEN = 9
     .error "machine_tag undefined"
 .endif
 .segment "HEADER"
-.assert * = $0000, error, "Header must be at $0000"
+.assert * = $0000, error, "header must start at $0000"
 .dbyt $6502
 .byte R6502_SNAPSHOT
 .byte machine_tag
-.assert * = $0007, error, "Machine tag must end at $0007"
+.assert * = $0007, error, "machine tag must end at $0007"
 .addr $0000             ; PC
 .byte $00               ; A
 .byte $00               ; X
@@ -54,7 +54,7 @@ R6502_SYSTEM_HEADER_LEN = 9
 .byte $00               ; P
 .dword $00000000        ; lo(total_cycles)
 .dword $00000000        ; hi(total_cycles)
-.assert * = R6502_SNAPSHOT_HEADER_LEN, error, "Header must end at $0016 (22 bytes)"
+.assert * = R6502_SNAPSHOT_HEADER_LEN, error, "header must end at $0016 (22 bytes)"
 .endmacro
 
 ; Insert r6502 system header
@@ -74,13 +74,13 @@ R6502_SYSTEM_HEADER_LEN = 9
     .error "load undefined"
 .endif
 .segment "HEADER"
-.assert * = $0000, error, "Header must be at $0000"
+.assert * = $0000, error, "header must start at $0000"
 .dbyt $6502
 .byte R6502_SYSTEM
 .byte machine_tag
-.assert * = $0007, error, "Machine tag must end at $0007"
+.assert * = $0007, error, "machine tag must end at $0007"
 .addr load
-.assert * = R6502_SYSTEM_HEADER_LEN, error, "Header must end at $0009 (9 bytes)"
+.assert * = R6502_SYSTEM_HEADER_LEN, error, "header must end at $0009 (9 bytes)"
 .endmacro
 
 ; sysinit
@@ -90,7 +90,10 @@ R6502_SYSTEM_HEADER_LEN = 9
 
 ; syshalt
 ; Halt the system
-.macro syshalt
+.macro syshalt exit_code
+.ifnblank exit_code
+    lda #exit_code
+.endif
 .import HALT
     jmp HALT
 .endmacro
@@ -103,7 +106,8 @@ R6502_SYSTEM_HEADER_LEN = 9
 .import SIDEWAYS_ROM_OFFSET
 .import SIDEWAYS_ROM_START
 .import SIDEWAYS_ROM_TITLE
-.assert * = SIDEWAYS_ROM_START, error, "header at expected address"
+.segment "SIDEWAYSHEADER"
+.assert * = SIDEWAYS_ROM_START, error, "header must start at $8000"
 .ifblank language
     .byte $00, $00, $00
 .else
@@ -119,14 +123,14 @@ R6502_SYSTEM_HEADER_LEN = 9
 .else
     .byte rom_type
 .endif
-.assert * = SIDEWAYS_ROM_OFFSET, error, "offset at expected address"
+.assert * = SIDEWAYS_ROM_OFFSET, error, "offset must be at expected address"
     .byte <@offset
 .ifblank version
     .byte $00
 .else
     .byte version
 .endif
-.assert * = SIDEWAYS_ROM_TITLE, error, "title at expected address"
+.assert * = SIDEWAYS_ROM_TITLE, error, "title must be at expected address"
 .ifnblank title
     .byte title
 .endif
