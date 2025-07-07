@@ -22,7 +22,6 @@ impl OutputDevice for TerminalOutput {
             let mut stdout = stdout();
             match value {
                 0x0a => stdout.write_all(&[13, 10])?,
-                127 => stdout.write_all(&[65, 66])?,
                 _ => stdout.write_all(&[value])?,
             }
             stdout.flush()?;
