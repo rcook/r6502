@@ -23,7 +23,8 @@ fn div16_benchmark(c: &mut Criterion) {
 
     let bus = Bus::default_with_image(&image).expect("Must succeed");
     let mut cpu = Cpu::new(bus.view(), None);
-    image.set_initial_cpu_state(&mut cpu);
+    let cpu_state = image.get_initial_cpu_state(&cpu);
+    cpu_state.apply_to(&mut cpu);
 
     cpu.bus.store(IRQ_ADDR, 0x40);
     let (hi, lo) = split_word(IRQ_ADDR);

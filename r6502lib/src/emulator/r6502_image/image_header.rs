@@ -1,10 +1,9 @@
-use crate::_p;
 use crate::emulator::r6502_image::R6502ImageType;
 use crate::emulator::util::make_word;
-use crate::emulator::{Cpu, MachineTag, TotalCycles, R6502_MAGIC_NUMBER, RESET};
+use crate::emulator::{Cpu, CpuState, MachineTag, TotalCycles, R6502_MAGIC_NUMBER, RESET};
 use anyhow::{bail, Result};
 use num_traits::FromPrimitive;
-use std::io::{ErrorKind, Read, Seek, Write};
+use std::io::{ErrorKind, Read, Seek};
 
 pub enum ImageHeader {
     // A module represents a program or subroutine that runs independently
@@ -113,20 +112,6 @@ impl ImageHeader {
     }
 
     #[must_use]
-    pub const fn new_snapshot(cpu: &Cpu) -> Self {
-        Self::Snapshot {
-            machine_tag: cpu.bus.machine_tag(),
-            pc: cpu.reg.pc,
-            a: cpu.reg.a,
-            x: cpu.reg.x,
-            y: cpu.reg.y,
-            sp: cpu.reg.sp,
-            p: cpu.reg.p.bits(),
-            total_cycles: cpu.total_cycles,
-        }
-    }
-
-    #[must_use]
     pub const fn machine_tag(&self) -> MachineTag {
         match self {
             Self::Module { machine_tag, .. }
@@ -159,9 +144,18 @@ impl ImageHeader {
         }
     }
 
-    pub fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    #[must_use]
+    pub fn get_initial_cpu_state(&self, cpu: &Cpu) -> CpuState {
         match self {
-            Self::Module { start, .. } => cpu.reg.pc = *start,
+            Self::Module { start, .. } => CpuState {
+                pc: *start,
+                a: 0x00,
+                x: 0x00,
+                y: 0x00,
+                sp: 0x00,
+                p: 0x00,
+                total_cycles: 0,
+            },
             Self::Snapshot {
                 pc,
                 a,
@@ -171,44 +165,30 @@ impl ImageHeader {
                 p,
                 total_cycles,
                 ..
-            } => {
-                cpu.reg.pc = *pc;
-                cpu.reg.a = *a;
-                cpu.reg.x = *x;
-                cpu.reg.y = *y;
-                cpu.reg.sp = *sp;
-                cpu.reg.p = _p!(*p);
-                cpu.total_cycles = *total_cycles;
-            }
+            } => CpuState {
+                pc: *pc,
+                a: *a,
+                x: *x,
+                y: *y,
+                sp: *sp,
+                p: *p,
+                total_cycles: *total_cycles,
+            },
             Self::System { .. } => {
                 let reset_lo = cpu.bus.load(RESET);
                 let reset_hi = cpu.bus.load(RESET.wrapping_add(1));
                 let reset = make_word(reset_hi, reset_lo);
-                cpu.reg.pc = reset;
+                CpuState {
+                    pc: reset,
+                    a: 0x00,
+                    x: 0x00,
+                    y: 0x00,
+                    sp: 0x00,
+                    p: 0x00,
+                    total_cycles: 0,
+                }
             }
         }
-    }
-
-    pub fn write<W: Write>(&self, writer: &mut W) -> Result<()> {
-        let Self::Snapshot {
-            machine_tag,
-            pc,
-            a,
-            x,
-            y,
-            sp,
-            p,
-            total_cycles,
-        } = *self
-        else {
-            todo!();
-        };
-
-        writer.write_all(&machine_tag)?;
-        writer.write_all(&pc.to_le_bytes())?;
-        writer.write_all(&[a, x, y, sp, p])?;
-        writer.write_all(&total_cycles.to_le_bytes())?;
-        Ok(())
     }
 
     fn try_read_module<R: Read + Seek>(reader: &mut R) -> Result<Option<Self>> {

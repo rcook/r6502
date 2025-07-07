@@ -3,7 +3,7 @@ use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use crate::terminal::raw_mode::RawMode;
 use crate::terminal::{
-    show_image_info, Runner, StopReason, TerminalChannel, TerminalOutput, Vectors,
+    show_run_info, Runner, StopReason, TerminalChannel, TerminalOutput, Vectors,
 };
 use anyhow::Result;
 use log::info;
@@ -37,9 +37,9 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         };
 
         let mut cpu = Cpu::new(bus.view(), monitor);
-        image.set_initial_cpu_state(&mut cpu);
-
-        show_image_info(opts, &image, cpu.reg.pc, &vectors);
+        let cpu_state = image.get_initial_cpu_state(&cpu);
+        show_run_info(opts, &image, &cpu_state, &vectors);
+        cpu_state.apply_to(&mut cpu);
 
         let stop_reason = Runner {
             cpu: &mut cpu,

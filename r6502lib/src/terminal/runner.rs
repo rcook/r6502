@@ -1,4 +1,4 @@
-use crate::emulator::r6502_image::Image;
+use crate::emulator::r6502_image::Snapshot;
 use crate::emulator::util::make_unique_snapshot_path;
 use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
 use crate::machine_config::MachineInfo;
@@ -62,7 +62,7 @@ impl Runner<'_> {
                     jmp_ind.execute_word(cpu, RESET);
                 }
                 Ok(BusEvent::Snapshot) => {
-                    let snapshot = Image::new_snapshot(cpu);
+                    let snapshot = Snapshot::new(cpu);
                     let snapshot_path = make_unique_snapshot_path()?;
                     snapshot.write(&snapshot_path)?;
                 }

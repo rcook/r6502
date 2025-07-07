@@ -33,7 +33,8 @@ impl TuiHost {
         let monitor = Box::new(TuiMonitor::new(self.monitor_tx.clone()));
 
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
-        image.set_initial_cpu_state(&mut cpu);
+        let cpu_state = image.get_initial_cpu_state(&cpu);
+        cpu_state.apply_to(&mut cpu);
 
         let mut state = Stepping;
         loop {

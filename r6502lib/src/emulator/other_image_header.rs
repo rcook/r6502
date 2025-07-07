@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use std::io::{ErrorKind, Read, Seek};
 
-use crate::emulator::{util::make_word, Cpu, SIM6502_MAGIC_NUMBER};
+use crate::emulator::{util::make_word, Cpu, CpuState, SIM6502_MAGIC_NUMBER};
 
 pub enum OtherImageHeader {
     Sim6502 { load: u16, start: u16, sp: u8 },
@@ -14,16 +14,36 @@ impl OtherImageHeader {
         Ok(Self::try_read_sim6502(reader)?.unwrap_or(Self::Raw))
     }
 
-    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
+    #[must_use]
+    pub const fn get_initial_cpu_state(&self, _cpu: &Cpu) -> CpuState {
         match self {
-            Self::Sim6502 { start, sp, .. } => {
-                cpu.reg.pc = *start;
-                cpu.reg.sp = *sp;
-            }
-            Self::Listing { start, .. } => {
-                cpu.reg.pc = *start;
-            }
-            Self::Raw { .. } => {}
+            Self::Sim6502 { start, sp, .. } => CpuState {
+                pc: *start,
+                a: 0x00,
+                x: 0x00,
+                y: 0x00,
+                sp: *sp,
+                p: 0x00,
+                total_cycles: 0,
+            },
+            Self::Listing { start, .. } => CpuState {
+                pc: *start,
+                a: 0x00,
+                x: 0x00,
+                y: 0x00,
+                sp: 0x00,
+                p: 0x00,
+                total_cycles: 0,
+            },
+            Self::Raw { .. } => CpuState {
+                pc: 0x0000,
+                a: 0x00,
+                x: 0x00,
+                y: 0x00,
+                sp: 0x00,
+                p: 0x00,
+                total_cycles: 0,
+            },
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::emulator::Image;
+use crate::emulator::{CpuState, Image};
 use crate::run_options::RunOptions;
 use log::info;
 use std::fmt::Display;
@@ -10,9 +10,14 @@ pub struct Vectors {
     pub irq: u16,
 }
 
-pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16, vectors: &Vectors) {
+pub fn show_run_info(
+    opts: &RunOptions,
+    image: &Image,
+    initial_cpu_state: &CpuState,
+    vectors: &Vectors,
+) {
     fn log_property<D: Display>(label: &str, value: D) {
-        info!("{label}: {value}");
+        info!("{label:<12}: {value}");
     }
 
     log_property("Image", opts.path.display());
@@ -34,12 +39,19 @@ pub fn show_image_info(opts: &RunOptions, image: &Image, start: u16, vectors: &V
         ),
     );
 
-    log_property("Start address", format!("${start:04X}"));
-
-    match image.sp() {
-        Some(sp) => log_property("Initial stack pointer", format!("${sp:02X}")),
-        None => log_property("Initial stack pointer", "(unspecified)"),
-    }
+    log_property(
+        "Initial PC",
+        format!("${pc:04X}", pc = initial_cpu_state.pc),
+    );
+    log_property("Initial A", format!("${a:02X}", a = initial_cpu_state.a));
+    log_property("Initial X", format!("${x:02X}", x = initial_cpu_state.x));
+    log_property("Initial Y", format!("${y:02X}", y = initial_cpu_state.y));
+    log_property(
+        "Initial SP",
+        format!("${sp:02X}", sp = initial_cpu_state.sp),
+    );
+    log_property("Initial P", format!("${p:02X}", p = initial_cpu_state.p));
+    log_property("Total cycles", initial_cpu_state.total_cycles);
 
     if let Some(stop_after) = opts.stop_after {
         log_property("Stop after cycles", stop_after);

@@ -1,4 +1,4 @@
-use crate::emulator::{Cpu, OtherImageHeader};
+use crate::emulator::{Cpu, CpuState, OtherImageHeader};
 use anyhow::Result;
 use std::io::{Read, Seek};
 
@@ -71,7 +71,8 @@ impl OtherImage {
         &self.bytes
     }
 
-    pub const fn set_initial_cpu_state(&self, cpu: &mut Cpu) {
-        self.header.set_initial_cpu_state(cpu);
+    #[must_use]
+    pub const fn get_initial_cpu_state(&self, cpu: &Cpu) -> CpuState {
+        self.header.get_initial_cpu_state(cpu)
     }
 }

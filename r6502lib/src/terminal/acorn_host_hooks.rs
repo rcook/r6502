@@ -87,7 +87,7 @@ fn show_catalogue(arg: Option<&str>) -> Result<bool> {
 fn change_working_dir(arg: Option<&str>) -> Result<bool> {
     let d = current_dir()?;
     if let Some(s) = arg {
-        set_current_dir(Path::new(s).absolutize_from(&d)?)?
+        set_current_dir(Path::new(s).absolutize_from(&d)?)?;
     } else {
         let raw_mode = RawMode::disable()?;
         println!("{d}", d = d.display());
