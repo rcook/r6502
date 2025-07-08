@@ -1,4 +1,5 @@
 .import BRKV
+.import IRQ1V
 .importzp OSFAULT
 .importzp OSINTA
 .importzp OSXREG
@@ -11,40 +12,41 @@
     rts
 .endproc
 
+; https://tobylobster.github.io/mos/os120_acme.a (.irqEntryPoint)
 .segment "MOS"
 .export MOS_IRQ_ENTRYPOINT
 .proc MOS_IRQ_ENTRYPOINT
-    ; For the time being, we'll just handle BRK: for everything else,
-    ; we'll halt the system
-    ; https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
-    sta OSINTA          ; Save A for later
-    pla                 ; Get the status register: IRQ/BRK puts it on the stack
-    pha                 ; Keep the status register on the stack for later
-    and #$10            ; Check if it's a BRK or an IRQ
-    bne handle_brk      ; If it's BRK, that's an error: go to the BRK vector
-    jmp HALT            ; Otherwise, halt the CPU for time being
+    sta OSINTA
+    pla
+    pha
+    and #$10
+    bne handle_brk
+    jmp (IRQ1V)
 .endproc
 
-; https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
-; Handler for interrupts that we know were called by the BRK instruction.
-; This means an error was reported. The BBC MOS API defines the structure
-; of an error message. To get the message, we need to store the location
-; of the error message in addresses $FD and $FE.
+; https://tobylobster.github.io/mos/os120_acme.a (.brkRoutine)
 .proc handle_brk
     txa
-    pha                     ; Save X
-    tsx                     ; Get the stack pointer value
-    lda STACKBASE + 3, x    ; Get the low byte of the error message location, offset by the stack pointer
+    pha
+    tsx
+    lda STACKBASE + 3, x
+    cld
     sec
-    sbc #$01                ; Subtract one since BRK stores BRK + 2 to the stack by default, rather than the BRK + 1 we need
-    sta OSFAULT             ; Store the low byte into the fault handler
-    lda STACKBASE + 4, x    ; Get the high byte of the error message location
-    sbc #$00                ; Did subtracting 1 from the low byte cause the carry bit to set? Subtract 1 from the high byte too
-    sta OSFAULT + 1         ; Store the high byte into the fault handler
-    stx OSXREG              ; Store the location of the last break for the error handler
+    sbc #$01
+    sta OSFAULT
+    lda STACKBASE + 4, x
+    sbc #$00
+    sta OSFAULT + 1
+    ; lda .currentlySelectedROM
+    ; sta .romNumberActiveLastBRK
+    ; stx .stackPointerLastBRK
+    ; ldx #.romServiceCallBreakInstruction
+    ; jsr .osbyte143EntryPoint
+    ; ldx .languageROMNumber
+    ; jsr .selectROM
     pla
-    txa                     ; Restore X
+    txa
     lda OSINTA
     cli
-    jmp (BRKV)              ; Jump to BBC BASIC's error handler routine, which takes it from there
+    jmp (BRKV)
 .endproc
