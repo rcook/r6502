@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+
+set +e
+pid=$(pgrep -f r6502)
+set -e
+if [ -z $pid ]; then
+  echo r6502 is not running
+  exit 1
+fi
+
+kill -s int $pid
