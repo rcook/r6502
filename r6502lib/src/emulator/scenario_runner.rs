@@ -1,5 +1,5 @@
 use crate::_p;
-use crate::emulator::{Bus, Cpu, Opcode};
+use crate::emulator::{Bus, Cpu, IrqChannel, Opcode};
 use crate::validation::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use anyhow::{anyhow, bail, Result};
 use std::ffi::OsStr;
@@ -97,7 +97,8 @@ pub fn run_scenario(scenario: &Scenario) -> (bool, Option<State>) {
 
 fn run_inner(scenario: &Scenario) -> (bool, State) {
     let bus = Bus::default();
-    let mut cpu = Cpu::new(bus.view(), None);
+    let irq_channel = IrqChannel::new();
+    let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
     cpu.reg.pc = scenario.initial.pc;
     cpu.reg.sp = scenario.initial.sp;
     cpu.reg.a = scenario.initial.a;

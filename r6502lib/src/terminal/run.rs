@@ -1,4 +1,4 @@
-use crate::emulator::{Cpu, Image, Monitor, PiaChannel, TracingMonitor};
+use crate::emulator::{Cpu, Image, IrqChannel, Monitor, PiaChannel, TracingMonitor};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use crate::terminal::raw_mode::RawMode;
@@ -18,6 +18,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         let terminal_channel = TerminalChannel::new();
         let pia_channel = PiaChannel::new();
         let pia_tx = pia_channel.tx.clone();
+        let irq_channel = IrqChannel::new();
 
         let output = machine_info
             .machine
@@ -37,7 +38,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
             None
         };
 
-        let mut cpu = Cpu::new(bus.view(), monitor);
+        let mut cpu = Cpu::new(bus.view(), monitor, irq_channel.rx);
         let cpu_state = image.get_initial_cpu_state(&cpu);
         show_run_info(opts, &image, &cpu_state, &vectors);
         cpu_state.apply_to(&mut cpu);

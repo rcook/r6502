@@ -1,10 +1,14 @@
 use crate::emulator::util::{make_word, split_word};
 use crate::emulator::{
-    BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, Monitor, Reg, TotalCycles,
-    STACK_BASE,
+    BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, IrqEvent, Monitor, Reg,
+    TotalCycles, IRQ, STACK_BASE,
 };
 use log::{debug, log_enabled, Level};
-use std::sync::LazyLock;
+use signal_hook::consts::SIGINT;
+use signal_hook::flag::register;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{Receiver, TryRecvError};
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 
 const CPU_FREQUENCY: Frequency = Frequency::MHz(3_000_000);
@@ -15,16 +19,26 @@ pub struct Cpu<'a> {
     pub bus: BusView<'a>,
     pub total_cycles: TotalCycles,
     monitor: Box<dyn Monitor>,
+    irq_rx: Receiver<IrqEvent>,
+    interrupt: Arc<AtomicBool>,
 }
 
 impl<'a> Cpu<'a> {
     #[must_use]
-    pub fn new(bus: BusView<'a>, monitor: Option<Box<dyn Monitor>>) -> Self {
+    pub fn new(
+        bus: BusView<'a>,
+        monitor: Option<Box<dyn Monitor>>,
+        irq_rx: Receiver<IrqEvent>,
+    ) -> Self {
+        let interrupt = Arc::new(AtomicBool::new(false));
+        register(SIGINT, Arc::clone(&interrupt)).unwrap();
         Self {
             reg: Reg::default(),
             bus,
             total_cycles: 0,
             monitor: monitor.unwrap_or_else(|| Box::new(DummyMonitor)),
+            irq_rx,
+            interrupt,
         }
     }
 
@@ -125,7 +139,28 @@ impl<'a> Cpu<'a> {
             .store(STACK_BASE.wrapping_add(u16::from(self.reg.sp)), value);
     }
 
-    fn decode_next(&self) -> (Instruction, InstructionInfo) {
+    fn decode_next(&mut self) -> (Instruction, InstructionInfo) {
+        match self.irq_rx.try_recv() {
+            Ok(IrqEvent::Notify) => {
+                // IRQ signalled: what to do now?
+                todo!();
+            }
+            Err(TryRecvError::Empty) => {}
+            Err(TryRecvError::Disconnected) => todo!(),
+        }
+
+        if self.interrupt.load(Ordering::Relaxed) {
+            self.interrupt.store(false, Ordering::Relaxed);
+
+            // Reference: https://www.pagetable.com/?p=410
+            self.push_word(self.reg.pc);
+            let p = self.reg.p.bits();
+            self.push(p & 0b1110_1111);
+            let pc_lo = self.bus.load(IRQ);
+            let pc_hi = self.bus.load(IRQ.wrapping_add(1));
+            self.reg.pc = make_word(pc_hi, pc_lo);
+        }
+
         let instruction = Instruction::fetch(self);
         let instruction_info = InstructionInfo::from_instruction(&instruction);
         if log_enabled!(Level::Debug) {

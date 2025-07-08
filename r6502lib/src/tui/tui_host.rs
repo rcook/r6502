@@ -1,4 +1,4 @@
-use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo};
+use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo, IrqChannel};
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, MonitorMessage, State};
@@ -31,8 +31,9 @@ impl TuiHost {
 
     pub fn run(&self, image: &Image) {
         let monitor = Box::new(TuiMonitor::new(self.monitor_tx.clone()));
+        let irq_channel = IrqChannel::new();
 
-        let mut cpu = Cpu::new(self.bus.view(), Some(monitor));
+        let mut cpu = Cpu::new(self.bus.view(), Some(monitor), irq_channel.rx);
         let cpu_state = image.get_initial_cpu_state(&cpu);
         cpu_state.apply_to(&mut cpu);
 
