@@ -12,8 +12,8 @@
 .endproc
 
 .segment "MOS"
-.export MOS_INTERRUPT_HANDLER
-.proc MOS_INTERRUPT_HANDLER
+.export MOS_IRQ_ENTRYPOINT
+.proc MOS_IRQ_ENTRYPOINT
     ; For the time being, we'll just handle BRK: for everything else,
     ; we'll halt the system
     ; https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
