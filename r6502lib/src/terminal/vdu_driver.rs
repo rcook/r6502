@@ -2,7 +2,7 @@ use crate::emulator::OutputDevice;
 use crate::machine_config::CharSet;
 use crate::terminal::{RawMode, VduCode, VDU_CODES_BY_CODE};
 use anyhow::Result;
-use std::io::{stdout, Write};
+use std::io::{stdout, Stdout, Write};
 
 pub struct VduDriver {
     code: Option<&'static VduCode>,
@@ -10,7 +10,7 @@ pub struct VduDriver {
 }
 
 impl VduDriver {
-    fn process(&mut self, value: u8) -> Result<Option<u8>> {
+    fn process(&mut self, value: u8, stdout: &mut Stdout) -> Result<Option<u8>> {
         if let Some(temp) = self.code {
             self.args.push(value);
             let count = self.args.len();
@@ -38,7 +38,11 @@ impl VduDriver {
         }
 
         match VDU_CODES_BY_CODE.get(&value) {
-            Some((_, _, 0, _)) | None => Ok(Some(value)),
+            Some((_, _, 0, _, Some(f))) => {
+                f(stdout);
+                Ok(None)
+            }
+            Some((_, _, 0, _, None)) | None => Ok(Some(value)),
             Some(code) => {
                 self.code = Some(code);
                 Ok(None)
@@ -58,8 +62,10 @@ impl Default for VduDriver {
 
 impl OutputDevice for VduDriver {
     fn write(&mut self, char_set: &CharSet, value: u8) -> Result<()> {
+        let mut stdout = stdout();
+
         let value = match char_set {
-            CharSet::Acorn => match self.process(value)? {
+            CharSet::Acorn => match self.process(value, &mut stdout)? {
                 Some(value) => value,
                 None => return Ok(()),
             },
@@ -67,7 +73,6 @@ impl OutputDevice for VduDriver {
         };
 
         if let Some(value) = char_set.translate_out(value) {
-            let mut stdout = stdout();
             match value {
                 0x0a => stdout.write_all(&[13, 10])?,
                 _ => stdout.write_all(&[value])?,
