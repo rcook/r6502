@@ -1,12 +1,33 @@
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::cursor::MoveTo;
-use cursive::backends::crossterm::crossterm::style::{Color, SetForegroundColor};
+use cursive::backends::crossterm::crossterm::style::{
+    Color, SetBackgroundColor, SetForegroundColor,
+};
 use cursive::backends::crossterm::crossterm::terminal::{Clear, ClearType};
 use cursive::backends::crossterm::crossterm::QueueableCommand;
 use std::collections::HashMap;
 use std::io::Stdout;
 use std::io::Write;
 use std::sync::LazyLock;
+
+const COLOURS: [Color; 16] = [
+    Color::Black,
+    Color::Red,
+    Color::Green,
+    Color::Yellow,
+    Color::Blue,
+    Color::Magenta,
+    Color::Cyan,
+    Color::White,
+    Color::Grey,
+    Color::DarkRed,
+    Color::DarkGreen,
+    Color::DarkYellow,
+    Color::DarkBlue,
+    Color::DarkMagenta,
+    Color::DarkCyan,
+    Color::DarkGrey,
+];
 
 pub type VduCode = (
     u8,
@@ -61,14 +82,19 @@ const VDU_CODES: [VduCode; 33] = [
     (127, "del", 0, "Backspace and delete", None),
 ];
 
-fn define_text_colour(stdout: &mut Stdout, _args: &[u8]) {
-    fn inner(stdout: &mut Stdout) -> Result<()> {
-        stdout.queue(SetForegroundColor(Color::Red))?;
+fn define_text_colour(stdout: &mut Stdout, args: &[u8]) {
+    fn inner(stdout: &mut Stdout, args: &[u8]) -> Result<()> {
+        let colour = COLOURS[usize::from(args[0]) % COLOURS.len()];
+        if (args[0] & 0x80) == 0 {
+            stdout.queue(SetForegroundColor(colour))?;
+        } else {
+            stdout.queue(SetBackgroundColor(colour))?;
+        }
         stdout.flush()?;
         Ok(())
     }
 
-    inner(stdout).unwrap();
+    inner(stdout, args).unwrap();
 }
 
 fn clear_text_area(stdout: &mut Stdout, _args: &[u8]) {
