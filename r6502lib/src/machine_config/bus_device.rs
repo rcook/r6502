@@ -1,7 +1,7 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
-    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, OutputDevice, Pia,
-    PiaChannel, Ram, Rom,
+    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, IrqEvent, OutputDevice,
+    Pia, PiaChannel, Ram, Rom, Via,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::CharSet;
@@ -30,6 +30,7 @@ impl BusDevice {
         output: Box<dyn OutputDevice>,
         input_channel: PiaChannel,
         bus_tx: &Sender<BusEvent>,
+        irq_tx: Sender<IrqEvent>,
         char_set: CharSet,
     ) -> DeviceMapping {
         let device: Box<dyn _BusDevice> = match self.r#type {
@@ -37,6 +38,13 @@ impl BusDevice {
                 Box::new(Pia::new(output, input_channel, bus_tx.clone(), char_set))
             }
             BusDeviceType::Ram | BusDeviceType::Rom => unimplemented!(),
+            BusDeviceType::Via => Box::new(Via::new(
+                output,
+                input_channel,
+                bus_tx.clone(),
+                irq_tx,
+                char_set,
+            )),
         };
         DeviceMapping {
             address_range: self.address_range.clone(),
@@ -51,7 +59,7 @@ impl BusDevice {
             .map(|image| image.slice(&self.address_range))
             .collect();
         let device: Box<dyn _BusDevice> = match self.r#type {
-            BusDeviceType::Pia => unimplemented!(),
+            BusDeviceType::Pia | BusDeviceType::Via => unimplemented!(),
             BusDeviceType::Ram => Box::new(Ram::new(self.address_range.len(), &image_slices)),
             BusDeviceType::Rom => Box::new(Rom::new(self.address_range.len(), &image_slices)),
         };

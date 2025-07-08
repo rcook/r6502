@@ -10,4 +10,7 @@ pub enum BusDeviceType {
 
     #[serde(rename = "rom")]
     Rom,
+
+    #[serde(rename = "via")]
+    Via,
 }

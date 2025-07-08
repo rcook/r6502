@@ -65,8 +65,8 @@
                     "offset": "$C000"
                 },
                 {
-                    "comment": "PIA for console I/O",
-                    "type": "pia",
+                    "comment": "6522 VIA for keyboard and character output",
+                    "type": "via",
                     "addressRange": "$FC00:$FC03",
                     "offset": "$FC00"
                 },

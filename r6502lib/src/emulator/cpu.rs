@@ -141,24 +141,20 @@ impl<'a> Cpu<'a> {
 
     fn decode_next(&mut self) -> (Instruction, InstructionInfo) {
         match self.irq_rx.try_recv() {
-            Ok(IrqEvent::Notify) => {
+            Ok(IrqEvent::Irq) => {
                 // IRQ signalled: what to do now?
-                todo!();
+                self.handle_interrupt();
             }
             Err(TryRecvError::Empty) => {}
-            Err(TryRecvError::Disconnected) => todo!(),
+            Err(TryRecvError::Disconnected) => {
+                // TBD: IRQ channel will never be connected when using
+                // Pia instead of Via. Handle that more gracefully.
+            }
         }
 
         if self.interrupt.load(Ordering::Relaxed) {
             self.interrupt.store(false, Ordering::Relaxed);
-
-            // Reference: https://www.pagetable.com/?p=410
-            self.push_word(self.reg.pc);
-            let p = self.reg.p.bits();
-            self.push(p & 0b1110_1111);
-            let pc_lo = self.bus.load(IRQ);
-            let pc_hi = self.bus.load(IRQ.wrapping_add(1));
-            self.reg.pc = make_word(pc_hi, pc_lo);
+            self.handle_interrupt();
         }
 
         let instruction = Instruction::fetch(self);
@@ -168,6 +164,16 @@ impl<'a> Cpu<'a> {
         }
 
         (instruction, instruction_info)
+    }
+
+    fn handle_interrupt(&mut self) {
+        // Reference: https://www.pagetable.com/?p=410
+        self.push_word(self.reg.pc);
+        let p = self.reg.p.bits();
+        self.push(p & 0b1110_1111);
+        let pc_lo = self.bus.load(IRQ);
+        let pc_hi = self.bus.load(IRQ.wrapping_add(1));
+        self.reg.pc = make_word(pc_hi, pc_lo);
     }
 }
 

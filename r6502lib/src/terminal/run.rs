@@ -24,7 +24,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
             .machine
             .output_device_type
             .create_output_device();
-        let (bus, bus_rx) = machine_info.create_bus(output, pia_channel, &image)?;
+        let (bus, bus_rx) = machine_info.create_bus(output, pia_channel, irq_channel.tx, &image)?;
         bus.start();
 
         let nmi = bus.load_nmi_unsafe();

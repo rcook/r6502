@@ -2,6 +2,10 @@
 .macpack r6502
 .macpack raw
 
+.import HALT
+.import OSRDCH
+
+.importzp OSKBD1
 .importzp OSAREG
 .importzp OSXREG
 .importzp OSYREG
@@ -21,6 +25,8 @@
 .import HOSTHOOK
 .importzp CLIVHOSTHOOK
 .importzp FILEVHOSTHOOK
+
+BIT7 = 1 << 7
 
 .segment "MOS"
 .export userv_entrypoint
@@ -141,15 +147,14 @@
     ldy #$00
 
 loop:
-    raw_read_char_to_a
+    jsr OSRDCH
 @check_esc:
-    cmp #ESC
-    bne @check_del
+    bcc @check_del
 
     lda OSAREG
     ldx OSXREG
+    ldy #$00
     plp
-    sec                 ; C = 1 indicates Escape, C = 0 otherwise
     rts
 
 @check_del:
@@ -222,8 +227,19 @@ done:
 .segment "MOS"
 .export rdchv_entrypoint
 .proc rdchv_entrypoint
-    raw_not_impl "NOT IMPLEMENTED: rdchv"
-    raw_read_char_to_a
+    lda OSESC
+    and #BIT7
+    beq @loop
+    sec
+    rts
+@loop:
+    lda OSKBD1
+    beq @loop
+    pha
+    lda #$00
+    sta OSKBD1
+    pla
+    clc
     rts
 .endproc
 

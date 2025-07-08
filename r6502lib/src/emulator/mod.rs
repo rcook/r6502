@@ -44,6 +44,7 @@ mod rom;
 mod scenario_runner;
 mod test_scenarios;
 mod total_cycles;
+mod via;
 mod word_op;
 
 pub use address_range::*;
@@ -86,4 +87,5 @@ pub use reg::*;
 pub use rom::*;
 pub use scenario_runner::*;
 pub use total_cycles::*;
+pub use via::*;
 pub use word_op::*;

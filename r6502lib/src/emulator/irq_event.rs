@@ -1,7 +1,7 @@
 use crate::emulator::Channel;
 
 pub enum IrqEvent {
-    Notify,
+    Irq,
 }
 
 pub type IrqChannel = Channel<IrqEvent>;

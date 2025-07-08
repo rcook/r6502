@@ -1,5 +1,5 @@
 use crate::emulator::{
-    Bus, BusEvent, Image, MachineTag, OutputDevice, PiaChannel, NULL_MACHINE_TAG,
+    Bus, BusEvent, Image, IrqEvent, MachineTag, OutputDevice, PiaChannel, NULL_MACHINE_TAG,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
@@ -10,7 +10,7 @@ use path_absolutize::Absolutize;
 use std::env::current_exe;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{channel, Receiver};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Debug)]
 pub struct MachineInfo {
@@ -54,6 +54,7 @@ impl MachineInfo {
         &self,
         output: Box<dyn OutputDevice>,
         pia_channel: PiaChannel,
+        irq_tx: Sender<IrqEvent>,
         image: &Image,
     ) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
@@ -76,7 +77,7 @@ impl MachineInfo {
         let mut memory_devices = Vec::new();
         for d in &self.machine.bus_devices {
             match d.r#type {
-                BusDeviceType::Pia => io_devices.push(d),
+                BusDeviceType::Pia | BusDeviceType::Via => io_devices.push(d),
                 BusDeviceType::Ram | BusDeviceType::Rom => memory_devices.push(d),
             }
         }
@@ -88,7 +89,13 @@ impl MachineInfo {
         let mut mappings = Vec::with_capacity(self.machine.bus_devices.len());
 
         if let Some(d) = io_devices.first() {
-            mappings.push(d.map_io_device(output, pia_channel, &bus_tx, self.machine.char_set));
+            mappings.push(d.map_io_device(
+                output,
+                pia_channel,
+                &bus_tx,
+                irq_tx,
+                self.machine.char_set,
+            ));
         }
 
         for d in memory_devices {

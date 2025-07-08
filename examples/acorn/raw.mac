@@ -1,14 +1,3 @@
-.macro raw_read_char_to_a
-.import HALT
-.import KBD
-.import KBDCR
-.local @loop
-@loop:
-    lda KBDCR
-    bpl @loop
-    lda KBD
-.endmacro
-
 .macro raw_write_char_from_a
 .import DSP
 .local @loop

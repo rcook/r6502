@@ -1,3 +1,5 @@
+.macpack raw
+.macpack r6502
 .import BRKV
 .import IRQ1V
 .importzp OSESC
@@ -7,6 +9,11 @@
 .importzp OSKBD2
 .importzp OSXREG
 .import STACKBASE
+
+.importzp ESC
+
+.import KBD
+.import KBDCR
 
 .segment "HALT"
 .proc HALT
@@ -30,14 +37,16 @@
 .endproc
 
 ; Inspired by https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
-; Doesn't work yet!
 .proc keyboard_interrupt
-    lda #$1B
+    lda KBD
+    cmp #ESC
     sta OSKBD1
+    bne @keyboard_interrupt_done
     lda #$00
     sta OSKBD2
     lda #$FF
     sta OSESC
+@keyboard_interrupt_done:
     rts
 .endproc
 
