@@ -181,7 +181,7 @@ done:
 
     lda OSAREG
     ldx OSXREG
-    ;ldy OSYREG         ; Document (Advanced User Guide etc.)
+    ;ldy OSYREG         ; Documentation (Advanced User Guide etc.)
                         ; says "Y contains line length, including
                         ; carriage return if used". However, my experiments
                         ; on an emulator demonstrate that Y should not
