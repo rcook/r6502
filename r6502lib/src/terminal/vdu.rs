@@ -1,5 +1,6 @@
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::cursor::MoveTo;
+use cursive::backends::crossterm::crossterm::style::{Color, SetForegroundColor};
 use cursive::backends::crossterm::crossterm::terminal::{Clear, ClearType};
 use cursive::backends::crossterm::crossterm::QueueableCommand;
 use std::collections::HashMap;
@@ -7,7 +8,16 @@ use std::io::Stdout;
 use std::io::Write;
 use std::sync::LazyLock;
 
-pub type VduCode = (u8, &'static str, u8, &'static str, Option<fn(&mut Stdout)>);
+pub type VduCode = (
+    u8,
+    &'static str,
+    u8,
+    &'static str,
+    Option<fn(&mut Stdout, &[u8])>,
+);
+
+pub static VDU_CODES_BY_CODE: LazyLock<HashMap<u8, VduCode>> =
+    LazyLock::new(|| VDU_CODES.into_iter().map(|c| (c.0, c)).collect());
 
 const VDU_CODES: [VduCode; 33] = [
     (0, "@", 0, "Does nothing", None),
@@ -27,7 +37,7 @@ const VDU_CODES: [VduCode; 33] = [
     (14, "N", 0, "Paged mode on", None),
     (15, "O", 0, "Paped mode off", None),
     (16, "P", 0, "Clear graphics area", None),
-    (17, "Q", 1, "Define text colour", None),
+    (17, "Q", 1, "Define text colour", Some(define_text_colour)),
     (18, "R", 2, "Define graphics colour", None),
     (19, "S", 5, "Define logical colour", None),
     (20, "T", 0, "Restore default logical colours", None),
@@ -51,10 +61,17 @@ const VDU_CODES: [VduCode; 33] = [
     (127, "del", 0, "Backspace and delete", None),
 ];
 
-pub static VDU_CODES_BY_CODE: LazyLock<HashMap<u8, VduCode>> =
-    LazyLock::new(|| VDU_CODES.into_iter().map(|c| (c.0, c)).collect());
+fn define_text_colour(stdout: &mut Stdout, _args: &[u8]) {
+    fn inner(stdout: &mut Stdout) -> Result<()> {
+        stdout.queue(SetForegroundColor(Color::Red))?;
+        stdout.flush()?;
+        Ok(())
+    }
 
-fn clear_text_area(stdout: &mut Stdout) {
+    inner(stdout).unwrap();
+}
+
+fn clear_text_area(stdout: &mut Stdout, _args: &[u8]) {
     fn inner(stdout: &mut Stdout) -> Result<()> {
         stdout.queue(Clear(ClearType::All))?;
         stdout.queue(MoveTo(0, 0))?;

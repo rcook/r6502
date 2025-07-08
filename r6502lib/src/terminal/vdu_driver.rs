@@ -11,26 +11,32 @@ pub struct VduDriver {
 
 impl VduDriver {
     fn process(&mut self, value: u8, stdout: &mut Stdout) -> Result<Option<u8>> {
+        fn show_unimplemented(code: &VduCode, args: &mut Vec<u8>) -> Result<()> {
+            let s = args
+                .drain(0..)
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            let raw_mode = RawMode::disable()?;
+            println!(
+                "[VDU {code}, {args} ({description}) unimplemented]",
+                code = code.0,
+                args = s,
+                description = code.3
+            );
+            drop(raw_mode);
+            Ok(())
+        }
         if let Some(temp) = self.code {
             self.args.push(value);
             let count = self.args.len();
             let arg_count = usize::from(temp.2);
             assert!(count <= arg_count);
             if count == arg_count {
-                let s = self
-                    .args
-                    .drain(0..)
-                    .map(|x| x.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                let raw_mode = RawMode::disable()?;
-                println!(
-                    "[VDU {code}, {args} ({description}) unimplemented]",
-                    code = temp.0,
-                    args = s,
-                    description = temp.3
-                );
-                drop(raw_mode);
+                match temp.4 {
+                    Some(f) => f(stdout, &self.args),
+                    None => show_unimplemented(temp, &mut self.args)?,
+                }
                 self.code = None;
                 self.args.clear();
             }
@@ -39,7 +45,7 @@ impl VduDriver {
 
         match VDU_CODES_BY_CODE.get(&value) {
             Some((_, _, 0, _, Some(f))) => {
-                f(stdout);
+                f(stdout, &self.args);
                 Ok(None)
             }
             Some((_, _, 0, _, None)) | None => Ok(Some(value)),
