@@ -1,7 +1,10 @@
 .import BRKV
 .import IRQ1V
+.importzp OSESC
 .importzp OSFAULT
 .importzp OSINTA
+.importzp OSKBD1
+.importzp OSKBD2
 .importzp OSXREG
 .import STACKBASE
 
@@ -21,7 +24,21 @@
     pha
     and #$10
     bne handle_brk
-    jmp (IRQ1V)
+    jsr keyboard_interrupt
+    lda OSINTA
+    rti
+.endproc
+
+; Inspired by https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
+; Doesn't work yet!
+.proc keyboard_interrupt
+    lda #$1B
+    sta OSKBD1
+    lda #$00
+    sta OSKBD2
+    lda #$FF
+    sta OSESC
+    rts
 .endproc
 
 ; https://tobylobster.github.io/mos/os120_acme.a (.brkRoutine)
