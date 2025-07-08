@@ -25,4 +25,4 @@ result: .word $0000
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_add16 passed", 13, 10, 0
-failed: .byte "test_add16 failed", 13, 10, 0
+failed: .byte "!!!!! test_add16 failed", 13, 10, 0

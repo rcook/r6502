@@ -27,7 +27,7 @@
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_str_to_num passed", 13, 10, 0
-failed: .byte "test_str_to_num failed", 13, 10, 0
+failed: .byte "!!!!! test_str_to_num failed", 13, 10, 0
 failed_due_to_overflow: .byte "test_str_to_num failed due to overflow", 13, 10, 0
 str: .byte "12345", 0
 expected_value: .dword $00003039

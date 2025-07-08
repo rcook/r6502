@@ -52,4 +52,4 @@ zy = OSYREG
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_preserve_stack passed", 13, 10, 0
-failed: .byte "test_preserve_stack failed", 13, 10, 0
+failed: .byte "!!!!! test_preserve_stack failed", 13, 10, 0

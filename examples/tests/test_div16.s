@@ -75,4 +75,4 @@ word2: .word $ffff
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_div16 passed", 13, 10, 0
-failed: .byte "test_div16 failed", 13, 10, 0
+failed: .byte "!!!!! test_div16 failed", 13, 10, 0

@@ -46,7 +46,7 @@ result: .res MAX_STR_LEN
 
 .segment "SIDEWAYSDATA"
 succeeded: .byte "test_num_to_str passed", 13, 10, 0
-failed: .byte "test_num_to_str failed", 13, 10, 0
+failed: .byte "!!!!! test_num_to_str failed", 13, 10, 0
 value: .dword $12345678
 expected_len: .byte 9
 expected: .byte "305419896", 0

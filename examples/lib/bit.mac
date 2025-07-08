@@ -1,0 +1,35 @@
+.macro setbit bit
+.ifblank bit
+    .error "bit undefined"
+.endif
+    ora #(1 << bit)
+.endmacro
+
+.macro clearbit bit
+.ifblank bit
+    .error "bit undefined"
+.endif
+    and #255 - (1 << bit)
+.endmacro
+
+.macro ifbit bit, label
+.ifblank bit
+    .error "bit undefined"
+.endif
+.ifblank label
+    .error "label undefined"
+.endif
+    and #(1 << bit)
+    bne label
+.endmacro
+
+.macro ifnbit bit, label
+.ifblank bit
+    .error "bit undefined"
+.endif
+.ifblank label
+    .error "label undefined"
+.endif
+    and #(1 << bit)
+    beq label
+.endmacro
