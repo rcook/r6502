@@ -5,6 +5,7 @@
 .importzp OSAREG
 .importzp OSXREG
 .importzp OSYREG
+.importzp OSESC
 
 .importzp zbyte0
 .importzp zbyte1
@@ -65,17 +66,37 @@
 .export bytev_entrypoint
 .proc bytev_entrypoint
     php
+    cmp #$7E
+    beq @osbyte_126_ack_esc
     cmp #$83
     beq @osbyte_131_oshwm
     cmp #$84
     beq @osbyte_132_himem
     plp
     rts
+
+@osbyte_126_ack_esc:
+    ldx OSESC
+    cpx #$FF
+    bne @osbyte_126_ack_esc_clear
+    ldx #$00
+    stx OSESC
+    ldx #$FF
+    bne @osbyte_126_ack_esc_done
+@osbyte_126_ack_esc_clear:
+    ldx #$00
+    stx OSESC
+@osbyte_126_ack_esc_done:
+    plp
+    clc
+    rts
+
 @osbyte_131_oshwm:
     ldx #<OSHWM
     ldy #>OSHWM
     plp
     rts
+
 @osbyte_132_himem:
     ldx #<HIMEM
     ldy #>HIMEM
