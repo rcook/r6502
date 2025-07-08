@@ -174,7 +174,9 @@ impl<'a> Cpu<'a> {
 #[cfg(test)]
 mod tests {
     use crate::emulator::util::{get_brk_addr, make_word, split_word};
-    use crate::emulator::{Bus, Cpu, Image, Monitor, Opcode, TracingMonitor, IRQ, MOS_6502, P};
+    use crate::emulator::{
+        Bus, Cpu, Image, IrqChannel, Monitor, Opcode, TracingMonitor, IRQ, MOS_6502, P,
+    };
     use crate::{p, p_get, p_set};
     use anyhow::Result;
     use rstest::rstest;
@@ -182,7 +184,8 @@ mod tests {
     #[test]
     fn no_operand() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::Nop as u8);
         cpu.step_no_spin();
@@ -196,7 +199,8 @@ mod tests {
     #[test]
     fn byte0() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::AdcImm as u8);
         bus.store(0x0001, 0x34);
@@ -211,7 +215,8 @@ mod tests {
     #[test]
     fn byte1() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::AdcZp as u8);
         bus.store(0x0001, 0x34);
@@ -227,7 +232,8 @@ mod tests {
     #[test]
     fn word0() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.a = 0x12;
         bus.store(0x0000, Opcode::JmpAbs as u8);
         bus.store(0x0001, 0x00);
@@ -243,7 +249,8 @@ mod tests {
     #[test]
     fn word1() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.a = 0x25;
         bus.store(0x0000, Opcode::AdcAbs as u8);
         bus.store(0x0001, 0x12);
@@ -261,7 +268,8 @@ mod tests {
     fn brk() {
         const IRQ_ADDR: u16 = 0x9876;
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.pc = 0x1000;
         bus.store(0x1000, Opcode::Brk as u8);
         bus.store(IRQ_ADDR, 0xea);
@@ -284,7 +292,8 @@ mod tests {
         let p_test = P::D | P::ALWAYS_ONE;
 
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         bus.store(IRQ_ADDR, 0xea);
         let (hi, lo) = split_word(IRQ_ADDR);
@@ -408,7 +417,8 @@ mod tests {
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
         let bus = Bus::default_with_image(&image)?;
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         let irq_addr = bus.load_irq_unsafe();
         cpu.bus.store(irq_addr, 0xea);
@@ -442,7 +452,8 @@ mod tests {
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
         let bus = Bus::default_with_image(&image)?;
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         let irq_addr = bus.load_irq_unsafe();
         cpu.bus.store(irq_addr, 0xea);
@@ -494,7 +505,8 @@ mod tests {
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
         let bus = Bus::default_with_image(&image)?;
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         let irq_addr = bus.load_irq_unsafe();
         cpu.bus.store(irq_addr, 0xea);
@@ -529,7 +541,8 @@ mod tests {
 
         let image = input.parse::<Image>()?;
         let bus = Bus::default_with_image(&image)?;
-        let mut cpu = Cpu::new(bus.view(), monitor);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), monitor, irq_channel.rx);
 
         let irq_addr = bus.load_irq_unsafe();
         cpu.bus.store(irq_addr, 0xea);

@@ -46,13 +46,14 @@ pub fn plp(cpu: &mut Cpu) {
 mod tests {
     use crate::_p;
     use crate::emulator::ops::stack::{pha, php, pla, plp};
-    use crate::emulator::{Bus, Cpu, P, STACK_BASE};
+    use crate::emulator::{Bus, Cpu, IrqChannel, P, STACK_BASE};
     use rstest::rstest;
 
     #[test]
     fn pha_basics() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.a = 0x56;
         cpu.bus.store(STACK_BASE + 0x00ff, 0x34);
         assert_eq!(0xff, cpu.reg.sp);
@@ -66,7 +67,8 @@ mod tests {
     #[test]
     fn pha_wraparound() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         for value in 0x00..=0xff {
             let current_s = 0xff - value;
@@ -82,7 +84,8 @@ mod tests {
     #[test]
     fn php_basics() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         cpu.reg.p = P::N | P::ALWAYS_ONE | P::D | P::Z;
         php(&mut cpu);
@@ -110,7 +113,8 @@ mod tests {
         #[case] p: u8,
     ) {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         cpu.reg.sp = sp;
         cpu.reg.p = _p!(p);
@@ -122,7 +126,8 @@ mod tests {
     #[test]
     fn pla_basics() {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         cpu.reg.a = 0x00;
         pha(&mut cpu);
@@ -168,7 +173,8 @@ mod tests {
         const START: u16 = 0x1000;
 
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
 
         bus.store(START, 0xa9); // LDA_IMM
         bus.store(START + 2, 0x48); // PHA

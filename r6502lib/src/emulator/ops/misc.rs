@@ -29,7 +29,7 @@ mod tests {
     use crate::_p;
     use crate::emulator::ops::brk;
     use crate::emulator::util::split_word;
-    use crate::emulator::{Bus, Cpu, IRQ, STACK_BASE};
+    use crate::emulator::{Bus, Cpu, IrqChannel, IRQ, STACK_BASE};
     use rstest::rstest;
 
     #[rstest]
@@ -46,7 +46,8 @@ mod tests {
         #[case] irq_addr: u16,
     ) {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         cpu.reg.p = _p!(p);
         cpu.reg.pc = pc + 1;
         cpu.reg.sp = sp;

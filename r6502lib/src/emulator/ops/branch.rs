@@ -53,7 +53,7 @@ pub fn bvs(cpu: &mut Cpu, offset: u8) -> BranchResult {
 mod tests {
     use crate::emulator::ops::branch::{bcs, beq};
     use crate::emulator::ops::BranchResult;
-    use crate::emulator::{Bus, Cpu};
+    use crate::emulator::{Bus, Cpu, IrqChannel};
     use crate::p_set;
     use rstest::rstest;
 
@@ -70,7 +70,8 @@ mod tests {
         #[case] offset: u8,
     ) {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         p_set!(cpu.reg, Z, flag_value);
         cpu.reg.pc = pc;
         let branch_result = beq(&mut cpu, offset);
@@ -87,7 +88,8 @@ mod tests {
         #[case] carry: bool,
     ) {
         let bus = Bus::default();
-        let mut cpu = Cpu::new(bus.view(), None);
+        let irq_channel = IrqChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
         p_set!(cpu.reg, C, carry);
         cpu.reg.pc = pc.wrapping_add(2);
         bcs(&mut cpu, offset);
