@@ -78,7 +78,13 @@ const VDU_CODES: [VduCode; 33] = [
     (28, "\\", 4, "Define text window", None),
     (29, "]", 4, "Define graphics origin", None),
     (30, "^", 0, "Home text cursor to top left of window", None),
-    (31, "_", 2, "Move text cursor to x, y", None),
+    (
+        31,
+        "_",
+        2,
+        "Move text cursor to x, y",
+        Some(move_text_cursor),
+    ),
     (127, "del", 0, "Backspace and delete", None),
 ];
 
@@ -106,4 +112,14 @@ fn clear_text_area(stdout: &mut Stdout, _args: &[u8]) {
     }
 
     inner(stdout).unwrap();
+}
+
+fn move_text_cursor(stdout: &mut Stdout, args: &[u8]) {
+    fn inner(stdout: &mut Stdout, args: &[u8]) -> Result<()> {
+        stdout.queue(MoveTo(u16::from(args[0]), u16::from(args[1])))?;
+        stdout.flush()?;
+        Ok(())
+    }
+
+    inner(stdout, args).unwrap();
 }
