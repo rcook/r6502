@@ -32,14 +32,13 @@
 ; Inspired by https://github.com/chelsea6502/BeebEater/blob/main/BeebEater.asm
 .proc keyboard_interrupt
     lda KBD
-    cmp #ESC
     sta OSKBD1
-    bne @keyboard_interrupt_done
-    lda #$00
-    sta OSKBD2
+    cmp #ESC
+    bne @not_esc
     lda #$FF
     sta OSESC
-@keyboard_interrupt_done:
+    rts
+@not_esc:
     rts
 .endproc
 

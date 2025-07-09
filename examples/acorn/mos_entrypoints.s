@@ -105,6 +105,7 @@ BIT7 = 1 << 7
 .export wordv_entrypoint
 .proc wordv_entrypoint
     php
+    cli
     sta OSAREG
     stx OSXREG
     sty OSYREG
@@ -138,13 +139,12 @@ BIT7 = 1 << 7
 
 loop:
     jsr OSRDCH
-@check_esc:
     bcc @check_del
 
-    lda OSAREG
-    ldx OSXREG
-    ldy #$00
     plp
+    lda OSESC
+    rol
+    cli
     rts
 
 @check_del:
@@ -163,7 +163,6 @@ loop:
     jsr OSWRCH
     lda #DEL
     jsr OSWRCH
-    lda #$00
     beq loop
 
 @check_cr:
@@ -193,7 +192,7 @@ done:
     lda #CR
     sta (zword1), y
 
-    jsr OSWRCH
+    jsr OSNEWL
 
     lda OSAREG
     ldx OSXREG
@@ -223,6 +222,7 @@ done:
     lda OSESC
     and #BIT7
     beq @loop
+    lda #$00
     sec
     rts
 @loop:
