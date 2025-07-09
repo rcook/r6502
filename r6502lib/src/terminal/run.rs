@@ -1,4 +1,4 @@
-use crate::emulator::{Cpu, Image, InterruptChannel, Monitor, PiaChannel, TracingMonitor};
+use crate::emulator::{Cpu, Image, InterruptChannel, IoChannel, Monitor, TracingMonitor};
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use crate::terminal::raw_mode::RawMode;
@@ -16,8 +16,8 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         };
 
         let terminal_channel = TerminalChannel::new();
-        let pia_channel = PiaChannel::new();
-        let pia_tx = pia_channel.tx.clone();
+        let io_channel = IoChannel::new();
+        let io_tx = io_channel.tx.clone();
         let interrupt_channel = InterruptChannel::new();
 
         let output = machine_info
@@ -25,7 +25,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
             .output_device_type
             .create_output_device();
         let (bus, bus_rx) =
-            machine_info.create_bus(output, pia_channel, interrupt_channel.tx, &image)?;
+            machine_info.create_bus(output, io_channel, interrupt_channel.tx, &image)?;
         bus.start();
 
         let nmi = bus.load_nmi_unsafe();
@@ -47,7 +47,7 @@ pub fn run(opts: &RunOptions) -> Result<()> {
         let stop_reason = Runner {
             cpu: &mut cpu,
             bus_rx,
-            pia_tx,
+            io_tx,
             terminal_channel,
             stop_after: opts.stop_after,
             machine_info,

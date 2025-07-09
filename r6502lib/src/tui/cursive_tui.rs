@@ -1,4 +1,4 @@
-use crate::emulator::{AddressRange, InstructionInfo, PiaEvent, Reg};
+use crate::emulator::{AddressRange, InstructionInfo, IoEvent, Reg};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use crate::symbols::MapFile;
 use crate::tui::export_list_info::ExportListInfo;
@@ -48,7 +48,7 @@ impl CursiveTui {
         monitor_rx: Receiver<MonitorMessage>,
         io_rx: Receiver<IoMessage>,
         debug_tx: &Sender<DebugMessage>,
-        pia_tx: &Sender<PiaEvent>,
+        io_tx: &Sender<IoEvent>,
         map_file: MapFile,
     ) -> Self {
         let export_list_info = ExportListInfo::new(&map_file);
@@ -60,7 +60,7 @@ impl CursiveTui {
         );
         cursive.set_fps(30);
         Self::add_global_callbacks(&mut cursive, debug_tx, export_list_info);
-        Self::set_pre_event_inner_handler(&mut cursive, pia_tx);
+        Self::set_pre_event_inner_handler(&mut cursive, io_tx);
         Self {
             cursive,
             monitor_rx,
@@ -381,20 +381,20 @@ impl CursiveTui {
 
     fn set_pre_event_inner_handler(
         c: &mut CursiveRunner<CursiveRunnable>,
-        pia_tx: &Sender<PiaEvent>,
+        io_tx: &Sender<IoEvent>,
     ) {
         let program_has_input = AtomicBool::new(false);
-        let pia_tx_clone = pia_tx.clone();
+        let io_tx_clone = io_tx.clone();
         c.set_on_pre_event_inner(EventTrigger::any(), move |e| {
-            fn send_char(pia_tx: &Sender<PiaEvent>, ch: char) {
-                _ = pia_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
+            fn send_char(io_tx: &Sender<IoEvent>, ch: char) {
+                _ = io_tx.send(IoEvent::Input(CrosstermEvent::Key(KeyEvent::new(
                     KeyCode::Char(ch),
                     KeyModifiers::NONE,
                 ))));
             }
 
-            fn send_ctrl_char(pia_tx: &Sender<PiaEvent>, ch: char) {
-                _ = pia_tx.send(PiaEvent::Input(CrosstermEvent::Key(KeyEvent::new(
+            fn send_ctrl_char(io_tx: &Sender<IoEvent>, ch: char) {
+                _ = io_tx.send(IoEvent::Input(CrosstermEvent::Key(KeyEvent::new(
                     KeyCode::Char(ch),
                     KeyModifiers::CONTROL,
                 ))));
@@ -434,13 +434,13 @@ impl CursiveTui {
                         }))));
                     }
                     // TBD: Get this working!
-                    Event::CtrlChar('r') => send_ctrl_char(&pia_tx_clone, 'r'),
+                    Event::CtrlChar('r') => send_ctrl_char(&io_tx_clone, 'r'),
                     // TBD: Get this working!
-                    Event::CtrlChar('s') => send_ctrl_char(&pia_tx_clone, 's'),
-                    Event::Key(Key::Backspace | Key::Del) => send_char(&pia_tx_clone, '_'),
-                    Event::Key(Key::Enter) => send_char(&pia_tx_clone, '\r'),
-                    Event::Key(Key::Esc) => send_char(&pia_tx_clone, 0x1b as char),
-                    Event::Char(ch) => send_char(&pia_tx_clone, *ch),
+                    Event::CtrlChar('s') => send_ctrl_char(&io_tx_clone, 's'),
+                    Event::Key(Key::Backspace | Key::Del) => send_char(&io_tx_clone, '_'),
+                    Event::Key(Key::Enter) => send_char(&io_tx_clone, '\r'),
+                    Event::Key(Key::Esc) => send_char(&io_tx_clone, 0x1b as char),
+                    Event::Char(ch) => send_char(&io_tx_clone, *ch),
                     _ => return None,
                 }
                 Some(EventResult::consumed())

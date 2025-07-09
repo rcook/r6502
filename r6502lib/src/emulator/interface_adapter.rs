@@ -1,7 +1,7 @@
-use crate::emulator::PiaEvent::{
+use crate::emulator::IoEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
 };
-use crate::emulator::{BusDevice, BusEvent, InterruptEvent, OutputDevice, PiaChannel};
+use crate::emulator::{BusDevice, BusEvent, InterruptEvent, IoChannel, OutputDevice};
 use crate::machine_config::CharSet;
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
@@ -13,15 +13,15 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread::{spawn, JoinHandle};
 
-struct ViaState {
+struct InterfaceAdapterState {
     started: bool,
-    pa: u8,    // PIA.A keyboard input on Apple 1
-    pa_cr: u8, // PIA.A keyboard control register on Apple 1
-    pb: u8,    // PIA.B display output register on Apple 1
-    pb_cr: u8, // PIA.B display control register on Apple 1
+    pa: u8,    // Port A
+    pa_cr: u8, // Port A control register
+    pb: u8,    // Port B
+    pb_cr: u8, // Port B control register
 }
 
-impl ViaState {
+impl InterfaceAdapterState {
     const fn new() -> Self {
         Self {
             started: false,
@@ -38,13 +38,14 @@ impl ViaState {
     }
 }
 
-pub struct Via {
-    state: Arc<Mutex<ViaState>>,
-    pia_tx: Sender<PiaEvent>,
+// A barely adequate emulation of the 6821 PIA and 6522 VIA
+pub struct InterfaceAdapter {
+    state: Arc<Mutex<InterfaceAdapterState>>,
+    io_tx: Sender<IoEvent>,
     handle: Cell<Option<JoinHandle<()>>>,
 }
 
-impl Via {
+impl InterfaceAdapter {
     const PA_OFFSET: u16 = 0x0000;
     const PA_CR_OFFSET: u16 = 0x0001;
     const PB_OFFSET: u16 = 0x0002;
@@ -53,17 +54,17 @@ impl Via {
     #[must_use]
     pub fn new(
         output: Box<dyn OutputDevice>,
-        pia_channel: PiaChannel,
+        io_channel: IoChannel,
         bus_tx: Sender<BusEvent>,
         interrupt_tx: Sender<InterruptEvent>,
         char_set: CharSet,
     ) -> Self {
-        let state = Arc::new(Mutex::new(ViaState::new()));
+        let state = Arc::new(Mutex::new(InterfaceAdapterState::new()));
         let state_clone = Arc::clone(&state);
         let handle = spawn(move || {
             Self::event_loop(
                 &state_clone,
-                &pia_channel.rx,
+                &io_channel.rx,
                 &bus_tx,
                 &interrupt_tx,
                 output,
@@ -73,22 +74,22 @@ impl Via {
         });
         Self {
             state,
-            pia_tx: pia_channel.tx,
+            io_tx: io_channel.tx,
             handle: Cell::new(Some(handle)),
         }
     }
 
     #[allow(clippy::needless_pass_by_value)]
     fn event_loop(
-        state: &Arc<Mutex<ViaState>>,
-        pia_rx: &Receiver<PiaEvent>,
+        state: &Arc<Mutex<InterfaceAdapterState>>,
+        io_rx: &Receiver<IoEvent>,
         bus_tx: &Sender<BusEvent>,
         interrupt_tx: &Sender<InterruptEvent>,
         mut output: Box<dyn OutputDevice>,
         char_set: CharSet,
     ) -> Result<()> {
         loop {
-            match pia_rx.recv() {
+            match io_rx.recv() {
                 Ok(PaUpdated(value)) => state.lock().unwrap().pa = value,
                 Ok(PacrUpdated(_)) => state.lock().unwrap().pa_cr = 0x00,
                 Ok(PbUpdated(value)) => {
@@ -115,7 +116,7 @@ impl Via {
                             _ => {
                                 if let Some(c) = char_set.translate_in(&key) {
                                     state.lock().unwrap().set_key(c);
-                                    interrupt_tx.send(InterruptEvent::Irq).unwrap();
+                                    _ = interrupt_tx.send(InterruptEvent::Irq);
                                 } else {
                                     info!("unimplemented: {key:?}");
                                 }
@@ -137,13 +138,13 @@ impl Via {
     }
 }
 
-impl BusDevice for Via {
+impl BusDevice for InterfaceAdapter {
     fn start(&self) {
         self.state.lock().unwrap().started = true;
     }
 
     fn stop(&self) -> bool {
-        _ = self.pia_tx.send(Shutdown);
+        _ = self.io_tx.send(Shutdown);
         if let Some(h) = self.handle.take() {
             h.join().is_ok()
         } else {
@@ -180,6 +181,6 @@ impl BusDevice for Via {
             Self::PB_CR_OFFSET => PbcrUpdated(value),
             _ => panic!("Invalid PIA address ${addr:04X}"),
         };
-        _ = self.pia_tx.send(m);
+        _ = self.io_tx.send(m);
     }
 }

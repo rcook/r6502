@@ -1,5 +1,5 @@
 use crate::emulator::{
-    Bus, BusEvent, Image, InterruptEvent, MachineTag, OutputDevice, PiaChannel, NULL_MACHINE_TAG,
+    Bus, BusEvent, Image, InterruptEvent, IoChannel, MachineTag, OutputDevice, NULL_MACHINE_TAG,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
@@ -53,7 +53,7 @@ impl MachineInfo {
     pub fn create_bus(
         &self,
         output: Box<dyn OutputDevice>,
-        pia_channel: PiaChannel,
+        io_channel: IoChannel,
         interrupt_tx: Sender<InterruptEvent>,
         image: &Image,
     ) -> Result<(Bus, Receiver<BusEvent>)> {
@@ -91,7 +91,7 @@ impl MachineInfo {
         if let Some(d) = io_devices.first() {
             mappings.push(d.map_io_device(
                 output,
-                pia_channel,
+                io_channel,
                 &bus_tx,
                 interrupt_tx,
                 self.machine.char_set,

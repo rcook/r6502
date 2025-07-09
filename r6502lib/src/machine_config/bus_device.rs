@@ -1,7 +1,7 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
-    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, InterruptEvent,
-    OutputDevice, Pia, PiaChannel, Ram, Rom, Via,
+    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, InterfaceAdapter,
+    InterruptEvent, IoChannel, OutputDevice, Ram, Rom,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::CharSet;
@@ -28,23 +28,20 @@ impl BusDevice {
     pub fn map_io_device(
         &self,
         output: Box<dyn OutputDevice>,
-        input_channel: PiaChannel,
+        io_channel: IoChannel,
         bus_tx: &Sender<BusEvent>,
         interrupt_tx: Sender<InterruptEvent>,
         char_set: CharSet,
     ) -> DeviceMapping {
         let device: Box<dyn _BusDevice> = match self.r#type {
-            BusDeviceType::Pia => {
-                Box::new(Pia::new(output, input_channel, bus_tx.clone(), char_set))
-            }
-            BusDeviceType::Ram | BusDeviceType::Rom => unimplemented!(),
-            BusDeviceType::Via => Box::new(Via::new(
+            BusDeviceType::Pia | BusDeviceType::Via => Box::new(InterfaceAdapter::new(
                 output,
-                input_channel,
+                io_channel,
                 bus_tx.clone(),
                 interrupt_tx,
                 char_set,
             )),
+            BusDeviceType::Ram | BusDeviceType::Rom => unimplemented!(),
         };
         DeviceMapping {
             address_range: self.address_range.clone(),

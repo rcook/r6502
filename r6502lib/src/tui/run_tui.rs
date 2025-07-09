@@ -1,5 +1,5 @@
 use crate::debug_options::DebugOptions;
-use crate::emulator::{Image, InterruptChannel, OutputDevice, PiaChannel};
+use crate::emulator::{Image, InterruptChannel, IoChannel, OutputDevice};
 use crate::machine_config::{CharSet, MachineInfo};
 use crate::messages::IoMessage;
 use crate::symbols::MapFile;
@@ -43,7 +43,7 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
 
     let tui_output = TuiOutput::new(io_channel.0.clone());
 
-    let input_channel = PiaChannel::new();
+    let input_channel = IoChannel::new();
     let input_tx = input_channel.tx.clone();
 
     let interrupt_channel = InterruptChannel::new();

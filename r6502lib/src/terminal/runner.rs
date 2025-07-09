@@ -1,6 +1,6 @@
 use crate::emulator::r6502_image::Snapshot;
 use crate::emulator::util::make_unique_snapshot_path;
-use crate::emulator::{Bus, BusEvent, Cpu, Opcode, PiaEvent, MOS_6502, RESET};
+use crate::emulator::{Bus, BusEvent, Cpu, IoEvent, Opcode, MOS_6502, RESET};
 use crate::machine_config::{HostHookType, MachineInfo};
 use crate::terminal::acorn_host_hooks::handle_host_hook;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
@@ -15,7 +15,7 @@ pub struct Runner<'a> {
     pub cpu: &'a mut Cpu<'a>,
     pub bus_rx: Receiver<BusEvent>,
     pub terminal_channel: TerminalChannel,
-    pub pia_tx: Sender<PiaEvent>,
+    pub io_tx: Sender<IoEvent>,
     pub stop_after: Option<u64>,
     pub machine_info: MachineInfo,
     pub bus: &'a Bus,
@@ -24,7 +24,7 @@ pub struct Runner<'a> {
 impl Runner<'_> {
     pub fn run(self) -> Result<StopReason> {
         let handle = spawn(move || {
-            Self::event_loop(&self.terminal_channel.rx, &self.pia_tx).expect("Must succeed");
+            Self::event_loop(&self.terminal_channel.rx, &self.io_tx).expect("Must succeed");
         });
         let stop_reason =
             Self::do_steps(self.cpu, &self.bus_rx, self.stop_after, &self.machine_info)?;
@@ -100,7 +100,7 @@ impl Runner<'_> {
         }
     }
 
-    fn event_loop(terminal_rx: &Receiver<TerminalEvent>, pia_tx: &Sender<PiaEvent>) -> Result<()> {
+    fn event_loop(terminal_rx: &Receiver<TerminalEvent>, io_tx: &Sender<IoEvent>) -> Result<()> {
         fn try_read_event() -> Result<Option<Event>> {
             if poll(Duration::from_millis(100))? {
                 Ok(Some(read()?))
@@ -116,7 +116,7 @@ impl Runner<'_> {
             }
 
             if let Some(event) = try_read_event()? {
-                _ = pia_tx.send(PiaEvent::Input(event));
+                _ = io_tx.send(IoEvent::Input(event));
             }
         }
 
