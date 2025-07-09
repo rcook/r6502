@@ -100,7 +100,7 @@ BUFFER_LEN = 10
 
     ; C = 1 if Esc was pressed
     bcc @display_str
-    raw_write_new_line
+    jsr OSNEWL
     raw_write_str escaped
 
     rts

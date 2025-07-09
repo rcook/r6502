@@ -3,6 +3,7 @@
 .macpack r6502
 
 .importzp CLIVHOSTHOOK
+.importzp CR
 .importzp DEL
 .importzp FILEVHOSTHOOK
 .importzp OSAREG
@@ -155,13 +156,13 @@ loop:
     beq loop
     dey
 
-    raw_write_char_from_a
+    jsr OSWRCH
 
     ; Overwrite last character
     lda #' '
-    raw_write_char_from_a
+    jsr OSWRCH
     lda #DEL
-    raw_write_char_from_a
+    jsr OSWRCH
     lda #$00
     beq loop
 
@@ -173,11 +174,11 @@ loop:
     cpx #$00
     bne @cont
     lda #$07            ; BEL
-    raw_write_char_from_a
+    jsr OSWRCH
     bne loop
 
 @cont:
-    raw_write_char_from_a
+    jsr OSWRCH
     cmp zbyte0
     blt loop
     cmp zbyte1
@@ -192,7 +193,7 @@ done:
     lda #CR
     sta (zword1), y
 
-    raw_write_new_line
+    jsr OSWRCH
 
     lda OSAREG
     ldx OSXREG
@@ -209,7 +210,10 @@ done:
 .segment "MOS"
 .export wrchv_entrypoint
 .proc wrchv_entrypoint
-    raw_write_char_from_a
+@loop:
+    bit DSP
+    bmi @loop
+    sta DSP
     rts
 .endproc
 
