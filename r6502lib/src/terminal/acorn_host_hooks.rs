@@ -71,17 +71,27 @@ fn show_catalogue(arg: Option<&str>) -> Result<bool> {
         return Ok(false);
     };
 
-    let raw_mode = RawMode::disable()?;
-    println!("Directory: {dir}", dir = d.display());
+    let mut file_infos = Vec::new();
     for entry in dir {
         let entry = entry?;
         let f = entry.file_name();
         let file_name = f
             .to_str()
             .ok_or_else(|| anyhow!("could not convert file name {f:?}"))?;
-        println!("  {file_name}");
+        let m = entry.metadata()?;
+        file_infos.push((file_name.to_string(), m.len()));
+    }
+    file_infos.sort();
+
+    let column_width = file_infos.iter().fold(0, |acc, f| acc.max(f.0.len()));
+
+    let raw_mode = RawMode::disable()?;
+    println!("Directory: {dir}", dir = d.display());
+    for (file_name, len) in file_infos {
+        println!("  {file_name:column_width$}  {len:>10}");
     }
     drop(raw_mode);
+
     Ok(true)
 }
 
