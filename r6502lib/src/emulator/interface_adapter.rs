@@ -100,6 +100,9 @@ impl InterfaceAdapter {
                 Ok(Input(event)) => match event {
                     Event::Key(key) if Self::key_event_is_press(&key) => {
                         match (key.modifiers, key.code) {
+                            (KeyModifiers::NONE, KeyCode::F(12)) => {
+                                _ = interrupt_tx.send(InterruptEvent::Reset);
+                            }
                             (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
                                 // Halt program
                                 _ = bus_tx.send(BusEvent::UserBreak);

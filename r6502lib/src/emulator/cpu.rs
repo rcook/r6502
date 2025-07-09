@@ -1,7 +1,7 @@
 use crate::emulator::util::{make_word, split_word};
 use crate::emulator::{
     BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, InterruptEvent, Monitor, Reg,
-    TotalCycles, IRQ, STACK_BASE,
+    TotalCycles, IRQ, RESET, STACK_BASE,
 };
 use log::{debug, log_enabled, Level};
 use std::sync::mpsc::{Receiver, TryRecvError};
@@ -135,7 +135,8 @@ impl<'a> Cpu<'a> {
     fn decode_next(&mut self) -> (Instruction, InstructionInfo) {
         match self.irq_rx.try_recv() {
             Ok(InterruptEvent::Irq) => self.handle_irq(),
-            Ok(InterruptEvent::Nmi | InterruptEvent::Reset) => todo!(),
+            Ok(InterruptEvent::Nmi) => todo!(),
+            Ok(InterruptEvent::Reset) => self.handle_reset(),
             Err(TryRecvError::Disconnected | TryRecvError::Empty) => {
                 // TBD: IRQ channel will never be connected when using
                 // Pia instead of Via. Handle that more gracefully.
@@ -151,13 +152,20 @@ impl<'a> Cpu<'a> {
         (instruction, instruction_info)
     }
 
+    // Reference: https://www.pagetable.com/?p=410
     fn handle_irq(&mut self) {
-        // Reference: https://www.pagetable.com/?p=410
         self.push_word(self.reg.pc);
         let p = self.reg.p.bits();
         self.push(p & 0b1110_1111);
         let pc_lo = self.bus.load(IRQ);
         let pc_hi = self.bus.load(IRQ.wrapping_add(1));
+        self.reg.pc = make_word(pc_hi, pc_lo);
+    }
+
+    // Reference: https://www.pagetable.com/?p=410
+    fn handle_reset(&mut self) {
+        let pc_lo = self.bus.load(RESET);
+        let pc_hi = self.bus.load(RESET.wrapping_add(1));
         self.reg.pc = make_word(pc_hi, pc_lo);
     }
 }
