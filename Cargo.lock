@@ -1192,7 +1192,6 @@ dependencies = [
  "rstest",
  "serde",
  "serde_json",
- "signal-hook",
  "strum",
  "strum_macros",
 ]

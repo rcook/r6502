@@ -4,11 +4,8 @@ use crate::emulator::{
     TotalCycles, IRQ, STACK_BASE,
 };
 use log::{debug, log_enabled, Level};
-use signal_hook::consts::SIGINT;
-use signal_hook::flag::register;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, TryRecvError};
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 use std::time::{Duration, Instant};
 
 const CPU_FREQUENCY: Frequency = Frequency::MHz(3_000_000);
@@ -20,7 +17,6 @@ pub struct Cpu<'a> {
     pub total_cycles: TotalCycles,
     monitor: Box<dyn Monitor>,
     irq_rx: Receiver<IrqEvent>,
-    interrupt: Arc<AtomicBool>,
 }
 
 impl<'a> Cpu<'a> {
@@ -30,15 +26,12 @@ impl<'a> Cpu<'a> {
         monitor: Option<Box<dyn Monitor>>,
         irq_rx: Receiver<IrqEvent>,
     ) -> Self {
-        let interrupt = Arc::new(AtomicBool::new(false));
-        register(SIGINT, Arc::clone(&interrupt)).unwrap();
         Self {
             reg: Reg::default(),
             bus,
             total_cycles: 0,
             monitor: monitor.unwrap_or_else(|| Box::new(DummyMonitor)),
             irq_rx,
-            interrupt,
         }
     }
 
@@ -145,16 +138,10 @@ impl<'a> Cpu<'a> {
                 // IRQ signalled: what to do now?
                 self.handle_interrupt();
             }
-            Err(TryRecvError::Empty) => {}
-            Err(TryRecvError::Disconnected) => {
+            Err(TryRecvError::Disconnected | TryRecvError::Empty) => {
                 // TBD: IRQ channel will never be connected when using
                 // Pia instead of Via. Handle that more gracefully.
             }
-        }
-
-        if self.interrupt.load(Ordering::Relaxed) {
-            self.interrupt.store(false, Ordering::Relaxed);
-            self.handle_interrupt();
         }
 
         let instruction = Instruction::fetch(self);
