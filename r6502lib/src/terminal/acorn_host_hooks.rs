@@ -1,6 +1,6 @@
 use crate::ascii::CR;
 use crate::emulator::util::make_word;
-use crate::emulator::Cpu;
+use crate::emulator::{BusView, Cpu};
 use crate::terminal::RawMode;
 use anyhow::{anyhow, bail, Result};
 use log::info;
@@ -37,6 +37,7 @@ fn handle_cliv(cpu: &mut Cpu) -> Result<()> {
     let result = match command {
         "*." | "*CAT" => show_catalogue(arg)?,
         "*DIR" => change_working_dir(arg)?,
+        "*SAVE" => save_memory_oscli(cpu, arg)?,
         _ => {
             info!("OSCLI command {command_line} not implemented");
             false
@@ -48,7 +49,7 @@ fn handle_cliv(cpu: &mut Cpu) -> Result<()> {
 
 fn handle_filev(cpu: &mut Cpu) -> Result<()> {
     let result = match cpu.reg.a {
-        0 => save_memory(cpu)?,
+        0 => save_memory_osfile(cpu)?,
         0xff => load_memory(cpu)?,
         _ => {
             info!("OSFILE operation ${a:02X} not implemented", a = cpu.reg.a);
@@ -96,24 +97,103 @@ fn change_working_dir(arg: Option<&str>) -> Result<bool> {
     Ok(true)
 }
 
-fn save_memory(cpu: &mut Cpu) -> Result<bool> {
+fn save_memory_oscli(cpu: &mut Cpu, arg: Option<&str>) -> Result<bool> {
+    let Some(arg) = arg else {
+        info!("Invalid arguments");
+        return Ok(false);
+    };
+
+    let tokens = match parse_command_line(arg) {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            info!("Failed to parse arguments {arg}: {e}");
+            return Ok(false);
+        }
+    };
+
+    let mut i = tokens.iter();
+
+    let Some(file_name) = i.next() else {
+        info!("Invalid arguments {arg}");
+        return Ok(false);
+    };
+
+    let Some(start_s) = i.next() else {
+        info!("Invalid arguments {arg}");
+        return Ok(false);
+    };
+
+    let Ok(start) = u32::from_str_radix(start_s, 16) else {
+        info!("Invalid start address {start_s}");
+        return Ok(false);
+    };
+
+    let Some(end_or_len_s) = i.next() else {
+        info!("Invalid arguments {arg}");
+        return Ok(false);
+    };
+
+    let end = if let Some(s) = end_or_len_s.strip_prefix('+') {
+        let Ok(len) = u32::from_str_radix(s, 16) else {
+            info!("Invalid length {s}");
+            return Ok(false);
+        };
+        start + len
+    } else {
+        let Ok(end) = u32::from_str_radix(end_or_len_s, 16) else {
+            info!("Invalid end address {end_or_len_s}");
+            return Ok(false);
+        };
+        end
+    };
+
+    if end <= start {
+        info!("Invalid end address or length {end_or_len_s}");
+        return Ok(false);
+    }
+
+    let exec = match i.next() {
+        Some(s) => {
+            let Ok(exec) = u32::from_str_radix(s, 16) else {
+                info!("Invalid execution address {s}");
+                return Ok(false);
+            };
+            exec
+        }
+        None => start,
+    };
+
+    save_memory(&cpu.bus, file_name, start, exec, start, end)
+}
+
+fn save_memory_osfile(cpu: &mut Cpu) -> Result<bool> {
     let xy_addr = make_word(cpu.reg.y, cpu.reg.x);
     let file_name_addr = read_word(cpu, xy_addr, 0);
-    let load_addr = read_dword(cpu, xy_addr, 2);
-    let execution_addr = read_dword(cpu, xy_addr, 6);
-    let start_addr = read_dword(cpu, xy_addr, 10);
-    let end_addr = read_dword(cpu, xy_addr, 14);
+    let load = read_dword(cpu, xy_addr, 2);
+    let exec = read_dword(cpu, xy_addr, 6);
+    let start = read_dword(cpu, xy_addr, 10);
+    let end = read_dword(cpu, xy_addr, 14);
     let file_name = read_cr_terminated_string(cpu, file_name_addr)?;
+    save_memory(&cpu.bus, &file_name, load, exec, start, end)
+}
 
-    info!(
-        "Saving to {file_name} {load_addr:08X} {execution_addr:08X} {start_addr:08X} {end_addr:08X}",
-    );
+fn save_memory(
+    bus: &BusView<'_>,
+    file_name: &str,
+    load: u32,
+    exec: u32,
+    start: u32,
+    end: u32,
+) -> Result<bool> {
+    assert!(end > start);
+    info!("Saving to {file_name} {load:08X} {exec:08X} {start:08X} {end:08X}",);
 
-    let start_addr = u16::try_from(start_addr & 0xffff).unwrap();
-    let end_addr = u16::try_from(end_addr & 0xffff).unwrap();
+    let start = u16::try_from(start & 0xffff).unwrap();
+    let end_inclusive = u16::try_from((end - 1) & 0xffff).unwrap();
+    let length = usize::from(end_inclusive) - usize::from(start) + 1;
 
     let d = current_dir()?;
-    let p = d.join(&file_name);
+    let p = d.join(file_name);
 
     let f = match File::create_new(&p) {
         Ok(f) => f,
@@ -130,12 +210,10 @@ fn save_memory(cpu: &mut Cpu) -> Result<bool> {
         }
     };
     let mut writer = BufWriter::new(f);
-    for addr in start_addr..end_addr {
-        let byte = cpu.bus.load(addr);
+    for addr in start..=end_inclusive {
+        let byte = bus.load(addr);
         writer.write_all(&[byte])?;
     }
-
-    let length = end_addr - start_addr;
 
     // TBD: Use my spiffy .inf file writer
     // See https://github.com/rcook/dfstool/blob/main/src/metadata/inf.rs
@@ -156,13 +234,11 @@ fn save_memory(cpu: &mut Cpu) -> Result<bool> {
     };
     writeln!(
         f,
-        "\"{file_name}\" {load_addr:08X} {execution_addr:08X} {length:08X} {access:02X}",
+        "\"{file_name}\" {load:08X} {exec:08X} {length:08X} {access:02X}",
         access = 0
     )?;
 
-    info!(
-        "Successfully saved to {file_name} {load_addr:08X} {execution_addr:08X} {start_addr:08X} {end_addr:08X}"
-    );
+    info!("Successfully saved to {file_name}");
 
     Ok(true)
 }
@@ -271,4 +347,64 @@ fn write_dword(cpu: &mut Cpu, base_addr: u16, offset: u16, value: u32) {
         .store(b2_addr, u8::try_from((value >> 16) & 0xff).unwrap());
     cpu.bus
         .store(b3_addr, u8::try_from((value >> 24) & 0xff).unwrap());
+}
+
+#[allow(unused)]
+fn parse_command_line(s: &str) -> Result<Vec<String>> {
+    let mut i = s.chars().peekable();
+
+    let mut tokens = Vec::new();
+    loop {
+        while let Some(c) = i.peek() {
+            if !c.is_whitespace() {
+                break;
+            }
+            i.next().unwrap();
+        }
+
+        match i.next() {
+            Some('"') => {
+                let mut token = String::new();
+                loop {
+                    let Some(c) = i.next() else {
+                        bail!("syntax error in {s}")
+                    };
+                    if c == '"' {
+                        break;
+                    }
+                    token.push(c);
+                }
+                tokens.push(token);
+            }
+            Some(c) => {
+                let mut token = String::new();
+                token.push(c);
+                while let Some(c) = i.peek() {
+                    if c.is_whitespace() {
+                        break;
+                    }
+                    token.push(i.next().unwrap());
+                }
+                tokens.push(token);
+            }
+            None => break,
+        }
+    }
+    Ok(tokens)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::terminal::acorn_host_hooks::parse_command_line;
+    use anyhow::Result;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(&["FILE", "aaa", "bbb", "ccc"], "FILE aaa bbb ccc")]
+    #[case(&["FILE NAME", "aaa", "bbb", "ccc"], "\"FILE NAME\" aaa bbb ccc")]
+    #[case(&["FILE NAME", "aaa", "bbb", "ccc"], "  \"FILE NAME\"   aaa   bbb   ccc  ")]
+    fn parse_command_line_basics(#[case] expected: &[&str], #[case] input: &str) -> Result<()> {
+        assert_eq!(expected, parse_command_line(input)?);
+        Ok(())
+    }
 }
