@@ -146,7 +146,7 @@ pub fn sbc(cpu: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::arithmetic::{adc, sbc};
-    use crate::emulator::{Bus, Cpu, IrqChannel, P};
+    use crate::emulator::{Bus, Cpu, InterruptChannel, P};
     use crate::{_p, p};
     use rstest::rstest;
 
@@ -171,8 +171,8 @@ mod tests {
         #[case] operand: u8,
     ) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = a;
         cpu.reg.pc = pc;
         cpu.reg.p = p;
@@ -203,8 +203,8 @@ mod tests {
         #[case] value: u8,
     ) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         adc(&mut cpu, value);
@@ -224,8 +224,8 @@ mod tests {
         #[case] operand: u8,
     ) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = a;
         cpu.reg.pc = pc;
         cpu.reg.p = p;
@@ -245,8 +245,8 @@ mod tests {
         #[case] operand: u8,
     ) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         adc(&mut cpu, operand);
@@ -265,8 +265,8 @@ mod tests {
         #[case] operand: u8,
     ) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = a;
         cpu.reg.p = _p!(p);
         sbc(&mut cpu, operand);

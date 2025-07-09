@@ -1,7 +1,7 @@
 use crate::emulator::deserialization::deserialize_word;
 use crate::emulator::{
-    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, IrqEvent, OutputDevice,
-    Pia, PiaChannel, Ram, Rom, Via,
+    AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, InterruptEvent,
+    OutputDevice, Pia, PiaChannel, Ram, Rom, Via,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::CharSet;
@@ -30,7 +30,7 @@ impl BusDevice {
         output: Box<dyn OutputDevice>,
         input_channel: PiaChannel,
         bus_tx: &Sender<BusEvent>,
-        irq_tx: Sender<IrqEvent>,
+        interrupt_tx: Sender<InterruptEvent>,
         char_set: CharSet,
     ) -> DeviceMapping {
         let device: Box<dyn _BusDevice> = match self.r#type {
@@ -42,7 +42,7 @@ impl BusDevice {
                 output,
                 input_channel,
                 bus_tx.clone(),
-                irq_tx,
+                interrupt_tx,
                 char_set,
             )),
         };

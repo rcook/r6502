@@ -54,7 +54,7 @@ mod tests {
     use crate::_p;
     use crate::emulator::ops::{jmp, jsr, rti};
     use crate::emulator::util::split_word;
-    use crate::emulator::{Bus, Cpu, IrqChannel};
+    use crate::emulator::{Bus, Cpu, InterruptChannel};
     use rstest::rstest;
 
     #[rstest]
@@ -67,8 +67,8 @@ mod tests {
         #[case] operand: u16,
     ) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = a;
         cpu.reg.pc = pc;
         jmp(&mut cpu, operand);
@@ -81,8 +81,8 @@ mod tests {
         const TARGET_ADDR: u16 = 0x1234;
 
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         let (target_hi, target_lo) = split_word(TARGET_ADDR);
         bus.store(0x1000, 0x20);
         bus.store(0x1001, target_lo);
@@ -105,8 +105,8 @@ mod tests {
     #[test]
     fn jsr_smashing_stack() {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
 
         cpu.reg.pc = 0x017b;
         cpu.reg.sp = 0x7d;
@@ -137,8 +137,8 @@ mod tests {
         const INITIAL_SP: u8 = 0x6e;
 
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.p = _p!(0x63);
         cpu.reg.sp = INITIAL_SP;
         bus.store(0x0100 + u16::from(INITIAL_SP), 0x98);

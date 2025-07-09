@@ -1,7 +1,7 @@
 use crate::emulator::PiaEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
 };
-use crate::emulator::{BusDevice, BusEvent, IrqEvent, OutputDevice, PiaChannel};
+use crate::emulator::{BusDevice, BusEvent, InterruptEvent, OutputDevice, PiaChannel};
 use crate::machine_config::CharSet;
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
@@ -55,7 +55,7 @@ impl Via {
         output: Box<dyn OutputDevice>,
         pia_channel: PiaChannel,
         bus_tx: Sender<BusEvent>,
-        irq_tx: Sender<IrqEvent>,
+        interrupt_tx: Sender<InterruptEvent>,
         char_set: CharSet,
     ) -> Self {
         let state = Arc::new(Mutex::new(ViaState::new()));
@@ -65,7 +65,7 @@ impl Via {
                 &state_clone,
                 &pia_channel.rx,
                 &bus_tx,
-                &irq_tx,
+                &interrupt_tx,
                 output,
                 char_set,
             )
@@ -83,7 +83,7 @@ impl Via {
         state: &Arc<Mutex<ViaState>>,
         pia_rx: &Receiver<PiaEvent>,
         bus_tx: &Sender<BusEvent>,
-        irq_tx: &Sender<IrqEvent>,
+        interrupt_tx: &Sender<InterruptEvent>,
         mut output: Box<dyn OutputDevice>,
         char_set: CharSet,
     ) -> Result<()> {
@@ -115,7 +115,7 @@ impl Via {
                             _ => {
                                 if let Some(c) = char_set.translate_in(&key) {
                                     state.lock().unwrap().set_key(c);
-                                    irq_tx.send(IrqEvent::Irq).unwrap();
+                                    interrupt_tx.send(InterruptEvent::Irq).unwrap();
                                 } else {
                                     info!("unimplemented: {key:?}");
                                 }

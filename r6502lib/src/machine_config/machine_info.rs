@@ -1,5 +1,5 @@
 use crate::emulator::{
-    Bus, BusEvent, Image, IrqEvent, MachineTag, OutputDevice, PiaChannel, NULL_MACHINE_TAG,
+    Bus, BusEvent, Image, InterruptEvent, MachineTag, OutputDevice, PiaChannel, NULL_MACHINE_TAG,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
@@ -54,7 +54,7 @@ impl MachineInfo {
         &self,
         output: Box<dyn OutputDevice>,
         pia_channel: PiaChannel,
-        irq_tx: Sender<IrqEvent>,
+        interrupt_tx: Sender<InterruptEvent>,
         image: &Image,
     ) -> Result<(Bus, Receiver<BusEvent>)> {
         let mut images = Vec::new();
@@ -93,7 +93,7 @@ impl MachineInfo {
                 output,
                 pia_channel,
                 &bus_tx,
-                irq_tx,
+                interrupt_tx,
                 self.machine.char_set,
             ));
         }

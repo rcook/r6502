@@ -92,7 +92,7 @@ fn ror_helper(cpu: &mut Cpu, operand: u8) -> u8 {
 mod tests {
     use crate::_p;
     use crate::emulator::ops::rol_acc;
-    use crate::emulator::{Bus, Cpu, IrqChannel};
+    use crate::emulator::{Bus, Cpu, InterruptChannel};
     use rstest::rstest;
 
     #[rstest]
@@ -100,8 +100,8 @@ mod tests {
     #[case(45, 94, 174, 175)]
     fn rol_basics(#[case] expected_p: u8, #[case] expected_a: u8, #[case] p: u8, #[case] a: u8) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.p = _p!(p);
         cpu.reg.a = a;
         rol_acc(&mut cpu);

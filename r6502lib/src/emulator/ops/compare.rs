@@ -31,13 +31,13 @@ fn compare_helper(cpu: &mut Cpu, register: u8, operand: u8) {
 mod tests {
     use crate::_p;
     use crate::emulator::ops::cmp;
-    use crate::emulator::{Bus, Cpu, IrqChannel};
+    use crate::emulator::{Bus, Cpu, InterruptChannel};
 
     #[test]
     fn basics() {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = 0x10;
         cpu.reg.p = _p!(0b1010_1111);
         cmp(&mut cpu, 0xbb);

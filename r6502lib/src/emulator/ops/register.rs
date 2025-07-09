@@ -83,13 +83,13 @@ pub fn tya(cpu: &mut Cpu) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::register::{tax, tay, txa, tya};
-    use crate::emulator::{Bus, Cpu, IrqChannel};
+    use crate::emulator::{Bus, Cpu, InterruptChannel};
 
     #[test]
     fn tax_basics() {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = 0x22;
         cpu.reg.x = 0x00;
         tax(&mut cpu);
@@ -99,8 +99,8 @@ mod tests {
     #[test]
     fn tay_basics() {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = 0x22;
         cpu.reg.y = 0x00;
         tay(&mut cpu);
@@ -110,8 +110,8 @@ mod tests {
     #[test]
     fn txa_basics() {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = 0x00;
         cpu.reg.x = 0x22;
         txa(&mut cpu);
@@ -121,8 +121,8 @@ mod tests {
     #[test]
     fn tya_basics() {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = 0x00;
         cpu.reg.y = 0x22;
         tya(&mut cpu);

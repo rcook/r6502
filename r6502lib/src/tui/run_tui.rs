@@ -1,5 +1,5 @@
 use crate::debug_options::DebugOptions;
-use crate::emulator::{Image, IrqChannel, OutputDevice, PiaChannel};
+use crate::emulator::{Image, InterruptChannel, OutputDevice, PiaChannel};
 use crate::machine_config::{CharSet, MachineInfo};
 use crate::messages::IoMessage;
 use crate::symbols::MapFile;
@@ -46,11 +46,16 @@ pub fn run_tui(opts: &DebugOptions) -> Result<()> {
     let input_channel = PiaChannel::new();
     let input_tx = input_channel.tx.clone();
 
-    let irq_channel = IrqChannel::new();
+    let interrupt_channel = InterruptChannel::new();
 
     let _handle = spawn(move || {
         let (bus, _) = machine_info
-            .create_bus(Box::new(tui_output), input_channel, irq_channel.tx, &image)
+            .create_bus(
+                Box::new(tui_output),
+                input_channel,
+                interrupt_channel.tx,
+                &image,
+            )
             .expect("Must succeed");
         bus.start();
 

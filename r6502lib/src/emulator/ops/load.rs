@@ -25,7 +25,7 @@ pub fn ldy(cpu: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::load::{lda, ldx, ldy};
-    use crate::emulator::{Bus, Cpu, IrqChannel, P};
+    use crate::emulator::{Bus, Cpu, InterruptChannel, P};
     use crate::p;
     use rstest::rstest;
 
@@ -38,8 +38,8 @@ mod tests {
     #[case(p!(N), 0xff)]
     fn lda_basics(#[case] expected_p: P, #[case] operand: u8) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.a = 0xff;
         lda(&mut cpu, operand);
         assert_eq!(operand, cpu.reg.a);
@@ -55,8 +55,8 @@ mod tests {
     #[case(p!(N), 0xff)]
     fn ldx_basics(#[case] expected_p: P, #[case] operand: u8) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.x = 0xff;
         ldx(&mut cpu, operand);
         assert_eq!(operand, cpu.reg.x);
@@ -72,8 +72,8 @@ mod tests {
     #[case(p!(N), 0xff)]
     fn ldy_basics(#[case] expected_p: P, #[case] operand: u8) {
         let bus = Bus::default();
-        let irq_channel = IrqChannel::new();
-        let mut cpu = Cpu::new(bus.view(), None, irq_channel.rx);
+        let interrupt_channel = InterruptChannel::new();
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         cpu.reg.y = 0xff;
         ldy(&mut cpu, operand);
         assert_eq!(operand, cpu.reg.y);
