@@ -13,6 +13,5 @@
 ; Enter BASIC at its entry point with A=1 [IMPLEMENTED]
 
 .macpack r6502
-.import __MOSINIT_LOAD__
 
 r6502_system "ACRN", __MOSINIT_LOAD__

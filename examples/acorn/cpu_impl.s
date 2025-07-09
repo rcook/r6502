@@ -1,6 +1,3 @@
-.import MOS_INIT
-.import MOS_IRQ_ENTRYPOINT
-
 .segment "NMI"
     .addr MOS_IRQ_ENTRYPOINT
 

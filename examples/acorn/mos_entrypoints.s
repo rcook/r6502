@@ -1,30 +1,19 @@
 .macpack generic
-.macpack r6502
 .macpack raw
+.macpack r6502
 
-.import HALT
-.import OSRDCH
-
-.importzp OSKBD1
+.importzp CLIVHOSTHOOK
+.importzp DEL
+.importzp FILEVHOSTHOOK
 .importzp OSAREG
+.importzp OSESC
+.importzp OSKBD1
 .importzp OSXREG
 .importzp OSYREG
-.importzp OSESC
-
 .importzp zbyte0
 .importzp zbyte1
 .importzp zword0
 .importzp zword1
-
-.importzp DEL
-.importzp ESC
-
-.import HIMEM
-.import OSHWM
-
-.import HOSTHOOK
-.importzp CLIVHOSTHOOK
-.importzp FILEVHOSTHOOK
 
 BIT7 = 1 << 7
 

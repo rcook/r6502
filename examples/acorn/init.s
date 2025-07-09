@@ -1,10 +1,4 @@
-.import HALT
-.import SIDEWAYS_ROM_OFFSET
-.import SIDEWAYS_ROM_START
-.import SIDEWAYS_ROM_TITLE
 .importzp OSAREG
-.import OSNEWL
-.import OSWRCH
 
 .macro init_vector vec, entrypoint
     .import vec

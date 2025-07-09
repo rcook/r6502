@@ -1,19 +1,12 @@
-.macpack raw
-.macpack r6502
-.import BRKV
-.import IRQ1V
+;.macpack raw
+;.macpack r6502
+
+.importzp ESC
 .importzp OSESC
 .importzp OSFAULT
 .importzp OSINTA
 .importzp OSKBD1
 .importzp OSKBD2
-.importzp OSXREG
-.import STACKBASE
-
-.importzp ESC
-
-.import KBD
-.import KBDCR
 
 .segment "HALT"
 .proc HALT

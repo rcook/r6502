@@ -1,13 +1,5 @@
 .macpack r6502
 .macpack raw
-.importzp OSAREG
-.import OSASCI
-.import OSBYTE
-.import OSNEWL
-.import OSRDCH
-.import OSWORD
-.import OSWRCH
-.import __SIDEWAYSHEADER_LOAD__
 
 r6502_system "ACRN", __SIDEWAYSHEADER_LOAD__
 sideways_rom_header entrypoint, , , , "acorn-test", "1.0", "2025 Richard Cook"

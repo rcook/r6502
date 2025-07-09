@@ -29,8 +29,7 @@ IMAGESOURCES := \
 	mos_routines_impl.s \
 	os_impl.s \
 	zp.s
-header.o: header.s $(SHAREDLIBDIR)/r6502.mac
-mos-entrypoints.o: mos_entrypoints.s raw.mac $(SHAREDLIBDIR)/r6502.mac
+mos_entrypoints.o: mos_entrypoints.s raw.mac $(SHAREDLIBDIR)/r6502.mac
 
 BIN := acorn-test.$(BINEXT)
 BINSOURCES := main.s

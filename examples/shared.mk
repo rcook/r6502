@@ -33,7 +33,7 @@ endif
 
 # Standard rules
 %.o: %.s
-	ca65 $(DEBUGARG) -I $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
+	ca65 $(DEBUGARG) -U -I $(SHAREDLIBDIR) -l $(@:o=lst) -o $@ $<
 
 # ld65 rule
 # $(1): output
