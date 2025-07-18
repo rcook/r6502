@@ -2,7 +2,7 @@ use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo, InterruptC
 use crate::machine_config::MachineInfo;
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, MonitorMessage, State};
-use crate::tui::TuiMonitor;
+use crate::text_ui::TuiMonitor;
 use crate::{p_get, p_set};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 

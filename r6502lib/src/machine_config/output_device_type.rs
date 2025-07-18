@@ -1,5 +1,5 @@
 use crate::emulator::OutputDevice;
-use crate::terminal::{SimpleOutput, VduDriver};
+use crate::terminal_ui::{SimpleOutput, VduDriver};
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Default, Deserialize)]

@@ -1,6 +1,6 @@
 use crate::emulator::OutputDevice;
 use crate::machine_config::CharSet;
-use crate::terminal::{RawMode, VDU_CODES_BY_CODE, VduCode};
+use crate::terminal_ui::{RawMode, VDU_CODES_BY_CODE, VduCode};
 use anyhow::Result;
 use std::io::{Stdout, Write, stdout};
 

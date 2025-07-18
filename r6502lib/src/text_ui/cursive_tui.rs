@@ -1,7 +1,7 @@
 use crate::emulator::{AddressRange, InstructionInfo, IoEvent, Reg};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use crate::symbols::MapFile;
-use crate::tui::export_list_info::ExportListInfo;
+use crate::text_ui::export_list_info::ExportListInfo;
 use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
     Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
@@ -496,7 +496,7 @@ impl CursiveTui {
 
 #[cfg(test)]
 mod tests {
-    use crate::{emulator::AddressRange, tui::cursive_tui::CursiveTui};
+    use crate::{emulator::AddressRange, text_ui::cursive_tui::CursiveTui};
     use anyhow::Result;
 
     #[test]

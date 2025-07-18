@@ -4,8 +4,8 @@ use anyhow::Result;
 use clap::Parser;
 use log::LevelFilter;
 use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
-use r6502lib::terminal::run as run_terminal;
-use r6502lib::tui::run_tui;
+use r6502lib::terminal_ui::run as run_terminal;
+use r6502lib::text_ui::run_tui;
 use r6502lib::validation::Scenario;
 use simple_logging::log_to_file;
 

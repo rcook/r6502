@@ -1,7 +1,7 @@
 use crate::ascii::CR;
 use crate::emulator::util::make_word;
 use crate::emulator::{BusView, Cpu};
-use crate::terminal::RawMode;
+use crate::terminal_ui::RawMode;
 use anyhow::{Result, anyhow, bail};
 use log::info;
 use path_absolutize::Absolutize;
@@ -405,7 +405,7 @@ fn parse_command_line(s: &str) -> Result<Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::terminal::acorn_host_hooks::parse_command_line;
+    use crate::terminal_ui::acorn_host_hooks::parse_command_line;
     use anyhow::Result;
     use rstest::rstest;
 
