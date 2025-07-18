@@ -1,5 +1,5 @@
-use crate::emulator::ops::helper::is_neg;
 use crate::emulator::Cpu;
+use crate::emulator::ops::helper::is_neg;
 use crate::p_set;
 
 // http://www.6502.org/tutorials/6502opcodes.html#CMP

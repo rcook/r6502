@@ -1,4 +1,4 @@
-use crate::emulator::op_info::op_infos::{Item, CONSTS};
+use crate::emulator::op_info::op_infos::{CONSTS, Item};
 use crate::emulator::{AddressingMode, Cpu, InstructionInfo, Op, OpCycles, Opcode};
 use crate::symbols::MapFile;
 use anyhow::Result;

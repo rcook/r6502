@@ -3,8 +3,8 @@ use crate::emulator::{
     AddressRange, BusDevice as _BusDevice, BusEvent, DeviceMapping, Image, InterfaceAdapter,
     InterruptEvent, IoChannel, OutputDevice, Ram, Rom,
 };
-use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::CharSet;
+use crate::machine_config::bus_device_type::BusDeviceType;
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::sync::mpsc::Sender;

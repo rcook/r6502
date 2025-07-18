@@ -1,7 +1,7 @@
 use crate::emulator::{InstructionInfo, Operand};
 use crate::num::{Truncate, Wrap};
 use crate::symbols::MapFile;
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 #[derive(Clone)]
 pub enum AddressingMode {

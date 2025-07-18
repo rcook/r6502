@@ -1,5 +1,5 @@
 use crate::symbols::{AddressSize, ExportKind};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::iter::Peekable;
 
@@ -115,8 +115,8 @@ impl Display for Export {
 
 #[cfg(test)]
 mod tests {
-    use crate::symbols::util::iter_map_file_lines;
     use crate::symbols::Export;
+    use crate::symbols::util::iter_map_file_lines;
     use anyhow::Result;
 
     #[test]

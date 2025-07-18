@@ -1,10 +1,10 @@
 use anyhow::Result;
+use cursive::backends::crossterm::crossterm::QueueableCommand;
 use cursive::backends::crossterm::crossterm::cursor::MoveTo;
 use cursive::backends::crossterm::crossterm::style::{
     Color, SetBackgroundColor, SetForegroundColor,
 };
 use cursive::backends::crossterm::crossterm::terminal::{Clear, ClearType};
-use cursive::backends::crossterm::crossterm::QueueableCommand;
 use std::collections::HashMap;
 use std::io::Stdout;
 use std::io::Write;

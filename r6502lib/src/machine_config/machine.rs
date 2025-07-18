@@ -1,9 +1,9 @@
-use crate::emulator::deserialization::{deserialize_machine_tag, deserialize_word_opt};
 use crate::emulator::MachineTag;
+use crate::emulator::deserialization::{deserialize_machine_tag, deserialize_word_opt};
+use crate::machine_config::CharSet;
 use crate::machine_config::bus_device::BusDevice;
 use crate::machine_config::host_hook::HostHook;
 use crate::machine_config::output_device_type::OutputDeviceType;
-use crate::machine_config::CharSet;
 use serde::Deserialize;
 use std::path::PathBuf;
 

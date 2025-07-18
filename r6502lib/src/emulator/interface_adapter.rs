@@ -11,7 +11,7 @@ use log::info;
 use std::cell::Cell;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
-use std::thread::{spawn, JoinHandle};
+use std::thread::{JoinHandle, spawn};
 
 struct InterfaceAdapterState {
     started: bool,
@@ -156,7 +156,7 @@ impl BusDevice for InterfaceAdapter {
     }
 
     fn load(&self, addr: u16) -> u8 {
-        let value = match addr {
+        match addr {
             Self::PA_OFFSET => {
                 let mut state = self.state.lock().unwrap();
                 let value = state.pa;
@@ -167,9 +167,7 @@ impl BusDevice for InterfaceAdapter {
             Self::PB_OFFSET => self.state.lock().unwrap().pb,
             Self::PB_CR_OFFSET => self.state.lock().unwrap().pb_cr,
             _ => panic!("Invalid PIA address ${addr:04X}"),
-        };
-
-        value
+        }
     }
 
     fn store(&self, addr: u16, value: u8) {

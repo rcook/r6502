@@ -76,11 +76,7 @@ macro_rules! p_get {
 #[macro_export]
 macro_rules! p_value {
     ($reg: expr, $flag: ident) => {
-        if $crate::p_get!($reg, $flag) {
-            1
-        } else {
-            0
-        }
+        if $crate::p_get!($reg, $flag) { 1 } else { 0 }
     };
 }
 

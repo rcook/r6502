@@ -1,4 +1,4 @@
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 use std::{iter::Peekable, str::FromStr};
 
 #[derive(Debug, PartialEq)]
@@ -74,8 +74,8 @@ impl FromStr for Segment {
 
 #[cfg(test)]
 mod tests {
-    use crate::symbols::util::iter_map_file_lines;
     use crate::symbols::Segment;
+    use crate::symbols::util::iter_map_file_lines;
     use anyhow::Result;
 
     #[test]

@@ -1,11 +1,11 @@
 use crate::emulator::util::{make_word, split_word};
 use crate::emulator::{
-    BusView, DummyMonitor, Frequency, Instruction, InstructionInfo, InterruptEvent, Monitor, Reg,
-    TotalCycles, IRQ, RESET, STACK_BASE,
+    BusView, DummyMonitor, Frequency, IRQ, Instruction, InstructionInfo, InterruptEvent, Monitor,
+    RESET, Reg, STACK_BASE, TotalCycles,
 };
-use log::{debug, log_enabled, Level};
-use std::sync::mpsc::{Receiver, TryRecvError};
+use log::{Level, debug, log_enabled};
 use std::sync::LazyLock;
+use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::{Duration, Instant};
 
 const CPU_FREQUENCY: Frequency = Frequency::MHz(3_000_000);
@@ -174,7 +174,7 @@ impl<'a> Cpu<'a> {
 mod tests {
     use crate::emulator::util::{get_brk_addr, make_word, split_word};
     use crate::emulator::{
-        Bus, Cpu, Image, InterruptChannel, Monitor, Opcode, TracingMonitor, IRQ, MOS_6502, P,
+        Bus, Cpu, IRQ, Image, InterruptChannel, MOS_6502, Monitor, Opcode, P, TracingMonitor,
     };
     use crate::{p, p_get, p_set};
     use anyhow::Result;

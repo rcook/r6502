@@ -1,5 +1,5 @@
 use crate::validation::{Cycle, State};
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use serde::Deserialize;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 

@@ -1,7 +1,7 @@
 use crate::emulator::r6502_image::R6502ImageType;
 use crate::emulator::util::make_word;
-use crate::emulator::{Cpu, CpuState, MachineTag, TotalCycles, R6502_MAGIC_NUMBER, RESET};
-use anyhow::{bail, Result};
+use crate::emulator::{Cpu, CpuState, MachineTag, R6502_MAGIC_NUMBER, RESET, TotalCycles};
+use anyhow::{Result, bail};
 use num_traits::FromPrimitive;
 use std::io::{ErrorKind, Read, Seek};
 

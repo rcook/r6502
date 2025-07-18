@@ -1,9 +1,9 @@
 use crate::_p;
 use crate::emulator::{Bus, Cpu, InterruptChannel, Opcode};
 use crate::validation::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use std::ffi::OsStr;
-use std::fs::{remove_file, File, OpenOptions};
+use std::fs::{File, OpenOptions, remove_file};
 use std::io::{ErrorKind, Write};
 use std::panic::catch_unwind;
 use std::path::Path;

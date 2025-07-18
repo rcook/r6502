@@ -1,7 +1,7 @@
 use crate::emulator::OutputDevice;
 use crate::machine_config::CharSet;
 use anyhow::Result;
-use std::io::{stdout, Write};
+use std::io::{Write, stdout};
 
 pub struct SimpleOutput;
 

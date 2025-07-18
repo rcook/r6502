@@ -1,16 +1,16 @@
 use crate::emulator::{
-    Bus, BusEvent, Image, InterruptEvent, IoChannel, MachineTag, OutputDevice, NULL_MACHINE_TAG,
+    Bus, BusEvent, Image, InterruptEvent, IoChannel, MachineTag, NULL_MACHINE_TAG, OutputDevice,
 };
 use crate::machine_config::bus_device_type::BusDeviceType;
 use crate::machine_config::machine::Machine;
 use crate::machine_config::machines::Machines;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use dirs::config_dir;
 use path_absolutize::Absolutize;
 use std::env::current_exe;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, channel};
 
 #[derive(Debug)]
 pub struct MachineInfo {

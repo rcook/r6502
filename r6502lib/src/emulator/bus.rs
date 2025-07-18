@@ -1,7 +1,7 @@
 use crate::emulator::util::make_word;
 use crate::emulator::{
-    AddressRange, BusView, DeviceMapping, Image, MachineTag, Ram, IRQ, MEMORY_SIZE, NMI,
-    NULL_MACHINE_TAG, RESET,
+    AddressRange, BusView, DeviceMapping, IRQ, Image, MEMORY_SIZE, MachineTag, NMI,
+    NULL_MACHINE_TAG, RESET, Ram,
 };
 use anyhow::Result;
 

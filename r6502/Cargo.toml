@@ -1,7 +1,7 @@
 [package]
 name = "r6502"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
@@ -17,3 +17,4 @@ simple-logging = "2.0.2"
 rstest = "0.25.0"
 
 [lints.clippy]
+pedantic = { level = "deny", priority = -1 }

@@ -1,7 +1,7 @@
 use crate::emulator::util::split_word;
-use crate::emulator::{Binding, Cpu, Instruction, Opcode, Operand, MOS_6502};
+use crate::emulator::{Binding, Cpu, Instruction, MOS_6502, Opcode, Operand};
 use crate::symbols::MapFile;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 #[derive(Clone, Debug)]
 pub struct InstructionInfo {

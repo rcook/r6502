@@ -1,5 +1,5 @@
 use crate::validation::{Scenario, ScenarioLoader};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::ffi::OsStr;
 use std::fs::read_dir;
 use std::io::ErrorKind;

@@ -51,8 +51,8 @@ pub fn bvs(cpu: &mut Cpu, offset: u8) -> BranchResult {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::ops::branch::{bcs, beq};
     use crate::emulator::ops::BranchResult;
+    use crate::emulator::ops::branch::{bcs, beq};
     use crate::emulator::{Bus, Cpu, InterruptChannel};
     use crate::p_set;
     use rstest::rstest;

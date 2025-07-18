@@ -29,7 +29,7 @@ mod tests {
     use crate::_p;
     use crate::emulator::ops::brk;
     use crate::emulator::util::split_word;
-    use crate::emulator::{Bus, Cpu, InterruptChannel, IRQ, STACK_BASE};
+    use crate::emulator::{Bus, Cpu, IRQ, InterruptChannel, STACK_BASE};
     use rstest::rstest;
 
     #[rstest]

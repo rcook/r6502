@@ -1,5 +1,5 @@
-use crate::emulator::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
 use crate::emulator::Cpu;
+use crate::emulator::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
 use crate::num::Truncate;
 use crate::{p_get, p_set, p_value};
 

@@ -1,11 +1,11 @@
 use crate::emulator::r6502_image::Snapshot;
 use crate::emulator::util::make_unique_snapshot_path;
-use crate::emulator::{Bus, BusEvent, Cpu, IoEvent, Opcode, MOS_6502, RESET};
+use crate::emulator::{Bus, BusEvent, Cpu, IoEvent, MOS_6502, Opcode, RESET};
 use crate::machine_config::{HostHookType, MachineInfo};
 use crate::terminal::acorn_host_hooks::handle_host_hook;
 use crate::terminal::{StopReason, TerminalChannel, TerminalEvent};
-use anyhow::{anyhow, bail, Result};
-use cursive::backends::crossterm::crossterm::event::{poll, read, Event};
+use anyhow::{Result, anyhow, bail};
+use cursive::backends::crossterm::crossterm::event::{Event, poll, read};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::thread::spawn;
 use std::time::Duration;
@@ -56,7 +56,7 @@ impl Runner<'_> {
                 Ok(BusEvent::UserBreak) => {
                     return Ok(StopReason::UserBreak {
                         total_cycles: cpu.total_cycles,
-                    })
+                    });
                 }
                 Ok(BusEvent::Reset) => {
                     jmp_ind.execute_word(cpu, RESET);

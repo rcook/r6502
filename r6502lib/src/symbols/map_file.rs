@@ -1,6 +1,6 @@
 use crate::symbols::util::iter_map_file_lines;
 use crate::symbols::{Export, Module, Segment};
-use anyhow::{anyhow, Error, Result};
+use anyhow::{Error, Result, anyhow};
 use std::fs::read_to_string;
 use std::path::Path;
 use std::str::FromStr;

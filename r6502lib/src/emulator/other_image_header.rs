@@ -1,7 +1,7 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::io::{ErrorKind, Read, Seek};
 
-use crate::emulator::{util::make_word, Cpu, CpuState, SIM6502_MAGIC_NUMBER};
+use crate::emulator::{Cpu, CpuState, SIM6502_MAGIC_NUMBER, util::make_word};
 
 pub enum OtherImageHeader {
     Sim6502 { load: u16, start: u16, sp: u8 },

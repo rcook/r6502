@@ -22,7 +22,7 @@ impl CharSet {
         let c = match (self, key.modifiers, key.code) {
             (_, KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c)) => c,
             (Self::Acorn, KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => {
-                return Some(DEL)
+                return Some(DEL);
             }
             (_, KeyModifiers::NONE, KeyCode::Backspace | KeyCode::Delete) => '_',
             (_, KeyModifiers::NONE, KeyCode::Enter) => CR as char,

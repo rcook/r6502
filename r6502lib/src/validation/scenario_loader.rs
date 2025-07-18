@@ -1,8 +1,8 @@
 use crate::validation::Scenario;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use dirs::config_dir;
 use std::env::current_dir;
-use std::fs::{create_dir_all, File};
+use std::fs::{File, create_dir_all};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 

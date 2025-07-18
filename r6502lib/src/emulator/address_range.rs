@@ -1,4 +1,4 @@
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::ops::RangeInclusive;
 use std::str::FromStr;

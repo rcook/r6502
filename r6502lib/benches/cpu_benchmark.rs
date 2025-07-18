@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use r6502lib::emulator::util::split_word;
-use r6502lib::emulator::{Bus, Cpu, Image, InterruptChannel, DEFAULT_SP, IRQ};
+use r6502lib::emulator::{Bus, Cpu, DEFAULT_SP, IRQ, Image, InterruptChannel};
 use r6502lib::{_p, p_get};
 
 // div16 takes approx. 938 cycles

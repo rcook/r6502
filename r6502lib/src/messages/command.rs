@@ -1,5 +1,5 @@
 use crate::emulator::AddressRange;
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use std::str::FromStr;
 
 const HELP: &str = "?/h/help: Show help message\n\

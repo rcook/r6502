@@ -1,5 +1,5 @@
 use crate::symbols::{ModuleName, ModuleSegment};
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::iter::Peekable;
 
 #[derive(Debug)]

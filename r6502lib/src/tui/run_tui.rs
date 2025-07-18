@@ -6,7 +6,7 @@ use crate::symbols::MapFile;
 use crate::tui::cursive_tui::CursiveTui;
 use crate::tui::tui_host::TuiHost;
 use anyhow::Result;
-use std::sync::mpsc::{channel, Sender};
+use std::sync::mpsc::{Sender, channel};
 use std::thread::spawn;
 
 struct TuiOutput {

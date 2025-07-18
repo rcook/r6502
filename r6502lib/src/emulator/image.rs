@@ -1,6 +1,6 @@
 use crate::emulator::r6502_image::Image as R6502Image;
 use crate::emulator::{AddressRange, Cpu, CpuState, ImageSlice, MachineTag, OtherImage};
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
@@ -190,7 +190,7 @@ impl FromStr for Image {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::{AddressRange, Image, OtherImage, DEFAULT_SP};
+    use crate::emulator::{AddressRange, DEFAULT_SP, Image, OtherImage};
     use anyhow::Result;
 
     #[test]

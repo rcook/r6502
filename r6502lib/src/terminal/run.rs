@@ -2,7 +2,7 @@ use crate::emulator::{Cpu, Image, InterruptChannel, IoChannel, Monitor, TracingM
 use crate::machine_config::MachineInfo;
 use crate::run_options::RunOptions;
 use crate::terminal::raw_mode::RawMode;
-use crate::terminal::{show_run_info, Runner, StopReason, TerminalChannel, Vectors};
+use crate::terminal::{Runner, StopReason, TerminalChannel, Vectors, show_run_info};
 use anyhow::Result;
 use log::info;
 use std::process::exit;

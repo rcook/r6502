@@ -1,5 +1,5 @@
 use crate::emulator::util::make_word;
-use crate::emulator::{Binding, Cpu, Op, OpCycles, Opcode, MOS_6502};
+use crate::emulator::{Binding, Cpu, MOS_6502, Op, OpCycles, Opcode};
 
 pub struct Instruction {
     pub pc: u16,

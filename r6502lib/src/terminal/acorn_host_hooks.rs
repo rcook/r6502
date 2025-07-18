@@ -2,11 +2,11 @@ use crate::ascii::CR;
 use crate::emulator::util::make_word;
 use crate::emulator::{BusView, Cpu};
 use crate::terminal::RawMode;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use log::info;
 use path_absolutize::Absolutize;
 use std::env::{current_dir, set_current_dir};
-use std::fs::{read_dir, File};
+use std::fs::{File, read_dir};
 use std::io::{BufReader, BufWriter, ErrorKind, Read, Write};
 use std::path::Path;
 

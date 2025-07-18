@@ -1,5 +1,5 @@
-use crate::emulator::ops::helper::set_flags_on_value;
 use crate::emulator::Cpu;
+use crate::emulator::ops::helper::set_flags_on_value;
 
 // http://www.6502.org/tutorials/6502opcodes.html#DEX
 // http://www.6502.org/users/obelisk/6502/reference.html#DEX

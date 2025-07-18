@@ -1,8 +1,8 @@
 use crate::emulator::OutputDevice;
 use crate::machine_config::CharSet;
-use crate::terminal::{RawMode, VduCode, VDU_CODES_BY_CODE};
+use crate::terminal::{RawMode, VDU_CODES_BY_CODE, VduCode};
 use anyhow::Result;
-use std::io::{stdout, Stdout, Write};
+use std::io::{Stdout, Write, stdout};
 
 pub struct VduDriver {
     code: Option<&'static VduCode>,
