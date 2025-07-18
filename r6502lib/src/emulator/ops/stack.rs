@@ -1,6 +1,6 @@
+use crate::emulator::Cpu;
 use crate::emulator::ops::helper::{is_neg, is_zero};
-use crate::emulator::{Cpu, P};
-use crate::{_p, p_set};
+use r6502cpu::{_p, P, p_set};
 
 // http://www.6502.org/tutorials/6502opcodes.html#PHA
 // http://www.6502.org/users/obelisk/6502/reference.html#PHA
@@ -44,9 +44,10 @@ pub fn plp(cpu: &mut Cpu) {
 
 #[cfg(test)]
 mod tests {
-    use crate::_p;
     use crate::emulator::ops::stack::{pha, php, pla, plp};
-    use crate::emulator::{Bus, Cpu, InterruptChannel, P, STACK_BASE};
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::constants::STACK_BASE;
+    use r6502cpu::{_p, InterruptChannel, P};
     use rstest::rstest;
 
     #[test]

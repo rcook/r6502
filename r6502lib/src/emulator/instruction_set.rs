@@ -1,4 +1,5 @@
-use crate::emulator::{OpInfo, Opcode};
+use crate::emulator::OpInfo;
+use r6502cpu::Opcode;
 use std::{collections::HashMap, sync::LazyLock};
 
 pub static MOS_6502: LazyLock<InstructionSet> = LazyLock::new(|| {

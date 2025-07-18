@@ -1,4 +1,5 @@
-use crate::emulator::{ByteOp, Cpu, NoOperandOp, OpCycles, WordOp};
+use crate::emulator::{ByteOp, Cpu, NoOperandOp, WordOp};
+use r6502cpu::OpCycles;
 
 #[derive(Clone)]
 pub enum Op {

@@ -1,6 +1,5 @@
-use crate::emulator::{AddressRange, InstructionInfo, IoEvent, Reg};
+use crate::emulator::{InstructionInfo, IoEvent};
 use crate::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
-use crate::symbols::MapFile;
 use crate::text_ui::export_list_info::ExportListInfo;
 use cursive::align::HAlign;
 use cursive::backends::crossterm::crossterm::event::{
@@ -13,6 +12,9 @@ use cursive::views::{
     EditView, Layer, LinearLayout, NamedView, Panel, ResizedView, ScrollView, TextView,
 };
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
+use r6502core::AddressRange;
+use r6502cpu::Reg;
+use r6502cpu::symbols::MapFile;
 use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender};
@@ -496,8 +498,9 @@ impl CursiveTui {
 
 #[cfg(test)]
 mod tests {
-    use crate::{emulator::AddressRange, text_ui::cursive_tui::CursiveTui};
+    use crate::text_ui::cursive_tui::CursiveTui;
     use anyhow::Result;
+    use r6502core::AddressRange;
 
     #[test]
     fn format_snapshot() -> Result<()> {

@@ -1,5 +1,5 @@
 use crate::emulator::Cpu;
-use crate::p_set;
+use r6502cpu::p_set;
 
 pub const fn sign(value: u8) -> bool {
     (value & 0b1000_0000) != 0

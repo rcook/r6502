@@ -11,10 +11,14 @@ log = "0.4.27"
 log-panics = { version = "2.1.0", features = ["with-backtrace"] }
 path-absolutize = "3.1.1"
 r6502lib = { path = "../r6502lib" }
+r6502ui = { path = "../r6502ui" }
+r6502validation = { path = "../r6502validation" }
+serde_json = "1.0.140"
 simple-logging = "2.0.2"
 
 [dev-dependencies]
 rstest = "0.25.0"
 
 [lints.clippy]
+missing_errors_doc = "allow"
 pedantic = { level = "deny", priority = -1 }

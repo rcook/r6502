@@ -1,7 +1,8 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use r6502lib::emulator::util::split_word;
-use r6502lib::emulator::{Bus, Cpu, DEFAULT_SP, IRQ, Image, InterruptChannel};
-use r6502lib::{_p, p_get};
+use r6502core::util::split_word;
+use r6502cpu::constants::{DEFAULT_SP, IRQ};
+use r6502cpu::{_p, InterruptChannel, p_get};
+use r6502lib::emulator::{Bus, Cpu, MemoryImage};
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
@@ -19,7 +20,7 @@ fn div16_benchmark(c: &mut Criterion) {
         0x09, 0x8d, 0x71, 0x10, 0x8c, 0x70, 0x10, 0xee, 0x6c, 0x10, 0xca, 0xd0, 0xd8, 0x60, 0x19,
         0x35, 0x12, 0x0a, 0x00, 0xff, 0xff,
     ];
-    let image = Image::from_bytes(&bytes).expect("Must succeed");
+    let image = MemoryImage::from_bytes(&bytes).expect("Must succeed");
 
     let bus = Bus::default_with_image(&image).expect("Must succeed");
     let interrupt_channel = InterruptChannel::new();

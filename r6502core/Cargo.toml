@@ -1,0 +1,16 @@
+[package]
+name = "r6502core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+chrono = "0.4.41"
+
+[dev-dependencies]
+rstest = "0.25.0"
+
+[lints.clippy]
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+pedantic = { level = "deny", priority = -1 }

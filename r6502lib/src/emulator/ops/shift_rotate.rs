@@ -1,6 +1,6 @@
 use crate::emulator::Cpu;
 use crate::emulator::ops::helper::{set_flags_on_value, sign};
-use crate::{p_get, p_set};
+use r6502cpu::{p_get, p_set};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ASL
 // http://www.6502.org/users/obelisk/6502/reference.html#ASL
@@ -90,9 +90,9 @@ fn ror_helper(cpu: &mut Cpu, operand: u8) -> u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::_p;
     use crate::emulator::ops::rol_acc;
-    use crate::emulator::{Bus, Cpu, InterruptChannel};
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::{_p, InterruptChannel};
     use rstest::rstest;
 
     #[rstest]

@@ -1,9 +1,9 @@
-use crate::emulator::util::make_word;
-use crate::emulator::{
-    AddressRange, BusView, DeviceMapping, IRQ, Image, MEMORY_SIZE, MachineTag, NMI,
-    NULL_MACHINE_TAG, RESET, Ram,
-};
+use crate::emulator::{BusView, MemoryImage};
 use anyhow::Result;
+use r6502core::util::make_word;
+use r6502core::{AddressRange, MachineTag, NULL_MACHINE_TAG};
+use r6502cpu::constants::{IRQ, MEMORY_SIZE, NMI, RESET};
+use r6502cpu::{DeviceMapping, Ram};
 
 const UNMAPPED_VALUE: u8 = 0xff;
 
@@ -42,13 +42,13 @@ impl Bus {
         }
     }
 
-    pub fn default_with_image(image: &Image) -> Result<Self> {
+    pub fn default_with_image(image: &MemoryImage) -> Result<Self> {
         let address_range = AddressRange::new(0x0000, 0xffff)?;
-        let image_slices = [image]
+        let memory_slices = [image]
             .iter()
             .map(|image| image.slice(&address_range))
             .collect();
-        let device = Box::new(Ram::new(MEMORY_SIZE, &image_slices));
+        let device = Box::new(Ram::new(MEMORY_SIZE, &memory_slices));
         Ok(Bus::new(
             image.machine_tag().unwrap_or(NULL_MACHINE_TAG),
             vec![DeviceMapping {
@@ -145,8 +145,9 @@ impl Bus {
 
 #[cfg(test)]
 mod tests {
+    use crate::emulator::Bus;
     use crate::emulator::bus::UNMAPPED_VALUE;
-    use crate::emulator::{Bus, NULL_MACHINE_TAG};
+    use r6502core::NULL_MACHINE_TAG;
 
     #[test]
     fn load_no_device() {

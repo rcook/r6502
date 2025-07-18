@@ -1,5 +1,6 @@
+use crate::emulator::Cpu;
 use crate::emulator::ops::BranchResult;
-use crate::emulator::{Cpu, P};
+use r6502cpu::P;
 
 // http://www.6502.org/tutorials/6502opcodes.html#BCC
 // http://www.6502.org/users/obelisk/6502/reference.html#BCC
@@ -53,8 +54,8 @@ pub fn bvs(cpu: &mut Cpu, offset: u8) -> BranchResult {
 mod tests {
     use crate::emulator::ops::BranchResult;
     use crate::emulator::ops::branch::{bcs, beq};
-    use crate::emulator::{Bus, Cpu, InterruptChannel};
-    use crate::p_set;
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::{InterruptChannel, p_set};
     use rstest::rstest;
 
     #[rstest]

@@ -1,0 +1,17 @@
+[package]
+name = "r6502ui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+cursive = "0.21.1"
+log = "0.4.27"
+path-absolutize = "3.1.1"
+r6502config = { path = "../r6502config" }
+r6502core = { path = "../r6502core" }
+r6502cpu = { path = "../r6502cpu" }
+r6502lib = { path = "../r6502lib" }
+
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }

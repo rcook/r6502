@@ -1,4 +1,5 @@
-use crate::emulator::{Cpu, OpCycles};
+use crate::emulator::Cpu;
+use r6502cpu::OpCycles;
 
 pub type NoOperandFn = fn(&mut Cpu) -> OpCycles;
 

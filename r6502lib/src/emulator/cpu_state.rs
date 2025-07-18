@@ -1,5 +1,5 @@
-use crate::_p;
-use crate::emulator::{Cpu, TotalCycles};
+use crate::emulator::Cpu;
+use r6502cpu::{_p, TotalCycles};
 
 #[derive(Debug)]
 pub struct CpuState {

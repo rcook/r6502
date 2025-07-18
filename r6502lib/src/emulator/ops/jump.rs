@@ -1,6 +1,6 @@
-use crate::emulator::util::{make_word, split_word};
-use crate::emulator::{Cpu, P};
-use crate::p_set;
+use crate::emulator::Cpu;
+use r6502core::util::{make_word, split_word};
+use r6502cpu::{P, p_set};
 
 // http://www.6502.org/tutorials/6502opcodes.html#JMP
 // http://www.6502.org/users/obelisk/6502/reference.html#JMP
@@ -51,10 +51,10 @@ pub fn rts(cpu: &mut Cpu) {
 
 #[cfg(test)]
 mod tests {
-    use crate::_p;
     use crate::emulator::ops::{jmp, jsr, rti};
-    use crate::emulator::util::split_word;
-    use crate::emulator::{Bus, Cpu, InterruptChannel};
+    use crate::emulator::{Bus, Cpu};
+    use r6502core::util::split_word;
+    use r6502cpu::{_p, InterruptChannel};
     use rstest::rstest;
 
     #[rstest]

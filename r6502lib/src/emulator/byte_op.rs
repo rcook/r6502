@@ -1,4 +1,5 @@
-use crate::emulator::{Cpu, OpCycles};
+use crate::emulator::Cpu;
+use r6502cpu::OpCycles;
 
 pub type ByteOpFn = fn(&mut Cpu, u8) -> OpCycles;
 

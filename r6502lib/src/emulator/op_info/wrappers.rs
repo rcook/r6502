@@ -1,7 +1,7 @@
 pub mod absolute {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(addr));
                 $cycles
             }
@@ -11,7 +11,7 @@ pub mod absolute {
     macro_rules! wrap_jump {
         ($f: ident, $cycles: expr) => {
             #[allow(clippy::missing_const_for_fn)]
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu, addr);
                 $cycles
             }
@@ -20,7 +20,7 @@ pub mod absolute {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu, addr);
                 $cycles
             }
@@ -55,10 +55,10 @@ pub mod absolute {
 pub mod absolute_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(u16::from(cpu.reg.x));
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(effective_addr));
-                if $crate::emulator::util::crosses_page_boundary(effective_addr) {
+                if r6502core::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
                     $cycles
@@ -69,10 +69,10 @@ pub mod absolute_x {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(u16::from(cpu.reg.x));
                 $crate::emulator::ops::$f(cpu, effective_addr);
-                if $crate::emulator::util::crosses_page_boundary(effective_addr) {
+                if r6502core::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
                     $cycles
@@ -101,10 +101,10 @@ pub mod absolute_x {
 pub mod absolute_y {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(u16::from(cpu.reg.y));
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(effective_addr));
-                if $crate::emulator::util::crosses_page_boundary(effective_addr) {
+                if r6502core::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
                     $cycles
@@ -115,10 +115,10 @@ pub mod absolute_y {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(u16::from(cpu.reg.y));
                 $crate::emulator::ops::$f(cpu, effective_addr);
-                if $crate::emulator::util::crosses_page_boundary(effective_addr) {
+                if r6502core::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
                     $cycles
@@ -141,7 +141,7 @@ pub mod absolute_y {
 pub mod accumulator {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu);
                 $cycles
             }
@@ -157,7 +157,7 @@ pub mod accumulator {
 pub mod immediate {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, value: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, value: u8) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu, value);
                 $cycles
             }
@@ -181,7 +181,7 @@ pub mod implied {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
             #[allow(clippy::missing_const_for_fn)]
-            pub fn $f(cpu: &mut $crate::emulator::Cpu) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu);
                 $cycles
             }
@@ -218,7 +218,7 @@ pub mod implied {
 pub mod indexed_indirect_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr =
                     $crate::emulator::util::compute_effective_addr_indexed_indirect_x(cpu, addr);
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(effective_addr));
@@ -229,7 +229,7 @@ pub mod indexed_indirect_x {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr =
                     $crate::emulator::util::compute_effective_addr_indexed_indirect_x(cpu, addr);
                 $crate::emulator::ops::$f(cpu, effective_addr);
@@ -251,7 +251,7 @@ pub mod indexed_indirect_x {
 pub mod indirect {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u16) -> r6502cpu::OpCycles {
                 // http://www.6502.org/tutorials/6502opcodes.html
                 // "AN INDIRECT JUMP MUST NEVER USE A VECTOR BEGINNING ON THE LAST BYTE OF A PAGE"
                 let lo_addr = cpu.bus.load(addr);
@@ -271,11 +271,11 @@ pub mod indirect {
 pub mod indirect_indexed_y {
     macro_rules! wrap {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr =
                     $crate::emulator::util::compute_effective_addr_indirect_indexed_y(cpu, addr);
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(effective_addr));
-                if $crate::emulator::util::crosses_page_boundary(effective_addr) {
+                if r6502core::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
                     $cycles
@@ -286,11 +286,11 @@ pub mod indirect_indexed_y {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr, $cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr =
                     $crate::emulator::util::compute_effective_addr_indirect_indexed_y(cpu, addr);
                 $crate::emulator::ops::$f(cpu, effective_addr);
-                if $crate::emulator::util::crosses_page_boundary(effective_addr) {
+                if r6502core::util::crosses_page_boundary(effective_addr) {
                     $cross_page_cycles
                 } else {
                     $cycles
@@ -312,7 +312,7 @@ pub mod indirect_indexed_y {
 pub mod relative {
     macro_rules! wrap {
         ($f: ident, $not_taken_cycles: expr, $taken_cycles: expr, $taken_cross_page_cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, offset: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, offset: u8) -> r6502cpu::OpCycles {
                 match $crate::emulator::ops::$f(cpu, offset) {
                     $crate::emulator::ops::BranchResult::NotTaken => $not_taken_cycles,
                     $crate::emulator::ops::BranchResult::Taken => $not_taken_cycles,
@@ -335,7 +335,7 @@ pub mod relative {
 pub mod zero_page {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(u16::from(addr)));
                 $cycles
             }
@@ -344,7 +344,7 @@ pub mod zero_page {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 $crate::emulator::ops::$f(cpu, u16::from(addr));
                 $cycles
             }
@@ -377,7 +377,7 @@ pub mod zero_page {
 pub mod zero_page_x {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.x);
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(u16::from(effective_addr)));
                 $cycles
@@ -387,7 +387,7 @@ pub mod zero_page_x {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.x);
                 $crate::emulator::ops::$f(cpu, u16::from(effective_addr));
                 $cycles
@@ -416,7 +416,7 @@ pub mod zero_page_x {
 pub mod zero_page_y {
     macro_rules! wrap {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.y);
                 $crate::emulator::ops::$f(cpu, cpu.bus.load(u16::from(effective_addr)));
                 $cycles
@@ -426,7 +426,7 @@ pub mod zero_page_y {
 
     macro_rules! wrap_store {
         ($f: ident, $cycles: expr) => {
-            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> $crate::emulator::OpCycles {
+            pub fn $f(cpu: &mut $crate::emulator::Cpu, addr: u8) -> r6502cpu::OpCycles {
                 let effective_addr = addr.wrapping_add(cpu.reg.y);
                 $crate::emulator::ops::$f(cpu, u16::from(effective_addr));
                 $cycles

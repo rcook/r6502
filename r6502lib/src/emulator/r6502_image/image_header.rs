@@ -1,8 +1,11 @@
 use crate::emulator::r6502_image::R6502ImageType;
-use crate::emulator::util::make_word;
-use crate::emulator::{Cpu, CpuState, MachineTag, R6502_MAGIC_NUMBER, RESET, TotalCycles};
+use crate::emulator::{Cpu, CpuState, R6502_MAGIC_NUMBER};
 use anyhow::{Result, bail};
 use num_traits::FromPrimitive;
+use r6502core::MachineTag;
+use r6502core::util::make_word;
+use r6502cpu::TotalCycles;
+use r6502cpu::constants::RESET;
 use std::io::{ErrorKind, Read, Seek};
 
 pub enum ImageHeader {

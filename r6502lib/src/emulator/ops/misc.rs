@@ -1,6 +1,7 @@
-use crate::emulator::util::make_word;
-use crate::emulator::{Cpu, IRQ, P};
-use crate::p_set;
+use crate::emulator::Cpu;
+use r6502core::util::make_word;
+use r6502cpu::constants::IRQ;
+use r6502cpu::{P, p_set};
 
 // http://www.6502.org/tutorials/6502opcodes.html#BRK
 // http://www.6502.org/users/obelisk/6502/reference.html#BRK
@@ -26,10 +27,11 @@ pub const fn nop(_cpu: &mut Cpu) {}
 
 #[cfg(test)]
 mod tests {
-    use crate::_p;
     use crate::emulator::ops::brk;
-    use crate::emulator::util::split_word;
-    use crate::emulator::{Bus, Cpu, IRQ, InterruptChannel, STACK_BASE};
+    use crate::emulator::{Bus, Cpu};
+    use r6502core::util::split_word;
+    use r6502cpu::constants::{IRQ, STACK_BASE};
+    use r6502cpu::{_p, InterruptChannel};
     use rstest::rstest;
 
     #[rstest]

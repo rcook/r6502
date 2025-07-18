@@ -1,9 +1,9 @@
-use crate::emulator::{AddressRange, Bus, Cpu, Image, InstructionInfo, InterruptChannel};
-use crate::machine_config::MachineInfo;
+use crate::emulator::{Bus, Cpu, InstructionInfo, MachineInfo, MemoryImage};
 use crate::messages::State::{Halted, Running, Stepping, Stopped};
 use crate::messages::{DebugMessage, MonitorMessage, State};
 use crate::text_ui::TuiMonitor;
-use crate::{p_get, p_set};
+use r6502core::AddressRange;
+use r6502cpu::{InterruptChannel, p_get, p_set};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -29,7 +29,7 @@ impl TuiHost {
         }
     }
 
-    pub fn run(&self, image: &Image) {
+    pub fn run(&self, image: &MemoryImage) {
         let monitor = Box::new(TuiMonitor::new(self.monitor_tx.clone()));
         let interrupt_channel = InterruptChannel::new();
 

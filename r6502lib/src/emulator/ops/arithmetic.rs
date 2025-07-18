@@ -1,7 +1,7 @@
 use crate::emulator::Cpu;
 use crate::emulator::ops::helper::{is_carry, is_neg, is_overflow, is_zero};
-use crate::num::Truncate;
-use crate::{p_get, p_set, p_value};
+use r6502core::num::Truncate;
+use r6502cpu::{p_get, p_set, p_value};
 
 // http://www.6502.org/tutorials/6502opcodes.html#ADC
 // http://www.6502.org/users/obelisk/6502/reference.html#ADC
@@ -146,8 +146,8 @@ pub fn sbc(cpu: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::arithmetic::{adc, sbc};
-    use crate::emulator::{Bus, Cpu, InterruptChannel, P};
-    use crate::{_p, p};
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::{_p, InterruptChannel, P, p};
     use rstest::rstest;
 
     #[rstest]

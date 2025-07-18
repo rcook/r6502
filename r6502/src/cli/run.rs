@@ -1,12 +1,12 @@
 use crate::cli::Args;
 use crate::cli::Command::{Debug, Run, Validate, ValidateJson};
+use crate::scenario_util;
 use anyhow::Result;
 use clap::Parser;
 use log::LevelFilter;
 use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
-use r6502lib::terminal_ui::run as run_terminal;
 use r6502lib::text_ui::run_tui;
-use r6502lib::validation::Scenario;
+use r6502ui::terminal_ui::run as run_terminal;
 use simple_logging::log_to_file;
 
 pub fn run() -> Result<()> {
@@ -21,7 +21,7 @@ pub fn run() -> Result<()> {
             filter,
         } => run_scenarios_with_filter(&report_path, &filter)?,
         ValidateJson { json } => {
-            let scenario = Scenario::from_json(&json)?;
+            let scenario = scenario_util::from_json(&json)?;
             println!("{scenario}");
             let (result, final_state) = run_scenario(&scenario);
             if result {

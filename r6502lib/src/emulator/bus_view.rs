@@ -1,4 +1,5 @@
-use crate::emulator::{Bus, MachineTag};
+use crate::emulator::Bus;
+use r6502core::MachineTag;
 
 #[derive(Clone)]
 pub struct BusView<'a> {

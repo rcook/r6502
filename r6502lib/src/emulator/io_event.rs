@@ -1,5 +1,5 @@
-use crate::emulator::Channel;
 use cursive::backends::crossterm::crossterm::event::Event;
+use r6502core::Channel;
 
 #[derive(Debug)]
 pub enum IoEvent {

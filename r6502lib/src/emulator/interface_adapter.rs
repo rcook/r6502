@@ -1,13 +1,15 @@
 use crate::emulator::IoEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
 };
-use crate::emulator::{BusDevice, BusEvent, InterruptEvent, IoChannel, OutputDevice};
-use crate::machine_config::CharSet;
+use crate::emulator::char_set_util::translate_in;
+use crate::emulator::{BusEvent, IoChannel, OutputDevice};
 use anyhow::Result;
 use cursive::backends::crossterm::crossterm::event::{
     Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
 use log::info;
+use r6502config::CharSet;
+use r6502cpu::{BusDevice, InterruptEvent};
 use std::cell::Cell;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
@@ -117,7 +119,7 @@ impl InterfaceAdapter {
                                 _ = bus_tx.send(BusEvent::Snapshot);
                             }
                             _ => {
-                                if let Some(c) = char_set.translate_in(&key) {
+                                if let Some(c) = translate_in(&char_set, &key) {
                                     state.lock().unwrap().set_key(c);
                                     _ = interrupt_tx.send(InterruptEvent::Irq);
                                 } else {

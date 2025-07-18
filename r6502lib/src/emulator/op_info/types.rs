@@ -1,7 +1,8 @@
 use crate::emulator::op_info::op_infos::{CONSTS, Item};
-use crate::emulator::{AddressingMode, Cpu, InstructionInfo, Op, OpCycles, Opcode};
-use crate::symbols::MapFile;
+use crate::emulator::{AddressingMode, Cpu, InstructionInfo, Op};
 use anyhow::Result;
+use r6502cpu::symbols::MapFile;
+use r6502cpu::{OpCycles, Opcode};
 
 #[derive(Clone)]
 pub struct OpInfo {

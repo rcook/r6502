@@ -1,6 +1,7 @@
 use crate::emulator::r6502_image::ImageHeader;
-use crate::emulator::{Cpu, CpuState, MachineTag};
+use crate::emulator::{Cpu, CpuState};
 use anyhow::Result;
+use r6502core::MachineTag;
 use std::io::{Read, Seek};
 
 pub struct Image {

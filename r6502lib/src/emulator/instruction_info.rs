@@ -1,7 +1,8 @@
-use crate::emulator::util::split_word;
-use crate::emulator::{Binding, Cpu, Instruction, MOS_6502, Opcode, Operand};
-use crate::symbols::MapFile;
+use crate::emulator::{Binding, Cpu, Instruction, MOS_6502};
 use anyhow::{Result, anyhow};
+use r6502core::util::split_word;
+use r6502cpu::symbols::MapFile;
+use r6502cpu::{Opcode, Operand};
 
 #[derive(Clone, Debug)]
 pub struct InstructionInfo {
@@ -69,10 +70,11 @@ impl InstructionInfo {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::Opcode::*;
-    use crate::emulator::{InstructionInfo, Operand};
-    use crate::symbols::MapFile;
+    use crate::emulator::InstructionInfo;
     use anyhow::Result;
+    use r6502cpu::Opcode::*;
+    use r6502cpu::Operand;
+    use r6502cpu::symbols::MapFile;
 
     #[test]
     fn basics() -> Result<()> {

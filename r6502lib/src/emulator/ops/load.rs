@@ -25,8 +25,8 @@ pub fn ldy(cpu: &mut Cpu, operand: u8) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::load::{lda, ldx, ldy};
-    use crate::emulator::{Bus, Cpu, InterruptChannel, P};
-    use crate::p;
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::{InterruptChannel, P, p};
     use rstest::rstest;
 
     #[rstest]

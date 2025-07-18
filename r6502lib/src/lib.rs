@@ -1,11 +1,5 @@
-pub mod ascii;
 pub mod debug_options;
 pub mod emulator;
-pub mod machine_config;
 pub mod messages;
-pub mod num;
-pub mod run_options;
-pub mod symbols;
-pub mod terminal_ui;
 pub mod text_ui;
 pub mod validation;

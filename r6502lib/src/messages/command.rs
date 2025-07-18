@@ -1,5 +1,5 @@
-use crate::emulator::AddressRange;
 use anyhow::{Error, bail};
+use r6502core::AddressRange;
 use std::str::FromStr;
 
 const HELP: &str = "?/h/help: Show help message\n\
@@ -65,9 +65,9 @@ impl FromStr for Command {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::AddressRange;
     use crate::messages::Command;
     use anyhow::Result;
+    use r6502core::AddressRange;
     use rstest::rstest;
 
     #[rstest]

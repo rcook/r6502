@@ -1,7 +1,8 @@
-use crate::emulator::{InstructionInfo, Operand};
-use crate::num::{Truncate, Wrap};
-use crate::symbols::MapFile;
+use crate::emulator::InstructionInfo;
 use anyhow::{Result, bail};
+use r6502core::num::{Truncate, Wrap};
+use r6502cpu::Operand;
+use r6502cpu::symbols::MapFile;
 
 #[derive(Clone)]
 pub enum AddressingMode {

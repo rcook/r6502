@@ -1,6 +1,7 @@
 use crate::emulator::r6502_image::R6502ImageType;
-use crate::emulator::{Cpu, CpuState, MachineTag, R6502_MAGIC_NUMBER};
+use crate::emulator::{CpuState, R6502_MAGIC_NUMBER};
 use anyhow::Result;
+use r6502core::MachineTag;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
@@ -13,11 +14,11 @@ pub struct Snapshot {
 
 impl Snapshot {
     #[must_use]
-    pub fn new(cpu: &Cpu) -> Self {
+    pub fn new(machine_tag: MachineTag, cpu_state: CpuState, bytes: Vec<u8>) -> Self {
         Self {
-            machine_tag: cpu.bus.machine_tag(),
-            cpu_state: CpuState::new(cpu),
-            bytes: (0..=0xffff).map(|addr| cpu.bus.load(addr)).collect(),
+            machine_tag,
+            cpu_state,
+            bytes,
         }
     }
 

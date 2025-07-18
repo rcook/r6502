@@ -1,9 +1,8 @@
-use crate::emulator::util::{make_word, split_word};
-use crate::emulator::{
-    BusView, DummyMonitor, Frequency, IRQ, Instruction, InstructionInfo, InterruptEvent, Monitor,
-    RESET, Reg, STACK_BASE, TotalCycles,
-};
+use crate::emulator::{BusView, Instruction, InstructionInfo, Monitor};
 use log::{Level, debug, log_enabled};
+use r6502core::util::{make_word, split_word};
+use r6502cpu::constants::{IRQ, RESET, STACK_BASE};
+use r6502cpu::{Frequency, InterruptEvent, Reg, TotalCycles};
 use std::sync::LazyLock;
 use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::{Duration, Instant};
@@ -26,6 +25,10 @@ impl<'a> Cpu<'a> {
         monitor: Option<Box<dyn Monitor>>,
         irq_rx: Receiver<InterruptEvent>,
     ) -> Self {
+        pub struct DummyMonitor;
+
+        impl Monitor for DummyMonitor {}
+
         Self {
             reg: Reg::default(),
             bus,
@@ -172,12 +175,12 @@ impl<'a> Cpu<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::util::{get_brk_addr, make_word, split_word};
-    use crate::emulator::{
-        Bus, Cpu, IRQ, Image, InterruptChannel, MOS_6502, Monitor, Opcode, P, TracingMonitor,
-    };
-    use crate::{p, p_get, p_set};
+    use crate::emulator::util::get_brk_addr;
+    use crate::emulator::{Bus, Cpu, MOS_6502, MemoryImage, Monitor, TracingMonitor};
     use anyhow::Result;
+    use r6502core::util::{make_word, split_word};
+    use r6502cpu::constants::IRQ;
+    use r6502cpu::{InterruptChannel, Opcode, P, p, p_get, p_set};
     use rstest::rstest;
 
     #[test]
@@ -411,7 +414,7 @@ mod tests {
  0E0B  00        BRK  
  0E0C  12 34                                            |.4              |
 "
-        .parse::<Image>()?;
+        .parse::<MemoryImage>()?;
 
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
@@ -446,7 +449,7 @@ mod tests {
  0E12  8D 01 0E  STA  $0E01
  0E15  00        BRK  
  0E16  12 34 56 78                                      |.4Vx            |"
-            .parse::<Image>()?;
+            .parse::<MemoryImage>()?;
 
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
@@ -499,7 +502,7 @@ mod tests {
  0E32  60        RTS  
  0E33  34 12 0A 00 00 00                                |4.....          |
 "
-        .parse::<Image>()?;
+        .parse::<MemoryImage>()?;
 
         let load = image.load().expect("Must be set");
         assert_eq!(0x0e00, load);
@@ -538,7 +541,7 @@ mod tests {
             None
         };
 
-        let image = input.parse::<Image>()?;
+        let image = input.parse::<MemoryImage>()?;
         let bus = Bus::default_with_image(&image)?;
         let interrupt_channel = InterruptChannel::new();
         let mut cpu = Cpu::new(bus.view(), monitor, interrupt_channel.rx);

@@ -1,6 +1,6 @@
 use crate::emulator::Cpu;
 use crate::emulator::ops::helper::is_neg;
-use crate::p_set;
+use r6502cpu::p_set;
 
 // http://www.6502.org/tutorials/6502opcodes.html#CMP
 // http://www.6502.org/users/obelisk/6502/reference.html#CMP
@@ -29,9 +29,9 @@ fn compare_helper(cpu: &mut Cpu, register: u8, operand: u8) {
 
 #[cfg(test)]
 mod tests {
-    use crate::_p;
     use crate::emulator::ops::cmp;
-    use crate::emulator::{Bus, Cpu, InterruptChannel};
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::{_p, InterruptChannel};
 
     #[test]
     fn basics() {

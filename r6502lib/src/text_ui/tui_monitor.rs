@@ -1,5 +1,6 @@
-use crate::emulator::{InstructionInfo, Monitor, Reg, TotalCycles};
+use crate::emulator::{InstructionInfo, Monitor};
 use crate::messages::MonitorMessage;
+use r6502cpu::{Reg, TotalCycles};
 use std::sync::mpsc::Sender;
 
 pub struct TuiMonitor {

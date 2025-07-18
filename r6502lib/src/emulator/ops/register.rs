@@ -83,7 +83,8 @@ pub fn tya(cpu: &mut Cpu) {
 #[cfg(test)]
 mod tests {
     use crate::emulator::ops::register::{tax, tay, txa, tya};
-    use crate::emulator::{Bus, Cpu, InterruptChannel};
+    use crate::emulator::{Bus, Cpu};
+    use r6502cpu::InterruptChannel;
 
     #[test]
     fn tax_basics() {

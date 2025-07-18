@@ -1168,16 +1168,54 @@ dependencies = [
  "log-panics",
  "path-absolutize",
  "r6502lib",
+ "r6502ui",
+ "r6502validation",
  "rstest",
+ "serde_json",
  "simple-logging",
 ]
+
+[[package]]
+name = "r6502config"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "r6502core",
+ "serde",
+]
+
+[[package]]
+name = "r6502core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "rstest",
+]
+
+[[package]]
+name = "r6502cpu"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bitflags",
+ "num-derive",
+ "num-traits",
+ "r6502core",
+ "rstest",
+ "strum",
+ "strum_macros",
+]
+
+[[package]]
+name = "r6502hw"
+version = "0.1.0"
 
 [[package]]
 name = "r6502lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bitflags",
  "chrono",
  "criterion",
  "cursive",
@@ -1187,13 +1225,41 @@ dependencies = [
  "num-derive",
  "num-traits",
  "path-absolutize",
+ "r6502config",
+ "r6502core",
+ "r6502cpu",
+ "r6502validation",
  "rancor",
  "rkyv",
  "rstest",
  "serde",
  "serde_json",
- "strum",
- "strum_macros",
+]
+
+[[package]]
+name = "r6502snapshot"
+version = "0.1.0"
+
+[[package]]
+name = "r6502ui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cursive",
+ "log",
+ "path-absolutize",
+ "r6502config",
+ "r6502core",
+ "r6502cpu",
+ "r6502lib",
+]
+
+[[package]]
+name = "r6502validation"
+version = "0.1.0"
+dependencies = [
+ "rkyv",
+ "serde",
 ]
 
 [[package]]

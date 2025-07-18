@@ -1,0 +1,13 @@
+[package]
+name = "r6502config"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+r6502core = { path = "../r6502core" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[lints.clippy]
+missing_errors_doc = "allow"
+pedantic = { level = "deny", priority = -1 }

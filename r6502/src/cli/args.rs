@@ -98,7 +98,7 @@ pub struct RunOptions {
     pub machine: Option<String>,
 }
 
-impl From<RunOptions> for r6502lib::run_options::RunOptions {
+impl From<RunOptions> for r6502ui::terminal_ui::RunOptions {
     fn from(value: RunOptions) -> Self {
         Self {
             path: value.path,

@@ -5,7 +5,6 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
-bitflags = "2.9.1"
 chrono = "0.4.41"
 cursive = "0.21.1"
 dirs = "6.0.0"
@@ -14,12 +13,14 @@ log = "0.4.27"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
 path-absolutize = "3.1.1"
+r6502config = { path = "../r6502config" }
+r6502core = { path = "../r6502core" }
+r6502cpu = { path = "../r6502cpu" }
+r6502validation = { path = "../r6502validation" }
 rancor = "0.1.0"
 rkyv = "0.8.10"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-strum = { version = "0.27.1", features = ["strum_macros"] }
-strum_macros = "0.27.1"
 
 [dev-dependencies]
 criterion = "0.6.0"

@@ -1,5 +1,6 @@
-use crate::emulator::{Cpu, P};
-use crate::num::SignExtend;
+use crate::emulator::Cpu;
+use r6502core::num::SignExtend;
+use r6502cpu::P;
 
 #[derive(Debug, PartialEq)]
 pub enum BranchResult {

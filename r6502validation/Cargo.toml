@@ -1,0 +1,11 @@
+[package]
+name = "r6502validation"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rkyv = "0.8.10"
+serde = { version = "1.0.219", features = ["derive"] }
+
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }
