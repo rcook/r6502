@@ -1167,8 +1167,6 @@ dependencies = [
  "log",
  "log-panics",
  "path-absolutize",
- "r6502cpu",
- "r6502lib",
  "r6502ui",
  "r6502validation",
  "rstest",
