@@ -2,11 +2,10 @@ use crate::emulator::IoEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
 };
 use crate::emulator::char_set_util::translate_in;
-use crate::emulator::{BusEvent, IoChannel, OutputDevice};
-use anyhow::Result;
-use cursive::backends::crossterm::crossterm::event::{
-    Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
+use crate::emulator::{
+    BusEvent, Event, IoChannel, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, OutputDevice,
 };
+use anyhow::Result;
 use log::info;
 use r6502config::CharSet;
 use r6502cpu::{BusDevice, InterruptEvent};
@@ -128,7 +127,7 @@ impl InterfaceAdapter {
                             }
                         }
                     }
-                    _ => {}
+                    Event::Key(_) => {}
                 },
                 Ok(Shutdown) | Err(_) => break,
             }

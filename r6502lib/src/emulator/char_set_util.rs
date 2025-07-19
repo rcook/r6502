@@ -1,4 +1,4 @@
-use cursive::backends::crossterm::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crate::emulator::{KeyCode, KeyEvent, KeyModifiers};
 use log::info;
 use r6502config::CharSet;
 use r6502core::ascii::{BEL, BS, CR, DEL, ESC, LF};

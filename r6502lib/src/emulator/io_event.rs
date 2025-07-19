@@ -1,4 +1,4 @@
-use cursive::backends::crossterm::crossterm::event::Event;
+use crate::emulator::Event;
 use r6502core::Channel;
 
 #[derive(Debug)]

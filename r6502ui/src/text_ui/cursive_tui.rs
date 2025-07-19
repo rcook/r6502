@@ -1,8 +1,5 @@
 use crate::text_ui::export_list_info::ExportListInfo;
 use cursive::align::HAlign;
-use cursive::backends::crossterm::crossterm::event::{
-    Event as CrosstermEvent, KeyCode, KeyEvent, KeyModifiers,
-};
 use cursive::event::{Callback, Event, EventResult, EventTrigger, Key};
 use cursive::theme::{BaseColor, Color, ColorStyle, ColorType};
 use cursive::view::{Finder, Nameable, Resizable, ScrollStrategy, Scrollable, Selector};
@@ -13,7 +10,10 @@ use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
 use r6502core::AddressRange;
 use r6502cpu::Reg;
 use r6502cpu::symbols::MapFile;
-use r6502lib::emulator::{InstructionInfo, IoEvent};
+use r6502lib::emulator::{
+    Event as Event_em, InstructionInfo, IoEvent, KeyCode as KeyCode_em, KeyEvent as KeyEvent_em,
+    KeyEventKind as KeyEventKind_em, KeyModifiers as KeyModifiers_em,
+};
 use r6502lib::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -389,17 +389,19 @@ impl CursiveTui {
         let io_tx_clone = io_tx.clone();
         c.set_on_pre_event_inner(EventTrigger::any(), move |e| {
             fn send_char(io_tx: &Sender<IoEvent>, ch: char) {
-                _ = io_tx.send(IoEvent::Input(CrosstermEvent::Key(KeyEvent::new(
-                    KeyCode::Char(ch),
-                    KeyModifiers::NONE,
-                ))));
+                _ = io_tx.send(IoEvent::Input(Event_em::Key(KeyEvent_em {
+                    code: KeyCode_em::Char(ch),
+                    modifiers: KeyModifiers_em::NONE,
+                    kind: KeyEventKind_em::Press,
+                })));
             }
 
             fn send_ctrl_char(io_tx: &Sender<IoEvent>, ch: char) {
-                _ = io_tx.send(IoEvent::Input(CrosstermEvent::Key(KeyEvent::new(
-                    KeyCode::Char(ch),
-                    KeyModifiers::CONTROL,
-                ))));
+                _ = io_tx.send(IoEvent::Input(Event_em::Key(KeyEvent_em {
+                    code: KeyCode_em::Char(ch),
+                    modifiers: KeyModifiers_em::CONTROL,
+                    kind: KeyEventKind_em::Press,
+                })));
             }
 
             fn set_stdout_colour(c: &mut Cursive, active: bool) {

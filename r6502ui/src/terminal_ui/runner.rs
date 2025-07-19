@@ -1,3 +1,4 @@
+use crate::crossterm_util::translate_event;
 use crate::terminal_ui::acorn_host_hooks::handle_host_hook;
 use crate::terminal_ui::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{Result, anyhow, bail};
@@ -122,7 +123,7 @@ impl Runner<'_> {
             }
 
             if let Some(event) = try_read_event()? {
-                _ = io_tx.send(IoEvent::Input(event));
+                _ = io_tx.send(IoEvent::Input(translate_event(&event)));
             }
         }
 
