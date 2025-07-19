@@ -1,4 +1,5 @@
 pub mod ascii;
+pub mod events;
 pub mod num;
 pub mod util;
 

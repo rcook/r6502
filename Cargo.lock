@@ -1188,6 +1188,7 @@ name = "r6502core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bitflags",
  "chrono",
  "rstest",
 ]
@@ -1225,7 +1226,6 @@ name = "r6502lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "bitflags",
  "criterion",
  "iter_mod",
  "log",

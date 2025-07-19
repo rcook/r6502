@@ -1,7 +1,7 @@
-use crate::emulator::{KeyCode, KeyEvent, KeyModifiers};
 use log::info;
 use r6502config::CharSet;
 use r6502core::ascii::{BEL, BS, CR, DEL, ESC, LF};
+use r6502core::events::{KeyCode, KeyEvent, KeyModifiers};
 
 #[must_use]
 pub fn translate_in(char_set: &CharSet, key: &KeyEvent) -> Option<u8> {

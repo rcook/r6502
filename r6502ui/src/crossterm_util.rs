@@ -2,7 +2,7 @@ use cursive::backends::crossterm::crossterm::event::{
     Event as Event_crossterm, KeyCode as KeyCode_crossterm, KeyEvent as KeyEvent_crossterm,
     KeyEventKind as KeyEventKind_crossterm, KeyModifiers as KeyModifiers_crossterm,
 };
-use r6502lib::emulator::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use r6502core::events::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 #[must_use]
 pub fn translate_event(event: &Event_crossterm) -> Option<Event> {

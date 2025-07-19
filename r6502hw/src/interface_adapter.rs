@@ -1,14 +1,13 @@
 use anyhow::Result;
 use log::info;
 use r6502config::CharSet;
+use r6502core::events::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use r6502cpu::{BusDevice, InterruptEvent};
 use r6502lib::emulator::IoEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
 };
 use r6502lib::emulator::char_set_util::translate_in;
-use r6502lib::emulator::{
-    BusEvent, Event, IoChannel, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, OutputDevice,
-};
+use r6502lib::emulator::{BusEvent, IoChannel, OutputDevice};
 use std::cell::Cell;
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};

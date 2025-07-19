@@ -1,4 +1,4 @@
-use crate::emulator::KeyEvent;
+use crate::events::KeyEvent;
 
 #[derive(Debug)]
 pub enum Event {

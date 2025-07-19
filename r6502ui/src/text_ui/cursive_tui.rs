@@ -8,12 +8,13 @@ use cursive::views::{
 };
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
 use r6502core::AddressRange;
-use r6502cpu::Reg;
-use r6502cpu::symbols::MapFile;
-use r6502lib::emulator::{
-    Event as Event_em, InstructionInfo, IoEvent, KeyCode as KeyCode_em, KeyEvent as KeyEvent_em,
+use r6502core::events::{
+    Event as Event_em, KeyCode as KeyCode_em, KeyEvent as KeyEvent_em,
     KeyEventKind as KeyEventKind_em, KeyModifiers as KeyModifiers_em,
 };
+use r6502cpu::Reg;
+use r6502cpu::symbols::MapFile;
+use r6502lib::emulator::{InstructionInfo, IoEvent};
 use r6502lib::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};

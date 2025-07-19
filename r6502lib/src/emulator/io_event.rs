@@ -1,5 +1,5 @@
-use crate::emulator::Event;
 use r6502core::Channel;
+use r6502core::events::Event;
 
 #[derive(Debug)]
 pub enum IoEvent {

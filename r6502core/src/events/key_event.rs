@@ -1,4 +1,4 @@
-use crate::emulator::key::{KeyCode, KeyEventKind, KeyModifiers};
+use crate::events::{KeyCode, KeyEventKind, KeyModifiers};
 
 #[derive(Debug)]
 pub struct KeyEvent {
