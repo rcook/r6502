@@ -7,7 +7,7 @@ use r6502cpu::InterruptChannel;
 use r6502lib::emulator::{Cpu, IoChannel, MachineInfo, MemoryImage, Monitor, TracingMonitor};
 use std::process::exit;
 
-pub fn run(opts: &RunOptions) -> Result<()> {
+pub fn run_terminal_ui(opts: &RunOptions) -> Result<()> {
     fn run_inner(opts: &RunOptions) -> Result<i32> {
         let image = MemoryImage::from_file(&opts.path)?;
         let machine_info = match image.machine_tag() {

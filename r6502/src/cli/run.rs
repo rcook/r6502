@@ -5,8 +5,8 @@ use anyhow::Result;
 use clap::Parser;
 use log::LevelFilter;
 use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
-use r6502lib::text_ui::run_tui;
-use r6502ui::terminal_ui::run as run_terminal;
+use r6502ui::terminal_ui::run_terminal_ui;
+use r6502ui::text_ui::run_text_ui;
 use simple_logging::log_to_file;
 
 pub fn run() -> Result<()> {
@@ -14,8 +14,8 @@ pub fn run() -> Result<()> {
     log_panics::init();
 
     match Args::parse().command {
-        Debug(opts) => run_tui(&opts.into())?,
-        Run(opts) => run_terminal(&opts.into())?,
+        Debug(opts) => run_text_ui(&opts.into())?,
+        Run(opts) => run_terminal_ui(&opts.into())?,
         Validate {
             report_path,
             filter,

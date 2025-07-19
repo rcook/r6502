@@ -1,9 +1,9 @@
-use crate::emulator::{Bus, Cpu, InstructionInfo, MachineInfo, MemoryImage};
-use crate::messages::State::{Halted, Running, Stepping, Stopped};
-use crate::messages::{DebugMessage, MonitorMessage, State};
 use crate::text_ui::TuiMonitor;
 use r6502core::AddressRange;
 use r6502cpu::{InterruptChannel, p_get, p_set};
+use r6502lib::emulator::{Bus, Cpu, InstructionInfo, MachineInfo, MemoryImage};
+use r6502lib::messages::State::{Halted, Running, Stepping, Stopped};
+use r6502lib::messages::{DebugMessage, MonitorMessage, State};
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!

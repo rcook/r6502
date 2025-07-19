@@ -1252,6 +1252,7 @@ dependencies = [
  "r6502core",
  "r6502cpu",
  "r6502lib",
+ "rstest",
 ]
 
 [[package]]

@@ -13,5 +13,10 @@ r6502core = { path = "../r6502core" }
 r6502cpu = { path = "../r6502cpu" }
 r6502lib = { path = "../r6502lib" }
 
+[dev-dependencies]
+rstest = "0.25.0"
+
 [lints.clippy]
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
 pedantic = { level = "deny", priority = -1 }

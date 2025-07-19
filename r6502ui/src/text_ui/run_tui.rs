@@ -1,13 +1,13 @@
-use crate::debug_options::DebugOptions;
-use crate::emulator::char_set_util::translate_out;
-use crate::emulator::{IoChannel, MachineInfo, MemoryImage, OutputDevice};
-use crate::messages::IoMessage;
 use crate::text_ui::cursive_tui::CursiveTui;
+use crate::text_ui::debug_options::DebugOptions;
 use crate::text_ui::tui_host::TuiHost;
 use anyhow::Result;
 use r6502config::CharSet;
 use r6502cpu::InterruptChannel;
 use r6502cpu::symbols::MapFile;
+use r6502lib::emulator::char_set_util::translate_out;
+use r6502lib::emulator::{IoChannel, MachineInfo, MemoryImage, OutputDevice};
+use r6502lib::messages::IoMessage;
 use std::sync::mpsc::{Sender, channel};
 use std::thread::spawn;
 
@@ -30,7 +30,7 @@ impl OutputDevice for TuiOutput {
     }
 }
 
-pub fn run_tui(opts: &DebugOptions) -> Result<()> {
+pub fn run_text_ui(opts: &DebugOptions) -> Result<()> {
     let image = MemoryImage::from_file(&opts.path)?;
     let machine_info = match image.machine_tag() {
         Some(tag) => MachineInfo::find_by_tag(tag)?,

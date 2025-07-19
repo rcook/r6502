@@ -55,7 +55,7 @@ pub struct DebugOptions {
     pub machine: Option<String>,
 }
 
-impl From<DebugOptions> for r6502lib::debug_options::DebugOptions {
+impl From<DebugOptions> for r6502ui::text_ui::DebugOptions {
     fn from(value: DebugOptions) -> Self {
         Self {
             path: value.path,
