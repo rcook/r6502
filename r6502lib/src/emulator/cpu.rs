@@ -175,7 +175,7 @@ impl<'a> Cpu<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::util::get_brk_addr;
+    use crate::emulator::address_util::get_brk_addr;
     use crate::emulator::{Bus, Cpu, MOS_6502, MemoryImage, Monitor, TracingMonitor};
     use anyhow::Result;
     use r6502core::util::{make_word, split_word};

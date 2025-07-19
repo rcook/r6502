@@ -1,7 +1,7 @@
+pub mod address_util;
 pub mod char_set_util;
 pub mod machines_util;
 pub mod r6502_image;
-pub mod util;
 
 mod addressing_mode;
 mod binding;
