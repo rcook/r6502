@@ -4,9 +4,9 @@ use crate::scenario_util;
 use anyhow::Result;
 use clap::Parser;
 use log::LevelFilter;
-use r6502lib::emulator::{run_scenario, run_scenarios_with_filter};
 use r6502ui::terminal_ui::run_terminal_ui;
 use r6502ui::text_ui::run_text_ui;
+use r6502validation::scenario_runner::{run_scenario, run_scenarios_with_filter};
 use simple_logging::log_to_file;
 
 pub fn run() -> Result<()> {

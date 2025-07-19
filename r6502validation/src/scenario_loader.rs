@@ -1,6 +1,6 @@
+use crate::Scenario;
 use anyhow::{Result, anyhow, bail};
 use dirs::config_dir;
-use r6502validation::Scenario;
 use std::env::current_dir;
 use std::fs::{File, create_dir_all};
 use std::io::{Read, Write};

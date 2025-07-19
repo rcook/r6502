@@ -2,7 +2,7 @@
 
 use crate::scenario_util;
 use anyhow::Result;
-use r6502lib::emulator::run_scenario;
+use r6502validation::scenario_runner::run_scenario;
 use rstest::rstest;
 
 #[rstest]

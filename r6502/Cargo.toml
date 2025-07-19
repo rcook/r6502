@@ -10,6 +10,7 @@ clap-num = "1.2.0"
 log = "0.4.27"
 log-panics = { version = "2.1.0", features = ["with-backtrace"] }
 path-absolutize = "3.1.1"
+r6502cpu = { path = "../r6502cpu" }
 r6502lib = { path = "../r6502lib" }
 r6502ui = { path = "../r6502ui" }
 r6502validation = { path = "../r6502validation" }

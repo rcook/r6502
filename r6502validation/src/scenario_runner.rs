@@ -1,8 +1,7 @@
-use crate::emulator::{Bus, Cpu};
-use crate::validation::{ScenarioFilter, ScenarioLoader};
+use crate::{AddressValue, Scenario, ScenarioFilter, ScenarioLoader, State};
 use anyhow::{Result, anyhow, bail};
 use r6502cpu::{_p, InterruptChannel, Opcode};
-use r6502validation::{AddressValue, Scenario, State};
+use r6502lib::emulator::{Bus, Cpu};
 use std::ffi::OsStr;
 use std::fs::{File, OpenOptions, remove_file};
 use std::io::{ErrorKind, Write};

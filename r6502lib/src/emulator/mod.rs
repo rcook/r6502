@@ -30,7 +30,6 @@ mod ops;
 mod other_image;
 mod other_image_header;
 mod output_device;
-mod scenario_runner;
 mod tracing_monitor;
 mod word_op;
 
@@ -59,6 +58,5 @@ pub use op_info::*;
 pub use other_image::*;
 pub use other_image_header::*;
 pub use output_device::*;
-pub use scenario_runner::*;
 pub use tracing_monitor::*;
 pub use word_op::*;
