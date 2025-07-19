@@ -1,13 +1,20 @@
 {
   "files.eol": "\n",
   "files.exclude": {
-    "**/*.bin": true,
-    "**/*.o": true,
+    "**/.mypy_cache/": true,
     "**/.vscode/": true,
+    "**/SingleStepTests-65x02/": true,
     "**/target/": true,
     "**/__pycache__/": true,
     "**/*.egg-info/": true,
-    "py/": true,
+    "**/*.bin": true,
+    "**/*.lib": true,
+    "**/*.log": true,
+    "**/*.lst": true,
+    "**/*.map": true,
+    "**/*.o": true,
+    "**/*.r6502": true,
+    "**/*.rom": true,
   },
   "rust-analyzer.showUnlinkedFileNotification": false,
 }
