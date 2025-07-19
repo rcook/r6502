@@ -1,12 +1,12 @@
-use crate::emulator::bus_device_util::{map_io_device, map_memory_device};
-use crate::emulator::machines_util::read;
-use crate::emulator::{Bus, BusEvent, IoChannel, MemoryImage, OutputDevice};
+use crate::bus_device_util::{map_io_device, map_memory_device};
 use anyhow::{Result, anyhow, bail};
 use dirs::config_dir;
 use path_absolutize::Absolutize;
 use r6502config::{BusDeviceType, Machine, Machines};
 use r6502core::{MachineTag, NULL_MACHINE_TAG};
 use r6502cpu::InterruptEvent;
+use r6502lib::emulator::machines_util::read;
+use r6502lib::emulator::{Bus, BusEvent, IoChannel, MemoryImage, OutputDevice};
 use std::env::current_exe;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};

@@ -1,6 +1,7 @@
-use crate::emulator::{BusEvent, InterfaceAdapter, IoChannel, MemoryImage, OutputDevice};
+use crate::InterfaceAdapter;
 use r6502config::{BusDevice as BusDevice_config, BusDeviceType, CharSet};
 use r6502cpu::{BusDevice, DeviceMapping, InterruptEvent, Ram, Rom};
+use r6502lib::emulator::{BusEvent, IoChannel, MemoryImage, OutputDevice};
 use std::sync::mpsc::Sender;
 
 #[must_use]

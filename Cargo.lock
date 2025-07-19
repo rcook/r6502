@@ -1209,18 +1209,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "r6502hw"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "log",
+ "path-absolutize",
+ "r6502config",
+ "r6502core",
+ "r6502cpu",
+ "r6502lib",
+]
+
+[[package]]
 name = "r6502lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "bitflags",
  "criterion",
- "dirs",
  "iter_mod",
  "log",
  "num-derive",
  "num-traits",
- "path-absolutize",
  "r6502config",
  "r6502core",
  "r6502cpu",
@@ -1239,6 +1251,7 @@ dependencies = [
  "r6502config",
  "r6502core",
  "r6502cpu",
+ "r6502hw",
  "r6502lib",
  "rstest",
 ]

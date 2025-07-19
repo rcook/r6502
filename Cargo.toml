@@ -11,6 +11,7 @@ members = [
   "r6502config",
   "r6502core",
   "r6502cpu",
+  "r6502hw",
   "r6502lib",
   "r6502ui",
   "r6502validation",

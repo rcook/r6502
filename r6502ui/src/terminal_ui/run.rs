@@ -4,7 +4,8 @@ use crate::terminal_ui::{Runner, StopReason, TerminalChannel, Vectors, show_run_
 use anyhow::Result;
 use log::info;
 use r6502cpu::InterruptChannel;
-use r6502lib::emulator::{Cpu, IoChannel, MachineInfo, MemoryImage, Monitor, TracingMonitor};
+use r6502hw::MachineInfo;
+use r6502lib::emulator::{Cpu, IoChannel, MemoryImage, Monitor, TracingMonitor};
 use std::process::exit;
 
 pub fn run_terminal_ui(opts: &RunOptions) -> Result<()> {
