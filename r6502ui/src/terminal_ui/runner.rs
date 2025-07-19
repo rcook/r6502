@@ -3,6 +3,7 @@ use crate::terminal_ui::acorn_host_hooks::handle_host_hook;
 use crate::terminal_ui::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{Result, anyhow, bail};
 use cursive::backends::crossterm::crossterm::event::{Event, poll, read};
+use log::warn;
 use r6502config::HostHookType;
 use r6502core::util::make_unique_snapshot_path;
 use r6502cpu::Opcode;
@@ -108,25 +109,29 @@ impl Runner<'_> {
     }
 
     fn event_loop(terminal_rx: &Receiver<TerminalEvent>, io_tx: &Sender<IoEvent>) -> Result<()> {
-        fn try_read_event() -> Result<Option<Event>> {
-            if poll(Duration::from_millis(100))? {
-                Ok(Some(read()?))
-            } else {
-                Ok(None)
-            }
-        }
-
         loop {
             match terminal_rx.try_recv() {
                 Ok(TerminalEvent::Shutdown) | Err(TryRecvError::Disconnected) => break,
                 Err(TryRecvError::Empty) => {}
             }
 
-            if let Some(event) = try_read_event()? {
-                _ = io_tx.send(IoEvent::Input(translate_event(&event)));
+            if let Some(event) = Self::try_read_event()? {
+                if let Some(event) = translate_event(&event) {
+                    _ = io_tx.send(IoEvent::Input(event));
+                } else {
+                    warn!("could not translate event {event:?}");
+                }
             }
         }
 
         Ok(())
+    }
+
+    fn try_read_event() -> Result<Option<Event>> {
+        if poll(Duration::from_millis(100))? {
+            Ok(Some(read()?))
+        } else {
+            Ok(None)
+        }
     }
 }
