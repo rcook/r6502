@@ -46,7 +46,7 @@ pub fn plp(cpu: &mut Cpu) {
 mod tests {
     use crate::emulator::ops::stack::{pha, php, pla, plp};
     use crate::emulator::{Bus, Cpu};
-    use r6502cpu::constants::STACK_BASE;
+    use r6502core::constants::STACK_BASE;
     use r6502cpu::{_p, InterruptChannel, P};
     use rstest::rstest;
 

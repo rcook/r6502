@@ -1,4 +1,5 @@
-use crate::{BusDevice, MemorySlice};
+use crate::BusDevice;
+use r6502snapshot::MemorySlice;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 pub struct Ram {

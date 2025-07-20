@@ -1,5 +1,4 @@
-use crate::emulator::r6502_image::ImageHeader;
-use crate::emulator::{Cpu, CpuState};
+use crate::{CpuState, ImageHeader};
 use anyhow::Result;
 use r6502core::MachineTag;
 use std::io::{Read, Seek};
@@ -45,7 +44,7 @@ impl Image {
     }
 
     #[must_use]
-    pub fn get_initial_cpu_state(&self, cpu: &Cpu) -> CpuState {
-        self.header.get_initial_cpu_state(cpu)
+    pub fn get_initial_cpu_state(&self, reset_addr: u16) -> CpuState {
+        self.header.get_initial_cpu_state(reset_addr)
     }
 }

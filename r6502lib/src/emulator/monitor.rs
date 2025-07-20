@@ -1,5 +1,6 @@
 use crate::emulator::InstructionInfo;
-use r6502cpu::{Reg, TotalCycles};
+use r6502core::TotalCycles;
+use r6502cpu::Reg;
 
 pub trait Monitor {
     fn on_before_execute(

@@ -3,9 +3,12 @@ use crate::terminal_ui::{RunOptions, output_device_type_util};
 use crate::terminal_ui::{Runner, StopReason, TerminalChannel, Vectors, show_run_info};
 use anyhow::Result;
 use log::info;
+use r6502core::constants::RESET;
+use r6502core::util::make_word;
 use r6502cpu::InterruptChannel;
 use r6502hw::MachineInfo;
-use r6502lib::emulator::{Cpu, IoChannel, MemoryImage, Monitor, TracingMonitor};
+use r6502lib::emulator::{Cpu, IoChannel, Monitor, TracingMonitor};
+use r6502snapshot::MemoryImage;
 use std::process::exit;
 
 pub fn run_terminal_ui(opts: &RunOptions) -> Result<()> {
@@ -39,9 +42,12 @@ pub fn run_terminal_ui(opts: &RunOptions) -> Result<()> {
         };
 
         let mut cpu = Cpu::new(bus.view(), monitor, interrupt_channel.rx);
-        let cpu_state = image.get_initial_cpu_state(&cpu);
+        let reset_addr_lo = cpu.bus.load(RESET);
+        let reset_addr_hi = cpu.bus.load(RESET.wrapping_add(1));
+        let reset_addr = make_word(reset_addr_hi, reset_addr_lo);
+        let cpu_state = image.get_initial_cpu_state(reset_addr);
         show_run_info(opts, &image, &cpu_state, &vectors);
-        cpu_state.apply_to(&mut cpu);
+        cpu.set_initial_state(&cpu_state);
 
         let stop_reason = Runner {
             cpu: &mut cpu,

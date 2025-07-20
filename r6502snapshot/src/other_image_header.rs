@@ -1,4 +1,4 @@
-use crate::emulator::{Cpu, CpuState, SIM6502_MAGIC_NUMBER};
+use crate::{CpuState, SIM6502_MAGIC_NUMBER};
 use anyhow::{Result, bail};
 use r6502core::util::make_word;
 use std::io::{ErrorKind, Read, Seek};
@@ -15,7 +15,7 @@ impl OtherImageHeader {
     }
 
     #[must_use]
-    pub const fn get_initial_cpu_state(&self, _cpu: &Cpu) -> CpuState {
+    pub const fn get_initial_cpu_state(&self, _reset_addr: u16) -> CpuState {
         match self {
             Self::Sim6502 { start, sp, .. } => CpuState {
                 pc: *start,

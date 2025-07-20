@@ -1,11 +1,7 @@
-use crate::emulator::r6502_image::R6502ImageType;
-use crate::emulator::{Cpu, CpuState, R6502_MAGIC_NUMBER};
+use crate::{CpuState, R6502_MAGIC_NUMBER, R6502ImageType};
 use anyhow::{Result, bail};
 use num_traits::FromPrimitive;
-use r6502core::MachineTag;
-use r6502core::util::make_word;
-use r6502cpu::TotalCycles;
-use r6502cpu::constants::RESET;
+use r6502core::{MachineTag, TotalCycles};
 use std::io::{ErrorKind, Read, Seek};
 
 pub enum ImageHeader {
@@ -148,7 +144,7 @@ impl ImageHeader {
     }
 
     #[must_use]
-    pub fn get_initial_cpu_state(&self, cpu: &Cpu) -> CpuState {
+    pub fn get_initial_cpu_state(&self, reset_addr: u16) -> CpuState {
         match self {
             Self::Module { start, .. } => CpuState {
                 pc: *start,
@@ -177,20 +173,15 @@ impl ImageHeader {
                 p: *p,
                 total_cycles: *total_cycles,
             },
-            Self::System { .. } => {
-                let reset_lo = cpu.bus.load(RESET);
-                let reset_hi = cpu.bus.load(RESET.wrapping_add(1));
-                let reset = make_word(reset_hi, reset_lo);
-                CpuState {
-                    pc: reset,
-                    a: 0x00,
-                    x: 0x00,
-                    y: 0x00,
-                    sp: 0x00,
-                    p: 0x00,
-                    total_cycles: 0,
-                }
-            }
+            Self::System { .. } => CpuState {
+                pc: reset_addr,
+                a: 0x00,
+                x: 0x00,
+                y: 0x00,
+                sp: 0x00,
+                p: 0x00,
+                total_cycles: 0,
+            },
         }
     }
 

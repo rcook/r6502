@@ -13,6 +13,7 @@ r6502core = { path = "../r6502core" }
 r6502cpu = { path = "../r6502cpu" }
 r6502hw = { path = "../r6502hw" }
 r6502lib = { path = "../r6502lib" }
+r6502snapshot = { path = "../r6502snapshot" }
 
 [dev-dependencies]
 rstest = "0.25.0"

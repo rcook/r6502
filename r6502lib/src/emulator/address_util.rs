@@ -1,6 +1,6 @@
 use crate::emulator::Cpu;
+use r6502core::constants::IRQ;
 use r6502core::util::make_word;
-use r6502cpu::constants::IRQ;
 
 // https://stackoverflow.com/questions/46262435/indirect-y-indexed-addressing-mode-in-mos-6502
 pub fn compute_effective_addr_indirect_indexed_y(cpu: &mut Cpu, addr: u8) -> u16 {

@@ -9,6 +9,7 @@ bitflags = "2.9.1"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
 r6502core = { path = "../r6502core" }
+r6502snapshot = { path = "../r6502snapshot" }
 strum = { version = "0.27.1", features = ["strum_macros"] }
 strum_macros = "0.27.1"
 

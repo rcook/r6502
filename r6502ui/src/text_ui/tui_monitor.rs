@@ -1,4 +1,5 @@
-use r6502cpu::{Reg, TotalCycles};
+use r6502core::TotalCycles;
+use r6502cpu::Reg;
 use r6502lib::emulator::{InstructionInfo, Monitor};
 use r6502lib::messages::MonitorMessage;
 use std::sync::mpsc::Sender;

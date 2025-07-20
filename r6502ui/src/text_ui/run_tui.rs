@@ -7,8 +7,9 @@ use r6502cpu::InterruptChannel;
 use r6502cpu::symbols::MapFile;
 use r6502hw::MachineInfo;
 use r6502lib::emulator::char_set_util::translate_out;
-use r6502lib::emulator::{IoChannel, MemoryImage, OutputDevice};
+use r6502lib::emulator::{IoChannel, OutputDevice};
 use r6502lib::messages::IoMessage;
+use r6502snapshot::MemoryImage;
 use std::sync::mpsc::{Sender, channel};
 use std::thread::spawn;
 

@@ -1,5 +1,4 @@
-use crate::emulator::r6502_image::R6502ImageType;
-use crate::emulator::{CpuState, R6502_MAGIC_NUMBER};
+use crate::{CpuState, R6502_MAGIC_NUMBER, R6502ImageType};
 use anyhow::Result;
 use r6502core::MachineTag;
 use std::fs::File;

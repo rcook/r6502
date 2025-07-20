@@ -1,8 +1,10 @@
 use crate::emulator::{BusView, Instruction, InstructionInfo, Monitor};
 use log::{Level, debug, log_enabled};
+use r6502core::TotalCycles;
+use r6502core::constants::{IRQ, RESET, STACK_BASE};
 use r6502core::util::{make_word, split_word};
-use r6502cpu::constants::{IRQ, RESET, STACK_BASE};
-use r6502cpu::{Frequency, InterruptEvent, Reg, TotalCycles};
+use r6502cpu::{_p, Frequency, InterruptEvent, Reg};
+use r6502snapshot::CpuState;
 use std::sync::LazyLock;
 use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::{Duration, Instant};
@@ -36,6 +38,29 @@ impl<'a> Cpu<'a> {
             monitor: monitor.unwrap_or_else(|| Box::new(DummyMonitor)),
             irq_rx,
         }
+    }
+
+    #[must_use]
+    pub fn get_state(&self) -> CpuState {
+        CpuState {
+            pc: self.reg.pc,
+            a: self.reg.a,
+            x: self.reg.x,
+            y: self.reg.y,
+            sp: self.reg.sp,
+            p: self.reg.p.bits(),
+            total_cycles: self.total_cycles,
+        }
+    }
+
+    pub fn set_initial_state(&mut self, state: &CpuState) {
+        self.reg.pc = state.pc;
+        self.reg.a = state.a;
+        self.reg.x = state.x;
+        self.reg.y = state.y;
+        self.reg.sp = state.sp;
+        self.reg.p = _p!(state.p);
+        self.total_cycles = state.total_cycles;
     }
 
     pub fn step_with_monitor_callbacks(&mut self) {
@@ -176,11 +201,12 @@ impl<'a> Cpu<'a> {
 #[cfg(test)]
 mod tests {
     use crate::emulator::address_util::get_brk_addr;
-    use crate::emulator::{Bus, Cpu, MOS_6502, MemoryImage, Monitor, TracingMonitor};
+    use crate::emulator::{Bus, Cpu, MOS_6502, Monitor, TracingMonitor};
     use anyhow::Result;
+    use r6502core::constants::IRQ;
     use r6502core::util::{make_word, split_word};
-    use r6502cpu::constants::IRQ;
     use r6502cpu::{InterruptChannel, Opcode, P, p, p_get, p_set};
+    use r6502snapshot::MemoryImage;
     use rstest::rstest;
 
     #[test]

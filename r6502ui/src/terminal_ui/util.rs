@@ -1,6 +1,6 @@
 use crate::terminal_ui::RunOptions;
 use log::info;
-use r6502lib::emulator::{CpuState, MemoryImage};
+use r6502snapshot::{CpuState, MemoryImage};
 use std::fmt::Display;
 use std::str::from_utf8;
 

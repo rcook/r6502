@@ -13,6 +13,7 @@ members = [
   "r6502cpu",
   "r6502hw",
   "r6502lib",
+  "r6502snapshot",
   "r6502ui",
   "r6502validation",
 ]

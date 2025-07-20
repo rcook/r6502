@@ -1,7 +1,8 @@
 use crate::emulator::{InstructionInfo, Monitor};
 use log::info;
+use r6502core::TotalCycles;
+use r6502cpu::Reg;
 use r6502cpu::symbols::MapFile;
-use r6502cpu::{Reg, TotalCycles};
 
 #[derive(Default)]
 pub struct TracingMonitor {

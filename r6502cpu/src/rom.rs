@@ -1,4 +1,5 @@
-use crate::{BusDevice, MemorySlice};
+use crate::BusDevice;
+use r6502snapshot::MemorySlice;
 
 pub struct Rom {
     bytes: Vec<u8>,

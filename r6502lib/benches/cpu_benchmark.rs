@@ -1,8 +1,10 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use r6502core::util::split_word;
-use r6502cpu::constants::{DEFAULT_SP, IRQ};
+use r6502core::RESET;
+use r6502core::constants::{DEFAULT_SP, IRQ};
+use r6502core::util::{make_word, split_word};
 use r6502cpu::{_p, InterruptChannel, p_get};
-use r6502lib::emulator::{Bus, Cpu, MemoryImage};
+use r6502lib::emulator::{Bus, Cpu};
+use r6502snapshot::MemoryImage;
 
 // div16 takes approx. 938 cycles
 // On a real 6502 at 1 MHz this ought to run in around 1 ms.
@@ -25,8 +27,11 @@ fn div16_benchmark(c: &mut Criterion) {
     let bus = Bus::default_with_image(&image).expect("Must succeed");
     let interrupt_channel = InterruptChannel::new();
     let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
-    let cpu_state = image.get_initial_cpu_state(&cpu);
-    cpu_state.apply_to(&mut cpu);
+    let reset_addr_lo = cpu.bus.load(RESET);
+    let reset_addr_hi = cpu.bus.load(RESET.wrapping_add(1));
+    let reset_addr = make_word(reset_addr_hi, reset_addr_lo);
+    let cpu_state = image.get_initial_cpu_state(reset_addr);
+    cpu.set_initial_state(&cpu_state);
 
     cpu.bus.store(IRQ_ADDR, 0x40);
     let (hi, lo) = split_word(IRQ_ADDR);

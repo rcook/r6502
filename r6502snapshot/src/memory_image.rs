@@ -1,8 +1,6 @@
-use crate::emulator::r6502_image::Image;
-use crate::emulator::{Cpu, CpuState, OtherImage};
+use crate::{CpuState, Image, MemorySlice, OtherImage};
 use anyhow::{Error, Result, bail};
 use r6502core::{AddressRange, MachineTag};
-use r6502cpu::MemorySlice;
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
@@ -69,10 +67,10 @@ impl MemoryImage {
     }
 
     #[must_use]
-    pub fn get_initial_cpu_state(&self, cpu: &Cpu) -> CpuState {
+    pub fn get_initial_cpu_state(&self, reset_addr: u16) -> CpuState {
         match self {
-            Self::R6502(image) => image.get_initial_cpu_state(cpu),
-            Self::Other(image) => image.get_initial_cpu_state(cpu),
+            Self::R6502(image) => image.get_initial_cpu_state(reset_addr),
+            Self::Other(image) => image.get_initial_cpu_state(reset_addr),
         }
     }
 
@@ -192,10 +190,10 @@ impl FromStr for MemoryImage {
 
 #[cfg(test)]
 mod tests {
-    use crate::emulator::{MemoryImage, OtherImage};
+    use crate::{MemoryImage, OtherImage};
     use anyhow::Result;
     use r6502core::AddressRange;
-    use r6502cpu::constants::DEFAULT_SP;
+    use r6502core::constants::DEFAULT_SP;
 
     #[test]
     fn basics() -> Result<()> {

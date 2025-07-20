@@ -1,18 +1,13 @@
 [package]
-name = "r6502hw"
+name = "r6502snapshot"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
-dirs = "6.0.0"
-log = "0.4.27"
-path-absolutize = "3.1.1"
-r6502config = { path = "../r6502config" }
+num-derive = "0.4.2"
+num-traits = "0.2.19"
 r6502core = { path = "../r6502core" }
-r6502cpu = { path = "../r6502cpu" }
-r6502lib = { path = "../r6502lib" }
-r6502snapshot = { path = "../r6502snapshot" }
 
 [lints.clippy]
 missing_errors_doc = "allow"

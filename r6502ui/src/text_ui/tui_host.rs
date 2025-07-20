@@ -1,10 +1,13 @@
 use crate::text_ui::TuiMonitor;
 use r6502core::AddressRange;
+use r6502core::constants::RESET;
+use r6502core::util::make_word;
 use r6502cpu::{InterruptChannel, p_get, p_set};
 use r6502hw::MachineInfo;
-use r6502lib::emulator::{Bus, Cpu, InstructionInfo, MemoryImage};
+use r6502lib::emulator::{Bus, Cpu, InstructionInfo};
 use r6502lib::messages::State::{Halted, Running, Stepping, Stopped};
 use r6502lib::messages::{DebugMessage, MonitorMessage, State};
+use r6502snapshot::MemoryImage;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 // TBD: Come up with a better name for this struct!
@@ -35,8 +38,11 @@ impl TuiHost {
         let interrupt_channel = InterruptChannel::new();
 
         let mut cpu = Cpu::new(self.bus.view(), Some(monitor), interrupt_channel.rx);
-        let cpu_state = image.get_initial_cpu_state(&cpu);
-        cpu_state.apply_to(&mut cpu);
+        let reset_addr_lo = cpu.bus.load(RESET);
+        let reset_addr_hi = cpu.bus.load(RESET.wrapping_add(1));
+        let reset_addr = make_word(reset_addr_hi, reset_addr_lo);
+        let cpu_state = image.get_initial_cpu_state(reset_addr);
+        cpu.set_initial_state(&cpu_state);
 
         let mut state = Stepping;
         loop {

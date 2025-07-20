@@ -1,4 +1,4 @@
-use r6502cpu::TotalCycles;
+use r6502core::TotalCycles;
 
 pub enum StopReason {
     UnexpectedInterrupt { total_cycles: TotalCycles },

@@ -1,9 +1,10 @@
-use crate::emulator::{BusView, MemoryImage};
+use crate::emulator::BusView;
 use anyhow::Result;
+use r6502core::constants::{IRQ, MEMORY_SIZE, NMI, RESET};
 use r6502core::util::make_word;
 use r6502core::{AddressRange, MachineTag, NULL_MACHINE_TAG};
-use r6502cpu::constants::{IRQ, MEMORY_SIZE, NMI, RESET};
 use r6502cpu::{DeviceMapping, Ram};
+use r6502snapshot::MemoryImage;
 
 const UNMAPPED_VALUE: u8 = 0xff;
 

@@ -1202,6 +1202,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "r6502core",
+ "r6502snapshot",
  "rstest",
  "strum",
  "strum_macros",
@@ -1219,6 +1220,7 @@ dependencies = [
  "r6502core",
  "r6502cpu",
  "r6502lib",
+ "r6502snapshot",
 ]
 
 [[package]]
@@ -1234,8 +1236,19 @@ dependencies = [
  "r6502config",
  "r6502core",
  "r6502cpu",
+ "r6502snapshot",
  "rstest",
  "serde_json",
+]
+
+[[package]]
+name = "r6502snapshot"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "num-derive",
+ "num-traits",
+ "r6502core",
 ]
 
 [[package]]
@@ -1251,6 +1264,7 @@ dependencies = [
  "r6502cpu",
  "r6502hw",
  "r6502lib",
+ "r6502snapshot",
  "rstest",
 ]
 
