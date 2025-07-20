@@ -15,5 +15,6 @@ members = [
   "r6502snapshot",
   "r6502ui",
   "r6502validation",
+  "r6502vdu",
 ]
 resolver = "2"

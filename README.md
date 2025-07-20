@@ -17,6 +17,33 @@ eventually.
 Note that r6502 does not currently implement any undocumented 6502
 opcodes and will panic if any are encountered.
 
+## Dev setup
+
+### Ubuntu
+
+Install prerequisites:
+
+```bash
+sudo apt install freeglut3-dev libfreetype-dev libglu1-mesa-dev mesa-common-dev mesa-utils
+export LD_LIBRARY_PATH=/usr/local/lib
+#export LIBGL_ALWAYS_SOFTWARE=1
+```
+
+* [Download SDL3-3.2.18.tar.gz][sdl3-devel]
+* Build with CMake: `cmake . && sudo make install`
+* [Download SDL3_ttf-3.2.2.tar.gz][sdl3-ttf-devel]
+* Build with CMake: `sudo apt install  && cmake . && sudo make install`
+
+### macOS
+
+* `brew install sdl3 sdl3_ttf`
+
+### Windows
+
+* [Download SDL3-devel-3.2.18-VC.zip][sdl3-devel]
+* [Download SDL3_ttf-devel-3.2.2-VC.zip][sdl3-ttf-devel]
+* Extract the contents of the `lib` directories into the root of this project
+
 # Licence
 
 [MIT License](LICENSE)
@@ -46,4 +73,6 @@ opcodes and will panic if any are encountered.
 * https://jefftranter.blogspot.com/2012/05/source-code-for-apple-1-basic.html
 * https://electronics.stackexchange.com/questions/678427/mc6820-pia-operation-on-the-apple-1
 
+[sdl3-devel]: https://github.com/libsdl-org/SDL/releases/tag/release-3.2.18
+[sdl3-ttf-devel]: https://github.com/libsdl-org/SDL_ttf/releases/tag/release-3.2.2
 [single-step-tests]: https://github.com/SingleStepTests/65x02

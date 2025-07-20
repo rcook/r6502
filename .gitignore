@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 
 *.bin
+*.dll
 *.lib
 *.log
 *.lst
@@ -11,3 +12,5 @@ __pycache__/
 *.o
 *.r6502
 *.sim65
+
+r6502vdu.json

@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use clap_num::maybe_hex;
 use path_absolutize::Absolutize;
 use std::path::PathBuf;
@@ -16,6 +16,15 @@ pub enum Command {
 
     #[command(name = "run", about = "Run program")]
     Run(RunOptions),
+
+    #[command(name = "test-gui")]
+    TestGraphicsTerminal {
+        #[clap(long = "font", value_enum, default_value_t = Font::Bedstead)]
+        font: Font,
+    },
+
+    #[command(name = "test-tui")]
+    TestTextTerminal,
 
     #[command(name = "validate", about = "Run validation suite")]
     Validate {
@@ -108,6 +117,28 @@ impl From<RunOptions> for r6502ui::terminal_ui::RunOptions {
             cycles: value.cycles,
             stop_after: value.stop_after,
             machine: value.machine,
+        }
+    }
+}
+
+#[derive(Clone, Debug, ValueEnum)]
+pub enum Font {
+    #[clap(name = "acorn")]
+    Acorn,
+
+    #[clap(name = "bedstead")]
+    Bedstead,
+
+    #[clap(name = "5050")]
+    MullardSaa5050,
+}
+
+impl From<Font> for r6502vdu::font::Font {
+    fn from(value: Font) -> Self {
+        match value {
+            Font::Acorn => Self::Acorn,
+            Font::Bedstead => Self::Bedstead,
+            Font::MullardSaa5050 => Self::MullardSaa5050,
         }
     }
 }
