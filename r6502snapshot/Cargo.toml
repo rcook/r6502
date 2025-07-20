@@ -7,7 +7,7 @@ edition = "2024"
 anyhow = "1.0.98"
 num-derive = "0.4.2"
 num-traits = "0.2.19"
-r6502core = { path = "../r6502core" }
+r6502lib = { path = "../r6502lib" }
 
 [lints.clippy]
 missing_errors_doc = "allow"

@@ -1,7 +1,7 @@
-use r6502core::TotalCycles;
-use r6502cpu::Reg;
-use r6502lib::emulator::{InstructionInfo, Monitor};
-use r6502lib::messages::MonitorMessage;
+use r6502core::Reg;
+use r6502core::emulator::{InstructionInfo, Monitor};
+use r6502core::messages::MonitorMessage;
+use r6502lib::TotalCycles;
 use std::sync::mpsc::Sender;
 
 pub struct TuiMonitor {

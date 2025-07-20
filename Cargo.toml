@@ -10,7 +10,6 @@ members = [
   "r6502",
   "r6502config",
   "r6502core",
-  "r6502cpu",
   "r6502hw",
   "r6502lib",
   "r6502snapshot",

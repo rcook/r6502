@@ -1,6 +1,6 @@
 use crate::{CpuState, ImageHeader};
 use anyhow::Result;
-use r6502core::MachineTag;
+use r6502lib::MachineTag;
 use std::io::{Read, Seek};
 
 pub struct Image {

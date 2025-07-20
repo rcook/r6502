@@ -10,7 +10,6 @@ log = "0.4.27"
 path-absolutize = "3.1.1"
 r6502config = { path = "../r6502config" }
 r6502core = { path = "../r6502core" }
-r6502cpu = { path = "../r6502cpu" }
 r6502lib = { path = "../r6502lib" }
 r6502snapshot = { path = "../r6502snapshot" }
 

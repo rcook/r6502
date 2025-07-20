@@ -1,4 +1,4 @@
-use r6502cpu::symbols::MapFile;
+use r6502core::symbols::MapFile;
 use std::sync::{Arc, Mutex};
 
 pub enum ExportSortOrder {

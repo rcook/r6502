@@ -1,4 +1,4 @@
-use r6502core::Channel;
+use r6502lib::Channel;
 
 #[derive(Debug)]
 pub enum TerminalEvent {

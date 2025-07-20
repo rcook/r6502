@@ -3,11 +3,11 @@ use crate::terminal_ui::{RunOptions, output_device_type_util};
 use crate::terminal_ui::{Runner, StopReason, TerminalChannel, Vectors, show_run_info};
 use anyhow::Result;
 use log::info;
-use r6502core::constants::RESET;
-use r6502core::util::make_word;
-use r6502cpu::InterruptChannel;
+use r6502core::InterruptChannel;
+use r6502core::emulator::{Cpu, IoChannel, Monitor, TracingMonitor};
 use r6502hw::MachineInfo;
-use r6502lib::emulator::{Cpu, IoChannel, Monitor, TracingMonitor};
+use r6502lib::constants::RESET;
+use r6502lib::util::make_word;
 use r6502snapshot::MemoryImage;
 use std::process::exit;
 

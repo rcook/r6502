@@ -6,12 +6,30 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.98"
 bitflags = "2.9.1"
-chrono = "0.4.41"
+iter_mod = "0.1.0"
+log = "0.4.27"
+num-derive = "0.4.2"
+num-traits = "0.2.19"
+r6502config = { path = "../r6502config" }
+r6502lib = { path = "../r6502lib" }
+r6502snapshot = { path = "../r6502snapshot" }
+serde_json = "1.0.140"
+strum = { version = "0.27.1", features = ["strum_macros"] }
+strum_macros = "0.27.1"
 
 [dev-dependencies]
+criterion = "0.6.0"
 rstest = "0.25.0"
+
+[features]
+not-implemented = []
+
+[[bench]]
+name = "cpu_benchmark"
+harness = false
 
 [lints.clippy]
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
+module_name_repetitions = "allow"
 pedantic = { level = "deny", priority = -1 }

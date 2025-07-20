@@ -1,6 +1,6 @@
 use crate::{CpuState, Image, MemorySlice, OtherImage};
 use anyhow::{Error, Result, bail};
-use r6502core::{AddressRange, MachineTag};
+use r6502lib::{AddressRange, MachineTag};
 use std::fs::File;
 use std::io::{Cursor, ErrorKind, Read, Seek};
 use std::path::Path;
@@ -192,8 +192,8 @@ impl FromStr for MemoryImage {
 mod tests {
     use crate::{MemoryImage, OtherImage};
     use anyhow::Result;
-    use r6502core::AddressRange;
-    use r6502core::constants::DEFAULT_SP;
+    use r6502lib::AddressRange;
+    use r6502lib::constants::DEFAULT_SP;
 
     #[test]
     fn basics() -> Result<()> {

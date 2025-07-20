@@ -1,5 +1,5 @@
 use anyhow::Result;
-use r6502core::{AddressRange, MachineTag};
+use r6502lib::{AddressRange, MachineTag};
 use serde::de::Error as SerdeError;
 use serde::{Deserialize, Deserializer};
 use std::result::Result as StdResult;

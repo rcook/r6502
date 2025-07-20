@@ -1,12 +1,12 @@
 use crate::text_ui::TuiMonitor;
-use r6502core::AddressRange;
-use r6502core::constants::RESET;
-use r6502core::util::make_word;
-use r6502cpu::{InterruptChannel, p_get, p_set};
+use r6502core::emulator::{Bus, Cpu, InstructionInfo};
+use r6502core::messages::State::{Halted, Running, Stepping, Stopped};
+use r6502core::messages::{DebugMessage, MonitorMessage, State};
+use r6502core::{InterruptChannel, p_get, p_set};
 use r6502hw::MachineInfo;
-use r6502lib::emulator::{Bus, Cpu, InstructionInfo};
-use r6502lib::messages::State::{Halted, Running, Stepping, Stopped};
-use r6502lib::messages::{DebugMessage, MonitorMessage, State};
+use r6502lib::AddressRange;
+use r6502lib::constants::RESET;
+use r6502lib::util::make_word;
 use r6502snapshot::MemoryImage;
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 

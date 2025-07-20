@@ -1,7 +1,7 @@
 use anyhow::Result;
 use r6502config::CharSet;
-use r6502lib::emulator::OutputDevice;
-use r6502lib::emulator::char_set_util::translate_out;
+use r6502core::emulator::OutputDevice;
+use r6502core::emulator::char_set_util::translate_out;
 use std::io::{Write, stdout};
 
 pub struct SimpleOutput;

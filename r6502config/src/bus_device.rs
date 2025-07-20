@@ -1,5 +1,5 @@
 use crate::{BusDeviceType, deserialize_address_range, deserialize_word};
-use r6502core::AddressRange;
+use r6502lib::AddressRange;
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]

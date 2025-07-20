@@ -1,7 +1,7 @@
 use crate::{CpuState, R6502_MAGIC_NUMBER, R6502ImageType};
 use anyhow::{Result, bail};
 use num_traits::FromPrimitive;
-use r6502core::{MachineTag, TotalCycles};
+use r6502lib::{MachineTag, TotalCycles};
 use std::io::{ErrorKind, Read, Seek};
 
 pub enum ImageHeader {

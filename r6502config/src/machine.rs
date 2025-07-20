@@ -1,7 +1,7 @@
 use crate::{
     BusDevice, CharSet, HostHook, OutputDeviceType, deserialize_machine_tag, deserialize_word_opt,
 };
-use r6502core::MachineTag;
+use r6502lib::MachineTag;
 use serde::Deserialize;
 use std::path::PathBuf;
 

@@ -7,14 +7,14 @@ use cursive::views::{
     EditView, Layer, LinearLayout, NamedView, Panel, ResizedView, ScrollView, TextView,
 };
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
-use r6502core::AddressRange;
-use r6502core::keyboard::{
+use r6502core::Reg;
+use r6502core::emulator::{InstructionInfo, IoEvent};
+use r6502core::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
+use r6502core::symbols::MapFile;
+use r6502lib::AddressRange;
+use r6502lib::keyboard::{
     KeyCode as KeyCode_em, KeyEvent as KeyEvent_em, KeyModifiers as KeyModifiers_em,
 };
-use r6502cpu::Reg;
-use r6502cpu::symbols::MapFile;
-use r6502lib::emulator::{InstructionInfo, IoEvent};
-use r6502lib::messages::{Command, DebugMessage, IoMessage, MonitorMessage, State};
 use std::fmt::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, Sender};
@@ -76,8 +76,8 @@ impl CursiveTui {
     }
 
     fn step(&mut self) -> bool {
-        use r6502lib::messages::IoMessage::WriteChar;
-        use r6502lib::messages::MonitorMessage::{
+        use r6502core::messages::IoMessage::WriteChar;
+        use r6502core::messages::MonitorMessage::{
             AfterExecute, BeforeExecute, FetchMemoryResponse, NotifyInvalidBrk, NotifyState,
         };
 
@@ -348,7 +348,7 @@ impl CursiveTui {
         debug_tx: &Sender<DebugMessage>,
         export_list_info: ExportListInfo,
     ) {
-        use r6502lib::messages::DebugMessage::{Break, Run, Step};
+        use r6502core::messages::DebugMessage::{Break, Run, Step};
 
         c.add_global_callback('q', Cursive::quit);
         c.add_global_callback('s', move |c| {
@@ -461,7 +461,7 @@ impl CursiveTui {
     }
 
     fn run_command(c: &mut Cursive, text: &str, d: &Sender<DebugMessage>) {
-        use r6502lib::messages::DebugMessage::{FetchMemory, Go, SetPc};
+        use r6502core::messages::DebugMessage::{FetchMemory, Go, SetPc};
 
         match text.parse::<Command>() {
             Ok(Command::Help(help)) => {
@@ -500,7 +500,7 @@ impl CursiveTui {
 mod tests {
     use crate::text_ui::cursive_tui::CursiveTui;
     use anyhow::Result;
-    use r6502core::AddressRange;
+    use r6502lib::AddressRange;
 
     #[test]
     fn format_snapshot() -> Result<()> {

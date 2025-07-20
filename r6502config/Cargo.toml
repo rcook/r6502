@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
-r6502core = { path = "../r6502core" }
+r6502lib = { path = "../r6502lib" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [lints.clippy]

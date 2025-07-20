@@ -1,6 +1,6 @@
 use crate::{CpuState, R6502_MAGIC_NUMBER, R6502ImageType};
 use anyhow::Result;
-use r6502core::MachineTag;
+use r6502lib::MachineTag;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;

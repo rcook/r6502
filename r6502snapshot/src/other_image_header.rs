@@ -1,6 +1,6 @@
 use crate::{CpuState, SIM6502_MAGIC_NUMBER};
 use anyhow::{Result, bail};
-use r6502core::util::make_word;
+use r6502lib::util::make_word;
 use std::io::{ErrorKind, Read, Seek};
 
 pub enum OtherImageHeader {

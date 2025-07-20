@@ -1,6 +1,6 @@
 use crate::terminal_ui::{SimpleOutput, VduDriver};
 use r6502config::OutputDeviceType;
-use r6502lib::emulator::OutputDevice;
+use r6502core::emulator::OutputDevice;
 
 #[must_use]
 pub fn create_output_device(output_device_type: &OutputDeviceType) -> Box<dyn OutputDevice> {

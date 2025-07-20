@@ -1,4 +1,4 @@
-use r6502core::TotalCycles;
+use r6502lib::TotalCycles;
 
 #[derive(Debug)]
 pub struct CpuState {

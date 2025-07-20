@@ -2,7 +2,7 @@ use cursive::backends::crossterm::crossterm::event::{
     KeyCode as KeyCode_crossterm, KeyEvent as KeyEvent_crossterm,
     KeyModifiers as KeyModifiers_crossterm,
 };
-use r6502core::keyboard::{KeyCode, KeyEvent, KeyModifiers};
+use r6502lib::keyboard::{KeyCode, KeyEvent, KeyModifiers};
 
 #[must_use]
 pub fn translate_key_event(key_event: &KeyEvent_crossterm) -> Option<KeyEvent> {

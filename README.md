@@ -5,7 +5,7 @@ MOS 6502 Emulator and Debugger
 This is my emulator and debugger for the 6502 CPU. It is _not_
 cycle-accurate in that it does not fully emulate the
 fetch-decode-execute steps of a real 6502. This leads to a couple of fun
-little hacks ([example](r6502lib/src/ops/jump.rs#L21)). It also does not
+little hacks ([example](r6502core/src/ops/jump.rs#L21)). It also does not
 emulate the 6502's timing and currently runs "at full speed" - i.e. it
 will run instructions as quickly as the host operating system handle it.
 I have, however, verified the (reasonably) correct functioning of the
