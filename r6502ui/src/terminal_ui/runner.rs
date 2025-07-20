@@ -1,8 +1,8 @@
-use crate::crossterm_util::translate_event;
+use crate::crossterm_util::translate_key_event;
 use crate::terminal_ui::acorn_host_hooks::handle_host_hook;
 use crate::terminal_ui::{StopReason, TerminalChannel, TerminalEvent};
 use anyhow::{Result, anyhow, bail};
-use cursive::backends::crossterm::crossterm::event::{Event, poll, read};
+use cursive::backends::crossterm::crossterm::event::{Event, KeyEventKind, poll, read};
 use log::warn;
 use r6502config::HostHookType;
 use r6502core::util::make_unique_snapshot_path;
@@ -116,11 +116,13 @@ impl Runner<'_> {
                 Err(TryRecvError::Empty) => {}
             }
 
-            if let Some(event) = Self::try_read_event()? {
-                if let Some(event) = translate_event(&event) {
-                    _ = io_tx.send(IoEvent::Input(event));
+            if let Some(Event::Key(key_event)) = Self::try_read_event()?
+                && key_event.kind == KeyEventKind::Press
+            {
+                if let Some(key_event) = translate_key_event(&key_event) {
+                    _ = io_tx.send(IoEvent::Input(key_event));
                 } else {
-                    warn!("could not translate event {event:?}");
+                    warn!("unhandled event: {key_event:?}");
                 }
             }
         }

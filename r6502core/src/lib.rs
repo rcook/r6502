@@ -1,5 +1,5 @@
 pub mod ascii;
-pub mod events;
+pub mod keyboard;
 pub mod num;
 pub mod util;
 

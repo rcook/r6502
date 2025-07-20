@@ -8,9 +8,8 @@ use cursive::views::{
 };
 use cursive::{Cursive, CursiveRunnable, CursiveRunner, View};
 use r6502core::AddressRange;
-use r6502core::events::{
-    Event as Event_em, KeyCode as KeyCode_em, KeyEvent as KeyEvent_em,
-    KeyEventKind as KeyEventKind_em, KeyModifiers as KeyModifiers_em,
+use r6502core::keyboard::{
+    KeyCode as KeyCode_em, KeyEvent as KeyEvent_em, KeyModifiers as KeyModifiers_em,
 };
 use r6502cpu::Reg;
 use r6502cpu::symbols::MapFile;
@@ -390,19 +389,17 @@ impl CursiveTui {
         let io_tx_clone = io_tx.clone();
         c.set_on_pre_event_inner(EventTrigger::any(), move |e| {
             fn send_char(io_tx: &Sender<IoEvent>, ch: char) {
-                _ = io_tx.send(IoEvent::Input(Event_em::Key(KeyEvent_em {
+                _ = io_tx.send(IoEvent::Input(KeyEvent_em {
                     code: KeyCode_em::Char(ch),
                     modifiers: KeyModifiers_em::NONE,
-                    kind: KeyEventKind_em::Press,
-                })));
+                }));
             }
 
             fn send_ctrl_char(io_tx: &Sender<IoEvent>, ch: char) {
-                _ = io_tx.send(IoEvent::Input(Event_em::Key(KeyEvent_em {
+                _ = io_tx.send(IoEvent::Input(KeyEvent_em {
                     code: KeyCode_em::Char(ch),
                     modifiers: KeyModifiers_em::CONTROL,
-                    kind: KeyEventKind_em::Press,
-                })));
+                }));
             }
 
             fn set_stdout_colour(c: &mut Cursive, active: bool) {

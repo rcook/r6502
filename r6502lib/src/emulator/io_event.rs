@@ -1,5 +1,5 @@
 use r6502core::Channel;
-use r6502core::events::Event;
+use r6502core::keyboard::KeyEvent;
 
 #[derive(Debug)]
 pub enum IoEvent {
@@ -7,7 +7,7 @@ pub enum IoEvent {
     PacrUpdated(u8),
     PbUpdated(u8),
     PbcrUpdated(u8),
-    Input(Event),
+    Input(KeyEvent),
     Shutdown,
 }
 

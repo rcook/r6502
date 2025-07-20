@@ -1,7 +1,7 @@
 use anyhow::Result;
 use log::info;
 use r6502config::CharSet;
-use r6502core::events::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use r6502core::keyboard::{KeyCode, KeyEvent, KeyModifiers};
 use r6502cpu::{BusDevice, InterruptEvent};
 use r6502lib::emulator::IoEvent::{
     self, Input, PaUpdated, PacrUpdated, PbUpdated, PbcrUpdated, Shutdown,
@@ -97,47 +97,44 @@ impl InterfaceAdapter {
                     state.lock().unwrap().pb = 0x00;
                 }
                 Ok(PbcrUpdated(value)) => state.lock().unwrap().pb_cr = value,
-                Ok(Input(event)) => match event {
-                    Event::Key(key) if Self::key_event_is_press(&key) => {
-                        match (key.modifiers, key.code) {
-                            (KeyModifiers::NONE, KeyCode::F(12)) => {
-                                _ = interrupt_tx.send(InterruptEvent::Reset);
-                            }
-                            (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
-                                // Halt program
-                                _ = bus_tx.send(BusEvent::UserBreak);
-                                break;
-                            }
-                            (KeyModifiers::CONTROL, KeyCode::Char('r')) => {
-                                // Reset CPU: i.e. call the RESET vector etc.
-                                _ = bus_tx.send(BusEvent::Reset);
-                            }
-                            (KeyModifiers::CONTROL, KeyCode::Char('s')) => {
-                                // Save snapshot of memory to disc
-                                _ = bus_tx.send(BusEvent::Snapshot);
-                            }
-                            _ => {
-                                if let Some(c) = translate_in(&char_set, &key) {
-                                    state.lock().unwrap().set_key(c);
-                                    _ = interrupt_tx.send(InterruptEvent::Irq);
-                                } else {
-                                    info!("unimplemented: {key:?}");
-                                }
-                            }
-                        }
+                Ok(Input(KeyEvent {
+                    code: KeyCode::F(12),
+                    modifiers: KeyModifiers::NONE,
+                })) => _ = interrupt_tx.send(InterruptEvent::Reset),
+                Ok(Input(KeyEvent {
+                    code: KeyCode::Char('c'),
+                    modifiers: KeyModifiers::CONTROL,
+                })) => {
+                    _ = bus_tx.send(BusEvent::UserBreak);
+                    break;
+                }
+                Ok(Input(KeyEvent {
+                    code: KeyCode::Char('r'),
+                    modifiers: KeyModifiers::CONTROL,
+                })) => {
+                    // Reset CPU: i.e. call the RESET vector etc.
+                    _ = bus_tx.send(BusEvent::Reset);
+                }
+                Ok(Input(KeyEvent {
+                    code: KeyCode::Char('s'),
+                    modifiers: KeyModifiers::CONTROL,
+                })) => {
+                    // Save snapshot of memory to disc
+                    _ = bus_tx.send(BusEvent::Snapshot);
+                }
+                Ok(Input(key_event @ KeyEvent { .. })) => {
+                    if let Some(c) = translate_in(&char_set, &key_event) {
+                        state.lock().unwrap().set_key(c);
+                        _ = interrupt_tx.send(InterruptEvent::Irq);
+                    } else {
+                        info!("unimplemented: {key_event:?}");
                     }
-                    Event::Key(_) => {}
-                },
+                }
                 Ok(Shutdown) | Err(_) => break,
             }
         }
 
         Ok(())
-    }
-
-    // TBD: Use KeyEvent::is_press in crossterm >= 0.29
-    const fn key_event_is_press(key: &KeyEvent) -> bool {
-        matches!(key.kind, KeyEventKind::Press)
     }
 }
 

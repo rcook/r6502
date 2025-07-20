@@ -1,23 +1,14 @@
 use cursive::backends::crossterm::crossterm::event::{
-    Event as Event_crossterm, KeyCode as KeyCode_crossterm, KeyEvent as KeyEvent_crossterm,
-    KeyEventKind as KeyEventKind_crossterm, KeyModifiers as KeyModifiers_crossterm,
+    KeyCode as KeyCode_crossterm, KeyEvent as KeyEvent_crossterm,
+    KeyModifiers as KeyModifiers_crossterm,
 };
-use r6502core::events::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use r6502core::keyboard::{KeyCode, KeyEvent, KeyModifiers};
 
 #[must_use]
-pub fn translate_event(event: &Event_crossterm) -> Option<Event> {
-    match event {
-        Event_crossterm::Key(key_event) => Some(Event::Key(translate_key_event(key_event)?)),
-        _ => None,
-    }
-}
-
-#[must_use]
-pub fn translate_key_event(key: &KeyEvent_crossterm) -> Option<KeyEvent> {
+pub fn translate_key_event(key_event: &KeyEvent_crossterm) -> Option<KeyEvent> {
     Some(KeyEvent {
-        code: translate_key_code(key.code)?,
-        modifiers: translate_key_modifiers(key.modifiers)?,
-        kind: translate_key_event_kind(key.kind),
+        code: translate_key_code(key_event.code)?,
+        modifiers: translate_key_modifiers(key_event.modifiers)?,
     })
 }
 
@@ -64,14 +55,5 @@ pub fn translate_key_modifiers(key_modifiers: KeyModifiers_crossterm) -> Option<
         KeyModifiers_crossterm::META => Some(KeyModifiers::META),
         KeyModifiers_crossterm::NONE => Some(KeyModifiers::NONE),
         _ => None,
-    }
-}
-
-#[must_use]
-pub fn translate_key_event_kind(key_event_kind: KeyEventKind_crossterm) -> KeyEventKind {
-    match key_event_kind {
-        KeyEventKind_crossterm::Press => KeyEventKind::Press,
-        KeyEventKind_crossterm::Repeat => KeyEventKind::Repeat,
-        KeyEventKind_crossterm::Release => KeyEventKind::Release,
     }
 }
