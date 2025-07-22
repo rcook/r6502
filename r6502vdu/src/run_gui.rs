@@ -11,8 +11,10 @@ use path_absolutize::Absolutize;
 use r6502config::HostHookType;
 use r6502core::emulator::{Bus, Cpu, Monitor, TracingMonitor};
 use r6502core::symbols::MapFile;
-use r6502core::{BusDevice, DeviceMapping};
+use r6502core::{BusDevice, DeviceMapping, InterruptEvent};
 use r6502hw::MachineInfo;
+use r6502lib::ascii::{CR, DEL, ESC};
+use r6502lib::keyboard::{KeyCode, KeyEvent, KeyModifiers};
 use r6502lib::util::make_word;
 use r6502lib::{AddressRange, Channel, RESET};
 use r6502snapshot::MemoryImage;
@@ -20,12 +22,16 @@ use sdl3::libc::MAP_FAILED;
 use std::cell::RefCell;
 use std::ops::DerefMut;
 use std::path::Path;
-use std::sync::mpsc::{Receiver, TryRecvError};
+use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 
 const PA: u16 = 0xfc00;
 const PA_CR: u16 = 0xfc01;
 const PB: u16 = 0xfc02;
 const PB_CR: u16 = 0xfc03;
+
+enum MemoryEvent {
+    Write(char),
+}
 
 enum StopReason {
     Halt,
@@ -34,12 +40,14 @@ enum StopReason {
 }
 
 struct FlatMemoryDevice {
+    tx: Sender<MemoryEvent>,
     bytes: RefCell<Vec<u8>>,
 }
 
 impl FlatMemoryDevice {
-    fn new() -> Self {
+    fn new(tx: Sender<MemoryEvent>) -> Self {
         Self {
+            tx,
             bytes: RefCell::new(vec![0x00; 0x10000]),
         }
     }
@@ -55,28 +63,26 @@ impl FlatMemoryDevice {
 impl BusDevice for FlatMemoryDevice {
     fn load(&self, addr: u16) -> u8 {
         match addr {
-            PA => todo!("PA"),
             PA_CR => todo!("PA_CR"),
-            PB => todo!("PB"),
+            PB => return 0x00,
             PB_CR => todo!("PB_CR"),
-            _ => {}
+            _ => {
+                let bytes = self.bytes.borrow();
+                bytes[addr as usize]
+            }
         }
-
-        let bytes = self.bytes.borrow();
-        bytes[addr as usize]
     }
 
     fn store(&self, addr: u16, value: u8) {
         match addr {
-            PA => todo!("PA"),
             PA_CR => todo!("PA_CR"),
-            PB => todo!("PB"),
+            PB => _ = self.tx.send(MemoryEvent::Write(value as char)),
             PB_CR => todo!("PB_CR"),
-            _ => {}
+            _ => {
+                let mut bytes = self.bytes.borrow_mut();
+                bytes[addr as usize] = value;
+            }
         }
-
-        let mut bytes = self.bytes.borrow_mut();
-        bytes[addr as usize] = value;
     }
 }
 
@@ -91,7 +97,9 @@ pub fn run_gui(font: &Font) -> Result<()> {
             .ok_or_else(|| anyhow!("machine tag not defined"))?;
         let machine_info = MachineInfo::find_by_tag(machine_tag)?;
 
-        let device = FlatMemoryDevice::new();
+        let memory_channel = Channel::new();
+
+        let device = FlatMemoryDevice::new(memory_channel.tx);
 
         if let Some(base_image_path) = machine_info.machine.base_image_path.as_ref() {
             device.load_image(&MemoryImage::from_file(
@@ -120,7 +128,8 @@ pub fn run_gui(font: &Font) -> Result<()> {
         };
         let monitor = TracingMonitor::new(map_file);
 
-        let mut cpu = Cpu::new(bus.view(), Some(Box::new(monitor)), interrupt_channel.rx);
+        //let mut cpu = Cpu::new(bus.view(), Some(Box::new(monitor)), interrupt_channel.rx);
+        let mut cpu = Cpu::new(bus.view(), None, interrupt_channel.rx);
         let reset_addr_lo = cpu.bus.load(RESET);
         let reset_addr_hi = cpu.bus.load(RESET.wrapping_add(1));
         let reset_addr = make_word(reset_addr_hi, reset_addr_lo);
@@ -128,7 +137,15 @@ pub fn run_gui(font: &Font) -> Result<()> {
         cpu.set_initial_state(&cpu_state);
 
         info!("running");
-        run_gui_inner(cpu, &machine_info, terminal, rx)
+        run_gui_inner(
+            cpu,
+            &machine_info,
+            terminal,
+            rx,
+            &memory_channel.rx,
+            &interrupt_channel.tx,
+            &bus,
+        )
     })?;
 
     match reason {
@@ -144,11 +161,50 @@ fn run_gui_inner(
     mut cpu: Cpu,
     machine_info: &MachineInfo,
     terminal: &GraphicsTerminal,
-    rx: &Receiver<TerminalEvent>,
+    terminal_rx: &Receiver<TerminalEvent>,
+    memory_rx: &Receiver<MemoryEvent>,
+    interrupt_tx: &Sender<InterruptEvent>,
+    bus: &Bus,
 ) -> Result<StopReason> {
     loop {
-        match rx.try_recv() {
+        // TBD: Move this off this thread
+        match memory_rx.try_recv() {
+            Ok(MemoryEvent::Write(c)) => terminal.write_decode(c),
+            Err(TryRecvError::Disconnected) => return Ok(StopReason::Disconnected),
+            Err(TryRecvError::Empty) => {}
+        }
+
+        // TBD: Move this off this thread
+        match terminal_rx.try_recv() {
             Ok(TerminalEvent::Closed) => return Ok(StopReason::Closed),
+            Ok(TerminalEvent::Key(KeyEvent {
+                code: KeyCode::Backspace,
+                modifiers: KeyModifiers::NONE,
+            })) => {
+                bus.store(PA, DEL);
+                _ = interrupt_tx.send(InterruptEvent::Irq)
+            }
+            Ok(TerminalEvent::Key(KeyEvent {
+                code: KeyCode::Enter,
+                modifiers,
+            })) if modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT => {
+                bus.store(PA, CR);
+                _ = interrupt_tx.send(InterruptEvent::Irq)
+            }
+            Ok(TerminalEvent::Key(KeyEvent {
+                code: KeyCode::Esc,
+                modifiers: KeyModifiers::NONE,
+            })) => {
+                bus.store(PA, ESC);
+                _ = interrupt_tx.send(InterruptEvent::Irq)
+            }
+            Ok(TerminalEvent::Key(key_event)) => info!("key_event: {key_event:?}"),
+            Ok(TerminalEvent::TextInput(s)) => {
+                for c in s.chars() {
+                    bus.store(PA, c as u8);
+                    _ = interrupt_tx.send(InterruptEvent::Irq)
+                }
+            }
             Ok(event) => info!("event: {event:?}"),
             Err(TryRecvError::Disconnected) => return Ok(StopReason::Disconnected),
             Err(TryRecvError::Empty) => {}
